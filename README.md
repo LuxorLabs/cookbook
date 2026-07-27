@@ -1,79 +1,140 @@
 # Tenki Cookbook
 
-Runnable examples for building on [Tenki](https://tenki.cloud) — disposable microVM **Sandboxes** for AI agents, drop-in GitHub **Runners**, and an AI **Code Reviewer**.
+Working examples for running code and AI agents in isolated, disposable Linux
+microVMs with [Tenki Sandbox](https://tenki.cloud/products/sandbox).
 
-Each example is small, self-contained, and **actually runs on Tenki** — proven in CI before it merges.
+Use this cookbook to:
 
-## The one rule
+- run untrusted or agent-generated code without exposing your host;
+- give popular agent frameworks a secure code-execution tool;
+- expose sandboxed services through public preview URLs;
+- preserve an environment with snapshots; or
+- migrate an existing E2B, Modal, or Daytona integration to Tenki.
 
-> **Every example ships a `verify.mjs` that exercises it against the live Tenki API and fails loudly if anything breaks. CI runs them all.**
+New to Tenki? Start with
+[Run code in a sandbox](examples/run-code-in-a-sandbox/). It covers the core
+create, execute, and dispose lifecycle in about 15 lines of JavaScript.
 
-A cookbook with broken examples is worse than no cookbook. This is the bar; see [CONTRIBUTING.md](CONTRIBUTING.md).
+## Quick start
 
-## Examples
+You need:
 
-| Example | What it shows |
-|---|---|
-| [run-code-in-a-sandbox](examples/run-code-in-a-sandbox/) | Boot a disposable microVM, run code, get the output, tear it down — the core loop |
-| [files-in-a-sandbox](examples/files-in-a-sandbox/) | Write, read back, and list files in a sandbox with the official SDK |
-| [expose-a-port](examples/expose-a-port/) | Run a web server in a sandbox and get a public preview URL |
-| [snapshots-pause-resume](examples/snapshots-pause-resume/) | Snapshot / pause a sandbox and resume it with state intact |
-| [e2b-to-tenki-migration](examples/e2b-to-tenki-migration/) | Moving from E2B → Tenki: side-by-side code + an API mapping table |
-| [run-code-python](examples/run-code-python/) | The core loop in Python, via the official `tenki-sandbox` PyPI SDK |
-| [vercel-ai-sdk](examples/vercel-ai-sdk/) | Tenki as the Vercel AI SDK's `experimental_sandbox` — the model's tools run in a microVM |
-| [langchain-code-interpreter](examples/langchain-code-interpreter/) | A LangChain agent that writes and runs code in a Tenki sandbox |
-| [langchain-python](examples/langchain-python/) | A LangChain (Python) agent with a Tenki code-execution tool |
-| [crewai-code-interpreter](examples/crewai-code-interpreter/) | A CrewAI agent (Python) that runs code in a Tenki sandbox |
-| [eve-agent-on-tenki](examples/eve-agent-on-tenki/) | Run a Vercel Eve agent's sandbox on Tenki |
-| [mcp-tenki-sandbox](examples/mcp-tenki-sandbox/) | Give Claude / Cursor a Tenki sandbox via the `tenki-mcp` MCP server (84 tools) |
-| [composio-tenki](examples/composio-tenki/) | A Composio agent that runs code in a Tenki sandbox, via the official `@tenkicloud/composio-tools` toolkit |
-| [covalent-tenki](examples/covalent-tenki/) | A Covalent workflow where each task runs in its own Tenki microVM, via the official `covalent-tenki-plugin` |
-| [smolagents](examples/smolagents/) | A HuggingFace smolagents `CodeAgent` whose generated Python runs in a Tenki sandbox, via a custom `RemotePythonExecutor` |
-| [openai-agents-sdk](examples/openai-agents-sdk/) | An OpenAI Agents SDK agent with a tool that runs code in a Tenki sandbox |
-| [llamaindex](examples/llamaindex/) | A LlamaIndex agent with a `FunctionTool` that runs code in a Tenki sandbox |
-| [modal-to-tenki-migration](examples/modal-to-tenki-migration/) | Moving from Modal → Tenki: side-by-side code + an API mapping table |
-| [daytona-to-tenki-migration](examples/daytona-to-tenki-migration/) | Moving from Daytona → Tenki: side-by-side code + an API mapping table |
+- a [Tenki account](https://tenki.cloud);
+- a Tenki API key and your project and workspace IDs; and
+- Node.js 20 or later.
 
-*(More landing here — more framework cookbooks (Vercel AI SDK, smolagents), migration guides, use-cases. See the backlog in [CONTRIBUTING.md](CONTRIBUTING.md).)*
+Clone the cookbook and run the introductory example:
 
-## Official integrations
+```bash
+git clone https://github.com/LuxorLabs/cookbook.git
+cd cookbook/examples/run-code-in-a-sandbox
+npm install
 
-First-party Tenki integrations that ship as their own packages on [github.com/tenkicloud](https://github.com/tenkicloud) — install and use them directly:
+export TENKI_AUTH_TOKEN="your-api-key"
+export TENKI_PROJECT_ID="your-project-id"
+export TENKI_WORKSPACE_ID="your-workspace-id"
 
-| Integration | Install | What it does |
-|---|---|---|
-| [Composio tools](https://github.com/TenkiCloud/composio-tools) | `npm i @tenkicloud/composio-tools` | Gives any [Composio](https://composio.dev) agent Tenki sandbox tools (create · exec · snapshot · terminate), in-process — no extra backend |
-| [Covalent executor](https://github.com/TenkiCloud/covalent-tenki-plugin) | `pip install covalent-tenki-plugin` | A [Covalent](https://github.com/AgnostiqHQ/covalent) executor that runs each workflow task in a disposable Tenki microVM |
-| [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | First-party Actions: install the `tenki` CLI on a runner, build sandbox templates from `.tenki/template.json` in CI |
-| [Go SDK](https://github.com/TenkiCloud/tenki-sdk-go) | `go get github.com/TenkiCloud/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
+node run.mjs
+```
 
-*(Walkthrough examples that build on these are on the [ROADMAP](ROADMAP.md).)*
+The script creates a sandbox, runs Python inside it, prints `42`, and disposes
+the sandbox automatically. See the
+[Sandbox SDK guide](https://tenki.cloud/docs/sandbox/sdk) for authentication
+and client setup details.
 
-## Run an example
+## Find an example
+
+### Learn the Sandbox API
+
+| Example | What you will learn |
+| --- | --- |
+| [Run code in a sandbox](examples/run-code-in-a-sandbox/) | Create a microVM, execute a command, read its output, and dispose it |
+| [Work with files](examples/files-in-a-sandbox/) | Write, read, and list files with the TypeScript SDK |
+| [Expose a port](examples/expose-a-port/) | Run a web server and create a public preview URL |
+| [Pause, snapshot, and resume](examples/snapshots-pause-resume/) | Preserve a sandbox and resume it with its state intact |
+| [Run code with Python](examples/run-code-python/) | Use the official `tenki-sandbox` Python SDK |
+
+### Add secure code execution to an agent
+
+| Example | Framework or use case |
+| --- | --- |
+| [Vercel AI SDK](examples/vercel-ai-sdk/) | Use Tenki as the AI SDK's `experimental_sandbox` |
+| [LangChain (JavaScript)](examples/langchain-code-interpreter/) | Give a LangChain agent a sandboxed code interpreter |
+| [LangChain (Python)](examples/langchain-python/) | Add a Tenki code-execution tool to a Python agent |
+| [CrewAI](examples/crewai-code-interpreter/) | Run agent-generated code in a Tenki sandbox |
+| [OpenAI Agents SDK](examples/openai-agents-sdk/) | Add sandboxed execution as an agent tool |
+| [LlamaIndex](examples/llamaindex/) | Wrap sandboxed execution in a `FunctionTool` |
+| [Hugging Face smolagents](examples/smolagents/) | Back a `CodeAgent` with a remote Python executor |
+| [Vercel Eve](examples/eve-agent-on-tenki/) | Use Tenki as an Eve agent's sandbox backend |
+
+### Connect Tenki to developer tools
+
+| Example | Integration |
+| --- | --- |
+| [MCP server](examples/mcp-tenki-sandbox/) | Give Claude, Cursor, or another MCP client access to Tenki sandbox tools |
+| [Composio](examples/composio-tenki/) | Add Tenki tools to a Composio agent |
+| [Covalent](examples/covalent-tenki/) | Run each workflow task in its own microVM |
+
+### Migrate to Tenki
+
+| Guide | What it includes |
+| --- | --- |
+| [E2B to Tenki](examples/e2b-to-tenki-migration/) | Side-by-side code and an API mapping |
+| [Modal to Tenki](examples/modal-to-tenki-migration/) | Side-by-side code and an API mapping |
+| [Daytona to Tenki](examples/daytona-to-tenki-migration/) | Side-by-side code and an API mapping |
+
+Each example is self-contained. Open its README for prerequisites, complete
+source code, and run instructions.
+
+## Tested against the live API
+
+Cookbook examples should be useful when you need them, not just when they are
+written. Each example includes a `verify.mjs` script that exercises its
+Tenki-facing behavior against the live API. CI runs those checks on every push
+and pull request.
+
+To verify an individual example after setting your Tenki credentials:
 
 ```bash
 cd examples/run-code-in-a-sandbox
 npm install
-export TENKI_AUTH_TOKEN=...   # from `tenki login`
-node run.mjs
+node verify.mjs
 ```
 
-## Verify everything
+Maintainers and contributors can run every example from the repository root:
 
 ```bash
-npm run verify        # runs every examples/*/verify.mjs
+npm run verify
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the verification contract and the
+recommended structure for new examples.
+
+## Official integrations
+
+These first-party packages can be installed directly in your own project:
+
+| Integration | Install | What it does |
+| --- | --- | --- |
+| [Composio tools](https://github.com/TenkiCloud/composio-tools) | `npm install @tenkicloud/composio-tools` | Provides create, execute, snapshot, and terminate tools for Composio agents |
+| [Covalent executor](https://github.com/TenkiCloud/covalent-tenki-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in disposable Tenki microVMs |
+| [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
+| [Go SDK](https://github.com/TenkiCloud/tenki-sdk-go) | `go get github.com/TenkiCloud/tenki-sdk-go/sandbox` | Provides a Go client for the Tenki Sandbox API |
 
 ## Contributing
 
-New examples welcome. Start with **[CONTRIBUTING.md](CONTRIBUTING.md)** (setup + how to add one) and **[ROADMAP.md](ROADMAP.md)** (the ranked backlog — pick from "Start here"). The one rule: every example runs on Tenki and proves it in CI.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for local
+setup and the example checklist, then choose an idea from
+[ROADMAP.md](ROADMAP.md).
 
-## Related
+## Resources
 
-- [tenki-mcp](https://github.com/opencolin/tenki-mcp) — Tenki as an MCP server for any agent
-- [tenki-eve-sandbox](https://github.com/opencolin/tenki-eve-sandbox) — Tenki backend for Vercel Eve
-- [n8n-nodes-tenki](https://github.com/opencolin/n8n-nodes-tenki) — Tenki as an n8n node
+- [Tenki documentation](https://tenki.cloud/docs)
+- [Sandbox SDK reference](https://tenki.cloud/docs/sandbox/sdk)
+- [Tenki MCP server](https://github.com/opencolin/tenki-mcp)
+- [Tenki backend for Vercel Eve](https://github.com/opencolin/tenki-eve-sandbox)
+- [Tenki nodes for n8n](https://github.com/opencolin/n8n-nodes-tenki)
 
 ## License
 
-MIT
+[MIT](LICENSE)
