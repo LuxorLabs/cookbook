@@ -4,7 +4,7 @@ bare binary -> exec a shell one-liner -> a file round-trip -> dispose. Asserts e
 result and exits non-zero on any failure. No LLM needed — this is the whole example,
 asserted.
 
-Needs Python 3.10+ and the dep in requirements.txt. Token/project from env (CI) or
+Needs Python 3.10+ and the dep in requirements.txt. Token/workspace from env (CI) or
 ~/.config/tenki/config.yaml (local `tenki login`).
 """
 import os
@@ -35,10 +35,7 @@ if not token.startswith(("tk_", "ory_st_", "cookie:")):
     token = f"cookie:{token}"
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-project_id = os.environ.get("TENKI_PROJECT_ID") or cfg("current_project_id")
 workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
-if project_id:
-    opts["project_id"] = project_id
 if workspace_id:
     opts["workspace_id"] = workspace_id
 

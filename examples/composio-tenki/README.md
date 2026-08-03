@@ -15,7 +15,7 @@ const session = await composio.sessions.create("default", {
 // the agent can now call LOCAL_TENKI_CREATE_SANDBOX, LOCAL_TENKI_EXEC_COMMAND, …
 ```
 
-`tenkiToolkit()` reads `TENKI_API_KEY` from the environment (or take `authToken`/`workspaceId`/`projectId` options). Custom toolkits are **session-scoped**: tool calls run through `session.execute(slug, args)`, and definitions come from `session.customTools()`.
+`tenkiToolkit()` reads `TENKI_API_KEY` from the environment (or takes `authToken`/`workspaceId` options). Custom toolkits are **session-scoped**: tool calls run through `session.execute(slug, args)`, and definitions come from `session.customTools()`.
 
 ## Two files
 

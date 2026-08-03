@@ -4,7 +4,7 @@ CodeAgent-style Python in a live Tenki sandbox, keeps state across steps, and
 detects `final_answer(...)` — the whole `RemotePythonExecutor` seam, asserted
 with no LLM. (The full `CodeAgent`, which needs a model key, is in agent.py.)
 
-Needs Python 3.10+ and the deps in requirements.txt. Token/project from env (CI)
+Needs Python 3.10+ and the deps in requirements.txt. Token/workspace from env (CI)
 or ~/.config/tenki/config.yaml (local `tenki login`). Exits non-zero on failure.
 """
 import os
@@ -38,8 +38,6 @@ if not token.startswith(("tk_", "ory_st_", "cookie:")):
     token = f"cookie:{token}"
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-if os.environ.get("TENKI_PROJECT_ID") or cfg("current_project_id"):
-    opts["project_id"] = os.environ.get("TENKI_PROJECT_ID") or cfg("current_project_id")
 if os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id"):
     opts["workspace_id"] = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 

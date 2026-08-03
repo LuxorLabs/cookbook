@@ -2,8 +2,8 @@
 Run code in a disposable Tenki sandbox: boot -> exec -> print -> dispose.
 The core Tenki loop, with the official `tenki-sandbox` Python SDK.
 
-Needs Python 3.10+ and `pip install tenki-sandbox`. Token/project from env
-(TENKI_AUTH_TOKEN / TENKI_PROJECT_ID / TENKI_WORKSPACE_ID) or, if unset,
+Needs Python 3.10+ and `pip install tenki-sandbox`. Token/workspace from env
+(TENKI_AUTH_TOKEN / TENKI_WORKSPACE_ID) or, if unset,
 ~/.config/tenki/config.yaml (written by `tenki login`). Run: python run.py
 """
 import os
@@ -33,10 +33,7 @@ if token and not token.startswith(("tk_", "ory_st_", "cookie:")):
     token = f"cookie:{token}"
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-project_id = os.environ.get("TENKI_PROJECT_ID") or cfg("current_project_id")
 workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
-if project_id:
-    opts["project_id"] = project_id
 if workspace_id:
     opts["workspace_id"] = workspace_id
 

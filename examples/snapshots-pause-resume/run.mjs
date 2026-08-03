@@ -8,7 +8,6 @@ const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 await using sandbox = await tenki.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
-	projectId: process.env.TENKI_PROJECT_ID, // from `tenki login` / your dashboard
 	workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 

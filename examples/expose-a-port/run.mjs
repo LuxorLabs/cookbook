@@ -13,7 +13,6 @@ await using sandbox = await tenki.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
 	allowInbound: true,
-	projectId: process.env.TENKI_PROJECT_ID, // from `tenki login` / your dashboard
 	workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 

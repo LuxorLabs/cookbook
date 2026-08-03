@@ -1,7 +1,7 @@
 /**
  * Proves pause/resume persists sandbox state: create → write a unique marker →
  * pause → resume → read the marker back → assert it survived. Also asserts pause
- * produced a durable snapshot. Token/project from env (CI) or ~/.config/tenki/config.yaml.
+ * produced a durable snapshot. Token/workspace from env (CI) or ~/.config/tenki/config.yaml.
  * Exits non-zero on any failure; terminates the sandbox it created.
  */
 import { TenkiSandbox } from "@tenkicloud/sandbox";
@@ -18,7 +18,6 @@ const cfg = (key) => {
 };
 
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const projectId = process.env.TENKI_PROJECT_ID || cfg("current_project_id");
 const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
 if (!authToken) {
 	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
@@ -39,7 +38,7 @@ const waitState = async (want) => {
 };
 
 try {
-	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, projectId, workspaceId });
+	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
 	await sandbox.writeFile("marker.txt", marker);
 
 	// pause() snapshots memory + disk, then frees the VM. Capture the id now — it clears on resume.

@@ -13,7 +13,6 @@ const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 await using sandbox = await tenki.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
-  projectId: process.env.TENKI_PROJECT_ID,
   workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 
@@ -26,7 +25,6 @@ console.log(`exit ${result.exitCode} -> ${stdoutText(result).trim()}`); // exit 
 ```bash
 npm install
 export TENKI_AUTH_TOKEN=...      # from `tenki login` (~/.config/tenki/config.yaml)
-export TENKI_PROJECT_ID=...      # your project id (tenki CLI / dashboard)
 export TENKI_WORKSPACE_ID=...
 node run.mjs                     # exit 0 -> 42
 ```

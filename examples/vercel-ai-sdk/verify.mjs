@@ -4,7 +4,7 @@
  * Experimental_SandboxSession surface the AI SDK calls: run (assert stdout),
  * writeTextFile + readTextFile (assert round-trip), a missing file (assert null),
  * and spawn (assert streamed output + exit code). Cleans up the microVM.
- * Token/project from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+ * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  * Exits non-zero on any failure.
  */
 import { createTenkiSandbox } from "./tenki-sandbox.mjs";

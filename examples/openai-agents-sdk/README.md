@@ -49,7 +49,7 @@ console.log(result.finalOutput);
 ```bash
 npm install
 export TENKI_AUTH_TOKEN=...                    # from `tenki login`
-export TENKI_PROJECT_ID=...  TENKI_WORKSPACE_ID=...
+export TENKI_WORKSPACE_ID=...
 export OPENAI_API_KEY=sk-...                   # the Agents SDK's model provider
 node agent.mjs
 ```

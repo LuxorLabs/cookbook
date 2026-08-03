@@ -4,7 +4,7 @@
  * directly, exactly as the Agents runner would (a RunContext + a JSON string of
  * arguments), and assert its output. (The full agent, which needs a model key,
  * is in agent.mjs.)
- * Token/project from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+ * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  */
 import { RunContext } from "@openai/agents";
 import { TenkiSandbox } from "@tenkicloud/sandbox";
@@ -22,7 +22,6 @@ const cfg = (key) => {
 };
 
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const projectId = process.env.TENKI_PROJECT_ID || cfg("current_project_id");
 const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
 if (!authToken) {
 	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
@@ -32,7 +31,7 @@ if (!authToken) {
 const tenki = new TenkiSandbox({ authToken });
 let sandbox;
 try {
-	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, projectId, workspaceId });
+	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
 	const runPython = makeCodeTool(sandbox);
 
 	// Drive the Agents SDK function tool exactly as the runner would.

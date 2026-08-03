@@ -10,7 +10,6 @@ from tenki_sandbox import Sandbox
 # `with` disposes (terminates) the sandbox when the scope ends.
 with Sandbox.create(
     auth_token=token,          # from `tenki login` (see the auth note below)
-    project_id=project_id,     # your project id (tenki CLI / dashboard)
     workspace_id=workspace_id,
     cpu_cores=1,
     memory_mb=1024,
@@ -31,7 +30,7 @@ export TENKI_AUTH_TOKEN=...                 # see the auth note below
 python run.py                              # exit 0 -> 42
 ```
 
-`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login`) for the token, project, and workspace, so with the CLI logged in you can just run it.
+`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login`) for the token and workspace, so with the CLI logged in you can just run it.
 
 **Auth note.** The Python SDK authenticates cleanly with a **`tk_` API key** (`export TENKI_AUTH_TOKEN=tk_…`). A `tenki login` browser session token also works, but — unlike the Node SDK — the Python SDK won't auto-detect it; it must be sent as a cookie, so pass it as **`cookie:<token>`** (`run.py` and `verify.py` add that prefix for you). It's an SDK gap, not yours.
 

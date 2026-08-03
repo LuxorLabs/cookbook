@@ -49,7 +49,7 @@ uv pip install -r requirements.txt         # tenki-sandbox + smolagents
 export TENKI_AUTH_TOKEN=...                 # see the auth note below
 ```
 
-The scripts fall back to `~/.config/tenki/config.yaml` (written by `tenki login`) for the token, project, and workspace.
+The scripts fall back to `~/.config/tenki/config.yaml` (written by `tenki login`) for the token and workspace.
 
 **Auth note.** The Python SDK authenticates cleanly with a **`tk_` API key** (`export TENKI_AUTH_TOKEN=tk_…`). A `tenki login` browser session token also works, but — unlike the Node SDK — the Python SDK won't auto-detect it; pass it as **`cookie:<token>`** so it's sent as a cookie (`verify.py` and `agent.py` do this for you). It's an SDK gap, not yours.
 

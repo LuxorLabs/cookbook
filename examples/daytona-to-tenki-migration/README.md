@@ -28,7 +28,6 @@ const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 const sandbox = await tenki.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
-  projectId: process.env.TENKI_PROJECT_ID,
   workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 try {
@@ -46,8 +45,8 @@ try {
 | --- | --- | --- |
 | Install | `npm i @daytonaio/sdk` | `npm i @tenkicloud/sandbox` |
 | Import | `import { Daytona } from "@daytonaio/sdk"` | `import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox"` |
-| Auth | `new Daytona({ apiKey })` (or implicit `DAYTONA_API_KEY`) | `new TenkiSandbox({ authToken })` (+ `projectId` / `workspaceId`) |
-| Create | `await daytona.create()` | `await tenki.createAndWait({ cpuCores, memoryMb, projectId, workspaceId })` |
+| Auth | `new Daytona({ apiKey })` (or implicit `DAYTONA_API_KEY`) | `new TenkiSandbox({ authToken })` (+ `workspaceId`) |
+| Create | `await daytona.create()` | `await tenki.createAndWait({ cpuCores, memoryMb, workspaceId })` |
 | Run a command | `await sandbox.process.executeCommand("ls -la")` (shell) | `await sandbox.exec("ls", { args: ["-la"] })` (no shell — see note) |
 | Run a code snippet | `await sandbox.process.codeRun("print(6 * 7)")` | `await sandbox.exec("python3", { args: ["-c", "print(6 * 7)"] })` |
 | stdout / stderr | `r.result` (string) | `stdoutText(r)` / `stderrText(r)` (decode the byte fields) |
@@ -88,7 +87,6 @@ await sandbox.exec("python3", { args: ["-c", "print(6 * 7)"] });
 ```bash
 npm install
 export TENKI_AUTH_TOKEN=...      # from `tenki login` (~/.config/tenki/config.yaml)
-export TENKI_PROJECT_ID=...      # your project id (tenki CLI / dashboard)
 export TENKI_WORKSPACE_ID=...
 node run.mjs                     # hello from tenki · exit 0
 ```
@@ -102,7 +100,7 @@ node verify.mjs   # ✓ create → exec sh + python3 → "hello-from-tenki" / 42
 ## Notes
 
 - **Output is bytes.** `ExecResult.stdout` / `.stderr` are `Uint8Array`; use `stdoutText(r)` / `stderrText(r)` to get strings (Daytona hands you a `result` string directly).
-- **Auth is explicit.** Daytona reads `DAYTONA_API_KEY` (implicitly, or via `new Daytona({ apiKey })`); Tenki takes an `authToken` on the client, plus a `projectId` / `workspaceId` for placement (from `tenki login`).
+- **Auth is explicit.** Daytona reads `DAYTONA_API_KEY` (implicitly, or via `new Daytona({ apiKey })`); Tenki takes an `authToken` on the client, plus a `workspaceId` for placement (from `tenki login`).
 - **Disposal.** `await sandbox.close()` maps to Daytona's `daytona.delete(sandbox)`. Because `Session` is an `AsyncDisposable`, you can also write `await using sandbox = await tenki.createAndWait(...)` and let the scope terminate it for you. Either way the microVM is billed per second and self-reaps on its idle / lifetime caps.
 - **Networking is off by default.** If your code needs outbound network, pass `createAndWait({ allowOutbound: true })`.
 - Requires Node 20+ for `await using` (the `run.mjs` here uses explicit `close()`, so Node 18+ is fine).

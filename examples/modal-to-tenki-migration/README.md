@@ -26,10 +26,9 @@ sb.terminate()
 ```python
 from tenki_sandbox import Sandbox
 
-# No App object — a sandbox is placed by project_id / workspace_id. `with` disposes it.
+# No App object — a sandbox is placed by workspace_id. `with` disposes it.
 with Sandbox.create(
     auth_token=token,          # from `tenki login` (see the auth note below)
-    project_id=project_id,     # your project id (tenki CLI / dashboard)
     workspace_id=workspace_id,
     cpu_cores=1,
     memory_mb=1024,
@@ -46,9 +45,9 @@ with Sandbox.create(
 | --- | --- | --- |
 | Install | `pip install modal` | `pip install tenki-sandbox` |
 | Import | `import modal` | `from tenki_sandbox import Sandbox` |
-| Auth | `modal token new` (writes `~/.modal.toml`), or `MODAL_TOKEN_ID` + `MODAL_TOKEN_SECRET` | `Sandbox.create(auth_token=…)` + `project_id` / `workspace_id` (from `tenki login`) |
-| App handle | `app = modal.App.lookup("name", create_if_missing=True)` (required first) | — none; placement is `project_id` / `workspace_id` |
-| Create | `modal.Sandbox.create(app=app)` | `Sandbox.create(auth_token=…, project_id=…, workspace_id=…, cpu_cores=1, memory_mb=1024)` |
+| Auth | `modal token new` (writes `~/.modal.toml`), or `MODAL_TOKEN_ID` + `MODAL_TOKEN_SECRET` | `Sandbox.create(auth_token=…)` + `workspace_id` (from `tenki login`) |
+| App handle | `app = modal.App.lookup("name", create_if_missing=True)` (required first) | — none; placement is `workspace_id` |
+| Create | `modal.Sandbox.create(app=app)` | `Sandbox.create(auth_token=…, workspace_id=…, cpu_cores=1, memory_mb=1024)` |
 | Run a command | `p = sb.exec("python", "-c", "…")` → live process | `r = sb.exec("python3", "-c", "…")` → finished result |
 | stdout / stderr | `p.stdout.read()` / `p.stderr.read()` (drain streams) | `r.stdout_text` / `r.stderr_text` (already captured) |
 | Exit code | `p.wait()` (returns it) or `p.returncode` | `r.exit_code` |
@@ -98,9 +97,9 @@ export TENKI_AUTH_TOKEN=...                 # see the auth note below
 python run.py                              # 42 · exit 0
 ```
 
-`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login`) for the token, project, and workspace, so with the CLI logged in you can just run it.
+`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login`) for the token and workspace, so with the CLI logged in you can just run it.
 
-**Auth note.** Modal authenticates from `~/.modal.toml` (or `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET`) implicitly; Tenki takes an explicit `auth_token` plus a `project_id` / `workspace_id` for placement. The Python SDK authenticates cleanly with a **`tk_` API key** (`export TENKI_AUTH_TOKEN=tk_…`). A `tenki login` browser session token also works, but — unlike the Node SDK — the Python SDK won't auto-detect it; it must be sent as a cookie, so pass it as **`cookie:<token>`** (`run.py` and `verify.py` add that prefix for you). It's an SDK gap, not yours.
+**Auth note.** Modal authenticates from `~/.modal.toml` (or `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET`) implicitly; Tenki takes an explicit `auth_token` plus a `workspace_id` for placement. The Python SDK authenticates cleanly with a **`tk_` API key** (`export TENKI_AUTH_TOKEN=tk_…`). A `tenki login` browser session token also works, but — unlike the Node SDK — the Python SDK won't auto-detect it; it must be sent as a cookie, so pass it as **`cookie:<token>`** (`run.py` and `verify.py` add that prefix for you). It's an SDK gap, not yours.
 
 ## Verify it
 
@@ -116,7 +115,7 @@ node verify.mjs   # ✓ create → exec python3 + sh + fs round-trip → 42 → 
 
 ## Notes
 
-- **No `App` object.** Modal ties every sandbox to a `modal.App` (`modal.App.lookup(...)` first). Tenki has no app concept — a sandbox is placed directly by `project_id` / `workspace_id` (from `tenki login`).
+- **No `App` object.** Modal ties every sandbox to a `modal.App` (`modal.App.lookup(...)` first). Tenki has no app concept — a sandbox is placed directly by `workspace_id` (from `tenki login`).
 - **`exec` blocks and returns a result.** Modal's `ContainerProcess` (drain `p.stdout.read()`, `p.wait()`) becomes Tenki's `CommandResult` (`r.stdout_text`, `r.exit_code`) — see the gotcha above.
 - **Disposal.** `sb.terminate()` maps 1:1 to Modal's `sandbox.terminate()`. Because `Sandbox` is a context manager, `with Sandbox.create(...) as sb:` disposes it for you at scope end. Either way the microVM is billed per second and self-reaps on its idle / lifetime caps.
 - **Networking is on by default** in the Python SDK (`allow_outbound=True`), matching Modal's default. Pass `create(..., allow_outbound=False)` to lock a sandbox down.
