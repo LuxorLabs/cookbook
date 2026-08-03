@@ -36,7 +36,7 @@ if (!token) {
 }
 
 const require = createRequire(import.meta.url);
-const serverEntry = require.resolve("tenki-mcp"); // package "main" → dist/index.js
+const serverEntry = require.resolve("@tenkicloud/mcp/dist/index.js"); // the package's bin entry (no "main" field)
 
 const transport = new StdioClientTransport({
 	command: process.execPath,

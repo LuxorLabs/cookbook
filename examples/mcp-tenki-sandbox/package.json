@@ -2,12 +2,12 @@
   "name": "mcp-tenki-sandbox",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — give Claude / Cursor a Tenki sandbox via the tenki-mcp MCP server.",
+  "description": "Cookbook example — give Claude / Cursor a Tenki sandbox via the @tenkicloud/mcp MCP server.",
   "scripts": {
     "verify": "node verify.mjs"
   },
   "dependencies": {
-    "tenki-mcp": "^1.0.1",
+    "@tenkicloud/mcp": "^0.1.0",
     "@modelcontextprotocol/sdk": "^1.0.0"
   }
 }

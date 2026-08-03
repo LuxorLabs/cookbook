@@ -9,7 +9,7 @@ labels: cookbook
 
 **Category** (product quickstart / framework cookbook / migration guide / use-case / MCP):
 
-**Template to copy** (`run-code-in-a-sandbox` / `langchain-code-interpreter` / `eve-agent-on-tenki` / new):
+**Template to copy** (`run-code-in-a-sandbox` / `langchain-code-interpreter` / `vercel-ai-sdk` / new):
 
 **The bar:** ships a `verify.mjs` that runs against a live Tenki sandbox and passes in CI (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
 
