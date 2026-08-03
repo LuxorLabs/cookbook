@@ -1,0 +1,9 @@
+{
+  "name": "openhermit-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — OpenHermit agents on Tenki microVM sandboxes: the sticky-session exec backend, verified.",
+  "dependencies": {
+    "@tenkicloud/sandbox": "^0.5.4"
+  }
+}

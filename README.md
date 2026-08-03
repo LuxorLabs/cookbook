@@ -62,6 +62,14 @@ Give an agent a sandboxed place to run the code it writes.
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
 
+### Agent platforms
+
+Run a self-hosted agent platform's sandboxes on Tenki.
+
+| Example | Platform |
+| --- | --- |
+| [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent microVMs for an agent fleet |
+
 ### Migrating from another provider
 
 Each guide has side-by-side code and an API mapping.
@@ -107,7 +115,7 @@ These open-source projects ship a Tenki provider or backend out of the box:
 | [DeerFlow](https://github.com/bytedance/deer-flow) | Sandbox provider for ByteDance's SuperAgent harness |
 | [AgentBox](https://github.com/madarco/agentbox) | Provider for running parallel agents in sandboxed VMs |
 | [ComputeSDK](https://github.com/computesdk/computesdk) | Tenki provider for the multi-provider compute toolkit |
-| [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) | Sandboxed exec backend for AI agent fleets |
+| [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) | Sandboxed exec backend for AI agent fleets — [example](examples/openhermit-tenki/) |
 
 ## Contributing
 
