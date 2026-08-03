@@ -1,6 +1,6 @@
 // Proves this example: boot a sandbox with inbound enabled, start an HTTP server, expose its
 // port for a public preview URL, fetch that URL from the host, assert the body. Exits non-zero
-// on any failure; terminates the sandbox. Token/project from env or ~/.config/tenki/config.yaml.
+// on any failure; terminates the sandbox. Token/workspace from env or ~/.config/tenki/config.yaml.
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -15,7 +15,6 @@ const cfg = (key) => {
 };
 
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const projectId = process.env.TENKI_PROJECT_ID || cfg("current_project_id");
 const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
 if (!authToken) {
 	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
@@ -29,7 +28,7 @@ const tenki = new TenkiSandbox({ authToken });
 let sandbox;
 try {
 	// allowInbound: true is required for the gateway to route public traffic to the port.
-	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, allowInbound: true, projectId, workspaceId });
+	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, allowInbound: true, workspaceId });
 
 	// Write a one-file site and start a detached HTTP server (setsid survives exec return).
 	await sandbox.exec("sh", {

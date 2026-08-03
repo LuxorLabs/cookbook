@@ -12,7 +12,6 @@ const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 await using sandbox = await tenki.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
-  projectId: process.env.TENKI_PROJECT_ID,
   workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 
@@ -34,7 +33,6 @@ console.log(`resumed -> ${marker}`); // resumed -> still here after the pause
 ```bash
 npm install
 export TENKI_AUTH_TOKEN=...      # from `tenki login` (~/.config/tenki/config.yaml)
-export TENKI_PROJECT_ID=...      # your project id (tenki CLI / dashboard)
 export TENKI_WORKSPACE_ID=...
 node run.mjs                     # resumed -> still here after the pause
 ```
@@ -56,7 +54,6 @@ const snap = await tenki.createSnapshotAndWait(sandbox.id, { name: "warm-base" }
 const forked = await tenki.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
-  projectId: process.env.TENKI_PROJECT_ID,
   workspaceId: process.env.TENKI_WORKSPACE_ID,
   snapshotId: snap.id,
 });

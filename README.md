@@ -10,8 +10,8 @@ create, execute, dispose lifecycle in about 15 lines of JavaScript.
 
 ## Quick start
 
-You need a [Tenki account](https://tenki.cloud), an API key with your project
-and workspace IDs, and Node.js 20 or later.
+You need a [Tenki account](https://tenki.cloud), an API key, your workspace ID,
+and Node.js 20 or later.
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
@@ -19,7 +19,6 @@ cd cookbook/examples/run-code-in-a-sandbox
 npm install
 
 export TENKI_AUTH_TOKEN="your-api-key"
-export TENKI_PROJECT_ID="your-project-id"
 export TENKI_WORKSPACE_ID="your-workspace-id"
 
 node run.mjs

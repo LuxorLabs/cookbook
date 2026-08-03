@@ -2,7 +2,7 @@
 Proves this example works against live Tenki: boot a sandbox, exec python3,
 assert "42", dispose. No LLM needed — this is the whole example, asserted.
 
-Needs Python 3.10+ and the dep in requirements.txt. Token/project from env (CI)
+Needs Python 3.10+ and the dep in requirements.txt. Token/workspace from env (CI)
 or ~/.config/tenki/config.yaml (local `tenki login`). Exits non-zero on failure.
 """
 import os
@@ -33,10 +33,7 @@ if not token.startswith(("tk_", "ory_st_", "cookie:")):
     token = f"cookie:{token}"
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-project_id = os.environ.get("TENKI_PROJECT_ID") or cfg("current_project_id")
 workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
-if project_id:
-    opts["project_id"] = project_id
 if workspace_id:
     opts["workspace_id"] = workspace_id
 

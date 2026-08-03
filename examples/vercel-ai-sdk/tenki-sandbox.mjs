@@ -140,7 +140,6 @@ const cfg = (key) => {
  */
 export async function createTenkiSandbox(options = {}) {
 	const authToken = options.authToken || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-	const projectId = options.projectId || process.env.TENKI_PROJECT_ID || cfg("current_project_id");
 	const workspaceId = options.workspaceId || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
 	if (!authToken) throw new Error("No Tenki token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
 
@@ -149,7 +148,6 @@ export async function createTenkiSandbox(options = {}) {
 		cpuCores: options.cpuCores ?? 1,
 		memoryMb: options.memoryMb ?? 1024,
 		allowOutbound: options.allowOutbound ?? false, // set true for pip/network
-		projectId,
 		workspaceId,
 	});
 

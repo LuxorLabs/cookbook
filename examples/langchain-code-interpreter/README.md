@@ -43,7 +43,7 @@ const result = await agent.invoke({
 ```bash
 npm install
 export TENKI_AUTH_TOKEN=...                    # from `tenki login`
-export TENKI_PROJECT_ID=...  TENKI_WORKSPACE_ID=...
+export TENKI_WORKSPACE_ID=...
 export OPENAI_API_KEY=...                      # or swap ChatOpenAI for your provider
 node agent.mjs
 ```

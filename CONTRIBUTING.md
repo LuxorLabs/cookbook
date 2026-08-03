@@ -4,7 +4,7 @@ This is the examples/cookbook layer for Tenki, and this is your playbook. New he
 
 ## Setup (5 minutes)
 
-1. **Get a Tenki account + key.** Install the CLI and run `tenki login` — it writes your token and default project/workspace to `~/.config/tenki/config.yaml`. The examples read from there automatically.
+1. **Get a Tenki account + key.** Install the CLI and run `tenki login` — it writes your token and default workspace to `~/.config/tenki/config.yaml`. The examples read from there automatically.
 2. **Node 20+.**
 3. **Run an example to confirm your setup works:**
    ```bash

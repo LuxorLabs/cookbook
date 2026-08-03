@@ -137,7 +137,7 @@ class TenkiExecutor(RemotePythonExecutor):
         logger: the agent's `AgentLogger`.
         allow_pickle: forwarded to `RemotePythonExecutor` (final-answer deserialization).
         **sandbox_kwargs: passed straight to `Sandbox.create(...)` — `auth_token`,
-            `project_id`, `workspace_id`, `cpu_cores`, `memory_mb`, `allow_outbound`, …
+            `workspace_id`, `cpu_cores`, `memory_mb`, `allow_outbound`, …
     """
 
     def __init__(self, additional_imports, logger, allow_pickle=False, **sandbox_kwargs):

@@ -1,7 +1,7 @@
 /**
  * Proves the Tenki side of the E2B->Tenki migration end to end:
  * create -> run a command -> capture output -> dispose. Exits non-zero on any failure.
- * Token/project from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+ * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  */
 import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
@@ -17,7 +17,6 @@ const cfg = (key) => {
 };
 
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const projectId = process.env.TENKI_PROJECT_ID || cfg("current_project_id");
 const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
 if (!authToken) {
 	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
@@ -28,7 +27,7 @@ const tenki = new TenkiSandbox({ authToken });
 let sandbox;
 try {
 	// E2B: await Sandbox.create()  ->  Tenki: createAndWait() boots + waits for ready.
-	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, projectId, workspaceId });
+	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
 	if (!sandbox.id) throw new Error("no sandbox id returned from createAndWait");
 
 	// E2B: sandbox.commands.run("...") runs via a shell. Tenki: exec() runs a bare binary

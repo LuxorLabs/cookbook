@@ -19,7 +19,6 @@ await using sandbox = await tenki.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
   allowInbound: true,
-  projectId: process.env.TENKI_PROJECT_ID,
   workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 
@@ -45,7 +44,6 @@ console.log(`GET ${res.status} -> ${(await res.text()).trim()}`); // 200 -> Hell
 ```bash
 npm install
 export TENKI_AUTH_TOKEN=...      # from `tenki login` (~/.config/tenki/config.yaml)
-export TENKI_PROJECT_ID=...      # your project id (tenki CLI / dashboard)
 export TENKI_WORKSPACE_ID=...
 node run.mjs                     # preview URL: https://…  /  GET 200 -> Hello from a Tenki sandbox!
 ```

@@ -12,7 +12,7 @@ internals have their own CI in TenkiCloud/covalent-tenki-plugin. This checks the
 two things that actually break a walkthrough: the plugin installing, and Tenki
 being reachable.
 
-Token/project from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
 """
 import os
 import sys
@@ -46,10 +46,7 @@ if not token.startswith(("tk_", "ory_st_", "cookie:")):
 TenkiExecutor(cpu_cores=1, memory_mb=1024)
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-project_id = os.environ.get("TENKI_PROJECT_ID") or cfg("current_project_id")
 workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
-if project_id:
-    opts["project_id"] = project_id
 if workspace_id:
     opts["workspace_id"] = workspace_id
 

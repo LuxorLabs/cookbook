@@ -1,6 +1,6 @@
 /**
  * Proves this example works: boot a sandbox, exec python3, assert "42", dispose.
- * Token/project from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+ * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  * Exits non-zero on any failure.
  */
 import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
@@ -17,7 +17,6 @@ const cfg = (key) => {
 };
 
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const projectId = process.env.TENKI_PROJECT_ID || cfg("current_project_id");
 const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
 if (!authToken) {
 	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
@@ -27,7 +26,7 @@ if (!authToken) {
 const tenki = new TenkiSandbox({ authToken });
 let sandbox;
 try {
-	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, projectId, workspaceId });
+	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
 	const r = await sandbox.exec("python3", { args: ["-c", "print(6 * 7)"] });
 	if (!(r.exitCode === 0 && stdoutText(r).trim() === "42")) {
 		throw new Error(`unexpected result: exit ${r.exitCode}, stdout ${JSON.stringify(stdoutText(r))}`);
