@@ -1,7 +1,7 @@
 # Tenki Cookbook
 
 Working examples for [Tenki Sandbox](https://tenki.cloud/products/sandbox):
-disposable Linux microVMs for running code and AI agents in isolation.
+disposable Linux VMs for running code and AI agents in isolation.
 
 Each example is self-contained, with its own README, source code, and run
 instructions. New to Tenki? Start with
