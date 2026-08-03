@@ -20,11 +20,11 @@ This is the examples/cookbook layer for Tenki, and this is your playbook. New he
 
 - Each example ships a **`verify.mjs`** that exercises it against the live Tenki API and **exits non-zero on any failure**.
 - CI (`.github/workflows/verify.yml`) runs every `verify.mjs` with a `TENKI_API_KEY` secret. A red build blocks the merge.
-- `verify.mjs` proves the *Tenki-facing* part. If an example needs an LLM (an agent turn), verify the tool/backend against Tenki directly — don't require a model key in CI. (See `langchain-code-interpreter` and `eve-agent-on-tenki` for the pattern.)
+- `verify.mjs` proves the *Tenki-facing* part. If an example needs an LLM (an agent turn), verify the tool/backend against Tenki directly — don't require a model key in CI. (See `langchain-code-interpreter` for the pattern.)
 
 ## What to build
 
-The full backlog, ranked, is in **[ROADMAP.md](ROADMAP.md)**. Start with the **Start here** list. Each item names the shipped example to copy the pattern from.
+Any small, runnable example that shows one clear Tenki integration or workflow is welcome. Pick the shipped example closest to your idea and copy the pattern from it.
 
 ## Anatomy of an example
 
@@ -41,7 +41,7 @@ examples/<name>/
 **Which template to copy:**
 - Direct SDK use → **`run-code-in-a-sandbox`**
 - A framework agent + a code-execution tool → **`langchain-code-interpreter`**
-- A pluggable sandbox backend for a framework → **`eve-agent-on-tenki`**
+- A pluggable sandbox backend for a framework → **`vercel-ai-sdk`**
 
 ## Adding an example — step by step
 
@@ -50,7 +50,7 @@ examples/<name>/
 3. Write `verify.mjs` — assert the Tenki-facing result, clean up.
 4. Run it: `node verify.mjs` → must print ✓.
 5. Write the `README.md` (the tutorial) — link back to `tenki.cloud`, name the products used.
-6. Add a row to the repo `README.md` examples table and flip its status in `ROADMAP.md`.
+6. Add a row to the repo `README.md` examples table.
 7. Open the PR. CI runs your `verify.mjs`.
 8. Write the companion article (the example is the code; the article is the walkthrough).
 
@@ -63,4 +63,4 @@ examples/<name>/
 
 ## Review flow
 
-Draft → content review (+ an engineer spot-checks technical accuracy) → publish. Then pick the next item off [ROADMAP.md](ROADMAP.md) and ship it.
+Draft → content review (+ an engineer spot-checks technical accuracy) → publish. Then pick the next example and ship it.

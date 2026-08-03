@@ -1,9 +1,0 @@
-{
-  "name": "eve-agent-on-tenki",
-  "private": true,
-  "type": "module",
-  "description": "Cookbook example — run a Vercel Eve agent's sandbox on Tenki.",
-  "dependencies": {
-    "tenki-eve-sandbox": "^0.1.0"
-  }
-}

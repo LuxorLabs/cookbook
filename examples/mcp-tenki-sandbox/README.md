@@ -1,6 +1,6 @@
 # Give Claude or Cursor a Tenki sandbox (MCP)
 
-Point any [MCP](https://modelcontextprotocol.io) client — Claude Desktop, Cursor, Claude Code — at **[`tenki-mcp`](https://github.com/opencolin/tenki-mcp)** and your agent gets a disposable Tenki microVM it can drive natively: create sandboxes, run code, read/write files, run git, expose preview URLs, manage snapshots/volumes/templates. **84 tools**, full parity with the Tenki API.
+Point any [MCP](https://modelcontextprotocol.io) client — Claude Desktop, Cursor, Claude Code — at **[`tenki-mcp`](https://github.com/LuxorLabs/tenki-mcp)** and your agent gets a disposable Tenki microVM it can drive natively: create sandboxes, run code, read/write files, run git, expose preview URLs, manage snapshots/volumes/templates. **85 tools**, full parity with the Tenki API.
 
 No SDK code to write — it's a config entry.
 
@@ -13,7 +13,7 @@ Add this to your client's MCP config (Claude Desktop: `claude_desktop_config.jso
   "mcpServers": {
     "tenki": {
       "command": "npx",
-      "args": ["-y", "tenki-mcp"],
+      "args": ["-y", "@tenkicloud/mcp"],
       "env": { "TENKI_API_KEY": "<your Tenki auth token>" }
     }
   }
@@ -21,10 +21,6 @@ Add this to your client's MCP config (Claude Desktop: `claude_desktop_config.jso
 ```
 
 Your token is the `auth_token` in `~/.config/tenki/config.yaml` after `tenki login`.
-
-> Until `tenki-mcp` is published to npm, install it from source instead:
-> `git clone https://github.com/opencolin/tenki-mcp && cd tenki-mcp && npm install && npm run build`,
-> then point `command` at `node` and `args` at the absolute path to `dist/index.js`.
 
 ## Try it
 
@@ -34,7 +30,7 @@ Once connected, ask your agent:
 
 It calls `tenki_run_code`, which boots a microVM, runs the snippet, returns the output, and tears the sandbox down — per-second billed, gone when it's done.
 
-## A few of the 84 tools
+## A few of the 85 tools
 
 | | |
 |---|---|
@@ -45,7 +41,7 @@ It calls `tenki_run_code`, which boots a microVM, runs the snippet, returns the 
 | `tenki_create_preview_url` | a public URL for a server the agent starts |
 | `tenki_create_snapshot` / `tenki_create_volume` | checkpoint state / attach a persistent disk |
 
-Full list: the [tenki-mcp README](https://github.com/opencolin/tenki-mcp#tools).
+Full list: the [tenki-mcp README](https://github.com/LuxorLabs/tenki-mcp#tools).
 
 ## Verify
 
@@ -54,7 +50,7 @@ Full list: the [tenki-mcp README](https://github.com/opencolin/tenki-mcp#tools).
 ```bash
 npm install
 node verify.mjs        # needs TENKI_API_KEY (or `tenki login`)
-# → ✓ connected — 84 tools advertised
+# → ✓ connected — 85 tools advertised
 # → ✓ tenki_create_sandbox → …  ✓ tenki_get_sandbox → …  ✓ tenki_terminate_sandbox
 ```
 

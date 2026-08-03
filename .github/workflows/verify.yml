@@ -1,9 +1,7 @@
 name: verify
 
 # Every example must run against the live Tenki API. A red build blocks the merge.
-# Requires repo secret TENKI_API_KEY. Examples that depend on an npm package not yet
-# published (e.g. tenki-eve-sandbox pre-publish) will fail their `npm install` step
-# until that package is on npm — expected until first publish.
+# Requires repo secret TENKI_API_KEY.
 
 on:
   push:
