@@ -26,6 +26,11 @@ jobs:
           set -e
           for d in examples/*/; do
             if [ -f "${d}verify.mjs" ]; then
+              if [ "$d" = "examples/composio-tenki/" ]; then
+                # Needs a Composio account/key we don't have; verify locally instead.
+                echo "== ${d} == skipped (no COMPOSIO_API_KEY)"
+                continue
+              fi
               echo "== ${d} =="
               ( cd "$d"
                 [ -f package.json ] && npm install --no-audit --no-fund
