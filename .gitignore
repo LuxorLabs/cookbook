@@ -6,3 +6,4 @@ package-lock.json
 .venv/
 __pycache__/
 .claude/
+.claude/worktrees/
