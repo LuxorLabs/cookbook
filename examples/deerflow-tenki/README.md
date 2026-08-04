@@ -8,8 +8,10 @@ The provider's `tenki-sandbox` dependency is an optional extra — uninstalled b
 
 ```bash
 git clone https://github.com/bytedance/deer-flow && cd deer-flow/backend
-uv sync --extra tenki
+uv sync --all-packages --extra tenki
 ```
+
+(`--all-packages` matters: the `tenki` extra lives on the `deerflow-harness` workspace package, so a bare `uv sync --extra tenki` fails with an unknown-extra error.)
 
 Opt in via `config.yaml` (see `config.example.yaml` upstream for every knob):
 
@@ -25,14 +27,16 @@ sandbox:
   sticky: false
 ```
 
-Optional keys: `base_url`, `image`, `workspace_id`, `home_dir` (default `/home/tenki`), and an `environment:` map injected into every sandbox. `project_id` is accepted for legacy configs; current Tenki no longer scopes sandboxes by project.
+Optional keys: `base_url`, `image`, `home_dir` (default `/home/tenki`), and an `environment:` map injected into every sandbox.
+
+**Scope:** the provider resolves a Tenki project for `create` on its own only when your account has exactly one workspace and one project. With more than one of either, it raises at startup listing the choices — set `project_id` (and `workspace_id`) in the `sandbox:` block explicitly.
 
 ## What the provider does
 
 - **The full DeerFlow `Sandbox` contract** — `execute_command`, file read/write/append, upload/download, `list_dir`, `glob`, and `grep` — mapped onto one Tenki microVM per replica.
 - **Virtual path mapping**: DeerFlow's `/mnt/user-data` namespace translates to the sandbox home directory on the way in and back on the way out.
 - **Native file transport**: uploads and downloads ride Tenki's `sandbox.fs` streaming API rather than shell pipes, so binary and Unicode content survive untouched.
-- **Warm-pool lifecycle**: the provider reuses DeerFlow's pooling mixin for `replicas`, idle eviction, and orphan reconciliation; download failures evict the sandbox rather than poisoning the pool.
+- **Warm-pool lifecycle**: the provider reuses DeerFlow's pooling mixin for `replicas` and idle eviction; download failures evict the sandbox rather than poisoning the pool.
 - **Shell semantics**: commands execute under `sh -lc`; `glob`/`grep` delegate to busybox-portable `find`/`grep` inside the VM.
 
 ## Verify
