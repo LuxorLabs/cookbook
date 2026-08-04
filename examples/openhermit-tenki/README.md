@@ -4,19 +4,22 @@
 
 ## Point an agent at Tenki
 
+> **Version note:** the Tenki backend merged after OpenHermit's latest npm release (`0.10.0`), so until the next release ships, run from a source checkout — `git clone https://github.com/HCF-STUDIOS/openhermit && cd openhermit && npm install`, then substitute `npm run dev:cli --` wherever `hermit` appears below (see the repo's Development section).
+
 ```bash
-npm install -g openhermit
 hermit setup                                        # DATABASE_URL, tokens
 
 echo 'TENKI_API_KEY=tk_...' >> ~/.openhermit/gateway/.env
 hermit gateway start
 
-hermit agents create main
+hermit agents create main --no-sandbox              # skip the default Docker sandbox
 hermit sandbox add --agent main --type tenki \
   --config '{"project_id": "default"}'
 hermit agents start main
 hermit chat --agent main                            # the agent's shell now runs on Tenki
 ```
+
+`--no-sandbox` matters: without it, `agents create` auto-provisions the gateway's default sandbox preset (Docker), and the Tenki `sandbox add` then conflicts on the `default` alias.
 
 Config keys (all optional except `project_id`, which OpenHermit's schema still requires — current Tenki no longer scopes sandboxes by project, so any identifier satisfies it):
 
@@ -28,7 +31,7 @@ Config keys (all optional except `project_id`, which OpenHermit's schema still r
 | `workspace_id` | token's own scope | explicit Tenki workspace |
 | `base_url` | Tenki cloud | self-hosted / staging endpoint |
 
-Operators can also register the same blob as a preset in `gateway.json` (`"sandboxPresets": { "tenki-default": { "type": "tenki", "config": { ... } } }`) and set `"autoProvisionSandbox": "tenki-default"` so every new agent lands on Tenki automatically.
+Operators can also register the same blob as a preset in `gateway.json` (`"sandboxPresets": { "tenki-default": { "type": "tenki", "config": { ... } } }`) and set `"autoProvisionSandbox": "tenki-default"` so every new agent lands on Tenki automatically — or pick it per agent with `hermit agents create main --sandbox tenki-default` (no `--no-sandbox` needed on either path).
 
 ## What the backend does with it
 
