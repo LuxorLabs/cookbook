@@ -1,11 +1,8 @@
 /**
  * Proves the AgentBox ↔ Tenki integration without the agentbox CLI: the
- * published provider plugin loads and exposes the SDK v2 surface AgentBox
- * drives after `agentbox plugin add`, and the live Tenki path every box
- * rides on is healthy — create → exec → file round-trip → dispose.
- * (The full box flow — prepare, create, attach — needs the CLI and a baked
- * image; see README. Pause/resume and snapshots are proven in the
- * snapshots-pause-resume example.)
+ * published plugin exposes the SDK v2 provider surface `agentbox plugin add`
+ * records, and the live Tenki path every box rides on is healthy —
+ * create → exec → file round-trip → dispose.
  * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  * Exits non-zero on any failure.
  */
@@ -35,14 +32,14 @@ const REQUIRED = ["create", "start", "reconnect", "pause", "resume", "stop", "de
 
 let sandbox;
 try {
-	// 1) structural — the plugin declares what `agentbox plugin add` records
+	// 1) structural — the provider contract
 	if (plugin.PROVIDER_NAME !== "tenki") throw new Error(`PROVIDER_NAME is ${JSON.stringify(plugin.PROVIDER_NAME)}`);
 	if (plugin.SDK_API_VERSION !== 2) throw new Error(`SDK_API_VERSION is ${plugin.SDK_API_VERSION}, AgentBox expects 2`);
 	const missing = REQUIRED.filter((k) => typeof plugin.tenkiProvider?.[k] !== "function");
 	if (typeof plugin.tenkiProvider?.checkpoint?.create !== "function") missing.push("checkpoint.create");
 	if (missing.length) throw new Error(`tenkiProvider missing members: ${missing.join(", ")}`);
 
-	// 2) live — the microVM surface a box boots on: create → exec → files → dispose
+	// 2) live — the microVM surface a box boots on
 	const tenki = new TenkiSandbox({ authToken });
 	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
 
@@ -51,7 +48,6 @@ try {
 		throw new Error(`exec: exit ${r.exitCode}, stdout ${JSON.stringify(stdoutText(r))}`);
 	}
 
-	// the workspace transport (uploadPath/downloadPath) rides writeFile/readFile
 	await sandbox.writeFile("workspace-note.txt", "agentbox workspace file\n");
 	const back = new TextDecoder().decode(await sandbox.readFile("workspace-note.txt"));
 	if (back !== "agentbox workspace file\n") throw new Error(`file round-trip mismatch: ${JSON.stringify(back)}`);
