@@ -32,13 +32,13 @@ let sandbox;
 try {
 	sandbox = await compute.sandbox.create();
 
-	// 1) runCommand (goes through `sh -lc`) → assert stdout
+	// 1) runCommand → assert stdout
 	const r = await sandbox.runCommand("python3 -c 'print(6 * 7)'");
 	if (!(r.exitCode === 0 && r.stdout.trim() === "42")) {
 		throw new Error(`runCommand: exit ${r.exitCode}, stdout ${JSON.stringify(r.stdout)}, stderr ${JSON.stringify(r.stderr)}`);
 	}
 
-	// 2) native filesystem API → write, assert exists, read back
+	// 2) filesystem API → write, assert exists, read back
 	const path = "/home/tenki/verify-note.txt";
 	const content = "written via the ComputeSDK filesystem API\n";
 	await sandbox.filesystem.writeFile(path, content);
