@@ -1,6 +1,6 @@
 # RAGFlow's code executor on Tenki
 
-[RAGFlow](https://github.com/infiniflow/ragflow) is an open-source RAG engine whose agent workflows can include **code components** — Python or JavaScript snippets executed through pluggable sandbox providers. Since [ragflow#17305](https://github.com/infiniflow/ragflow/pull/17305), `tenki` is one of those providers (implemented twice, in Python and Go, with full parity): each execution runs in a fresh [Tenki](https://tenki.cloud) microVM that is destroyed afterwards. Because it's cloud-hosted, there is nothing to operate locally — no gVisor, no Docker base images, no executor-manager service. Just an API key.
+[RAGFlow](https://github.com/infiniflow/ragflow) is an open-source RAG engine whose agent workflows can include **code components** — Python or JavaScript snippets executed through pluggable sandbox providers. Since [ragflow#17305](https://github.com/infiniflow/ragflow/pull/17305), `tenki` is one of those providers (implemented in both Python and Go): each execution runs in a fresh [Tenki](https://tenki.cloud) microVM that is destroyed afterwards. Because it's cloud-hosted, there is nothing to operate locally — no gVisor, no Docker base images, no executor-manager service. Just an API key.
 
 ## Enable it
 
@@ -25,7 +25,7 @@ Then configure the provider in **Admin > Sandbox Settings**:
 
 - **Ephemeral by design**: create → execute → destroy, once per run. No volumes, no snapshots, nothing persists between executions.
 - **Two languages**: Python (`python3`) and JavaScript (`node`), with wrapper scripts that inject the component's arguments.
-- **Artifacts come back**: anything the code writes to `artifacts/` in its working directory is collected over Tenki's file API — extension-whitelisted (`.csv .html .jpeg .json .pdf .png .svg`), size-capped, symlinks rejected.
+- **Artifacts come back** (Python provider): anything the code writes to `artifacts/` in its working directory is collected over Tenki's file API — extension-whitelisted (`.csv .html .jpeg .json .pdf .png .svg`), size-capped, symlinks rejected. The Go port runs code with the same wrapping protocol but, like the Go e2b provider, does not collect artifacts.
 - **Structured results**: stdout, stderr, exit code, and timing map to RAGFlow's `ExecutionResult`; timeouts and API failures map to clear error messages.
 - **`max_duration` is a server-side cap**, so a sandbox self-terminates even if RAGFlow crashes mid-run — no leaked billing.
 
@@ -36,7 +36,7 @@ uv venv && uv pip install -r requirements.txt
 node verify.mjs        # or: .venv/bin/python verify.py
 ```
 
-[`verify.py`](verify.py) proves the Tenki surface the provider is built on without running RAGFlow: the **`who_am_i()`** health check → an ephemeral sandbox with **outbound network off** (RAGFlow's security default) → the **Python** and **JavaScript** execution paths (script staged over `fs`, run with a timeout) → the **`artifacts/` read-back** transport → terminate. The provider's own suites upstream (49 Python tests + Go tests) cover the RAGFlow-side contract.
+[`verify.py`](verify.py) proves the Tenki surface the provider is built on without running RAGFlow: the **`who_am_i()`** health check → an ephemeral sandbox with **outbound network off** (RAGFlow's security default) → the **Python** and **JavaScript** execution paths (script staged over `fs`, run with a timeout) → the **`artifacts/` read-back** transport → terminate. The provider's own upstream test suites (Python and Go) cover the RAGFlow-side contract.
 
 ## Notes
 
