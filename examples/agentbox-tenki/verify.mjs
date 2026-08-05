@@ -1,11 +1,3 @@
-/**
- * Proves the AgentBox ↔ Tenki integration without the agentbox CLI: the
- * published plugin exposes the SDK v2 provider surface `agentbox plugin add`
- * records, and the live Tenki path every box rides on is healthy —
- * create → exec → file round-trip → dispose.
- * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
- * Exits non-zero on any failure.
- */
 import * as plugin from "@tenkicloud/agentbox-provider";
 import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
@@ -27,19 +19,18 @@ if (!authToken) {
 	process.exit(1);
 }
 
-// The provider-contract members AgentBox calls on a registered plugin.
 const REQUIRED = ["create", "start", "reconnect", "pause", "resume", "stop", "destroy", "exec", "buildAttach"];
 
 let sandbox;
 try {
-	// 1) structural — the provider contract
+	const provider = plugin.providerModule?.provider;
 	if (plugin.PROVIDER_NAME !== "tenki") throw new Error(`PROVIDER_NAME is ${JSON.stringify(plugin.PROVIDER_NAME)}`);
 	if (plugin.SDK_API_VERSION !== 2) throw new Error(`SDK_API_VERSION is ${plugin.SDK_API_VERSION}, AgentBox expects 2`);
-	const missing = REQUIRED.filter((k) => typeof plugin.tenkiProvider?.[k] !== "function");
-	if (typeof plugin.tenkiProvider?.checkpoint?.create !== "function") missing.push("checkpoint.create");
-	if (missing.length) throw new Error(`tenkiProvider missing members: ${missing.join(", ")}`);
+	if (provider?.name !== "tenki") throw new Error(`providerModule.provider.name is ${JSON.stringify(provider?.name)}`);
+	const missing = REQUIRED.filter((k) => typeof provider?.[k] !== "function");
+	if (typeof provider?.checkpoint?.create !== "function") missing.push("checkpoint.create");
+	if (missing.length) throw new Error(`providerModule.provider missing members: ${missing.join(", ")}`);
 
-	// 2) live — the microVM surface a box boots on
 	const tenki = new TenkiSandbox({ authToken });
 	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
 

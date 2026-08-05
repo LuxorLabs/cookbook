@@ -53,7 +53,7 @@ npm install
 node verify.mjs
 ```
 
-No agentbox CLI or baked image needed: [`verify.mjs`](verify.mjs) asserts the published plugin **exposes the SDK v2 provider contract** AgentBox drives (`PROVIDER_NAME`, `SDK_API_VERSION`, `create`/`exec`/`pause`/`resume`/`checkpoint`/…), then proves the **live Tenki path every box rides on** — boot a microVM, exec, file round-trip, dispose. The box workflow itself is covered by the plugin's CI at [LuxorLabs/tenki-agentbox-provider](https://github.com/LuxorLabs/tenki-agentbox-provider).
+No agentbox CLI or baked image needed: [`verify.mjs`](verify.mjs) asserts the published plugin registers `providerModule.provider` with the **SDK v2 provider contract** AgentBox drives (`create`/`exec`/`pause`/`resume`/`checkpoint`/…), then proves the **live Tenki path every box rides on** — boot a microVM, exec, file round-trip, dispose. The box workflow itself is covered by the plugin's CI at [LuxorLabs/tenki-agentbox-provider](https://github.com/LuxorLabs/tenki-agentbox-provider).
 
 ## Notes
 
