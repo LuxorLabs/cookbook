@@ -21,7 +21,7 @@ sandbox:
   api_key: $TENKI_API_KEY
   cpu_cores: 2
   memory_mb: 2048
-  replicas: 3          # warm-pool size
+  replicas: 3          # active + warm microVM cap per gateway process
   idle_timeout: 600    # seconds before an idle sandbox is evicted
   max_duration: 14400  # hard server-side lifetime cap
   sticky: false
@@ -36,7 +36,7 @@ Optional keys: `base_url`, `image`, `home_dir` (default `/home/tenki`), and an `
 - **The full DeerFlow `Sandbox` contract** — `execute_command`, file read/write/append, upload/download, `list_dir`, `glob`, and `grep` — mapped onto one Tenki microVM per replica.
 - **Virtual path mapping**: DeerFlow's `/mnt/user-data` namespace translates to the sandbox home directory on the way in and back on the way out.
 - **Native file transport**: uploads and downloads ride Tenki's `sandbox.fs` streaming API rather than shell pipes, so binary and Unicode content survive untouched.
-- **Warm-pool lifecycle**: the provider reuses DeerFlow's pooling mixin for `replicas` and idle eviction; download failures evict the sandbox rather than poisoning the pool.
+- **Warm-pool lifecycle**: `replicas` caps active plus warm microVMs per gateway process, and idle warm sandboxes are evicted; terminal download transport failures evict the sandbox rather than poisoning the pool.
 - **Shell semantics**: commands execute under `sh -lc`; `glob`/`grep` delegate to busybox-portable `find`/`grep` inside the VM.
 
 ## Verify
@@ -46,7 +46,7 @@ uv venv && uv pip install -r requirements.txt
 node verify.mjs        # or: .venv/bin/python verify.py
 ```
 
-[`verify.py`](verify.py) proves the Tenki surface the provider is built on without installing DeerFlow: **create with `wait=False` + `wait_ready()`** (the warm-pool boot path) → **`sh -lc`** exec → **`sandbox.fs`** streaming round-trip (`mkdir`, `write_stream`, `read_text`, `stat`) → busybox **`find`/`grep`** → terminate. The provider's own 49-test suite upstream covers the DeerFlow-side contract (path mapping, pool behavior, eviction).
+[`verify.py`](verify.py) proves the Tenki surface the provider is built on without installing DeerFlow: **create with `wait=False` + `wait_ready()`** (the warm-pool boot path) → **`sh -lc`** exec → **`sandbox.fs`** streaming round-trip (`mkdir`, `write_stream`, `read_text`, `stat`) → busybox **`find`/`grep`** → terminate. The provider's upstream test suite covers the DeerFlow-side contract (path mapping, pool behavior, eviction).
 
 ## Notes
 
