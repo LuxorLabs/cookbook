@@ -1,0 +1,71 @@
+examples/openhermit-tenki/tenki-agent-sandbox.ts
+  s_97f8cf2a895c6a::t_121512717f5cca 259
+  s_97f8cf2a895c6a::t_0ce85e76137c4b 560-565
+  s_97f8cf2a895c6a::t_883be6c876ad03 47-51
+  s_97f8cf2a895c6a::t_d85077462c6dcc 44-46
+  s_97f8cf2a895c6a::t_501c072e5e89d6 52-54,256-258
+  s_97f8cf2a895c6a::t_cce586f265054e 260-262,557-559
+  s_97f8cf2a895c6a::t_7a1f5210f69798 566-568
+  s_97f8cf2a895c6a::t_4e764e00fce3bb 1-43,55-255,263-556,569-640
+examples/openhermit-tenki/README.md
+  s_97f8cf2a895c6a::t_917868830fc47e 31-36
+  s_97f8cf2a895c6a::t_36950fa93d6292 28-30
+  s_97f8cf2a895c6a::t_89eaf778910c72 37-39
+examples/covalent-tenki/verify.py
+  s_97f8cf2a895c6a::t_f8fd905eab48c8 21-26
+examples/hermes-tenki/README.md
+  s_97f8cf2a895c6a::t_7331f374db9adb 84-85
+  s_97f8cf2a895c6a::t_71942a09618711 81-83
+  s_97f8cf2a895c6a::t_aeb9ece160a6fb 86-88
+  s_97f8cf2a895c6a::t_bf652fac67a72f 1-80,89-266
+.gitignore
+  s_97f8cf2a895c6a::t_263a521a892497 9-13
+README.md
+  s_97f8cf2a895c6a::t_0ac4eb5ca28c7e 34-35
+examples/openhermit-tenki/verify.mjs
+  s_97f8cf2a895c6a::t_f5b9f8b8f5acf3 1-12
+examples/openhermit-tenki/verify.ts
+  s_97f8cf2a895c6a::t_20e1ab065b7b59 71-76,144
+  s_97f8cf2a895c6a::t_9093f5ecb22477 68-70
+  s_97f8cf2a895c6a::t_0a65f25cbb71fb 77-79,141-143
+  s_97f8cf2a895c6a::t_d3cd2c558bacbe 145-147
+  s_97f8cf2a895c6a::t_c67517bbec0e5b 1-67,80-140,148-204
+examples/hermes-tenki/verify.mjs
+  s_97f8cf2a895c6a::t_de1c157fe8bdc6 1-26
+examples/covalent-tenki/README.md
+  s_97f8cf2a895c6a::t_d6701e1942ca4a 42-43
+examples/covalent-tenki/workflow.py
+  s_97f8cf2a895c6a::t_eeedde25e8736c 2,7,9-15,18-41
+ROADMAP.md
+  s_97f8cf2a895c6a::t_533e4e478aee02 56-57
+examples/hermes-tenki/hermes_env.py
+  s_97f8cf2a895c6a::t_38a73552d52da6 1-94
+examples/hermes-tenki/main.py
+  s_97f8cf2a895c6a::t_84c42cf765380a 1-109
+examples/hermes-tenki/requirements.txt
+  s_97f8cf2a895c6a::t_c2865a70cede30 1-25
+examples/hermes-tenki/setup.sh
+  s_97f8cf2a895c6a::t_cef5319bd7105c 1-58
+examples/hermes-tenki/verify.py
+  s_97f8cf2a895c6a::t_655c08fe16c503 1-223
+examples/openhermit-tenki/package.json
+  s_97f8cf2a895c6a::t_160cbabda69a55 1-23
+examples/openhermit-tenki/tsconfig.json
+  s_97f8cf2a895c6a::t_fdfafbb2c2e67f 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "526b195d67f0d4b59137f405d1d3781d732c135d",
+  "prompts": {},
+  "sessions": {
+    "s_97f8cf2a895c6a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f46e670-3851-4b1c-8791-0dfcf3580094",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "opencolin <colin@lowenberg.org>"
+    }
+  }
+}
