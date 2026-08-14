@@ -1,0 +1,10 @@
+{
+  "name": "openclaw-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — OpenClaw agents with all tool execution in Tenki Firecracker microVMs via @tenkicloud/openclaw.",
+  "dependencies": {
+    "@tenkicloud/openclaw": "^0.2.0",
+    "@tenkicloud/sandbox": "^0.5.4"
+  }
+}
