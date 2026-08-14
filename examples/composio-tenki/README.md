@@ -1,6 +1,6 @@
 # Composio agent on Tenki
 
-Give any [Composio](https://composio.dev) agent disposable Tenki microVMs. The official [`@tenkicloud/composio-tools`](https://github.com/TenkiCloud/composio-tools) package registers a **Tenki custom toolkit** — the agent gets `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX`, all running in-process against the Tenki SDK. No extra backend.
+Give any [Composio](https://composio.dev) agent disposable Tenki microVMs. The official [`@tenkicloud/composio-tools`](https://github.com/LuxorLabs/tenki-composio-tools) package registers a **Tenki custom toolkit** — the agent gets `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX`, all running in-process against the Tenki SDK. No extra backend.
 
 ## The integration (the whole thing)
 
@@ -15,7 +15,7 @@ const session = await composio.sessions.create("default", {
 // the agent can now call LOCAL_TENKI_CREATE_SANDBOX, LOCAL_TENKI_EXEC_COMMAND, …
 ```
 
-`tenkiToolkit()` reads `TENKI_API_KEY` from the environment (or takes `authToken`/`workspaceId` options). Custom toolkits are **session-scoped**: tool calls run through `session.execute(slug, args)`, and definitions come from `session.customTools()`.
+`tenkiToolkit()` reads `TENKI_API_KEY` from the environment (or takes an `authToken` option); the workspace is inferred from the key. Custom toolkits are **session-scoped**: tool calls run through `session.execute(slug, args)`, and definitions come from `session.customTools()`.
 
 ## Two files
 

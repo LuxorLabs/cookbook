@@ -24,7 +24,6 @@ const cfg = (key) => {
 
 const composioKey = process.env.COMPOSIO_API_KEY;
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
 
 if (!composioKey) {
 	console.error("No COMPOSIO_API_KEY. Get one at https://app.composio.dev.");
@@ -37,7 +36,7 @@ if (!authToken) {
 
 const composio = new Composio({ apiKey: composioKey });
 const session = await composio.sessions.create("default", {
-	experimental: { customToolkits: [tenkiToolkit({ authToken, workspaceId })] },
+	experimental: { customToolkits: [tenkiToolkit({ authToken })] },
 });
 
 /** Execute one LOCAL_TENKI_* tool and assert Composio + the tool itself both succeeded. */
