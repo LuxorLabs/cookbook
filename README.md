@@ -63,6 +63,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Firecracker microVMs |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
+| [Prefect](examples/prefect-tenki/) | Each flow run in its own microVM via a Prefect 3.x worker |
 
 ### Agent platforms
 
