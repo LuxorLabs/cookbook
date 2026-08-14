@@ -71,6 +71,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | Example | Platform |
 | --- | --- |
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
+| [Open WebUI](examples/open-webui-tenki/) | Sandboxed code interpreter for the self-hosted chat platform |
 
 ### Migrating from another provider
 

@@ -1,0 +1,2 @@
+tenki[async]>=0.5.1
+pydantic>=2
