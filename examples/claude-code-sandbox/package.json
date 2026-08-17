@@ -1,0 +1,9 @@
+{
+  "name": "claude-code-sandbox",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — run Claude Code headless against a real repo in a disposable Tenki sandbox.",
+  "dependencies": {
+    "@tenkicloud/sandbox": "^0.4.0"
+  }
+}
