@@ -1,0 +1,9 @@
+{
+  "name": "codex-sandbox",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — run OpenAI Codex headless against a real repo in a disposable Tenki sandbox.",
+  "dependencies": {
+    "@tenkicloud/sandbox": "^0.4.0"
+  }
+}
