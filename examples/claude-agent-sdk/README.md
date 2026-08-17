@@ -16,7 +16,10 @@ export function makeTenkiTools(sandbox) {
     // The schema argument is a raw Zod shape — a bare object of fields, not z.object({...}).
     tool("bash", "Run a shell command in the sandbox and return its stdout and stderr.", { command: z.string() }, async ({ command }) => {
       const r = await sandbox.exec("sh", { args: ["-c", command] });
-      return say(`${stdoutText(r)}${stderrText(r)}`.trim() || `(no output; exit ${r.exitCode})`);
+      const out = `${stdoutText(r)}${stderrText(r)}`.trim();
+      // Nothing carries the exit status to the model, so a failure that printed to
+      // stderr looks like success. Say it out loud instead.
+      return say(r.exitCode === 0 ? out || "(no output)" : `exit ${r.exitCode}\n${out}`.trim());
     }),
 
     tool("write_file", "Write a file in the sandbox.", { path: z.string(), content: z.string() }, async ({ path, content }) => {
@@ -24,7 +27,8 @@ export function makeTenkiTools(sandbox) {
       return say(`wrote ${path}`);
     }),
 
-    // readFile hands back bytes, not a string.
+    // readFile hands back bytes, not a string. It throws on a missing path, which the
+    // SDK turns into an is_error tool result — the agent sees it and can recover.
     tool("read_file", "Read a file from the sandbox.", { path: z.string() }, async ({ path }) =>
       say(new TextDecoder().decode(await sandbox.readFile(path)))),
   ];
@@ -43,7 +47,7 @@ await using sandbox = await tenki.createAndWait({
 });
 
 for await (const message of query({
-  prompt: "Write a Python script that computes the 30th Fibonacci number, run it, and tell me the number.",
+  prompt: "Write fib.py, a Python script that computes the 30th Fibonacci number, run it, and tell me the number.",
   options: {
     tools: [], // empty array disables every built-in tool — nothing can execute locally
     mcpServers: { tenki: createSdkMcpServer({ name: "tenki", version: "1.0.0", tools: makeTenkiTools(sandbox) }) },
@@ -52,8 +56,26 @@ for await (const message of query({
     maxTurns: 12,
   },
 })) {
+  // Every tool call printed here ran in the microVM. There is no local one to fall back to.
+  if (message.type === "assistant") {
+    for (const block of message.message.content) {
+      if (block.type === "tool_use") console.log(`→ ${block.name} ${JSON.stringify(block.input).slice(0, 70)}`);
+    }
+  }
   if (message.type === "result") console.log(message.result);
 }
+
+// The proof: the script the agent wrote is in the sandbox, and nowhere on this machine.
+console.log(stdoutText(await sandbox.exec("sh", { args: ["-c", "ls -l fib.py"] })));
+```
+
+Which prints the routing, the answer, and the evidence:
+
+```
+→ mcp__tenki__write_file {"path":"fib.py","content":"def fib(n):\n    a, b = 0, 1\n    for _ in
+→ mcp__tenki__bash {"command":"python3 fib.py"}
+The 30th Fibonacci number is **832040**.
+-rw-r--r-- 1 tenki tenki 136 Aug 17 05:13 fib.py
 ```
 
 ## Run it
@@ -66,6 +88,8 @@ export ANTHROPIC_API_KEY=...     # the agent turn
 node agent.mjs                   # -> The 30th Fibonacci number is 832040.
 ```
 
+`agent.mjs` uses top-level `await using`, which needs Node 24+.
+
 Verify the Tenki half with no model key — this is what CI runs:
 
 ```bash
@@ -77,5 +101,7 @@ node verify.mjs   # calls the tool handlers directly → runs Python in Tenki �
 - **`tools: []` is the whole security argument.** Leave it out and the SDK keeps its built-in Bash, Read, Write, and Edit, which run on the machine that called `query()` — the sandbox tools would then be one option among several rather than the only way out. With it, the agent's entire execution surface is the microVM.
 - **`tool()` takes a raw Zod shape, not a schema object.** Pass `{ command: z.string() }`; passing `z.object({ command: z.string() })` is the easy mistake.
 - Tools registered through `createSdkMcpServer` run in this process, but they are still named `mcp__<server>__<tool>` — list those full names in `allowedTools` or the agent will ask for permission on every call.
+- **A tool result carries no exit status.** `sandbox.exec` reports one, but the model only ever sees the text you return, so a command that failed after printing to stderr reads as success. `bash` prefixes `exit N` when the code is non-zero.
+- A tool handler that throws is caught by the SDK and delivered as an `is_error` tool result, so `read_file` on a missing path shows the agent the real `[not_found]` message and it recovers on its own — no try/catch needed in the tool.
 - `sandbox.readFile` resolves to a `Uint8Array`, not a string; decode it before handing it back to the model. `exec(command, { args })` does no shell splitting, so `sh -c` is what makes `bash` behave like a shell.
-- One sandbox per agent session, reused across every tool call — cheaper than one per call, and files the agent writes are still there on the next call. Top-level `await using` needs Node 24+; `verify.mjs` uses `try`/`finally`, so CI on Node 20 is fine.
+- One sandbox per agent session, reused across every tool call — cheaper than one per call, and files the agent writes are still there on the next call. `verify.mjs` uses `try`/`finally` rather than `await using`, so CI runs it on Node 20.

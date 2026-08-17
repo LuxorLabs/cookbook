@@ -3,7 +3,7 @@
 //
 // Needs a model key: export ANTHROPIC_API_KEY=...
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
 import { makeTenkiTools } from "./tenki-tools.mjs";
 
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
@@ -16,7 +16,7 @@ await using sandbox = await tenki.createAndWait({
 });
 
 for await (const message of query({
-	prompt: "Write a Python script that computes the 30th Fibonacci number, run it, and tell me the number.",
+	prompt: "Write fib.py, a Python script that computes the 30th Fibonacci number, run it, and tell me the number.",
 	options: {
 		tools: [], // empty array disables every built-in tool — nothing can execute locally
 		mcpServers: { tenki: createSdkMcpServer({ name: "tenki", version: "1.0.0", tools: makeTenkiTools(sandbox) }) },
@@ -25,5 +25,14 @@ for await (const message of query({
 		maxTurns: 12,
 	},
 })) {
+	// Every tool call printed here ran in the microVM. There is no local one to fall back to.
+	if (message.type === "assistant") {
+		for (const block of message.message.content) {
+			if (block.type === "tool_use") console.log(`→ ${block.name} ${JSON.stringify(block.input).slice(0, 70)}`);
+		}
+	}
 	if (message.type === "result") console.log(message.result);
 }
+
+// The proof: the script the agent wrote is in the sandbox, and nowhere on this machine.
+console.log(stdoutText(await sandbox.exec("sh", { args: ["-c", "ls -l fib.py"] })));
