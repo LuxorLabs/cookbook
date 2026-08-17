@@ -46,6 +46,7 @@ Give an agent a sandboxed place to run the code it writes.
 
 | Example | Framework |
 | --- | --- |
+| [Claude Agent SDK](examples/claude-agent-sdk/) | Tenki as the backend for the SDK's bash and file tools |
 | [Vercel AI SDK](examples/vercel-ai-sdk/) | Tenki as the AI SDK's `experimental_sandbox` |
 | [LangChain (JavaScript)](examples/langchain-code-interpreter/) | Sandboxed code interpreter tool |
 | [LangChain (Python)](examples/langchain-python/) | Code-execution tool for a Python agent |
