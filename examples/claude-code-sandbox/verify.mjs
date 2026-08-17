@@ -1,8 +1,8 @@
 /**
- * Proves the Tenki-facing half of this example without a model key: boot a sandbox
- * with the repo cloned, install the Claude Code CLI, read its version back, edit a
- * file in the checkout, and assert the diff round-trips. (run.mjs's agent turn needs
- * ANTHROPIC_API_KEY; CONTRIBUTING says CI verifies the backend, not the model.)
+ * Proves the Tenki-facing half of this example without a model key: boot a sandbox with
+ * the repo cloned, install the Claude Code CLI, check its version and run.mjs's flags,
+ * edit a file in the checkout, assert the diff round-trips. (The agent turn needs a
+ * model key; CONTRIBUTING says CI verifies the backend, not the model.)
  * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  */
 import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
@@ -28,12 +28,8 @@ if (!authToken) {
 const tenki = new TenkiSandbox({ authToken });
 let sandbox;
 try {
-	sandbox = await tenki.createAndWait({
-		cpuCores: 2,
-		memoryMb: 4096,
-		cloneRepoUrl: "https://github.com/sindresorhus/yocto-queue",
-		workspaceId,
-	});
+	const cloneRepoUrl = "https://github.com/sindresorhus/yocto-queue";
+	sandbox = await tenki.createAndWait({ cpuCores: 2, memoryMb: 4096, cloneRepoUrl, workspaceId });
 
 	const pkg = JSON.parse(stdoutText(await sandbox.exec("cat", { args: ["repo/package.json"] })));
 	if (pkg.name !== "yocto-queue") throw new Error(`clone landed wrong: repo/package.json is ${pkg.name}`);
@@ -43,6 +39,11 @@ try {
 
 	const version = stdoutText(await sandbox.exec("claude", { args: ["--version"] })).trim();
 	if (!/^\d+\.\d+\.\d+ \(Claude Code\)$/.test(version)) throw new Error(`claude --version said ${JSON.stringify(version)}`);
+
+	// npm always installs the latest CLI, so check run.mjs's flags still exist in it.
+	const help = stdoutText(await sandbox.exec("claude", { args: ["--help"] }));
+	const missing = ["-p, --print", "--dangerously-skip-permissions"].filter((f) => !help.includes(f));
+	if (missing.length) throw new Error(`claude --help no longer lists ${missing.join(", ")}`);
 
 	// Stand in for the agent's edit, then read it back the way run.mjs reads the agent's.
 	await sandbox.exec("sh", { args: ["-c", "printf '\\nexport const verified = true;\\n' >> repo/index.js"] });

@@ -26,6 +26,8 @@ await sandbox.exec("claude", {
 	args: ["-p", TASK, "--dangerously-skip-permissions"],
 	cwd: "repo", // relative paths resolve under the workdir, /home/tenki
 	timeoutMs: 10 * 60_000,
+	// An env value of undefined arrives as an empty string, not as unset — an empty
+	// ANTHROPIC_BASE_URL is worse than none, so filter to the vars you actually have.
 	env: Object.fromEntries(PASSTHROUGH.filter((k) => process.env[k]).map((k) => [k, process.env[k]])),
 	onOutput: ({ data }) => process.stdout.write(decoder.decode(data)), // data is a Uint8Array
 });
