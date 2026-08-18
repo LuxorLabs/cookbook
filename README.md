@@ -75,6 +75,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | Example | Platform |
 | --- | --- |
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
+| [orca](examples/orca-tenki/) | One microVM per parallel coding agent, via its ephemeral-VM recipe hook |
 
 ### Migrating from another provider
 
