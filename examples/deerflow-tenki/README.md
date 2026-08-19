@@ -29,7 +29,7 @@ sandbox:
 
 Optional keys: `base_url`, `image`, `home_dir` (default `/home/tenki`), and an `environment:` map injected into every sandbox.
 
-**Scope:** the provider resolves a Tenki project for `create` on its own only when your account has exactly one workspace and one project. With more than one of either, it raises at startup listing the choices — set `project_id` (and `workspace_id`) in the `sandbox:` block explicitly.
+**Scope:** the provider resolves your Tenki workspace for `create` on its own only when your account has exactly one workspace. With more than one, it raises at startup listing the choices — set `workspace_id` in the `sandbox:` block explicitly.
 
 ## What the provider does
 
