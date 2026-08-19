@@ -31,7 +31,13 @@ if (mode === "create") {
 	execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-q", "-f", `${keyDir}/id`]);
 	const publicKey = readFileSync(`${keyDir}/id.pub`, "utf8").trim();
 
-	const sandbox = await tenki.createAndWait({ cpuCores: 2, memoryMb: 4096, cloneRepoUrl: repoUrl, sshAuthorizedKeys: [publicKey] });
+	const sandbox = await tenki.createAndWait({
+		cpuCores: 2,
+		memoryMb: 4096,
+		cloneRepoUrl: repoUrl,
+		sshAuthorizedKeys: [publicKey],
+		workspaceId: process.env.TENKI_WORKSPACE_ID,
+	});
 	const cert = await tenki.issueSandboxSSHCert(sandbox.id, publicKey);
 	writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
 
