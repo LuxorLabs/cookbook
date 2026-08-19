@@ -11,13 +11,16 @@ const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
 // enableOpenCode bakes the CLI into the guest — nothing to npm install.
 // openCodeProvider.apiKey lands in the guest as OPENCODE_API_KEY.
-await using sandbox = await tenki.createAndWait({
+// No `await using` here: it would terminate the sandbox at the end of this scope and the
+// URL below would 404 before you could open it. idleTimeoutMinutes caps it instead.
+const sandbox = await tenki.createAndWait({
 	cpuCores: 2,
 	memoryMb: 4096,
 	enableOpenCode: true,
 	openCodeProvider: { apiKey: process.env.OPENAI_API_KEY },
 	allowInbound: true,
 	cloneRepoUrl: REPO,
+	idleTimeoutMinutes: 30,
 	workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 
@@ -34,3 +37,10 @@ const auth = { Authorization: "Basic " + Buffer.from(`opencode:${PASSWORD}`).toS
 
 const project = await (await fetch(`${previewUrl}/project/current`, { headers: auth })).json();
 console.log(`${project.worktree} (${project.vcs}) is live at ${previewUrl}/app`);
+console.log(`user: anything, password: ${PASSWORD}\nCtrl-C to terminate the sandbox.`);
+
+process.on("SIGINT", async () => {
+	await sandbox[Symbol.asyncDispose]();
+	process.exit(0);
+});
+setInterval(() => {}, 1 << 30); // hold the event loop open; an unsettled await would exit 13

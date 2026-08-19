@@ -16,13 +16,16 @@ const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
 // enableOpenCode bakes the CLI into the guest — nothing to npm install.
 // openCodeProvider.apiKey lands in the guest as OPENCODE_API_KEY.
-await using sandbox = await tenki.createAndWait({
+// No `await using` here: it would terminate the sandbox at the end of this scope and the
+// URL below would 404 before you could open it. idleTimeoutMinutes caps it instead.
+const sandbox = await tenki.createAndWait({
   cpuCores: 2,
   memoryMb: 4096,
   enableOpenCode: true,
   openCodeProvider: { apiKey: process.env.OPENAI_API_KEY },
   allowInbound: true,
   cloneRepoUrl: REPO,
+  idleTimeoutMinutes: 30,
   workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 
@@ -39,9 +42,17 @@ const auth = { Authorization: "Basic " + Buffer.from(`opencode:${PASSWORD}`).toS
 
 const project = await (await fetch(`${previewUrl}/project/current`, { headers: auth })).json();
 console.log(`${project.worktree} (${project.vcs}) is live at ${previewUrl}/app`);
+console.log(`user: anything, password: ${PASSWORD}
+Ctrl-C to terminate the sandbox.`);
+
+process.on("SIGINT", async () => {
+  await sandbox[Symbol.asyncDispose]();
+  process.exit(0);
+});
+setInterval(() => {}, 1 << 30); // hold the event loop open; an unsettled await would exit 13
 ```
 
-Open the printed `/app` URL in a browser and you are looking at OpenCode's own UI, driving a repo inside the microVM. The same URL serves the JSON API — `/session`, `/agent`, `/project/current` — so a script can drive it just as easily.
+The script stays in the foreground so the URL keeps working. Open the printed `/app` URL in a browser and you are looking at OpenCode's own UI, driving a repo inside the microVM; the same URL serves the JSON API — `/session`, `/agent`, `/project/current` — so a script can drive it just as easily. Ctrl-C terminates the sandbox and the URL with it.
 
 ## Run it
 
@@ -51,9 +62,8 @@ export TENKI_AUTH_TOKEN=...      # from `tenki login` (~/.config/tenki/config.ya
 export TENKI_WORKSPACE_ID=...
 export OPENAI_API_KEY=sk-...     # or any provider OpenCode supports, via openCodeProvider
 node run.mjs                     # -> /home/tenki/repo (git) is live at https://....sb.tenki.sh/app
+                                 #    stays up until you Ctrl-C
 ```
-
-`run.mjs` uses top-level `await using`, which needs Node 24+.
 
 Verify the Tenki half without a model key — this is what CI runs:
 
@@ -63,6 +73,7 @@ node verify.mjs   # boot → serve → exposePort → assert 401 unauthed, then 
 
 ## Notes
 
+- **This example deliberately does not use `await using`.** It would terminate the sandbox at the end of the script's scope, and the URL it just printed would `404` before you could open it — the whole point here is a machine that outlives the script. So it disposes on `SIGINT` instead, and sets `idleTimeoutMinutes: 30` so a forgotten sandbox still reaps itself. Holding the process open needs a ref'd handle (`setInterval`); an unsettled top-level `await` makes Node exit 13 with `Detected unsettled top-level await`.
 - **Set `OPENCODE_SERVER_PASSWORD`, always.** Without it the server logs `OPENCODE_SERVER_PASSWORD is not set; server is unsecured` and answers every caller — and `exposePort` has just put it on the public internet, so that is an open coding agent with a shell. With it set, unauthenticated requests get `401`. Auth is HTTP **Basic** (any username, that password); a `Bearer` token is rejected. `verify.mjs` asserts the `401` precisely so this cannot regress unnoticed.
 - **Port 7681 is spoken for.** Tenki's own `ttyd` console listens there, and `exposePort(7681)` fails with `[invalid_argument] port 7681 cannot be exposed as a preview`. Pick any other port for your server.
 - **`--hostname 0.0.0.0` is required.** `opencode serve` defaults to `127.0.0.1`, which the gateway cannot reach, so the preview URL would just hang.
