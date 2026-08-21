@@ -46,6 +46,7 @@ Give an agent a sandboxed place to run the code it writes.
 
 | Example | Framework |
 | --- | --- |
+| [Claude Agent SDK](examples/claude-agent-sdk/) | Tenki as the backend for the SDK's bash and file tools |
 | [Vercel AI SDK](examples/vercel-ai-sdk/) | Tenki as the AI SDK's `experimental_sandbox` |
 | [LangChain (JavaScript)](examples/langchain-code-interpreter/) | Sandboxed code interpreter tool |
 | [LangChain (Python)](examples/langchain-python/) | Code-execution tool for a Python agent |
@@ -59,6 +60,9 @@ Give an agent a sandboxed place to run the code it writes.
 | Example | Integration |
 | --- | --- |
 | [MCP server](examples/mcp-tenki-sandbox/) | Sandbox tools for Claude, Cursor, or any MCP client |
+| [Claude Code](examples/claude-code-sandbox/) | Headless coding agent on a real repo checkout |
+| [Codex](examples/codex-sandbox/) | OpenAI's coding agent, headless, on a real repo checkout |
+| [OpenCode](examples/opencode-sandbox/) | Headless OpenCode server on a public preview URL |
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Firecracker microVMs |
@@ -71,6 +75,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | Example | Platform |
 | --- | --- |
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
+| [orca](examples/orca-tenki/) | One microVM per parallel coding agent, via its ephemeral-VM recipe hook |
 
 ### Migrating from another provider
 

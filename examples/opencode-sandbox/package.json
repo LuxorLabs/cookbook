@@ -1,0 +1,9 @@
+{
+  "name": "opencode-sandbox",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — a browser-accessible OpenCode session in a disposable Tenki sandbox.",
+  "dependencies": {
+    "@tenkicloud/sandbox": "^0.4.0"
+  }
+}
