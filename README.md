@@ -59,6 +59,7 @@ Give an agent a sandboxed place to run the code it writes.
 | Example | Integration |
 | --- | --- |
 | [MCP server](examples/mcp-tenki-sandbox/) | Sandbox tools for Claude, Cursor, or any MCP client |
+| [Claude Code](examples/claude-code-sandbox/) | Headless coding agent on a real repo checkout |
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Firecracker microVMs |
