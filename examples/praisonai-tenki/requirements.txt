@@ -1,0 +1,8 @@
+# The Tenki compute provider merged to PraisonAI main on 2026-08-14 (PR #3242,
+# then PR #3949 for the shared team/workflow sandbox); the latest PyPI releases
+# (praisonai 4.6.162 / praisonaiagents 1.6.166) predate both. Pin BOTH packages
+# from the same git commit — mixing an old praisonaiagents with a new praisonai
+# breaks the compute="tenki" lookup. Swap to PyPI pins once newer releases ship.
+praisonaiagents @ git+https://github.com/MervinPraison/PraisonAI.git@1e0059a30eeae7026546a4da6b503bff1e5d976e#subdirectory=src/praisonai-agents
+praisonai @ git+https://github.com/MervinPraison/PraisonAI.git@1e0059a30eeae7026546a4da6b503bff1e5d976e#subdirectory=src/praisonai
+tenki>=0.5.4

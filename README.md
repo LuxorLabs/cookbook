@@ -53,6 +53,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [OpenAI Agents SDK](examples/openai-agents-sdk/) | Sandboxed execution as an agent tool |
 | [LlamaIndex](examples/llamaindex/) | Sandboxed execution as a `FunctionTool` |
 | [Hugging Face smolagents](examples/smolagents/) | Remote Python executor for a `CodeAgent` |
+| [PraisonAI](examples/praisonai-tenki/) | One shared microVM for a whole agent team |
 
 ### Developer tools
 
