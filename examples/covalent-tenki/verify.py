@@ -8,7 +8,7 @@ Smoke-verify the Covalent example, fast:
 
 We deliberately do NOT dispatch a full Covalent workflow: that needs a running
 dispatcher and a ~2-3 min per-task VM bootstrap (see README), and the executor's
-internals have their own CI in TenkiCloud/covalent-tenki-plugin. This checks the
+internals have their own CI in LuxorLabs/tenki-covalent-plugin. This checks the
 two things that actually break a walkthrough: the plugin installing, and Tenki
 being reachable.
 
