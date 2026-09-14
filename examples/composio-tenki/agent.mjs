@@ -27,7 +27,6 @@ const cfg = (key) => {
 
 const MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5";
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
 
 for (const [name, value] of [
 	["COMPOSIO_API_KEY", process.env.COMPOSIO_API_KEY],
@@ -44,7 +43,7 @@ const composio = new Composio({ apiKey: process.env.COMPOSIO_API_KEY });
 const anthropic = new Anthropic();
 
 const session = await composio.sessions.create("default", {
-	experimental: { customToolkits: [tenkiToolkit({ authToken, workspaceId })] },
+	experimental: { customToolkits: [tenkiToolkit({ authToken })] },
 });
 
 // Anthropic tool defs come straight from the session's custom-tool registry.
