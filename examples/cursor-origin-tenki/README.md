@@ -58,11 +58,11 @@ origin pr create -t "Add invoice totals endpoint" --push
 origin pr ready
 ```
 
-`origin pr create` opens a **draft** by default, as Cursor agents do, and Tenki skips drafts until they're published. `origin pr ready` is what starts the review (or pass `--status open` to `create`). Asking a Cursor agent to make the same change and then marking its PR ready works the same way.
+`origin pr create` opens a **draft** by default, and Tenki skips drafts until they're published. `origin pr ready` is what starts the review (or pass `--status open` to `create`). Asking a Cursor agent to make the same change and then marking its PR ready works the same way.
 
 ## 4. Read the review
 
-Tenki posts "Tenki is reviewing this pull request…" and replaces it with the summary when it finishes, usually within a few minutes.
+Tenki posts "Tenki is reviewing this pull request…" and replaces it with the summary when it finishes.
 
 ```bash
 origin pr view --comments          # summary comment, verdict, and finding threads
@@ -88,7 +88,7 @@ git commit -am "Check team membership on invoice totals" && git push
 origin pr comment -b "@tenki-reviewer"
 ```
 
-Pushes aren't re-reviewed by default. Turn on **Review on Push** in **Code Reviewer → Configuration** to skip the comment; each re-review is billed as a review. With no blocking findings left, Tenki approves (**Approve on Clean Review** is on by default), the check passes, and you can `origin pr merge`. By default the check is optional, so a failing check flags the PR without blocking the merge.
+Pushes aren't re-reviewed by default. Turn on **Review on Push** in **Code Reviewer → Configuration** to skip the comment; each re-review is billed as a review. With no blocking findings left, Tenki approves (**Approve on Clean Review** is on by default), the check passes, and you can `origin pr merge`. The check doesn't block merging unless you require it under the repo's Rules and Protections in Origin.
 
 To dismiss a finding that doesn't apply, reply in its thread with "false positive", "not a bug", "won't fix", "by design", or similar (`origin pr thread reply <thread-id> -b "won't fix: …"`). Tenki won't raise it again.
 
@@ -113,7 +113,7 @@ npm install
 node verify.mjs
 ```
 
-A real review needs an Origin namespace with the Tenki app installed, so [`verify.mjs`](verify.mjs) checks what this example ships instead. It confirms `AGENTS.md` carries the membership rule and that `pr/app.mjs` differs from the starter only by the new route. Then it boots a Tenki sandbox, uploads the starter repo, and runs the tests plus a probe (`gus` requests acme's totals) at each stage: main (404, no route), the PR (200, the leak, with tests still green), and the fix from step 5 (403). No Cursor account or model key is needed.
+A real review needs an Origin namespace with the Tenki app installed, so [`verify.mjs`](verify.mjs) checks what this example ships instead. It confirms `AGENTS.md` carries the membership rule and that `pr/app.mjs` differs from the starter only by the new route. Then it boots a Tenki sandbox, uploads the starter repo, and runs the tests plus a probe (`gus` requests acme's totals) at each stage: main (404, no route), the PR (200, the leak, with tests still green), and the fix from step 5 (403). No Cursor account or model key is needed. Needs your Tenki key (`tenki login`, or `TENKI_AUTH_TOKEN`).
 
 ## Notes
 
