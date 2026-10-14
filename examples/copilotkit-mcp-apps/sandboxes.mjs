@@ -26,7 +26,7 @@ export const hasToken = Boolean(authToken);
 
 const tenki = new TenkiSandbox(authToken ? { authToken } : {});
 
-export const FILE_FOR = {
+const FILE_FOR = {
 	python: { file: "main.py", command: "python3" },
 	javascript: { file: "main.js", command: "node" },
 	shell: { file: "main.sh", command: "sh" },
@@ -134,11 +134,15 @@ export async function serveWebApp(session, { files, startCommand, port }) {
 		throw new Error(`The server never listened on port ${port}.\n--- server log ---\n${stdout}`);
 	}
 
-	const exposed = await session.exposePort(port, { ttlMs: 60 * 60_000 });
-	return { previewUrl: exposed.previewUrl, log };
+	const exposed = await session.exposePort(port, { ttlMs: 60 * 60_000 }).catch((err) => {
+		// Inbound access is fixed at creation, and run_code_in_sandbox creates with it off.
+		if (String(err?.message ?? err).includes("inbound")) {
+			throw new Error(`Sandbox ${session.id} was created without inbound access, so its ports cannot be exposed. Serve from a fresh sandbox (omit sandbox_id).`);
+		}
+		throw err;
+	});
+	return { previewUrl: exposed.previewUrl };
 }
-
-export const readLog = async (session) => (await shell(session, `tail -c 4000 ${APP_DIR}/.server.log 2>/dev/null || true`)).stdout;
 
 export async function destroy(sandboxId) {
 	const session = await tenki.get(sandboxId);

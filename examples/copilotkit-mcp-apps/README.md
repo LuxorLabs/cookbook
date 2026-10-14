@@ -1,15 +1,15 @@
 # MCP Apps: tools that bring their own UI
 
-A normal MCP tool returns text and the chat prints it. An **[MCP App](https://mcpui.dev/guide/introduction)** returns text *and* names a `ui://` resource — an HTML page the host renders in the conversation and wires to that tool call. The answer arrives as something you can keep working in.
+A normal MCP tool returns text and the chat prints it. An **[MCP App](https://github.com/modelcontextprotocol/ext-apps)** returns text *and* names a `ui://` resource — an HTML page the host renders in the conversation and wires to that tool call. The answer arrives as something you can keep working in.
 
-This example gives an agent two of them, each backed by a Tenki sandbox:
+This example gives an agent two of them, each backed by a [Tenki](https://tenki.cloud) sandbox:
 
 | Tool | What the user gets |
 | --- | --- |
-| `run_code_in_sandbox` | A console: the program, its output, timings, and a **live shell into the same sandbox** |
-| `launch_web_app` | The app the agent just wrote, **served from the sandbox** on a public URL, running in the chat |
+| `run_code_in_sandbox` | A console: the program, its output, timings, and a live shell into the same sandbox |
+| `launch_web_app` | The app the agent just wrote, served from the sandbox on a public URL, running in the chat |
 
-Three more tools are marked `visibility: ["app"]` — hidden from the model, callable only from the UI through the host's proxy. That is what the terminal, the log tail and the destroy button use, and it is the part that makes an app an app: the user acts without going back through the model.
+Two more tools are marked `visibility: ["app"]` — hidden from the model, callable only from the UI through the host's proxy. That is what the terminal and the destroy button use, and it is the part that makes an app an app: the user acts without going back through the model.
 
 The chat in [`chat/`](chat/) is [CopilotKit](https://copilotkit.ai), which renders MCP Apps natively. The server is plain MCP, so any MCP Apps host can drive it.
 
@@ -26,7 +26,7 @@ npm start                                 # MCP App server on :3108
 In a second terminal, start the chat with any OpenAI-compatible model:
 
 ```bash
-cd chat
+cd examples/copilotkit-mcp-apps/chat
 cp .env.example .env     # LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
 npm install && npm run dev
 ```
@@ -67,7 +67,7 @@ app.sendMessage({ role: "user", content: [{ type: "text", text: "This failed —
 
 Every one of these tools runs code the model just wrote. [`sandboxes.mjs`](sandboxes.mjs) is the whole Tenki side: `createAndWait` for a machine, `writeFile` + `exec` to run something in it, `exposePort` for a public URL. Sandboxes are tagged, bounded to an hour, and the server refuses to touch anything it did not create — a workspace can hold other people's work.
 
-Passing `sandbox_id` back into a tool reuses the machine: the files are still there, nothing boots, and the chat gains a session.
+Passing `sandbox_id` back into a tool reuses the machine: the files are still there, nothing boots, and the chat gains a session. The exception is `launch_web_app`, which must serve from a fresh sandbox — one created by `run_code_in_sandbox` has inbound off, and inbound access is fixed at creation.
 
 ## Verify
 

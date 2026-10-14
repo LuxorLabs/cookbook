@@ -23,7 +23,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 
-import { APP_DIR, FILE_FOR, acquire, describe, destroy, exec, hasToken, readLog, runProgram, serveWebApp } from "./sandboxes.mjs";
+import { APP_DIR, acquire, describe, destroy, exec, hasToken, runProgram, serveWebApp } from "./sandboxes.mjs";
 import { widgetHtml } from "./widget.mjs";
 
 // The MCP Apps browser bundle: one self-contained ES module, read out of
@@ -157,21 +157,6 @@ function createServer() {
 				return ok({ destroyed: sandbox_id }, `Terminated ${sandbox_id}.`);
 			} catch (err) {
 				return failed("destroy", err);
-			}
-		},
-	);
-
-	registerAppTool(
-		server,
-		"sandbox_logs",
-		{ description: "Tail a served app's log (the preview's log view).", inputSchema: { sandbox_id: sandboxId }, _meta: appOnly },
-		async ({ sandbox_id }) => {
-			try {
-				const { session } = await acquire({ sandboxId: sandbox_id });
-				const log = await readLog(session);
-				return ok({ log }, log || "(no output yet)");
-			} catch (err) {
-				return failed("logs", err);
 			}
 		},
 	);

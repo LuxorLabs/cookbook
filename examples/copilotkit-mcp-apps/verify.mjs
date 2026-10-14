@@ -46,7 +46,12 @@ try {
 	const shell = await client.callTool({ name: "sandbox_exec", arguments: { sandbox_id: sandboxId, command: "uname -s && nproc" } });
 	if (shell.isError || !shell.structuredContent?.run?.stdout.includes("Linux")) throw new Error("sandbox_exec did not reach the sandbox");
 
-	console.log(`✓ copilotkit-mcp-apps: MCP App tool ran Python in a Tenki sandbox → 42, and its UI ran a shell command in the same sandbox`);
+	// The destroy button's tool, which also cleans up after this run.
+	const gone = await client.callTool({ name: "sandbox_destroy", arguments: { sandbox_id: sandboxId } });
+	if (gone.isError) throw new Error(gone.structuredContent?.error ?? "sandbox_destroy failed");
+	sandboxId = undefined;
+
+	console.log("✓ copilotkit-mcp-apps: ui resource → run python → 42 → app-only exec → destroy");
 } catch (err) {
 	console.error("✗ " + (err?.message ?? err));
 	process.exitCode = 1;

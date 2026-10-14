@@ -3,7 +3,7 @@
  *
  * The AI SDK's chat-completions parser keeps tool calls in an array keyed by
  * `delta.tool_calls[].index` and assumes those indexes are dense and 0-based.
- * Relays in front of Anthropic models (Aisa, verified) forward Anthropic's
+ * Relays in front of Anthropic models (e.g. Aisa) forward Anthropic's
  * *content-block* index instead: when the model writes a sentence before the
  * tool call, the text is block 0 and the call arrives as `index: 1`. The array
  * then has a hole at 0 and the stream dies with

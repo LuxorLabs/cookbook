@@ -1,11 +1,11 @@
 /**
  * The MCP App itself: the HTML a host renders in the chat.
  *
- * No framework and no build step. The page loads the MCP Apps bridge from this
- * server (`/ext-apps.js`, copied out of node_modules) and talks to the host with
- * it: the host pushes the tool's arguments and result in, and the page calls
- * back out to the app-only tools — which is what makes this an app rather than
- * a rendered blob of JSON.
+ * No framework and no build step. The MCP Apps bridge travels inside the page
+ * (base64 in `BRIDGE_B64`, imported as a blob module — see the note in SCRIPT)
+ * and the page talks to the host with it: the host pushes the tool's arguments
+ * and result in, and the page calls back out to the app-only tools — which is
+ * what makes this an app rather than a rendered blob of JSON.
  */
 
 const STYLE = `
