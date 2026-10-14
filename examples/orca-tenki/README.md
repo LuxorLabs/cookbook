@@ -99,5 +99,6 @@ node verify.mjs   # recipe create → ssh (yocto-queue) → suspend → resume �
 - The issued user certificate has **empty principals**, so any username works; the sandbox account is `tenki`.
 - **`resume()` returns while the session is still `RESUMING`.** Calling anything else immediately fails with `session not RUNNING (state=RESUMING)`; poll `sandbox.refresh()` until `isReady(sandbox.state)`. The recipe also mints a fresh certificate on resume, since they are short-lived.
 - `destroy` removes the key directory and the `known_hosts` entry it added, so a long-lived fleet does not leave a trail of dead aliases behind.
+- Tenki's gateways currently rotate SSH host keys across connections, so the pinned alias can intermittently fail with a changed-host-key warning. When that happens, re-run (`destroy` then `create`); the repo's CI skips this example until gateways present a stable, verifiable host identity.
 - A sandbox orca never destroys lives until your workspace's max-duration default — feed the create output back to `node recipe.mjs destroy` when experimenting by hand.
 - The same pause/resume pair on its own is [snapshots-pause-resume](../snapshots-pause-resume/); the port-exposing counterpart is [expose-a-port](../expose-a-port/).
