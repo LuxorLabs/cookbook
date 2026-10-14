@@ -9,7 +9,7 @@ Hugging Face [**smolagents**](https://github.com/huggingface/smolagents) `CodeAg
 ```python
 from smolagents.remote_executors import RemotePythonExecutor
 from smolagents.local_python_executor import CodeOutput
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 class TenkiExecutor(RemotePythonExecutor):
     def __init__(self, additional_imports, logger, allow_pickle=False, **sandbox_kwargs):
@@ -45,13 +45,11 @@ executor.cleanup()   # terminate the microVM
 
 ```bash
 uv venv --python 3.12                      # or: python3.11 -m venv .venv
-uv pip install -r requirements.txt         # tenki-sandbox + smolagents
-export TENKI_AUTH_TOKEN=...                 # see the auth note below
+uv pip install -r requirements.txt         # the tenki SDK + smolagents
+export TENKI_API_KEY=tk_...                # or: tenki login --api-key <key>
 ```
 
-The scripts fall back to `~/.config/tenki/config.yaml` (written by `tenki login`) for the token and workspace.
-
-**Auth note.** The Python SDK authenticates cleanly with a **`tk_` API key** (`export TENKI_AUTH_TOKEN=tk_…`). A `tenki login` browser session token also works, but — unlike the Node SDK — the Python SDK won't auto-detect it; pass it as **`cookie:<token>`** so it's sent as a cookie (`verify.py` and `agent.py` do this for you). It's an SDK gap, not yours.
+The SDK takes a `tk_` API key: set `TENKI_API_KEY`, or run `tenki login --api-key <key>` to store one in `~/.config/tenki/config.yaml` — the scripts fall back to it for the key and workspace.
 
 ## Verify it (no LLM needed)
 
@@ -73,8 +71,8 @@ export OPENAI_API_KEY=sk-...   # OpenAIServerModel (pip install 'smolagents[open
 
 - **The persistent kernel is what makes `CodeAgent` work** — it keeps tool definitions and intermediate variables alive across steps. It listens on sandbox **loopback only** (never exposed) and is pure stdlib, so it needs no outbound network and no image changes.
 - **One microVM per agent session**, reused across every step and terminated by `executor.cleanup()` (a real `TerminateSession`). smolagents calls `cleanup()` for you when the agent is done.
-- **`allow_outbound=True` for real runs.** A live `CodeAgent` patches its `final_answer` tool, and smolagents then pip-installs that tool's inferred requirements (numpy, pillow) into the sandbox at `send_tools` time — which needs network. The **verify** doesn't (it stays fully offline). Give any extra packages your agent needs to `TenkiExecutor(additional_imports=[...])`.
+- **A live run needs outbound network** (on by default, `allow_outbound=True`): `CodeAgent` patches its `final_answer` tool, and smolagents then pip-installs that tool's inferred requirements (numpy, pillow) into the sandbox at `send_tools` time. Give any extra packages your agent needs to `TenkiExecutor(additional_imports=[...])`.
 - `exec(command, *args)` passes args straight through (no shell splitting); this example base64-encodes code across that boundary, so multi-line model output never hits an escaping surprise.
 - Tenki confines file I/O to `/home/tenki` — use relative paths.
-- Requires **Python 3.10+** (a `tenki-sandbox` requirement); the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim.
+- Requires **Python 3.10+** (a `tenki` SDK requirement); the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim.
 - Official SDK + full API: [tenki.cloud/docs/sandbox/sdk](https://tenki.cloud/docs/sandbox/sdk). Same executor seam as smolagents' [E2B / Docker executors](https://github.com/huggingface/smolagents/blob/main/src/smolagents/remote_executors.py).
