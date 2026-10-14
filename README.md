@@ -38,7 +38,7 @@ up. Authentication and client setup are covered in the
 | [Work with files](examples/files-in-a-sandbox/) | Read, write, and list files with the TypeScript SDK |
 | [Expose a port](examples/expose-a-port/) | Serve a web app on a public preview URL |
 | [Pause, snapshot, and resume](examples/snapshots-pause-resume/) | Preserve a sandbox and pick up where it left off |
-| [Run code with Python](examples/run-code-python/) | The official `tenki-sandbox` Python SDK |
+| [Run code with Python](examples/run-code-python/) | The official `tenki` Python SDK |
 
 ### Agent frameworks
 

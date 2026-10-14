@@ -7,7 +7,7 @@ default model). Run: python agent.py
 import os
 
 from crewai import Agent, Crew, Task
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 from tenki_tool import TenkiCodeInterpreter
 
