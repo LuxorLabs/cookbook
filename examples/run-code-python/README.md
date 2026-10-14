@@ -1,15 +1,15 @@
 # Run code in a Tenki sandbox (Python)
 
-Boot a disposable microVM, run code in it, get the output, throw it away — the core [Tenki](https://tenki.cloud) loop, in ~15 lines with the official [`tenki-sandbox`](https://tenki.cloud/docs/sandbox/sdk) Python SDK. The Python twin of [`run-code-in-a-sandbox`](../run-code-in-a-sandbox/) (Node).
+Boot a disposable microVM, run code in it, get the output, throw it away — the core [Tenki](https://tenki.cloud) loop, in ~15 lines with the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK. The Python twin of [`run-code-in-a-sandbox`](../run-code-in-a-sandbox/) (Node).
 
 ## The code (`run.py`)
 
 ```python
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 # `with` disposes (terminates) the sandbox when the scope ends.
 with Sandbox.create(
-    auth_token=token,          # from `tenki login` (see the auth note below)
+    auth_token=token,          # a tk_ API key (see Setup below)
     workspace_id=workspace_id,
     cpu_cores=1,
     memory_mb=1024,
@@ -25,14 +25,12 @@ with Sandbox.create(
 
 ```bash
 uv venv --python 3.12                      # or: python3.11 -m venv .venv
-uv pip install -r requirements.txt         # just tenki-sandbox
-export TENKI_AUTH_TOKEN=...                 # see the auth note below
+uv pip install -r requirements.txt         # the tenki SDK
+export TENKI_API_KEY=tk_...                # a tk_ API key — the only credential the SDK accepts
 python run.py                              # exit 0 -> 42
 ```
 
-`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login`) for the token and workspace, so with the CLI logged in you can just run it.
-
-**Auth note.** The Python SDK authenticates cleanly with a **`tk_` API key** (`export TENKI_AUTH_TOKEN=tk_…`). A `tenki login` browser session token also works, but — unlike the Node SDK — the Python SDK won't auto-detect it; it must be sent as a cookie, so pass it as **`cookie:<token>`** (`run.py` and `verify.py` add that prefix for you). It's an SDK gap, not yours.
+`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login --api-key <key>`) for the key and workspace, so with the CLI configured you can run it with no env vars.
 
 ## Verify it
 
