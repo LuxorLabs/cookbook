@@ -1,7 +1,7 @@
 import os
 import sys
 
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 
 def cfg(key):
@@ -17,12 +17,8 @@ def cfg(key):
 
 token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 if not token:
-    print("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.")
+    print("No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.")
     sys.exit(1)
-# A `tk_` API key works as-is; a `tenki login` browser session token must go
-# over as a cookie — the SDK does that when the token is prefixed `cookie:`.
-if not token.startswith(("tk_", "ory_st_", "cookie:")):
-    token = f"cookie:{token}"
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024, "wait": False}
 workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
