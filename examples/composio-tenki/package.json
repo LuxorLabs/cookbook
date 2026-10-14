@@ -7,6 +7,6 @@
     "@anthropic-ai/sdk": "^0.111.0",
     "@composio/core": "^0.13.0",
     "@tenkicloud/composio-tools": "^0.1.0",
-    "@tenkicloud/sandbox": "^0.3.6"
+    "@tenkicloud/sandbox": ">=1.4.1"
   }
 }
