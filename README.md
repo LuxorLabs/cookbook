@@ -10,23 +10,24 @@ create, execute, dispose lifecycle in about 15 lines of JavaScript.
 
 ## Quick start
 
-You need a [Tenki account](https://tenki.cloud), an API key, your workspace ID,
-and Node.js 20 or later.
+You need a [Tenki account](https://tenki.cloud), a `tk_` API key, your
+workspace ID, and Node.js 24 or later.
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
 cd cookbook/examples/run-code-in-a-sandbox
 npm install
 
-export TENKI_AUTH_TOKEN="your-api-key"
+export TENKI_AUTH_TOKEN="tk_..."
 export TENKI_WORKSPACE_ID="your-workspace-id"
 
 node run.mjs
 ```
 
 The script creates a sandbox, runs Python inside it, prints `42`, and cleans
-up. Authentication and client setup are covered in the
-[Sandbox SDK guide](https://tenki.cloud/docs/sandbox/sdk).
+up. The SDK also reads the key from `TENKI_API_KEY`, and `tenki login` stores
+one in `~/.config/tenki/config.yaml`. Authentication and client setup are
+covered in the [Sandbox SDK guide](https://tenki.cloud/docs/sandbox/sdk).
 
 ## Examples
 
@@ -38,7 +39,7 @@ up. Authentication and client setup are covered in the
 | [Work with files](examples/files-in-a-sandbox/) | Read, write, and list files with the TypeScript SDK |
 | [Expose a port](examples/expose-a-port/) | Serve a web app on a public preview URL |
 | [Pause, snapshot, and resume](examples/snapshots-pause-resume/) | Preserve a sandbox and pick up where it left off |
-| [Run code with Python](examples/run-code-python/) | The official `tenki-sandbox` Python SDK |
+| [Run code with Python](examples/run-code-python/) | The official `tenki` Python SDK |
 
 ### Agent frameworks
 
@@ -113,7 +114,7 @@ First-party packages you can install directly in your own project:
 | [Composio tools](https://github.com/TenkiCloud/composio-tools) | `npm install @tenkicloud/composio-tools` | Create, execute, snapshot, and terminate tools for Composio agents |
 | [Covalent executor](https://github.com/TenkiCloud/covalent-tenki-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki microVMs |
 | [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
-| [Go SDK](https://github.com/TenkiCloud/tenki-sdk-go) | `go get github.com/TenkiCloud/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
+| [Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) | `go get github.com/LuxorLabs/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
 
 ## Projects with built-in Tenki support
 
