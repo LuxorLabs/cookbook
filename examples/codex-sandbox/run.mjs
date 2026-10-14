@@ -1,9 +1,10 @@
 // OpenAI Codex, headless, on a real repo in a disposable Tenki sandbox:
 // clone -> install the CLI -> let the agent edit the checkout -> read back the diff.
-import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
+import { TenkiSandbox } from "@tenkicloud/sandbox";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
 const TASK = "Add a toArray() method to the Queue class in index.js that returns the queued values as an array, oldest first. Declare it in index.d.ts and add a test for it in test.js.";
+const PASSTHROUGH = ["OPENAI_API_KEY"];
 
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
@@ -25,9 +26,11 @@ await sandbox.exec("codex", {
 	args: ["exec", "--dangerously-bypass-approvals-and-sandbox", TASK],
 	cwd: "repo", // relative paths resolve under the workdir, /home/tenki
 	timeoutMs: 10 * 60_000,
-	env: { OPENAI_API_KEY: process.env.OPENAI_API_KEY }, // scoped to this one process
+	// An env value of undefined arrives as an empty string, not as unset — so
+	// filter to the vars you actually have. ExecOptions.env is scoped to this one process.
+	env: Object.fromEntries(PASSTHROUGH.filter((k) => process.env[k]).map((k) => [k, process.env[k]])),
 	onOutput: ({ data }) => process.stdout.write(decoder.decode(data)), // data is a Uint8Array
 });
 
-// sandbox.git.* runs at the workdir, and the checkout is one level down — so use `git -C`.
-console.log(stdoutText(await sandbox.exec("git", { args: ["-C", "repo", "diff"] })));
+// sandbox.git.* runs at the workdir; the checkout is one level down, so point it at ./repo.
+console.log(await sandbox.git.diff({ directory: "repo" }));
