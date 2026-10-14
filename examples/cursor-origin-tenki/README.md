@@ -12,7 +12,7 @@ This example is the scenario from the launch post, ready to push: a small invoic
 
 ## Prerequisites
 
-- A [Tenki account](https://app.tenki.cloud/auth/registration). Reviews are $1.00 each from your workspace balance; new accounts get $100 in free credits ($50 at signup, $50 when you add a payment method). See [pricing](https://tenki.cloud/pricing).
+- A [Tenki account](https://app.tenki.cloud/auth/registration). Reviews are billed per review from your workspace balance, and new accounts start with free credits; see [pricing](https://tenki.cloud/pricing).
 - A Cursor plan with Origin access and a claimed codebase name at [cursor.com/codebase](https://cursor.com/codebase).
 - The [Origin CLI](https://cursor.com/docs/origin/cli):
 
