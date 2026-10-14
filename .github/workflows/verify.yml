@@ -34,6 +34,12 @@ jobs:
                 echo "== ${d} == skipped (no COMPOSIO_API_KEY)"
                 continue
               fi
+              if [ "$d" = "examples/covalent-tenki/" ]; then
+                # Pins covalent-tenki-plugin>=0.1.1, which is not on PyPI yet
+                # (LuxorLabs/tenki-covalent-plugin#1). Unskip when 0.1.1 ships.
+                echo "== ${d} == skipped (covalent-tenki-plugin 0.1.1 unreleased)"
+                continue
+              fi
               echo "== ${d} =="
               ( cd "$d"
                 [ -f package.json ] && npm install --no-audit --no-fund

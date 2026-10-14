@@ -87,6 +87,6 @@ Tenki sandbox — **`run` (→ 42) → `writeTextFile`/`readTextFile` round-trip
   `createTenkiSandbox({ allowOutbound: true })`. Tune the VM the same way:
   `createTenkiSandbox({ cpuCores: 4, memoryMb: 4096 })`.
 - **Versions:** built against `ai@7` / `@ai-sdk/provider-utils@5` (`Experimental_SandboxSession`)
-  and `@tenkicloud/sandbox@0.4`. Both are on npm — this example installs clean.
+  and `@tenkicloud/sandbox@1.4`. Both are on npm — this example installs clean.
 - Products used: [Tenki Sandboxes](https://tenki.cloud). Adapter + SDK:
   [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox).

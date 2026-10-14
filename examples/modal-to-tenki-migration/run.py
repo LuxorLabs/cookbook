@@ -1,6 +1,6 @@
 """
 The Tenki port of a typical Modal sandbox script: create -> run a command ->
-capture output -> dispose. The core loop, with the official `tenki-sandbox` SDK.
+capture output -> dispose. The core loop, with the official `tenki` SDK.
 
 Modal, for reference:
     import modal
@@ -10,17 +10,17 @@ Modal, for reference:
     print(p.stdout.read().strip(), "· exit", p.wait())        # 42 · exit 0
     sb.terminate()
 
-Needs Python 3.10+ and `pip install tenki-sandbox`. Token/workspace from env
-(TENKI_AUTH_TOKEN / TENKI_WORKSPACE_ID) or, if unset,
-~/.config/tenki/config.yaml (written by `tenki login`). Run: python run.py
+Needs Python 3.10+ and `pip install tenki`. API key/workspace from env
+(TENKI_API_KEY / TENKI_WORKSPACE_ID) or, if unset,
+~/.config/tenki/config.yaml (written by `tenki login --api-key`). Run: python run.py
 """
 import os
 
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 
 def cfg(key):
-    """Read a key from ~/.config/tenki/config.yaml (written by `tenki login`)."""
+    """Read a key from ~/.config/tenki/config.yaml (written by `tenki login --api-key`)."""
     try:
         with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
             for line in f:
@@ -32,12 +32,8 @@ def cfg(key):
 
 
 # Modal reads ~/.modal.toml (or MODAL_TOKEN_ID / MODAL_TOKEN_SECRET) implicitly.
-# Tenki takes an explicit auth_token. A `tenki login` *session* token must go over
-# as a cookie, so prefix it `cookie:`; a `tk_` API key works as-is. (Python-SDK
-# auth gap; the Node SDK auto-detects the session token.)
-token = os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
-if token and not token.startswith(("tk_", "ory_st_", "cookie:")):
-    token = f"cookie:{token}"
+# Tenki takes an explicit tk_ API key, here from env (CI) or the CLI's config (local).
+token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
 workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
