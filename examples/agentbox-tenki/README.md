@@ -57,7 +57,7 @@ node verify.mjs
 
 No agentbox CLI or baked image needed: [`verify.mjs`](verify.mjs) asserts the published plugin registers `providerModule.provider` with the **SDK v2 provider contract** AgentBox drives (`create`/`exec`/`pause`/`resume`/`checkpoint`/…), then proves the **live Tenki path every box rides on** — boot a VM, exec, file round-trip, dispose.
 
-verify.mjs uses `@tenkicloud/sandbox` 0.5.x to match the plugin's own `^0.5.2` dependency (the SDK's latest line is 1.x). The box workflow itself is covered by the plugin's CI at [LuxorLabs/tenki-agentbox-provider](https://github.com/LuxorLabs/tenki-agentbox-provider).
+verify.mjs uses the latest `@tenkicloud/sandbox` (`>=1.4.1`); the published plugin still depends on `^0.5.2`. The box workflow itself is covered by the plugin's CI at [LuxorLabs/tenki-agentbox-provider](https://github.com/LuxorLabs/tenki-agentbox-provider).
 
 ## Notes
 
