@@ -13,7 +13,7 @@ export TENKI_AUTH_TOKEN=tk_...        # or TENKI_API_KEY; env wins over config
 
 (Or from a checkout: `git clone https://github.com/LuxorLabs/tenki-openclaw && openclaw plugins install ./tenki-openclaw`.)
 
-> **Host compatibility (checked 2026-10-14):** plugin 0.2.0 loads on OpenClaw 2026.7.x (tested on 2026.7.34) but not on 2026.8.1 or later, which includes the current `latest`, 2026.10.3. OpenClaw retired the `openclaw/plugin-sdk/zod` subpath that the plugin imports, so a newer host fails to load it with `Plugin tenki cannot import openclaw/plugin-sdk/zod`. The install still prints "Installed plugin: tenki" because the plugin's `minHostVersion` (`>=2026.7.1-2`) has no upper bound. Until a fixed plugin release ships, run it on a 2026.7.x host. Newer hosts also require `--accept-capabilities` on install.
+> **Host compatibility:** plugin 0.2.0 loads on OpenClaw 2026.7.x (tested on 2026.7.34) but not on 2026.8.1 or later, which includes `latest` (2026.10.3). OpenClaw retired the `openclaw/plugin-sdk/zod` subpath that the plugin imports, so a newer host fails to load it with `Plugin tenki cannot import openclaw/plugin-sdk/zod`. The install still prints "Installed plugin: tenki" because the plugin's `minHostVersion` (`>=2026.7.1-2`) has no upper bound. Until a fixed plugin release ships, run it on a 2026.7.x host. Newer hosts also require `--accept-capabilities` on install.
 
 Then enable it in your OpenClaw config:
 
