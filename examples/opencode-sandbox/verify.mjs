@@ -45,11 +45,12 @@ try {
 
 	const { previewUrl } = await sandbox.exposePort(PORT);
 	const auth = { Authorization: "Basic " + Buffer.from(`opencode:${PASSWORD}`).toString("base64") };
+	const get = (headers) => fetch(`${previewUrl}/project/current`, { headers });
 
 	let project;
 	for (let i = 0; i < 15; i++) {
 		try {
-			const res = await fetch(`${previewUrl}/project/current`, { redirect: "follow", headers: auth });
+			const res = await get(auth);
 			if (res.status === 200) { project = await res.json(); break; }
 		} catch { /* gateway warming up */ }
 		await new Promise((r) => setTimeout(r, 2000));
@@ -57,7 +58,7 @@ try {
 	if (project?.worktree !== "/home/tenki/repo" || project?.vcs !== "git") throw new Error(`unexpected project: ${JSON.stringify(project)}`);
 
 	// The URL is public, so an unauthenticated caller must be turned away.
-	const open = (await fetch(`${previewUrl}/project/current`, { redirect: "follow" })).status;
+	const open = (await get()).status;
 	if (open !== 401) throw new Error(`unauthenticated request returned ${open}, expected 401`);
 
 	console.log(`✓ opencode-sandbox: create + clone → opencode ${version} serve → exposePort → 401 unauthed, 200 → ${project.worktree} → dispose`);

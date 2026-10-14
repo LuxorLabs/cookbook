@@ -29,21 +29,36 @@ const sandbox = await tenki.createAndWait({
   workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 
-// --hostname 0.0.0.0 is load-bearing: the default 127.0.0.1 is unreachable from the gateway.
-// setsid + redirected stdio keeps the server running after this exec() returns.
-await sandbox.exec("sh", {
-  args: ["-c", `cd repo && setsid opencode serve --port ${PORT} --hostname 0.0.0.0 >/tmp/opencode.log 2>&1 </dev/null & sleep 5`],
-  env: { OPENCODE_SERVER_PASSWORD: PASSWORD },
-});
+// From here on a throw must dispose the sandbox, or it leaks until the idle timeout.
+try {
+  // --hostname 0.0.0.0 is load-bearing: the default 127.0.0.1 is unreachable from the gateway.
+  // setsid + redirected stdio keeps the server running after this exec() returns.
+  await sandbox.exec("sh", {
+    args: ["-c", `cd repo && setsid opencode serve --port ${PORT} --hostname 0.0.0.0 >/tmp/opencode.log 2>&1 </dev/null & sleep 5`],
+    env: { OPENCODE_SERVER_PASSWORD: PASSWORD },
+  });
 
-const { previewUrl } = await sandbox.exposePort(PORT);
-// Auth is HTTP Basic — any username, the password above. A Bearer token is rejected.
-const auth = { Authorization: "Basic " + Buffer.from(`opencode:${PASSWORD}`).toString("base64") };
+  const { previewUrl } = await sandbox.exposePort(PORT);
+  // Auth is HTTP Basic — any username, the password above. A Bearer token is rejected.
+  const auth = { Authorization: "Basic " + Buffer.from(`opencode:${PASSWORD}`).toString("base64") };
 
-const project = await (await fetch(`${previewUrl}/project/current`, { headers: auth })).json();
-console.log(`${project.worktree} (${project.vcs}) is live at ${previewUrl}/app`);
-console.log(`user: anything, password: ${PASSWORD}
-Ctrl-C to terminate the sandbox.`);
+  // The gateway can take a few seconds to route a fresh URL, so retry the first fetch.
+  let project;
+  for (let i = 0; i < 15 && !project; i++) {
+    try {
+      const res = await fetch(`${previewUrl}/project/current`, { headers: auth });
+      if (res.status === 200) project = await res.json();
+    } catch { /* gateway warming up */ }
+    if (!project) await new Promise((r) => setTimeout(r, 2000));
+  }
+  if (!project) throw new Error("opencode serve never answered; see /tmp/opencode.log in the sandbox");
+
+  console.log(`${project.worktree} (${project.vcs}) is live at ${previewUrl}/app`);
+  console.log(`user: anything, password: ${PASSWORD}\nCtrl-C to terminate the sandbox.`);
+} catch (e) {
+  await sandbox[Symbol.asyncDispose]();
+  throw e;
+}
 
 process.on("SIGINT", async () => {
   await sandbox[Symbol.asyncDispose]();
@@ -52,7 +67,7 @@ process.on("SIGINT", async () => {
 setInterval(() => {}, 1 << 30); // hold the event loop open; an unsettled await would exit 13
 ```
 
-The script stays in the foreground so the URL keeps working. Open the printed `/app` URL in a browser and you are looking at OpenCode's own UI, driving a repo inside the microVM; the same URL serves the JSON API — `/session`, `/agent`, `/project/current` — so a script can drive it just as easily. Ctrl-C terminates the sandbox and the URL with it.
+The script stays in the foreground so the URL keeps working. Open the printed `/app` URL in a browser and you are looking at OpenCode's own UI, driving a repo inside the microVM; the same URL serves the JSON API — `/session`, `/agent`, `/project/current` — so a script can drive it. Ctrl-C terminates the sandbox and the URL with it.
 
 ## Run it
 
@@ -77,6 +92,6 @@ node verify.mjs   # boot → serve → exposePort → assert 401 unauthed, then 
 - **Set `OPENCODE_SERVER_PASSWORD`, always.** Without it the server logs `OPENCODE_SERVER_PASSWORD is not set; server is unsecured` and answers every caller — and `exposePort` has just put it on the public internet, so that is an open coding agent with a shell. With it set, unauthenticated requests get `401`. Auth is HTTP **Basic** (any username, that password); a `Bearer` token is rejected. `verify.mjs` asserts the `401` precisely so this cannot regress unnoticed.
 - **Port 7681 is spoken for.** Tenki's own `ttyd` console listens there, and `exposePort(7681)` fails with `[invalid_argument] port 7681 cannot be exposed as a preview`. Pick any other port for your server.
 - **`--hostname 0.0.0.0` is required.** `opencode serve` defaults to `127.0.0.1`, which the gateway cannot reach, so the preview URL would just hang.
-- `enableOpenCode: true` puts `opencode` (1.17.20 at the time of writing) at `/usr/local/bin/opencode` before the sandbox reports ready — no `npm install`, no custom image. `openCodeProvider.apiKey` and `.baseUrl` arrive in the guest as `OPENCODE_API_KEY` and `OPENCODE_PROVIDER_BASE_URL`.
+- `enableOpenCode: true` puts `opencode` at `/usr/local/bin/opencode` before the sandbox reports ready — no `npm install`, no custom image. `openCodeProvider.apiKey` and `.baseUrl` arrive in the guest as `OPENCODE_API_KEY` and `OPENCODE_PROVIDER_BASE_URL`.
 - `cloneRepoUrl` checks out to `./repo`, so the server is started with `cd repo` — that is what makes `/project/current` report `worktree: /home/tenki/repo` with `vcs: git` instead of an empty directory.
 - For the same agent driven as a one-shot CLI instead of a server, `opencode run "<task>"` works too — the shape used by [claude-code-sandbox](../claude-code-sandbox/) and [codex-sandbox](../codex-sandbox/).

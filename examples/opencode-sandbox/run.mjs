@@ -24,20 +24,36 @@ const sandbox = await tenki.createAndWait({
 	workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 
-// --hostname 0.0.0.0 is load-bearing: the default 127.0.0.1 is unreachable from the gateway.
-// setsid + redirected stdio keeps the server running after this exec() returns.
-await sandbox.exec("sh", {
-	args: ["-c", `cd repo && setsid opencode serve --port ${PORT} --hostname 0.0.0.0 >/tmp/opencode.log 2>&1 </dev/null & sleep 5`],
-	env: { OPENCODE_SERVER_PASSWORD: PASSWORD },
-});
+// From here on a throw must dispose the sandbox, or it leaks until the idle timeout.
+try {
+	// --hostname 0.0.0.0 is load-bearing: the default 127.0.0.1 is unreachable from the gateway.
+	// setsid + redirected stdio keeps the server running after this exec() returns.
+	await sandbox.exec("sh", {
+		args: ["-c", `cd repo && setsid opencode serve --port ${PORT} --hostname 0.0.0.0 >/tmp/opencode.log 2>&1 </dev/null & sleep 5`],
+		env: { OPENCODE_SERVER_PASSWORD: PASSWORD },
+	});
 
-const { previewUrl } = await sandbox.exposePort(PORT);
-// Auth is HTTP Basic — any username, the password above. A Bearer token is rejected.
-const auth = { Authorization: "Basic " + Buffer.from(`opencode:${PASSWORD}`).toString("base64") };
+	const { previewUrl } = await sandbox.exposePort(PORT);
+	// Auth is HTTP Basic — any username, the password above. A Bearer token is rejected.
+	const auth = { Authorization: "Basic " + Buffer.from(`opencode:${PASSWORD}`).toString("base64") };
 
-const project = await (await fetch(`${previewUrl}/project/current`, { headers: auth })).json();
-console.log(`${project.worktree} (${project.vcs}) is live at ${previewUrl}/app`);
-console.log(`user: anything, password: ${PASSWORD}\nCtrl-C to terminate the sandbox.`);
+	// The gateway can take a few seconds to route a fresh URL, so retry the first fetch.
+	let project;
+	for (let i = 0; i < 15 && !project; i++) {
+		try {
+			const res = await fetch(`${previewUrl}/project/current`, { headers: auth });
+			if (res.status === 200) project = await res.json();
+		} catch { /* gateway warming up */ }
+		if (!project) await new Promise((r) => setTimeout(r, 2000));
+	}
+	if (!project) throw new Error("opencode serve never answered; see /tmp/opencode.log in the sandbox");
+
+	console.log(`${project.worktree} (${project.vcs}) is live at ${previewUrl}/app`);
+	console.log(`user: anything, password: ${PASSWORD}\nCtrl-C to terminate the sandbox.`);
+} catch (e) {
+	await sandbox[Symbol.asyncDispose]();
+	throw e;
+}
 
 process.on("SIGINT", async () => {
 	await sandbox[Symbol.asyncDispose]();
