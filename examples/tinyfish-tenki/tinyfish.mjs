@@ -22,7 +22,7 @@ try {
 	console.log("browser:", await page.title());
 } finally {
 	await browser?.close();
-	// The SDK has no close method, and TinyFish bills a session until it ends.
+	// The SDK has no close method, and a session keeps running until it's deleted or its inactivity timeout fires.
 	await fetch(`https://api.browser.tinyfish.ai/${session.session_id}`, {
 		method: "DELETE",
 		headers: { "X-API-Key": process.env.TINYFISH_API_KEY },

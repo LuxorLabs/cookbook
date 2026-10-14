@@ -2,7 +2,7 @@
 
 [TinyFish](https://docs.tinyfish.ai/) runs web automation for agents: a natural-language **agent** that browses a page and returns JSON, a remote Chromium **browser** you drive over CDP, **fetch** (up to 10 URLs per call as markdown, HTML, or JSON), and **search**. This example runs the TinyFish TypeScript SDK ([`@tiny-fish/sdk`](https://www.npmjs.com/package/@tiny-fish/sdk)) and `playwright-core` inside a [Tenki](https://tenki.cloud) microVM: your code runs in the sandbox, and the browsers and agents run at TinyFish.
 
-## How it fits together
+## How it works
 
 `run.mjs` (on your machine) boots a sandbox, passes `TINYFISH_API_KEY` into the session environment, installs the two npm packages, uploads `tinyfish.mjs`, and runs it. `tinyfish.mjs` (in the VM) calls fetch and search, then opens a TinyFish browser session and loads a page through Playwright.
 
@@ -94,10 +94,10 @@ node verify.mjs
 
 ## Notes
 
-- **Network:** the sandbox talks to TinyFish over the public internet, so a TinyFish browser can't reach a dev server on `localhost` inside your VM. Every Playwright action is a round trip to TinyFish's browser.
-- **Session startup:** creating a TinyFish browser session typically takes 10 to 30 seconds. If you pass `url` to `sessions.create`, the call returns before that first navigation finishes, so wait for the page to load before reading it.
-- **Proxy:** browser sessions use TinyFish's US residential proxy unless you set `proxy_config` (`{ enabled: false }` connects directly).
-- **ESM only:** `@tiny-fish/sdk` is an ES module. Use `.mjs` files or `"type": "module"`.
-- **Python:** the official Python SDK is [`tinyfish`](https://pypi.org/project/tinyfish/) on PyPI (`pip install tinyfish`), with the same `client.browser.sessions.create(...)` shape.
-- **CLI:** [`@tiny-fish/cli`](https://www.npmjs.com/package/@tiny-fish/cli) installs a `tinyfish` command (`tinyfish agent run "<goal>" --url <url> --sync`, `tinyfish fetch content get <url> --format markdown`, `tinyfish search query "<terms>"`) that prints JSON, which suits an agent shelling out from the sandbox.
-- **Pre-built image:** Tenki is preparing a `tenki/tinyfish:stable` image with the CLI, SDK, and `playwright-core` preinstalled. It isn't published yet, so this example installs the packages itself.
+- The sandbox talks to TinyFish over the public internet, so a TinyFish browser can't reach a dev server on `localhost` inside your VM. Every Playwright action is a round trip to TinyFish's browser.
+- Creating a TinyFish browser session typically takes 10 to 30 seconds. If you pass `url` to `sessions.create`, the call returns before that first navigation finishes, so wait for the page to load before reading it.
+- Browser sessions use TinyFish's US residential proxy unless you set `proxy_config` (`{ enabled: false }` connects directly).
+- `@tiny-fish/sdk` is an ES module. Use `.mjs` files or `"type": "module"`.
+- The official Python SDK is [`tinyfish`](https://pypi.org/project/tinyfish/) on PyPI (`pip install tinyfish`), with the same `client.browser.sessions.create(...)` shape.
+- [`@tiny-fish/cli`](https://www.npmjs.com/package/@tiny-fish/cli) installs a `tinyfish` command (`tinyfish agent run "<goal>" --url <url> --sync`, `tinyfish fetch content get <url> --format markdown`, `tinyfish search query "<terms>"`) that prints JSON, which suits an agent shelling out from the sandbox.
+- Tenki is preparing a `tenki/tinyfish:stable` image with the CLI, SDK, and `playwright-core` preinstalled. It isn't published yet, so this example installs the packages itself.

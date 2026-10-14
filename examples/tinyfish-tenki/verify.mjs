@@ -1,9 +1,6 @@
-/**
- * Proves the TinyFish client stack runs in a live Tenki sandbox: boot → npm
- * install @tiny-fish/sdk + playwright-core → import both. With TINYFISH_API_KEY
- * set, also runs tinyfish.mjs in the VM (fetch, search, remote browser over CDP);
- * without it, that leg is skipped. Exits non-zero on any failure.
- */
+// Proves the TinyFish stack runs in a live Tenki sandbox: boot, install @tiny-fish/sdk +
+// playwright-core, import both. With TINYFISH_API_KEY set, also runs tinyfish.mjs in the
+// VM (fetch, search, remote browser over CDP); without it, that leg is skipped.
 import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
