@@ -9,7 +9,7 @@ import os
 
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 from tenki_tool import make_code_tool
 
@@ -25,11 +25,8 @@ def cfg(key):
     return ""
 
 
-# A `tk_` API key works as-is; a `tenki login` session token must be sent as a
-# cookie, so prefix it `cookie:` (see the auth note in the README).
+# A tk_ API key, from env or ~/.config/tenki/config.yaml (`tenki login --api-key`).
 token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
-if token and not token.startswith(("tk_", "ory_st_", "cookie:")):
-    token = f"cookie:{token}"
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
 workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
