@@ -1,2 +1,2 @@
-covalent-tenki-plugin>=0.1
-tenki-sandbox>=0.4
+covalent-tenki-plugin>=0.1.1
+tenki>=1.4.1

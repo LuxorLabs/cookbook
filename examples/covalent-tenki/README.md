@@ -26,11 +26,11 @@ Full runnable version in [`workflow.py`](workflow.py).
 
 ```bash
 uv venv                                 # or: python3.11 -m venv .venv
-uv pip install -r requirements.txt      # covalent-tenki-plugin + tenki-sandbox
-export TENKI_AUTH_TOKEN=...             # see the auth note below
+uv pip install -r requirements.txt      # covalent-tenki-plugin + the tenki SDK
+export TENKI_API_KEY=tk_...             # or: tenki login --api-key <key>
 ```
 
-**Auth note.** The plugin authenticates via the `tenki-sandbox` SDK, which wants a **`tk_` API key** (`export TENKI_AUTH_TOKEN=tk_…`). A `tenki login` browser session token works too, but the Python SDK won't auto-detect it — prefix it **`cookie:<token>`** (`verify.py` does this for you). It's an SDK gap, not yours.
+The plugin authenticates via the `tenki` SDK, which takes a `tk_` API key: set `TENKI_API_KEY`, or run `tenki login --api-key <key>` to store one in `~/.config/tenki/config.yaml` (`verify.py` reads it from there).
 
 ## Run the full workflow
 
@@ -51,6 +51,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
 
 ## Notes
 
+- `covalent-tenki-plugin` 0.1.0 declares the renamed `tenki-sandbox` package and no longer installs; this example needs 0.1.1 or later.
 - Each electron self-destructs server-side after `sandbox_max_duration_seconds` (default 3600) even if the dispatcher crashes — no leaked billing.
 - Tasks ship over the SDK's exec data plane (no SSH, no object storage).
 - Official plugin + full config: [github.com/TenkiCloud/covalent-tenki-plugin](https://github.com/TenkiCloud/covalent-tenki-plugin).
