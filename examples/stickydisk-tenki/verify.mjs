@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parse } from "yaml";
@@ -57,4 +57,6 @@ try {
 } catch (e) {
 	console.error("✗ " + (e?.message ?? e));
 	process.exitCode = 1;
+} finally {
+	rmSync(tmp, { recursive: true, force: true });
 }
