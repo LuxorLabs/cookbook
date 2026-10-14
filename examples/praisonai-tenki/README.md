@@ -51,7 +51,7 @@ Without `TENKI_WORKSPACE_ID`, sandboxes land in the first workspace on your acco
 node verify.mjs      # or: .venv/bin/python verify.py
 ```
 
-[`verify.py`](verify.py) proves the two halves without needing an LLM key: **registration** — `TenkiCompute` imports (module + barrel) and the core SDK's compute bridge resolves the string `"tenki"` to it, the exact path `compute="tenki"` takes — and **live** — provision a real microVM through the provider, run a command, round-trip a file byte-for-byte, shut down:
+[`verify.py`](verify.py) proves the two halves without needing an LLM key: **registration** — `TenkiCompute` imports and the core SDK's compute bridge resolves the string `"tenki"` to it, the exact path `compute="tenki"` takes — and **live** — provision a real microVM through the provider, run a command, round-trip a file byte-for-byte, shut down:
 
 ```
 ✓ praisonai-tenki: compute="tenki" resolves → provision → execute 42 → file round-trip → shutdown
@@ -59,7 +59,6 @@ node verify.mjs      # or: .venv/bin/python verify.py
 
 ## Notes
 
-- The provider uses the **new `tenki` SDK** (`pip install tenki`), not the older `tenki-sandbox` package.
 - Tenki's stock image runs commands as user `tenki` (passwordless sudo) and ships **without a `/workspace` directory**. The shared-workspace tools don't create it either (still true in praisonai 4.7.14). Have the first agent run `execute_command('sudo mkdir -p /workspace && sudo chown "$(id -un)" /workspace')`, use `$HOME` paths instead, or bake it into a custom image via `metadata={"tenki_image": ...}`. `verify.py` does exactly this.
 - `get_status` / `list_instances` reconcile against live Tenki state, so a sandbox reaped by the idle timeout stops reporting `RUNNING`.
 - The deprecated spelling `ManagedAgent(provider="tenki")` still works but warns; use `compute="tenki"` (or `LocalAgent(compute="tenki")` for a single agent).
