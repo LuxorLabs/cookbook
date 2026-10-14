@@ -51,8 +51,7 @@ try:
     if not token:
         print("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.")
         sys.exit(1)
-    # tenki SDK 1.x accepts only `tk_` API keys / service tokens (the 0.5.x
-    # `cookie:` session-token workaround is gone and is rejected client-side).
+    # tenki SDK 1.x accepts only `tk_` API keys.
     if not token.startswith("tk_"):
         print("Token must be a tk_ API key (tenki SDK 1.x). Run `tenki login --api-key tk_...` or set TENKI_AUTH_TOKEN.")
         sys.exit(1)

@@ -45,7 +45,7 @@ node verify.mjs                  # or: .venv/bin/python verify.py
 
 ## Notes
 
-- Uses the new [`tenki`](https://pypi.org/project/tenki/) SDK (`tenki[async]>=0.5.1`, `AsyncSandbox`) — not the older `tenki-sandbox` package.
+- Uses the [`tenki`](https://pypi.org/project/tenki/) SDK (`tenki[async]>=0.5.1`, `AsyncSandbox`).
 - Every execution is a fresh microVM with guaranteed teardown: `sandbox.close()` runs even on timeout or crash, and a server-side `max_duration` backstop kills stragglers — no leaked billing.
-- Auth: use a `tk_` API key. The `tenki[async]>=0.5.1` requirement installs SDK 1.x, which accepts only `tk_` keys; the old `cookie:<session token>` form is rejected.
+- Auth: use a `tk_` API key (`TENKI_API_KEY`, or `tenki login --api-key <key>`). SDK 1.x accepts only `tk_` keys.
 - Source, build tooling, and both plugins: [github.com/LuxorLabs/tenki-open-webui](https://github.com/LuxorLabs/tenki-open-webui).
