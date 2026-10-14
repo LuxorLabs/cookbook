@@ -1,17 +1,19 @@
 # AgentBox coding agents on Tenki
 
-[AgentBox](https://github.com/madarco/agentbox) moves your project into a dedicated VM — local or cloud — and runs coding agents (`claude`, `codex`, `opencode`) inside it, in parallel, with your own settings along for the ride. Tenki is a community provider ([agentbox#296](https://github.com/madarco/agentbox/pull/296)): with the [`@tenkicloud/agentbox-provider`](https://www.npmjs.com/package/@tenkicloud/agentbox-provider) plugin, every box becomes a [Tenki](https://tenki.cloud) Firecracker microVM — its own kernel, Docker inside the box, public preview URLs, and free pause/resume, with no local Docker needed.
+[AgentBox](https://github.com/madarco/agentbox) moves your project into a dedicated VM — local or cloud — and runs coding agents (`claude`, `codex`, `opencode`) inside it, in parallel, with your own settings along for the ride. Tenki is a community provider ([agentbox#296](https://github.com/madarco/agentbox/pull/296)): with the [`@tenkicloud/agentbox-provider`](https://www.npmjs.com/package/@tenkicloud/agentbox-provider) plugin, every box becomes a [Tenki](https://tenki.cloud) VM — its own kernel, Docker inside the box, public preview URLs, and free pause/resume, with no local Docker needed.
 
 ## Set it up
 
 ```bash
-npm i -g @madarco/agentbox @tenkicloud/agentbox-provider
+npm i -g @madarco/agentbox@0.29.2 @tenkicloud/agentbox-provider
 agentbox plugin add @tenkicloud/agentbox-provider
 agentbox plugin list                 # -> tenki … (SDK v2)
 
 export TENKI_AUTH_TOKEN=tk_...       # or add it to ~/.agentbox/secrets.env
 agentbox doctor                      # shows the `tenki:` group
 ```
+
+**Pin the CLI to 0.29.2.** The published plugin (0.1.1) targets provider SDK v2. AgentBox 0.27.1 (the plugin's documented minimum) through 0.29.2 loads it; 0.30.0 and later accept only v4 and refuse this one at `plugin add` (`targets provider SDK v2; this AgentBox supports v4`). SDK v4 support is in progress upstream ([tenki-agentbox-provider#6](https://github.com/LuxorLabs/tenki-agentbox-provider/pull/6)) but hasn't been released yet.
 
 A plugin runs in-process with full host and credential access — **`plugin add` is the trust boundary**.
 
@@ -53,7 +55,9 @@ npm install
 node verify.mjs
 ```
 
-No agentbox CLI or baked image needed: [`verify.mjs`](verify.mjs) asserts the published plugin registers `providerModule.provider` with the **SDK v2 provider contract** AgentBox drives (`create`/`exec`/`pause`/`resume`/`checkpoint`/…), then proves the **live Tenki path every box rides on** — boot a microVM, exec, file round-trip, dispose. The box workflow itself is covered by the plugin's CI at [LuxorLabs/tenki-agentbox-provider](https://github.com/LuxorLabs/tenki-agentbox-provider).
+No agentbox CLI or baked image needed: [`verify.mjs`](verify.mjs) asserts the published plugin registers `providerModule.provider` with the **SDK v2 provider contract** AgentBox drives (`create`/`exec`/`pause`/`resume`/`checkpoint`/…), then proves the **live Tenki path every box rides on** — boot a VM, exec, file round-trip, dispose.
+
+verify.mjs uses `@tenkicloud/sandbox` 0.5.x to match the plugin's own `^0.5.2` dependency (the SDK's latest line is 1.x). The box workflow itself is covered by the plugin's CI at [LuxorLabs/tenki-agentbox-provider](https://github.com/LuxorLabs/tenki-agentbox-provider).
 
 ## Notes
 
