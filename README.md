@@ -104,6 +104,7 @@ Speed up GitHub Actions jobs on [Tenki Runners](https://tenki.cloud/products/run
 | --- | --- |
 | [Sticky disks](examples/stickydisk-tenki/) | Keep dependency caches on a persistent disk between jobs |
 | [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
+| [orca](examples/orca-tenki/) | One microVM per parallel coding agent, via its ephemeral-VM recipe hook |
 
 ### Migrating from another provider
 
