@@ -1,0 +1,16 @@
+# Claude Code on the first 10 Terminal-Bench 2.0 tasks, one Tenki VM per trial.
+#
+#   export TENKI_API_KEY=tk_...
+#   export ANTHROPIC_API_KEY=sk-ant-...
+#   harbor run -c job.yaml
+n_concurrent_trials: 16
+environment:
+  import_path: tenki_harbor:TenkiEnvironment
+  delete: true
+agents:
+  - name: claude-code
+    model_name: anthropic/claude-opus-4-1
+datasets:
+  - name: terminal-bench
+    version: "2.0"
+    n_tasks: 10 # remove to run all 89 tasks

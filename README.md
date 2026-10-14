@@ -79,6 +79,7 @@ Review pull requests with [Tenki Code Reviewer](https://tenki.cloud/products/cod
 | Example | What it covers |
 | --- | --- |
 | [Cursor Origin](examples/cursor-origin-tenki/) | Tenki Code Reviewer on Origin pull requests, with `AGENTS.md` review rules |
+| [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), each trial in its own VM |
 
 ### Agent platforms
 
