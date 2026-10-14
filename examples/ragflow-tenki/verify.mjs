@@ -1,11 +1,11 @@
 /**
- * Shim so the cookbook's Node verify harness can run this Python example.
- * Runs verify.py with the example's local venv if present, else `python3`.
- * Setup (Python 3.10+): `uv venv && uv pip install -r requirements.txt` (see README).
+ * Shim so the cookbook's Node verify harness can run this Go example.
+ * RAGFlow's Tenki provider is Go-only, so the proof uses the same Go SDK
+ * module and version RAGFlow pins (see go.mod). Needs Go 1.25.3+ on PATH;
+ * an older Go downloads the right toolchain automatically (GOTOOLCHAIN=auto).
  */
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
 
-const py = existsSync(".venv/bin/python") ? ".venv/bin/python" : process.env.PYTHON || "python3";
-const r = spawnSync(py, ["verify.py"], { stdio: "inherit" });
+const r = spawnSync("go", ["run", "."], { stdio: "inherit" });
+if (r.error) console.error(`✗ could not run go: ${r.error.message}`);
 process.exit(r.status ?? 1);

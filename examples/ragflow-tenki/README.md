@@ -1,45 +1,43 @@
 # RAGFlow's code executor on Tenki
 
-[RAGFlow](https://github.com/infiniflow/ragflow) is an open-source RAG engine whose agent workflows can include **code components** — Python or JavaScript snippets executed through pluggable sandbox providers. Since [ragflow#17305](https://github.com/infiniflow/ragflow/pull/17305), `tenki` is one of those providers (implemented in both Python and Go): each execution runs in a fresh [Tenki](https://tenki.cloud) microVM that is destroyed afterwards. Because it's cloud-hosted, there is nothing to operate locally — no gVisor, no Docker base images, no executor-manager service. Just an API key.
+[RAGFlow](https://github.com/infiniflow/ragflow) is an open-source RAG engine whose agent workflows can include **code components** — Python or JavaScript snippets executed through pluggable sandbox providers. Since [ragflow#17305](https://github.com/infiniflow/ragflow/pull/17305), `tenki` is one of those providers: each execution runs in a fresh [Tenki](https://tenki.cloud) microVM that is destroyed afterwards. Because it's cloud-hosted, there is nothing to operate locally — no gVisor, no Docker base images, no executor-manager service. Just an API key.
 
 ## Enable it
 
-The `tenki-sandbox` SDK is an optional dependency (it needs `protobuf>=6.31`, which differs from RAGFlow's default gRPC stack), so install it into the RAGFlow runtime first:
+The provider lives in RAGFlow's Go server ([`internal/agent/sandbox/tenki.go`](https://github.com/infiniflow/ragflow/blob/main/internal/agent/sandbox/tenki.go)) and its SDK, `github.com/LuxorLabs/tenki-sdk-go/sandbox`, is a regular `go.mod` dependency, so there is nothing to install. The older Python provider was removed from RAGFlow main in [ragflow#20389](https://github.com/infiniflow/ragflow/pull/20389).
 
-```bash
-pip install tenki-sandbox
-```
-
-Then configure the provider in **Admin > Sandbox Settings**:
+Configure it in **Admin > Sandbox Settings** (saved settings apply to the next execution, no restart):
 
 | Setting | Notes |
 | --- | --- |
 | `api_key` (required) | create one at [app.tenki.cloud](https://app.tenki.cloud) under **API Keys** |
-| `project_id` (required) | required by RAGFlow's schema; current Tenki no longer scopes sandboxes by project, so any identifier satisfies it |
 | `image` | leave empty for the Tenki default image, which ships both `python3` and `node` |
 | `allow_outbound` | **defaults to `false`** — sandboxed code gets no network unless you opt in (e.g. to install packages) |
 | `timeout` / `max_lifetime` | per-execution limit (default 30 s) / server-side sandbox cap (default 3600 s) |
-| `cpu_cores`, `memory_mb`, `disk_size_gb`, output & artifact limits | tunable, sensible defaults |
+| `base_url` | override the API endpoint; empty uses Tenki cloud |
+| `cpu_cores`, `memory_mb`, `disk_size_gb` | `0` uses the Tenki default |
+| `max_output_bytes`, `max_artifacts`, `max_artifact_bytes` | 1 MiB / 20 / 10 MiB by default |
+
+Without saved settings the provider falls back to `TENKI_API_KEY` (and `TENKI_API_URL`) in the server environment. RAGFlow's sandbox quickstart still lists a required `project_id`; the provider no longer has that field ([ragflow#18117](https://github.com/infiniflow/ragflow/pull/18117)).
 
 ## What the provider does
 
 - **Ephemeral by design**: create → execute → destroy, once per run. No volumes, no snapshots, nothing persists between executions.
-- **Two languages**: Python (`python3`) and JavaScript (`node`), with wrapper scripts that inject the component's arguments.
-- **Artifacts come back** (Python provider): anything the code writes to `artifacts/` in its working directory is collected over Tenki's file API — extension-whitelisted (`.csv .html .jpeg .json .pdf .png .svg`), size-capped, symlinks rejected. The Go port runs code with the same wrapping protocol but, like the Go e2b provider, does not collect artifacts.
+- **Two languages**: Python (`python3 -c`) and JavaScript (`node -e`), run in a per-instance work dir (`/home/tenki/ragflow-codeexec-<session id>`) with a wrapper that injects the component's arguments and returns `main()`'s value.
+- **Artifacts come back**: anything the code writes to `artifacts/` in the work dir is collected over Tenki's file API (list, stat, read): extension-allowlisted, size- and count-capped, symlinks rejected.
 - **Structured results**: stdout, stderr, exit code, and timing map to RAGFlow's `ExecutionResult`; timeouts and API failures map to clear error messages.
 - **`max_duration` is a server-side cap**, so a sandbox self-terminates even if RAGFlow crashes mid-run — no leaked billing.
 
 ## Verify
 
 ```bash
-uv venv && uv pip install -r requirements.txt
-node verify.mjs        # or: .venv/bin/python verify.py
+node verify.mjs        # or: go run .   (Go 1.25.3+)
 ```
 
-[`verify.py`](verify.py) proves the Tenki surface the provider is built on without running RAGFlow: the **`who_am_i()`** health check → an ephemeral sandbox with **outbound network off** (RAGFlow's security default) → the **Python** and **JavaScript** execution paths (script staged over `fs`, run with a timeout) → the **`artifacts/` read-back** transport → terminate. The provider's own upstream test suites (Python and Go) cover the RAGFlow-side contract.
+[`main.go`](main.go) proves the Tenki surface the provider is built on without running RAGFlow, using the same SDK module and version RAGFlow pins (`v0.7.0`): the **`WhoAmI`** health check → a disposable sandbox with **outbound network off** (RAGFlow's security default) → the work dir with `artifacts/` → **`python3 -c`** and **`node -e`** with a timeout → **artifact collection** (list, stat, read) → close. RAGFlow's own `tenki_test.go` covers the RAGFlow-side contract.
 
 ## Notes
 
-- **Auth:** the Python SDK wants a `tk_` API key (`export TENKI_API_KEY=tk_…`). A `tenki login` browser session token works too, but must be prefixed `cookie:` — `verify.py` does this for you.
+- **Auth:** use a `tk_` API key (`export TENKI_API_KEY=tk_…`).
 - With `allow_outbound: false`, `pip install` inside components will fail by design; flip it on per RAGFlow's settings page when needed.
-- Full setup docs: [sandbox quickstart](https://github.com/infiniflow/ragflow/blob/main/docs/guides/agent/agent_quickstarts/sandbox_quickstart.md) in the RAGFlow repo.
+- Full setup docs: [sandbox quickstart](https://github.com/infiniflow/ragflow/blob/main/docs/administrator/configurations/sandbox_quickstart.md) in the RAGFlow repo.
