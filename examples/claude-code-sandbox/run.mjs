@@ -1,6 +1,6 @@
 // Claude Code, headless, on a real repo in a disposable Tenki sandbox:
 // clone -> install the CLI -> let the agent edit the checkout -> read back the diff.
-import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
+import { TenkiSandbox } from "@tenkicloud/sandbox";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
 const TASK = "Add a toArray() method to the Queue class in index.js that returns the queued values as an array, oldest first. Declare it in index.d.ts and add a test for it in test.js.";
@@ -17,7 +17,8 @@ await using sandbox = await tenki.createAndWait({
 });
 
 // Outbound is on by default, so no allowOutbound is needed to reach the npm registry.
-await sandbox.exec("npm", { args: ["i", "-g", "@anthropic-ai/claude-code"] });
+const install = await sandbox.exec("npm", { args: ["i", "-g", "@anthropic-ai/claude-code"] });
+if (install.exitCode !== 0) throw new Error(`npm i -g @anthropic-ai/claude-code exited ${install.exitCode}`);
 
 const decoder = new TextDecoder();
 await sandbox.exec("claude", {
@@ -32,5 +33,5 @@ await sandbox.exec("claude", {
 	onOutput: ({ data }) => process.stdout.write(decoder.decode(data)), // data is a Uint8Array
 });
 
-// sandbox.git.* runs at the workdir, and the checkout is one level down — so use `git -C`.
-console.log(stdoutText(await sandbox.exec("git", { args: ["-C", "repo", "diff"] })));
+// sandbox.git.* runs at the workdir; the checkout is one level down, so point it at ./repo.
+console.log(await sandbox.git.diff({ directory: "repo" }));

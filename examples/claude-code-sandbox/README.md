@@ -1,11 +1,11 @@
 # Claude Code on Tenki (headless, on a real repo)
 
-Run Claude Code non-interactively against a real Git checkout inside a disposable [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM, then read back the diff the agent produced and throw the machine away.
+Run [Claude Code](https://www.npmjs.com/package/@anthropic-ai/claude-code) non-interactively against a real Git checkout inside a disposable [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM, then read back the diff the agent produced and throw the machine away.
 
 ## The code (`run.mjs`)
 
 ```js
-import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
+import { TenkiSandbox } from "@tenkicloud/sandbox";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
 const TASK = "Add a toArray() method to the Queue class in index.js that returns the queued values as an array, oldest first. Declare it in index.d.ts and add a test for it in test.js.";
@@ -22,7 +22,8 @@ await using sandbox = await tenki.createAndWait({
 });
 
 // Outbound is on by default, so no allowOutbound is needed to reach the npm registry.
-await sandbox.exec("npm", { args: ["i", "-g", "@anthropic-ai/claude-code"] });
+const install = await sandbox.exec("npm", { args: ["i", "-g", "@anthropic-ai/claude-code"] });
+if (install.exitCode !== 0) throw new Error(`npm i -g @anthropic-ai/claude-code exited ${install.exitCode}`);
 
 const decoder = new TextDecoder();
 await sandbox.exec("claude", {
@@ -37,8 +38,8 @@ await sandbox.exec("claude", {
   onOutput: ({ data }) => process.stdout.write(decoder.decode(data)), // data is a Uint8Array
 });
 
-// sandbox.git.* runs at the workdir, and the checkout is one level down — so use `git -C`.
-console.log(stdoutText(await sandbox.exec("git", { args: ["-C", "repo", "diff"] })));
+// sandbox.git.* runs at the workdir; the checkout is one level down, so point it at ./repo.
+console.log(await sandbox.git.diff({ directory: "repo" }));
 ```
 
 The last line is the point: a unified diff against a real upstream checkout, produced by an agent that had root-free run of a machine you are about to delete.
@@ -63,8 +64,8 @@ node verify.mjs   # create + clone → install the CLI → check its version and
 
 ## Notes
 
-- **`sandbox.git.*` runs at the sandbox workdir (`/home/tenki`), but `cloneRepoUrl` checks out one level down into `./repo`** — so `sandbox.git.diff()` fails with "not a git repository". Read the checkout with `sandbox.exec("git", { args: ["-C", "repo", "diff"] })`, or clone at the workdir root if you want the helpers.
+- `sandbox.git.*` runs at the sandbox workdir; when `cloneRepoUrl` checked out into `./repo`, pass `directory: "repo"`.
 - The default image already ships Node 24, npm 11, and git 2.43, and outbound network is on for a bare `create`. `npm i -g @anthropic-ai/claude-code` finishes in about five seconds — no `allowOutbound`, no custom image, no baked-in CLI.
 - `--dangerously-skip-permissions` refuses to run as root; the sandbox user is `tenki`, so it works as written. It is the right flag *here* precisely because the blast radius is one microVM.
-- `exec(command, { args })` runs a bare binary and its args with no shell splitting, so the whole task prompt goes through as a single argument. `ExecOptions.env` is scoped to that one process — the model key never lands in the repo or the image. A key whose value is `undefined` arrives as an *empty string* rather than unset, which is why `run.mjs` filters before building the env.
-- Secrets in, diffs out: nothing else from your shell crosses into the VM, and `await using` terminates it when the scope ends (`Session` is an `AsyncDisposable`). Top-level `await using` needs **Node 24+** — Node 22 fails to parse it. `verify.mjs` uses `try`/`finally` instead, so CI runs fine on Node 20.
+- `exec(command, { args })` runs a bare binary and its args with no shell splitting, so the whole task prompt goes through as a single argument. `ExecOptions.env` is scoped to that one process — the model key never lands in the repo or the image.
+- Secrets in, diffs out: nothing else from your shell crosses into the VM, and `await using` terminates it when the scope ends (`Session` is an `AsyncDisposable`). `verify.mjs` uses `try`/`finally` instead, so CI runs fine on Node 20.
