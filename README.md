@@ -63,6 +63,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Firecracker microVMs |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
+| [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers driven from a microVM |
 
 ### Agent platforms
 
