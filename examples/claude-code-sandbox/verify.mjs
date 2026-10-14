@@ -47,7 +47,7 @@ try {
 
 	// Stand in for the agent's edit, then read it back the way run.mjs reads the agent's.
 	await sandbox.exec("sh", { args: ["-c", "printf '\\nexport const verified = true;\\n' >> repo/index.js"] });
-	const diff = stdoutText(await sandbox.exec("git", { args: ["-C", "repo", "diff"] }));
+	const diff = await sandbox.git.diff({ directory: "repo" });
 	if (!diff.includes("--- a/index.js") || !diff.includes("+export const verified = true;")) {
 		throw new Error(`diff did not round-trip: ${JSON.stringify(diff.slice(0, 200))}`);
 	}
