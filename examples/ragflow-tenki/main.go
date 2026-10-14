@@ -130,7 +130,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("Stat: %w", err)
 	}
-	if info.IsSymlink || info.Mode&0o170000 == 0o120000 {
+	if info.IsSymlink {
 		return fmt.Errorf("artifact unexpectedly a symlink")
 	}
 	data, err := sess.ReadFile(ctx, remote)

@@ -1,6 +1,6 @@
 # RAGFlow's code executor on Tenki
 
-[RAGFlow](https://github.com/infiniflow/ragflow) is an open-source RAG engine whose agent workflows can include **code components** — Python or JavaScript snippets executed through pluggable sandbox providers. Since [ragflow#17305](https://github.com/infiniflow/ragflow/pull/17305), `tenki` is one of those providers: each execution runs in a fresh [Tenki](https://tenki.cloud) microVM that is destroyed afterwards. Because it's cloud-hosted, there is nothing to operate locally — no gVisor, no Docker base images, no executor-manager service. Just an API key.
+[RAGFlow](https://github.com/infiniflow/ragflow) is an open-source RAG engine whose agent workflows can include **code components** — Python or JavaScript snippets executed through pluggable sandbox providers. Since [ragflow#17305](https://github.com/infiniflow/ragflow/pull/17305), `tenki` is one of those providers: each execution runs in a fresh [Tenki](https://tenki.cloud) microVM that is destroyed afterwards. Because it's cloud-hosted, there is nothing to operate locally — no gVisor, no Docker base images, no executor-manager service — only an API key.
 
 ## Enable it
 
@@ -31,7 +31,7 @@ Without saved settings the provider falls back to `TENKI_API_KEY` (and `TENKI_AP
 ## Verify
 
 ```bash
-node verify.mjs        # or: go run .   (Go 1.25.3+)
+node verify.mjs        # or: go run .   (Go 1.21+; `go.mod` pins toolchain 1.25.3)
 ```
 
 [`main.go`](main.go) proves the Tenki surface the provider is built on without running RAGFlow, using the same SDK module and version RAGFlow pins (`v0.7.0`): the **`WhoAmI`** health check → a disposable sandbox with **outbound network off** (RAGFlow's security default) → the work dir with `artifacts/` → **`python3 -c`** and **`node -e`** with a timeout → **artifact collection** (list, stat, read) → close. RAGFlow's own `tenki_test.go` covers the RAGFlow-side contract.
