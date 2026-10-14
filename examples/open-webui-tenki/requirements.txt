@@ -1,2 +1,2 @@
-tenki[async]>=0.5.1
+tenki[async]>=1.4.1
 pydantic>=2
