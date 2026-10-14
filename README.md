@@ -10,23 +10,24 @@ create, execute, dispose lifecycle in about 15 lines of JavaScript.
 
 ## Quick start
 
-You need a [Tenki account](https://tenki.cloud), an API key, your workspace ID,
-and Node.js 20 or later.
+You need a [Tenki account](https://tenki.cloud), a `tk_` API key, your
+workspace ID, and Node.js 20 or later.
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
 cd cookbook/examples/run-code-in-a-sandbox
 npm install
 
-export TENKI_AUTH_TOKEN="your-api-key"
+export TENKI_AUTH_TOKEN="tk_..."
 export TENKI_WORKSPACE_ID="your-workspace-id"
 
 node run.mjs
 ```
 
 The script creates a sandbox, runs Python inside it, prints `42`, and cleans
-up. Authentication and client setup are covered in the
-[Sandbox SDK guide](https://tenki.cloud/docs/sandbox/sdk).
+up. The SDK also reads the key from `TENKI_API_KEY`, and `tenki login` stores
+one in `~/.config/tenki/config.yaml`. Authentication and client setup are
+covered in the [Sandbox SDK guide](https://tenki.cloud/docs/sandbox/sdk).
 
 ## Examples
 
