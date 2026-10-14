@@ -72,6 +72,14 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | --- | --- |
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
 
+### Tenki Runners
+
+Speed up GitHub Actions jobs on [Tenki Runners](https://tenki.cloud/products/runners).
+
+| Example | What it covers |
+| --- | --- |
+| [Sticky disks](examples/stickydisk-tenki/) | Keep dependency caches on a persistent disk between jobs |
+
 ### Migrating from another provider
 
 Each guide has side-by-side code and an API mapping.
@@ -105,6 +113,7 @@ First-party packages you can install directly in your own project:
 | [Composio tools](https://github.com/TenkiCloud/composio-tools) | `npm install @tenkicloud/composio-tools` | Create, execute, snapshot, and terminate tools for Composio agents |
 | [Covalent executor](https://github.com/TenkiCloud/covalent-tenki-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki microVMs |
 | [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
+| [Sticky disk action](https://github.com/LuxorLabs/stickydisk) | `uses: LuxorLabs/stickydisk@v1` | Mounts a persistent, workspace-scoped cache disk on Tenki runners |
 | [Go SDK](https://github.com/TenkiCloud/tenki-sdk-go) | `go get github.com/TenkiCloud/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
 
 ## Projects with built-in Tenki support
