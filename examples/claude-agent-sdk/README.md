@@ -13,12 +13,9 @@ const say = (text) => ({ content: [{ type: "text", text }] });
 
 export function makeTenkiTools(sandbox) {
   return [
-    // The schema argument is a raw Zod shape — a bare object of fields, not z.object({...}).
     tool("bash", "Run a shell command in the sandbox and return its stdout and stderr.", { command: z.string() }, async ({ command }) => {
       const r = await sandbox.exec("sh", { args: ["-c", command] });
       const out = `${stdoutText(r)}${stderrText(r)}`.trim();
-      // Nothing carries the exit status to the model, so a failure that printed to
-      // stderr looks like success. Say it out loud instead.
       return say(r.exitCode === 0 ? out || "(no output)" : `exit ${r.exitCode}\n${out}`.trim());
     }),
 
@@ -27,8 +24,6 @@ export function makeTenkiTools(sandbox) {
       return say(`wrote ${path}`);
     }),
 
-    // readFile hands back bytes, not a string. It throws on a missing path, which the
-    // SDK turns into an is_error tool result — the agent sees it and can recover.
     tool("read_file", "Read a file from the sandbox.", { path: z.string() }, async ({ path }) =>
       say(new TextDecoder().decode(await sandbox.readFile(path)))),
   ];
@@ -51,12 +46,10 @@ for await (const message of query({
   options: {
     tools: [], // empty array disables every built-in tool — nothing can execute locally
     mcpServers: { tenki: createSdkMcpServer({ name: "tenki", version: "1.0.0", tools: makeTenkiTools(sandbox) }) },
-    // In-process MCP tools are still namespaced mcp__<server>__<tool>.
     allowedTools: ["mcp__tenki__bash", "mcp__tenki__write_file", "mcp__tenki__read_file"],
     maxTurns: 12,
   },
 })) {
-  // Every tool call printed here ran in the microVM. There is no local one to fall back to.
   if (message.type === "assistant") {
     for (const block of message.message.content) {
       if (block.type === "tool_use") console.log(`→ ${block.name} ${JSON.stringify(block.input).slice(0, 70)}`);
@@ -65,7 +58,6 @@ for await (const message of query({
   if (message.type === "result") console.log(message.result);
 }
 
-// The proof: the script the agent wrote is in the sandbox, and nowhere on this machine.
 console.log(stdoutText(await sandbox.exec("sh", { args: ["-c", "ls -l fib.py"] })));
 ```
 
@@ -75,7 +67,7 @@ Which prints the routing, the answer, and the evidence:
 → mcp__tenki__write_file {"path":"fib.py","content":"def fib(n):\n    a, b = 0, 1\n    for _ in
 → mcp__tenki__bash {"command":"python3 fib.py"}
 The 30th Fibonacci number is **832040**.
--rw-r--r-- 1 tenki tenki 136 Aug 17 05:13 fib.py
+-rw-r--r-- 1 tenki tenki 136 … fib.py
 ```
 
 ## Run it
