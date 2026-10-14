@@ -1,6 +1,6 @@
 """A CrewAI tool that runs Python in a disposable Tenki sandbox.
 
-Uses the official `tenki-sandbox` Python SDK (pip install tenki-sandbox; Python 3.10+).
+Uses the official `tenki` Python SDK (pip install tenki; Python 3.10+).
 `exec(command, *args)` passes args straight through (no shell splitting), so
 model-generated, multi-line code goes across as a single `-c` argument with no
 escaping surprises.
@@ -9,7 +9,7 @@ from typing import Type
 
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field, PrivateAttr
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 
 class RunPythonInput(BaseModel):

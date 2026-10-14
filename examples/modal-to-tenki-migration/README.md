@@ -1,6 +1,6 @@
 # Migrate from Modal to Tenki
 
-Already running sandboxes on [Modal](https://modal.com)? Moving the sandbox loop to [Tenki](https://tenki.cloud) is a small, mechanical change. Both give you a disposable cloud sandbox with the same core loop — **create → run a command → capture output → dispose** — so most scripts port in a few minutes with the official [`tenki-sandbox`](https://tenki.cloud/docs/sandbox/sdk) Python SDK.
+Already running sandboxes on [Modal](https://modal.com)? Moving the sandbox loop to [Tenki](https://tenki.cloud) is a small, mechanical change. Both give you a disposable cloud sandbox with the same core loop — **create → run a command → capture output → dispose** — so most scripts port in a few minutes with the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK.
 
 This example shows the two scripts side by side, an API map, and a `run.py` (plus a CI-runnable `verify.py`) you can run against live Tenki.
 
@@ -21,14 +21,14 @@ print(out.strip(), "· exit", p.wait())          # 42 · exit 0  (wait() returns
 sb.terminate()
 ```
 
-**Tenki** (`tenki-sandbox`):
+**Tenki** (`tenki`):
 
 ```python
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 # No App object — a sandbox is placed by workspace_id. `with` disposes it.
 with Sandbox.create(
-    auth_token=token,          # from `tenki login` (see the auth note below)
+    auth_token=token,          # a tk_ API key (see the auth note below)
     workspace_id=workspace_id,
     cpu_cores=1,
     memory_mb=1024,
@@ -41,11 +41,11 @@ with Sandbox.create(
 
 ## API map
 
-| Concept | Modal (`modal`) | Tenki (`tenki-sandbox`) |
+| Concept | Modal (`modal`) | Tenki (`tenki`) |
 | --- | --- | --- |
-| Install | `pip install modal` | `pip install tenki-sandbox` |
-| Import | `import modal` | `from tenki_sandbox import Sandbox` |
-| Auth | `modal token new` (writes `~/.modal.toml`), or `MODAL_TOKEN_ID` + `MODAL_TOKEN_SECRET` | `Sandbox.create(auth_token=…)` + `workspace_id` (from `tenki login`) |
+| Install | `pip install modal` | `pip install tenki` |
+| Import | `import modal` | `from tenki import Sandbox` |
+| Auth | `modal token new` (writes `~/.modal.toml`), or `MODAL_TOKEN_ID` + `MODAL_TOKEN_SECRET` | a `tk_` API key: `TENKI_API_KEY`, or `Sandbox.create(auth_token=…)` |
 | App handle | `app = modal.App.lookup("name", create_if_missing=True)` (required first) | — none; placement is `workspace_id` |
 | Create | `modal.Sandbox.create(app=app)` | `Sandbox.create(auth_token=…, workspace_id=…, cpu_cores=1, memory_mb=1024)` |
 | Run a command | `p = sb.exec("python", "-c", "…")` → live process | `r = sb.exec("python3", "-c", "…")` → finished result |
@@ -87,8 +87,8 @@ sb.exec("sh", "-c", "echo $HOME && ls /tmp")
 
 ```bash
 uv venv --python 3.12                      # or: python3.11 -m venv .venv
-uv pip install -r requirements.txt         # just tenki-sandbox
-export TENKI_AUTH_TOKEN=...                 # see the auth note below
+uv pip install -r requirements.txt         # the tenki SDK
+export TENKI_API_KEY=tk_...                # see the auth note below
 ```
 
 ## Run it
@@ -97,9 +97,9 @@ export TENKI_AUTH_TOKEN=...                 # see the auth note below
 python run.py                              # 42 · exit 0
 ```
 
-`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login`) for the token and workspace, so with the CLI logged in you can just run it.
+`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login --api-key <key>`) for the key and workspace, so with the CLI configured you can run it with no env vars.
 
-**Auth note.** Modal authenticates from `~/.modal.toml` (or `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET`) implicitly; Tenki takes an explicit `auth_token` plus a `workspace_id` for placement. The Python SDK authenticates cleanly with a **`tk_` API key** (`export TENKI_AUTH_TOKEN=tk_…`). A `tenki login` browser session token also works, but — unlike the Node SDK — the Python SDK won't auto-detect it; it must be sent as a cookie, so pass it as **`cookie:<token>`** (`run.py` and `verify.py` add that prefix for you). It's an SDK gap, not yours.
+**Auth note.** Modal authenticates from `~/.modal.toml` (or `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET`) implicitly; Tenki takes a **`tk_` API key** — from `TENKI_API_KEY`, or explicitly via `Sandbox.create(auth_token=…)` — plus a `workspace_id` for placement.
 
 ## Verify it
 
@@ -115,11 +115,11 @@ node verify.mjs   # ✓ create → exec python3 + sh + fs round-trip → 42 → 
 
 ## Notes
 
-- **No `App` object.** Modal ties every sandbox to a `modal.App` (`modal.App.lookup(...)` first). Tenki has no app concept — a sandbox is placed directly by `workspace_id` (from `tenki login`).
+- **No `App` object.** Modal ties every sandbox to a `modal.App` (`modal.App.lookup(...)` first). Tenki has no app concept — a sandbox is placed directly by `workspace_id`.
 - **`exec` blocks and returns a result.** Modal's `ContainerProcess` (drain `p.stdout.read()`, `p.wait()`) becomes Tenki's `CommandResult` (`r.stdout_text`, `r.exit_code`) — see the gotcha above.
 - **Disposal.** `sb.terminate()` maps 1:1 to Modal's `sandbox.terminate()`. Because `Sandbox` is a context manager, `with Sandbox.create(...) as sb:` disposes it for you at scope end. Either way the microVM is billed per second and self-reaps on its idle / lifetime caps.
 - **Networking is on by default** in the Python SDK (`allow_outbound=True`), matching Modal's default. Pass `create(..., allow_outbound=False)` to lock a sandbox down.
 - Tenki confines file I/O to `/home/tenki` — write to relative paths.
 - Requires **Python 3.10+**; the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim (the same pattern as [`run-code-python`](../run-code-python/) and [`crewai-code-interpreter`](../crewai-code-interpreter/)).
 
-Built with the official [`tenki-sandbox`](https://tenki.cloud/docs/sandbox/sdk) SDK. Learn more at [tenki.cloud](https://tenki.cloud).
+Built with the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK. Learn more at [tenki.cloud](https://tenki.cloud).
