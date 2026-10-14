@@ -4,13 +4,13 @@ bare binary -> exec a shell one-liner -> a file round-trip -> dispose. Asserts e
 result and exits non-zero on any failure. No LLM needed — this is the whole example,
 asserted.
 
-Needs Python 3.10+ and the dep in requirements.txt. Token/workspace from env (CI) or
-~/.config/tenki/config.yaml (local `tenki login`).
+Needs Python 3.10+ and the dep in requirements.txt. API key/workspace from env (CI) or
+~/.config/tenki/config.yaml (local `tenki login --api-key`).
 """
 import os
 import sys
 
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 
 def cfg(key):
@@ -26,13 +26,8 @@ def cfg(key):
 
 token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 if not token:
-    print("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.")
+    print("No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.")
     sys.exit(1)
-
-# Python SDK auth gap: a bare `tenki login` session token must be sent as a cookie
-# (prefix `cookie:`); a `tk_` API key works as-is. (The Node SDK auto-detects.)
-if not token.startswith(("tk_", "ory_st_", "cookie:")):
-    token = f"cookie:{token}"
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
 workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
