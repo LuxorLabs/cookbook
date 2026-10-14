@@ -33,4 +33,4 @@ node run.mjs                     # exit 0 -> 42
 
 - **`exec(command, { args })` runs a bare binary + its args — no shell splitting.** For a shell one-liner, use `sandbox.exec("sh", { args: ["-c", "echo hi && ls"] })`.
 - The sandbox boots in ~2s and is billed per second. `await using` disposes it automatically (`Session` is an `AsyncDisposable`); or call `await sandbox[Symbol.asyncDispose]()` explicitly.
-- Requires Node 20+ for `await using`.
+- Requires Node 24+ for top-level `await using`.
