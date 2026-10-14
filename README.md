@@ -77,6 +77,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent microVMs for an agent fleet |
 | [RAGFlow](examples/ragflow-tenki/) | Ephemeral microVMs for the RAG engine's code components |
 | [Open WebUI](examples/open-webui-tenki/) | Sandboxed code interpreter for the self-hosted chat platform |
+| [OpenClaw](examples/openclaw-tenki/) | Sandbox backend for the personal AI assistant |
 
 ### Migrating from another provider
 
