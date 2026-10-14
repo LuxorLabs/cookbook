@@ -7,6 +7,6 @@
     "@earendil-works/chord": "^1.2.0",
     "@earendil-works/pi-durable": "^1.2.0",
     "@earendil-works/pi-env": "^1.2.0",
-    "@tenkicloud/sandbox": "^1.4.1"
+    "@tenkicloud/sandbox": ">=1.4.1"
   }
 }
