@@ -13,6 +13,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Composio } from "@composio/core";
 import { tenkiToolkit } from "@tenkicloud/composio-tools";
+import { TenkiSandbox } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 
@@ -27,7 +28,6 @@ const cfg = (key) => {
 
 const MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5";
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
 
 for (const [name, value] of [
 	["COMPOSIO_API_KEY", process.env.COMPOSIO_API_KEY],
@@ -40,11 +40,17 @@ for (const [name, value] of [
 	}
 }
 
+// @tenkicloud/composio-tools 0.1.0 needs both IDs up front; with no projects on the account its own
+// lookup fails. Projects are legacy, so any projectId is accepted. 0.2.0 (unpublished) drops both.
+const workspaceId =
+	process.env.TENKI_WORKSPACE_ID || (await new TenkiSandbox({ authToken }).whoAmI()).workspaces[0]?.id;
+const projectId = process.env.TENKI_PROJECT_ID || "default";
+
 const composio = new Composio({ apiKey: process.env.COMPOSIO_API_KEY });
 const anthropic = new Anthropic();
 
 const session = await composio.sessions.create("default", {
-	experimental: { customToolkits: [tenkiToolkit({ authToken, workspaceId })] },
+	experimental: { customToolkits: [tenkiToolkit({ authToken, workspaceId, projectId })] },
 });
 
 // Anthropic tool defs come straight from the session's custom-tool registry.

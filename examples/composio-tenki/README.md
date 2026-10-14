@@ -1,6 +1,6 @@
 # Composio agent on Tenki
 
-Give any [Composio](https://composio.dev) agent disposable Tenki microVMs. The official [`@tenkicloud/composio-tools`](https://github.com/TenkiCloud/composio-tools) package registers a **Tenki custom toolkit** — the agent gets `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX`, all running in-process against the Tenki SDK. No extra backend.
+Give any [Composio](https://composio.dev) agent disposable Tenki microVMs. The official [`@tenkicloud/composio-tools`](https://github.com/LuxorLabs/tenki-composio-tools) package registers a **Tenki custom toolkit** — the agent gets `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX`, all running in-process against the Tenki SDK. No extra backend.
 
 ## The integration (the whole thing)
 
@@ -10,12 +10,14 @@ import { tenkiToolkit } from "@tenkicloud/composio-tools";
 
 const composio = new Composio({ apiKey: process.env.COMPOSIO_API_KEY });
 const session = await composio.sessions.create("default", {
-  experimental: { customToolkits: [tenkiToolkit()] },
+  experimental: {
+    customToolkits: [tenkiToolkit({ workspaceId: process.env.TENKI_WORKSPACE_ID, projectId: "default" })],
+  },
 });
 // the agent can now call LOCAL_TENKI_CREATE_SANDBOX, LOCAL_TENKI_EXEC_COMMAND, …
 ```
 
-`tenkiToolkit()` reads `TENKI_API_KEY` from the environment (or takes `authToken`/`workspaceId` options). Custom toolkits are **session-scoped**: tool calls run through `session.execute(slug, args)`, and definitions come from `session.customTools()`.
+`tenkiToolkit()` reads `TENKI_API_KEY` from the environment (or takes an `authToken` option). The published 0.1.0 also needs `workspaceId` and `projectId`: its own lookup expects a project, and Tenki no longer has them, so pass your workspace ID and any project value. `verify.mjs` and `agent.mjs` look the workspace up from the key for you. The example pins `@tenkicloud/sandbox` at `^0.3.6` for the workspace lookup — the same line composio-tools 0.1.0 itself depends on. Upstream 0.2.0 infers the workspace and drops both options, but it isn't on npm yet. Custom toolkits are **session-scoped**: tool calls run through `session.execute(slug, args)`, and definitions come from `session.customTools()`.
 
 ## Two files
 
