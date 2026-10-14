@@ -2,7 +2,7 @@
  * Proves this example works: boot a sandbox, seed the DB, start the app, drive
  * every endpoint (GET/POST/PATCH), expose the frontend, fetch it from the public
  * internet, assert each step, then terminate the sandbox.
- * Token/project from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+ * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  */
 import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
@@ -16,13 +16,11 @@ const cfg = (key) => {
 		return "";
 	}
 };
-let token = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+const token = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 if (!token) {
 	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
 	process.exit(1);
 }
-// A `tenki login` session token must be sent as a cookie; `tk_` keys work as-is.
-if (!/^(tk_|ory_st_|cookie:)/.test(token)) token = `cookie:${token}`;
 
 const PORT = 8000;
 const tenki = new TenkiSandbox({ authToken: token });
