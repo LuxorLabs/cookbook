@@ -4,7 +4,7 @@
 
 ## Point an agent at Tenki
 
-> **Version note:** the Tenki backend merged after OpenHermit's latest npm release (`0.10.0`), so until the next release ships, run from a source checkout — `git clone https://github.com/HCF-STUDIOS/openhermit && cd openhermit && npm install`, then substitute `npm run dev:cli --` wherever `hermit` appears below (see the repo's Development section).
+> **Version note:** the Tenki backend merged after OpenHermit's latest npm release (`0.10.0`), and since [openhermit#313](https://github.com/HCF-STUDIOS/openhermit/pull/313) it needs `@tenkicloud/sandbox` 1.4 or newer. Until the next release ships, run from a source checkout — `git clone https://github.com/HCF-STUDIOS/openhermit && cd openhermit && npm install`, then substitute `npm run dev:cli --` wherever `hermit` appears below (see the repo's Development section).
 
 ```bash
 hermit setup                                        # DATABASE_URL, tokens
@@ -14,20 +14,20 @@ hermit gateway start
 
 hermit agents create main --no-sandbox              # skip the default Docker sandbox
 hermit sandbox add --agent main --type tenki \
-  --config '{"project_id": "default"}'
+  --config '{"timeout_ms": 300000}'
 hermit agents start main
 hermit chat --agent main                            # the agent's shell now runs on Tenki
 ```
 
 `--no-sandbox` matters: without it, `agents create` auto-provisions the gateway's default sandbox preset (Docker), and the Tenki `sandbox add` then conflicts on the `default` alias.
 
-Config keys (all optional except `project_id`, which OpenHermit's schema still requires — current Tenki no longer scopes sandboxes by project, so any identifier satisfies it):
+Config keys (all optional; `--config` can be omitted entirely):
 
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `cpu_cores` / `memory_mb` / `disk_size_gb` | `2` / `4096` / `10` | microVM size |
 | `agent_home` | `/home/tenki` | workspace mount point and default `cwd` |
-| `timeout_ms` | `300000` | per-command timeout (exit 137 on expiry) |
+| `timeout_ms` | `300000` | guest-enforced per-command timeout; on expiry exit 137, partial stdout/stderr kept |
 | `workspace_id` | token's own scope | explicit Tenki workspace |
 | `base_url` | Tenki cloud | self-hosted / staging endpoint |
 
@@ -37,7 +37,7 @@ Operators can also register the same blob as a preset in `gateway.json` (`"sandb
 
 - **One sticky microVM per agent.** The backend creates the session with `sticky: true`, persists the session id, and after a gateway restart reattaches with `client.get(id)` — resuming a paused VM instead of recreating it, workspace intact.
 - **Commands run as `sh -c`** in `agent_home`, with per-agent pass-through secrets injected as env vars on every exec.
-- **Skills sync as file uploads** over Tenki's data plane; syncs queued while the sandbox is unreachable replay when it reattaches.
+- **Skills sync as file uploads** over Tenki's data plane, staged and then swapped in. A sync requested while the sandbox is paused only sets a dirty flag; the next `ensure()` re-pushes the enabled skills from the database.
 
 ## Verify
 
@@ -46,7 +46,7 @@ npm install
 node verify.mjs
 ```
 
-No gateway or database needed: [`verify.mjs`](verify.mjs) drives the exact Tenki surface the backend is built on — boot a sticky session → `sh -c` exec with env pass-through → skill-file round-trip → **reattach by session id** → dispose — against the live API. The backend's internals (state rows, replay queues) are covered by OpenHermit's own test suite.
+No gateway or database needed: [`verify.mjs`](verify.mjs) drives the exact Tenki surface the backend is built on — boot a sticky session → `sh -c` exec with env pass-through → a timed-out command that keeps its partial output → skill-file round-trip → **reattach by session id** → dispose — against the live API. The backend's internals (state rows, the skill dirty flag) are covered by OpenHermit's own test suite.
 
 ## Notes
 

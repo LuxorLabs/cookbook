@@ -40,13 +40,22 @@ try {
 		workspaceId,
 	});
 
-	// 2) exec the way TenkiExecBackend.exec() does: sh -c, cwd agent_home, env passed through
+	// 2) exec the way TenkiExecBackend.exec() does: sh -c, cwd agent_home, env passed
+	//    through, timeout_ms handed to the SDK's guest-enforced timeout
 	const r1 = await session.run(["sh", "-c", 'echo "$GREETING $(python3 -c "print(6*7)")"'], {
 		cwd: "/home/tenki",
 		env: { GREETING: "hermit" },
+		timeoutMs: 300_000,
 	});
-	if (!(r1.exitCode === 0 && text(r1.stdout).trim() === "hermit 42")) {
+	if (!(r1.exitCode === 0 && !r1.timedOut && text(r1.stdout).trim() === "hermit 42")) {
 		throw new Error(`exec: exit ${r1.exitCode}, stdout ${JSON.stringify(text(r1.stdout))}, stderr ${JSON.stringify(text(r1.stderr))}`);
+	}
+
+	// 2b) timeout_ms expiry: the guest returns timedOut with partial output, which the
+	//     backend maps to exit 137 while keeping stdout/stderr
+	const rt = await session.run(["sh", "-c", "echo partial; sleep 30"], { cwd: "/home/tenki", timeoutMs: 3_000 });
+	if (!(rt.timedOut && text(rt.stdout).includes("partial"))) {
+		throw new Error(`timeout: timedOut ${rt.timedOut}, exit ${rt.exitCode}, stdout ${JSON.stringify(text(rt.stdout))}`);
 	}
 
 	// 3) the skill-sync path: mkdir + writeFile, then read back
@@ -56,13 +65,15 @@ try {
 		throw new Error("skill file round-trip mismatch");
 	}
 
-	// 4) reattach by id — what the gateway does after a restart (resume if paused)
+	// 4) reattach by id — what the gateway does after a restart (readySession: resume if
+	//    paused, wait until RUNNING)
 	const again = await client.get(session.id);
 	if (again.state === "PAUSED") await again.resume();
+	if (again.state !== "RUNNING") await again.waitReady(180_000);
 	const r2 = await again.run(["sh", "-c", "cat skills/demo.md"], { cwd: "/home/tenki" });
 	if (!text(r2.stdout).includes("demo skill")) throw new Error("reattached session lost workspace state");
 
-	console.log("✓ openhermit-tenki: sticky session → sh -c exec with env (hermit 42) → skill file sync → reattach by id → dispose");
+	console.log("✓ openhermit-tenki: sticky session → sh -c exec with env (hermit 42) → timeout keeps partial output → skill file sync → reattach by id → dispose");
 } catch (e) {
 	console.error("✗ " + (e?.message ?? e));
 	process.exitCode = 1;
