@@ -1,0 +1,13 @@
+{
+  "name": "convex-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — Tenki sandboxes from Convex actions, with each sandbox's live state in a Convex table, via @tenkicloud/convex.",
+  "dependencies": {
+    "@tenkicloud/convex": "^0.1.1",
+    "convex": "^1.46.0"
+  },
+  "devDependencies": {
+    "convex-test": "0.0.60"
+  }
+}
