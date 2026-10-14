@@ -4,7 +4,7 @@
 
 ## Enable it
 
-The provider lives in RAGFlow's Go server ([`internal/agent/sandbox/tenki.go`](https://github.com/infiniflow/ragflow/blob/main/internal/agent/sandbox/tenki.go)) and its SDK, `github.com/LuxorLabs/tenki-sdk-go/sandbox`, is a regular `go.mod` dependency, so there is nothing to install. The older Python provider was removed from RAGFlow main in [ragflow#20389](https://github.com/infiniflow/ragflow/pull/20389).
+The provider lives in RAGFlow's Go server ([`internal/agent/sandbox/tenki.go`](https://github.com/infiniflow/ragflow/blob/main/internal/agent/sandbox/tenki.go)) and its SDK, `github.com/LuxorLabs/tenki-sdk-go/sandbox`, is a regular `go.mod` dependency, so there is nothing to install. That is what RAGFlow v1.0.0-rc1 and later run. The older Python provider was removed from RAGFlow main in [ragflow#20389](https://github.com/infiniflow/ragflow/pull/20389). On v0.27.x with the default Python server, that Python provider is used instead: install the SDK into the RAGFlow runtime with `pip install tenki` (the old `tenki-sandbox` package is no longer on PyPI).
 
 Configure it in **Admin > Sandbox Settings** (saved settings apply to the next execution, no restart):
 
