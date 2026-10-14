@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example — pause a Tenki sandbox (memory + disk snapshot), resume it, and prove the filesystem persisted.",
   "dependencies": {
-    "@tenkicloud/sandbox": "^0.4.0"
+    "@tenkicloud/sandbox": "^1.4.1"
   }
 }

@@ -12,7 +12,7 @@ persistent kernel *inside* the sandbox — a stdlib-only daemon on sandbox-loopb
 TCP that holds one namespace and executes code sent to it. No outbound network,
 no extra packages: it's the reason the shipped executors all use a live kernel.
 
-Uses the official `tenki-sandbox` Python SDK (pip install tenki-sandbox; Python 3.10+).
+Uses the official `tenki` Python SDK (pip install tenki; Python 3.10+).
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from smolagents.local_python_executor import CodeOutput
 from smolagents.monitoring import LogLevel
 from smolagents.remote_executors import RemotePythonExecutor
 from smolagents.utils import AgentError
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 _PORT = 47000  # sandbox-loopback only; never exposed outside the microVM
 

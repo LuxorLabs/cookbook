@@ -5,10 +5,10 @@ LlamaIndex `FunctionTool` an agent can call. `exec(command, *args)` passes args
 straight through (no shell splitting), so model-generated, multi-line code goes
 across as a single `-c` argument with no escaping surprises.
 
-Uses the official `tenki-sandbox` Python SDK (pip install tenki-sandbox; Python 3.10+).
+Uses the official `tenki` Python SDK (pip install tenki; Python 3.10+).
 """
 from llama_index.core.tools import FunctionTool
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 
 def make_code_tool(sandbox: Sandbox) -> FunctionTool:
