@@ -38,6 +38,8 @@ jobs:
                 # Pins covalent-tenki-plugin>=0.1.1, which is not on PyPI yet
                 # (LuxorLabs/tenki-covalent-plugin#1). Unskip when 0.1.1 ships.
                 echo "== ${d} == skipped (covalent-tenki-plugin 0.1.1 unreleased)"
+                continue
+              fi
               if [ "$d" = "examples/orca-tenki/" ]; then
                 # Gateway SSH host keys are not stable across connections, so the
                 # pinned-alias verification can fail intermittently. Skipped until
