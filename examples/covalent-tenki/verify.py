@@ -3,7 +3,7 @@ Smoke-verify the Covalent example, fast:
   1. the official `covalent-tenki-plugin` imports and its `TenkiExecutor`
      constructs (so the walkthrough is actually usable), and
   2. the live Tenki sandbox path the executor runs on is healthy — create a
-     sandbox with the same `tenki-sandbox` SDK, run a task-style command, assert,
+     sandbox with the same `tenki` SDK, run a task-style command, assert,
      terminate.
 
 We deliberately do NOT dispatch a full Covalent workflow: that needs a running
@@ -12,12 +12,12 @@ internals have their own CI in TenkiCloud/covalent-tenki-plugin. This checks the
 two things that actually break a walkthrough: the plugin installing, and Tenki
 being reachable.
 
-Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+API key/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login --api-key`).
 """
 import os
 import sys
 
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 from covalent_tenki_plugin import TenkiExecutor  # proves the plugin installed + imports
 
 
@@ -34,13 +34,8 @@ def cfg(key):
 
 token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 if not token:
-    print("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.")
+    print("No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.")
     sys.exit(1)
-
-# Python SDK auth gap: a bare `tenki login` session token is sent as Bearer (rejected);
-# prefix it `cookie:` so it goes as a cookie. A `tk_` API key works as-is.
-if not token.startswith(("tk_", "ory_st_", "cookie:")):
-    token = f"cookie:{token}"
 
 # Construct the executor — proves the plugin's config surface is intact.
 TenkiExecutor(cpu_cores=1, memory_mb=1024)
