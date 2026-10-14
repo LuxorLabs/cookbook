@@ -10,7 +10,6 @@ Give every user of a [Convex](https://www.convex.dev) app its own [Tenki](https:
 
 ```bash
 npm install @tenkicloud/convex convex
-npx convex env set TENKI_API_KEY tk_...     # a key from the Tenki dashboard
 ```
 
 Register the component ([`convex/convex.config.ts`](convex/convex.config.ts)):
@@ -94,8 +93,8 @@ A sandbox runs for at most `maxDurationMs` per run; at the deadline Tenki pauses
 
 ```bash
 npm install
-npx convex dev                              # pushes convex/, generates convex/_generated
-npx convex env set TENKI_API_KEY tk_...
+npx convex dev --once                       # provision a dev deployment and push convex/
+npx convex env set TENKI_API_KEY tk_...     # a key from the Tenki dashboard
 
 ID='{"subject":"user-1","issuer":"https://example.test"}'
 npx convex run --identity "$ID" sandboxes:start             # phase: "ready"
@@ -105,7 +104,7 @@ npx convex run --identity "$ID" sandboxes:start             # resumed, phase: "r
 npx convex run --identity "$ID" sandboxes:destroy           # phase: "terminated"
 ```
 
-`--identity` stands in for a signed-in user; in an app, wire up any Convex auth provider. `"use node"` actions need Node 20, 22 or 24 when you run a local deployment.
+`--identity` stands in for a signed-in user; in an app, wire up any Convex auth provider. `"use node"` actions need a Node version Convex's local deployment supports.
 
 ## Verify
 

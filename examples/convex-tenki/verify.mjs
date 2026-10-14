@@ -45,15 +45,12 @@ const sandboxes = {
 	save: action({ args: { path: v.string(), data: v.string() }, handler: async (ctx, a) => await tenki.writeFile(ctx, { ownerId: await ownerId(ctx), key: "main", ...a }) }),
 	load: action({ args: { path: v.string() }, handler: async (ctx, { path }) => await tenki.readFile(ctx, { ownerId: await ownerId(ctx), key: "main", path }) }),
 	destroy: action({ args: {}, handler: async (ctx) => await tenki.destroy(ctx, { ownerId: await ownerId(ctx), key: "main" }) }),
-};
-const sandboxQueries = {
 	mine: query({ args: {}, handler: async (ctx) => await ctx.runQuery(components.tenki.sandboxes.get, { ownerId: await ownerId(ctx), key: "main" }) }),
 };
 
 const t = convexTest(defineSchema({}), {
 	"./_generated/api.js": async () => ({}),
 	"./sandboxes.js": async () => sandboxes,
-	"./sandboxQueries.js": async () => sandboxQueries,
 });
 t.registerComponent("tenki", (await import(new URL("schema.js", dir))).default, componentModules);
 const user = t.withIdentity({ subject: "verify-user" });
@@ -63,7 +60,7 @@ let started = false;
 try {
 	const created = await user.action(api.sandboxes.start, {});
 	started = true;
-	const row = await user.query(api.sandboxQueries.mine, {});
+	const row = await user.query(api.sandboxes.mine, {});
 	if (row?.phase !== "ready" || row.sessionId !== created.sessionId) throw new Error(`row after create: ${JSON.stringify(row)}`);
 
 	const r = await user.action(api.sandboxes.run, { command: "python3 -c 'print(6 * 7)'" });
@@ -75,7 +72,7 @@ try {
 
 	await user.action(api.sandboxes.destroy, {});
 	started = false;
-	const after = await user.query(api.sandboxQueries.mine, {});
+	const after = await user.query(api.sandboxes.mine, {});
 	if (after?.phase !== "terminated") throw new Error(`row after destroy: ${JSON.stringify(after)}`);
 
 	console.log("✓ convex-tenki: tenki.create → row ready → exec (42) → file round-trip → destroy → row terminated");
