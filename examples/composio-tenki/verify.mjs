@@ -10,6 +10,7 @@
  */
 import { Composio } from "@composio/core";
 import { tenkiToolkit } from "@tenkicloud/composio-tools";
+import { TenkiSandbox } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 
@@ -34,9 +35,15 @@ if (!authToken) {
 	process.exit(1);
 }
 
+// @tenkicloud/composio-tools 0.1.0 needs both IDs up front; with no projects on the account its own
+// lookup fails. Projects are legacy, so any projectId is accepted. 0.2.0 (unpublished) drops both.
+const workspaceId =
+	process.env.TENKI_WORKSPACE_ID || (await new TenkiSandbox({ authToken }).whoAmI()).workspaces[0]?.id;
+const projectId = process.env.TENKI_PROJECT_ID || "default";
+
 const composio = new Composio({ apiKey: composioKey });
 const session = await composio.sessions.create("default", {
-	experimental: { customToolkits: [tenkiToolkit({ authToken })] },
+	experimental: { customToolkits: [tenkiToolkit({ authToken, workspaceId, projectId })] },
 });
 
 /** Execute one LOCAL_TENKI_* tool and assert Composio + the tool itself both succeeded. */

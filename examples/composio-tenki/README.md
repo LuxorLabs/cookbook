@@ -10,12 +10,14 @@ import { tenkiToolkit } from "@tenkicloud/composio-tools";
 
 const composio = new Composio({ apiKey: process.env.COMPOSIO_API_KEY });
 const session = await composio.sessions.create("default", {
-  experimental: { customToolkits: [tenkiToolkit()] },
+  experimental: {
+    customToolkits: [tenkiToolkit({ workspaceId: process.env.TENKI_WORKSPACE_ID, projectId: "default" })],
+  },
 });
 // the agent can now call LOCAL_TENKI_CREATE_SANDBOX, LOCAL_TENKI_EXEC_COMMAND, …
 ```
 
-`tenkiToolkit()` reads `TENKI_API_KEY` from the environment (or takes an `authToken` option); the workspace is inferred from the key. Custom toolkits are **session-scoped**: tool calls run through `session.execute(slug, args)`, and definitions come from `session.customTools()`.
+`tenkiToolkit()` reads `TENKI_API_KEY` from the environment (or takes an `authToken` option). The published 0.1.0 also needs `workspaceId` and `projectId`: its own lookup expects a project, and Tenki no longer has them, so pass your workspace ID and any project value. `verify.mjs` and `agent.mjs` look the workspace up from the key for you. Upstream 0.2.0 infers the workspace and drops both options, but it isn't on npm yet. Custom toolkits are **session-scoped**: tool calls run through `session.execute(slug, args)`, and definitions come from `session.customTools()`.
 
 ## Two files
 
