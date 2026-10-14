@@ -92,6 +92,5 @@ node verify.mjs      # or: .venv/bin/python verify.py
 
 ## Notes
 
-- The extension uses Tenki's **new [`tenki`](https://pypi.org/project/tenki/) Python SDK** (`tenki>=1.4.0,<2`, the range ag2 1.1.2 declares) — the canonical successor namespace to the older `tenki-sandbox` package some earlier cookbook examples use. Don't install `tenki-sandbox` for this one.
-- Auth: a `tk_` API key works as-is. A `tenki login` browser session token must be prefixed `cookie:` for the Python SDK (`verify.py` handles this).
+- Auth: use a `tk_` API key (`TENKI_API_KEY`, or `tenki login --api-key <key>`).
 - All credential/selection parameters also accept AG2 `Variable`s for per-request (multi-tenant) resolution — see the [AG2 Tenki docs](https://github.com/ag2ai/ag2/blob/main/website/docs/user-guide/extensions/tenki.mdx).

@@ -38,11 +38,12 @@ if not token:
     print("No token. Set TENKI_API_KEY, or run `tenki login`.")
     sys.exit(1)
 
-# `tenki` SDK auth gap: a bare `tenki login` browser session token is sent as a
-# Bearer header (rejected); prefix it `cookie:` so it travels as a cookie.
-# A `tk_` API key works as-is.
-if not token.startswith(("tk_", "ory_st_", "cookie:")):
-    token = f"cookie:{token}"
+if not token.startswith("tk_"):
+    print(
+        "Token must be a tk_ API key (tenki SDK 1.x accepts only tk_ keys). "
+        "Set TENKI_API_KEY or run `tenki login --api-key <key>`."
+    )
+    sys.exit(1)
 
 
 async def main() -> None:
