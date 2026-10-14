@@ -52,7 +52,7 @@ try {
 
 	recipe("destroy", { recipeResult: result });
 	result = null;
-	console.log("✓ orca-tenki: recipe create → ssh into the microVM → yocto-queue → suspend → resume → ssh again → destroy");
+	console.log("✓ orca-tenki: recipe create → ssh (yocto-queue) → suspend → resume → ssh again → destroy");
 } catch (e) {
 	console.error("✗ " + (e?.stderr?.toString()?.trim() || e?.message || e));
 	process.exitCode = 1;

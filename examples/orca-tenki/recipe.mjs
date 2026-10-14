@@ -5,7 +5,7 @@
 // target; `suspend`/`resume`/`destroy` get that same JSON back on stdin as recipeResult.
 import { TenkiSandbox, isReady } from "@tenkicloud/sandbox";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync, readFileSync, rmSync, appendFileSync, existsSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { randomUUID } from "node:crypto";
 
@@ -46,7 +46,7 @@ if (mode === "create") {
 	// per-sandbox alias, so later connections verify normally instead of skipping the check.
 	const alias = `tenki-${sandbox.id.slice(0, 8)}`;
 	mkdirSync(`${homedir()}/.ssh`, { recursive: true });
-	execFileSync("ssh", ["-o", `ProxyCommand=node ${proxy} ${sandbox.id}`, "-o", "StrictHostKeyChecking=accept-new",
+	execFileSync("ssh", ["-o", `ProxyCommand=node "${proxy}" ${sandbox.id}`, "-o", "StrictHostKeyChecking=accept-new",
 		"-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=30", "-i", `${keyDir}/id`, `tenki@${alias}`, "true"], { stdio: "ignore" });
 
 	process.stdout.write(JSON.stringify({
@@ -61,7 +61,7 @@ if (mode === "create") {
 				username: "tenki",
 				identityFile: `${keyDir}/id`,
 				identitiesOnly: true,
-				proxyCommand: `node ${proxy} ${sandbox.id}`,
+				proxyCommand: `node "${proxy}" ${sandbox.id}`,
 			},
 			projectRoot: "/home/tenki/repo",
 		},
@@ -76,7 +76,9 @@ if (mode === "create") {
 	else if (mode === "resume") {
 		await sandbox.resume();
 		// resume() returns while the session is still RESUMING; anything else 409s until it lands.
+		const deadline = Date.now() + 120_000;
 		while (!isReady(sandbox.state)) {
+			if (Date.now() > deadline) throw new Error(`resume timed out: state still ${sandbox.state} after 120s`);
 			await new Promise((r) => setTimeout(r, 1000));
 			await sandbox.refresh();
 		}
@@ -86,9 +88,8 @@ if (mode === "create") {
 	} else if (mode === "destroy") {
 		await sandbox[Symbol.asyncDispose]();
 		rmSync(keyDir, { recursive: true, force: true });
-		if (existsSync(knownHosts)) {
-			writeFileSync(knownHosts, readFileSync(knownHosts, "utf8").split("\n").filter((l) => !l.startsWith(`${alias} `)).join("\n"));
-		}
+		// ssh-keygen -R also handles hashed known_hosts entries, which a line filter would miss.
+		if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
 	}
 	process.stdout.write(JSON.stringify({ ok: true, mode }));
 }

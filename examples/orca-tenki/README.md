@@ -23,7 +23,7 @@ process.stdout.write(JSON.stringify({
       username: "tenki",
       identityFile: `${keyDir}/id`,
       identitiesOnly: true,
-      proxyCommand: `node ${proxy} ${sandbox.id}`,
+      proxyCommand: `node "${proxy}" ${sandbox.id}`,
     },
     projectRoot: "/home/tenki/repo",
   },
@@ -62,7 +62,7 @@ for (;;) {
 
 ## Wire it into orca
 
-Point orca's `environmentRecipes` at the recipe, one command per lifecycle mode:
+Point `environmentRecipes` in your repo's `orca.yaml` at the recipe, one command per lifecycle mode:
 
 ```yaml
 environmentRecipes:
@@ -89,7 +89,7 @@ Needs an OpenSSH client (`ssh`, `ssh-keygen`) on the host.
 Verify the whole lifecycle against the live API:
 
 ```bash
-node verify.mjs   # create → ssh in → suspend → resume → ssh again → destroy
+node verify.mjs   # recipe create → ssh (yocto-queue) → suspend → resume → ssh again → destroy
 ```
 
 ## Notes
@@ -98,5 +98,6 @@ node verify.mjs   # create → ssh in → suspend → resume → ssh again → d
 - **The certificate has to live at `<identityFile>-cert.pub`.** orca's SSH target schema has no certificate field, and OpenSSH auto-loads that filename — which is why each sandbox gets its own key directory rather than one shared key.
 - The issued user certificate has **empty principals**, so any username works; the sandbox account is `tenki`.
 - **`resume()` returns while the session is still `RESUMING`.** Calling anything else immediately fails with `session not RUNNING (state=RESUMING)`; poll `sandbox.refresh()` until `isReady(sandbox.state)`. The recipe also mints a fresh certificate on resume, since they are short-lived.
-- `destroy` removes the key directory and the `known_hosts` line it added, so a long-lived fleet does not leave a trail of dead aliases behind.
+- `destroy` removes the key directory and the `known_hosts` entry it added, so a long-lived fleet does not leave a trail of dead aliases behind.
+- A sandbox orca never destroys lives until your workspace's max-duration default — feed the create output back to `node recipe.mjs destroy` when experimenting by hand.
 - The same pause/resume pair on its own is [snapshots-pause-resume](../snapshots-pause-resume/); the port-exposing counterpart is [expose-a-port](../expose-a-port/).
