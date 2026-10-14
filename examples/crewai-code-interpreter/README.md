@@ -1,12 +1,12 @@
 # CrewAI agent with a Tenki code interpreter
 
-Give a [CrewAI](https://crewai.com) agent a **code interpreter** — a tool that runs Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. The same pattern E2B and Daytona ship for CrewAI, on Tenki microVMs. Python, on the official [`tenki-sandbox`](https://tenki.cloud/docs/sandbox/sdk) SDK.
+Give a [CrewAI](https://crewai.com) agent a **code interpreter** — a tool that runs Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. The same pattern E2B and Daytona ship for CrewAI, on Tenki microVMs. Python, on the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK.
 
 ## The tool (`tenki_tool.py`)
 
 ```python
 from crewai.tools import BaseTool
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 class TenkiCodeInterpreter(BaseTool):
     name = "run_python"
@@ -23,11 +23,11 @@ class TenkiCodeInterpreter(BaseTool):
 
 ```bash
 uv venv                                   # or: python3.11 -m venv .venv
-uv pip install -r requirements.txt        # tenki-sandbox + crewai
-export TENKI_AUTH_TOKEN=...               # see the auth note below
+uv pip install -r requirements.txt        # the tenki SDK + crewai
+export TENKI_API_KEY=tk_...               # or: tenki login --api-key <key>
 ```
 
-**Auth note.** The Python SDK authenticates cleanly with a **`tk_` API key** (`export TENKI_AUTH_TOKEN=tk_…`). A `tenki login` browser session token also works, but — unlike the Node SDK — the Python SDK won't auto-detect it; pass it as **`cookie:<token>`** so it's sent as a cookie (`verify.py` does this for you). It's an SDK gap, not yours.
+The SDK takes a `tk_` API key: set `TENKI_API_KEY`, or run `tenki login --api-key <key>` to store one in `~/.config/tenki/config.yaml` (the scripts read it from there).
 
 ## Verify it (no LLM needed)
 
