@@ -37,7 +37,7 @@ Both are single-file plugins built from the same execution core — install eith
 ```bash
 uv venv --python 3.12
 uv pip install -r requirements.txt
-export TENKI_AUTH_TOKEN=tk_...   # or `tenki login`
+export TENKI_AUTH_TOKEN=tk_...   # or `tenki login --api-key tk_...`
 node verify.mjs                  # or: .venv/bin/python verify.py
 ```
 
@@ -47,5 +47,5 @@ node verify.mjs                  # or: .venv/bin/python verify.py
 
 - Uses the new [`tenki`](https://pypi.org/project/tenki/) SDK (`tenki[async]>=0.5.1`, `AsyncSandbox`) — not the older `tenki-sandbox` package.
 - Every execution is a fresh microVM with guaranteed teardown: `sandbox.close()` runs even on timeout or crash, and a server-side `max_duration` backstop kills stragglers — no leaked billing.
-- Auth: a `tk_` API key works as-is. A `tenki login` browser session token must be prefixed `cookie:<token>` for the Python SDK (`verify.py` does this for you).
+- Auth: use a `tk_` API key. The `tenki[async]>=0.5.1` requirement installs SDK 1.x, which accepts only `tk_` keys; the old `cookie:<session token>` form is rejected.
 - Source, build tooling, and both plugins: [github.com/LuxorLabs/tenki-open-webui](https://github.com/LuxorLabs/tenki-open-webui).

@@ -51,11 +51,11 @@ try:
     if not token:
         print("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.")
         sys.exit(1)
-    # A `tk_` API key works as-is. A bare `tenki login` browser session token
-    # would be sent as Bearer and rejected — prefix it `cookie:` (SDK auth gap,
-    # same workaround as examples/langchain-python).
-    if not token.startswith(("tk_", "ory_st_", "cookie:")):
-        token = f"cookie:{token}"
+    # tenki SDK 1.x accepts only `tk_` API keys / service tokens (the 0.5.x
+    # `cookie:` session-token workaround is gone and is rejected client-side).
+    if not token.startswith("tk_"):
+        print("Token must be a tk_ API key (tenki SDK 1.x). Run `tenki login --api-key tk_...` or set TENKI_AUTH_TOKEN.")
+        sys.exit(1)
     tools.valves.tenki_api_key = token
     ws = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
     if ws:
