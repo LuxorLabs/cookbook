@@ -74,6 +74,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
 | [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent microVMs for an agent fleet |
 | [RAGFlow](examples/ragflow-tenki/) | Ephemeral microVMs for the RAG engine's code components |
+| [Open WebUI](examples/open-webui-tenki/) | Sandboxed code interpreter for the self-hosted chat platform |
 
 ### Migrating from another provider
 
