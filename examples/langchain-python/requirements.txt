@@ -1,4 +1,4 @@
-tenki-sandbox>=0.4
+tenki>=1.4.1
 langchain-core>=1.0
 langgraph>=1.0
 langchain-openai>=1.0

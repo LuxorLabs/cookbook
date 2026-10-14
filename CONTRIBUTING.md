@@ -4,8 +4,8 @@ This is the examples/cookbook layer for Tenki, and this is your playbook. New he
 
 ## Setup (5 minutes)
 
-1. **Get a Tenki account + key.** Install the CLI and run `tenki login` — it writes your token and default workspace to `~/.config/tenki/config.yaml`. The examples read from there automatically.
-2. **Node 20+.**
+1. **Get a Tenki account + key.** Install the CLI and run `tenki login` — it writes a `tk_` API key to `~/.config/tenki/config.yaml`. The examples read it from there automatically.
+2. **Node 24+.** (The verify scripts only need Node 20, which is what CI runs; the `run.mjs` demos use top-level `await using`, which needs 24.)
 3. **Run an example to confirm your setup works:**
    ```bash
    cd examples/run-code-in-a-sandbox
@@ -59,7 +59,7 @@ examples/<name>/
 - **Short and runnable beats comprehensive.** One clear thing per example.
 - Name the Tenki products used; link back to `tenki.cloud`.
 - Tenki confines file I/O to `/home/tenki` — use relative paths.
-- Note any gotchas inline (e.g. `exec(cmd, { args })` doesn't shell-split; `allowOutbound: true` is needed for network).
+- Note any gotchas inline (e.g. `exec(cmd, { args })` doesn't shell-split; outbound network is on by default — pass `allowOutbound: false` to isolate).
 
 ## Review flow
 

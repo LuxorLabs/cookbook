@@ -26,11 +26,8 @@ def cfg(key):
     return ""
 
 
-# A `tk_` API key works as-is; a `tenki login` session token must be sent as a
-# cookie, so prefix it `cookie:` (see the auth note in the README).
+# A tk_ API key, from env or ~/.config/tenki/config.yaml (`tenki login --api-key`).
 token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
-if token and not token.startswith(("tk_", "ory_st_", "cookie:")):
-    token = f"cookie:{token}"
 
 # allow_outbound=True: CodeAgent patches its final_answer tool, and smolagents
 # then pip-installs that tool's inferred requirements (numpy, pillow) into the
