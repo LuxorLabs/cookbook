@@ -1,5 +1,4 @@
-# ag2's latest release (1.0.1, 2026-07-29) predates the Tenki extension merge
-# (ag2ai/ag2#3096, 2026-08-13). Pin the merge commit until the next ag2 release
-# ships ag2/extensions/tenki, then switch to a plain `ag2` pin.
-ag2 @ git+https://github.com/ag2ai/ag2.git@535dfb303cf1db9f862ac099a9f7887d3f8f9b39
-tenki>=0.5.4,<1
+# ag2 1.1.2 (2026-10-03) is the first PyPI release that ships ag2/extensions/tenki.
+# The tenki range matches what the extension itself declares (tenki>=1.4.0,<2).
+ag2>=1.1.2
+tenki>=1.4.0,<2

@@ -37,15 +37,15 @@ if __name__ == "__main__":
 
 ```bash
 uv venv                                 # or: python3.11 -m venv .venv
-uv pip install -r requirements.txt      # ag2 (git pin, see note) + tenki SDK
+uv pip install -r requirements.txt      # ag2>=1.1.2 + tenki SDK
 export TENKI_API_KEY=tk_...             # from the Tenki dashboard
 ```
 
-> **Release note (2026-08):** the Tenki extension merged into ag2 `main` on 2026-08-13, after the latest PyPI release (1.0.1, 2026-07-29) — so `requirements.txt` pins the merge commit via git. Once the next ag2 release ships `ag2/extensions/tenki`, this becomes simply:
->
-> ```bash
-> pip install "ag2[anthropic]" "tenki>=0.5.4,<1"
-> ```
+The extension ships in ag2 1.1.2 and later. To run the agent above, add the Anthropic extra:
+
+```bash
+pip install "ag2[anthropic]>=1.1.2" "tenki>=1.4.0,<2"
+```
 
 ## Configuring `TenkiEnvironment`
 
@@ -92,6 +92,6 @@ node verify.mjs      # or: .venv/bin/python verify.py
 
 ## Notes
 
-- The extension uses Tenki's **new [`tenki`](https://pypi.org/project/tenki/) Python SDK** (`tenki>=0.5.4,<1`) — the canonical successor namespace to the older `tenki-sandbox` package some earlier cookbook examples use. Don't install `tenki-sandbox` for this one.
+- The extension uses Tenki's **new [`tenki`](https://pypi.org/project/tenki/) Python SDK** (`tenki>=1.4.0,<2`, the range ag2 1.1.2 declares) — the canonical successor namespace to the older `tenki-sandbox` package some earlier cookbook examples use. Don't install `tenki-sandbox` for this one.
 - Auth: a `tk_` API key works as-is. A `tenki login` browser session token must be prefixed `cookie:` for the Python SDK (`verify.py` handles this).
 - All credential/selection parameters also accept AG2 `Variable`s for per-request (multi-tenant) resolution — see the [AG2 Tenki docs](https://github.com/ag2ai/ag2/blob/main/website/docs/user-guide/extensions/tenki.mdx).
