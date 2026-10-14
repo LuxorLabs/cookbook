@@ -1,0 +1,2 @@
+harbor>=0.23.0,<0.24
+tenki-harbor @ git+https://github.com/LuxorLabs/tenki-harbor@b2d703898cc90918eb20ea134bd8619049d8d80d
