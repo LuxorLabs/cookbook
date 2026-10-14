@@ -1,8 +1,9 @@
 """
 Smoke-verify the PraisonAI Tenki compute provider, end to end:
 
-  1. registration — ``TenkiCompute`` imports from its module and the
-     ``praisonai.integrations.compute`` barrel, and the core SDK's compute
+  1. registration — ``TenkiCompute`` imports from ``praisonai_sandbox``
+     (where it lives since praisonai 4.7.x) and from the legacy
+     ``praisonai.integrations.compute`` paths, and the core SDK's compute
      bridge resolves the string ``"tenki"`` to it. That bridge is the exact
      path ``PraisonAIAgents(..., compute="tenki")`` and
      ``Workflow(..., compute="tenki")`` take, so this proves the string wiring
@@ -18,7 +19,8 @@ import os
 import sys
 import tempfile
 
-from praisonai.integrations.compute.tenki import TenkiCompute
+from praisonai_sandbox.compute.tenki import TenkiCompute
+from praisonai.integrations.compute.tenki import TenkiCompute as TenkiComputeLegacy
 from praisonai.integrations.compute import TenkiCompute as TenkiComputeBarrel
 from praisonaiagents.managed._compute_bridge import resolve_compute
 from praisonaiagents.managed.protocols import ComputeConfig, InstanceStatus
@@ -44,22 +46,17 @@ def resolve_token():
     if not token:
         print("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.")
         sys.exit(1)
-    # A `tenki login` browser-session token may need a `cookie:` prefix (a
-    # `tk_` API key works bare). Probe with who_am_i and keep what works.
-    from tenki import Client
-
-    for candidate in (token, f"cookie:{token}"):
-        try:
-            Client(auth_token=candidate).who_am_i()
-            return candidate
-        except Exception:
-            continue
-    print("Tenki rejected the token (tried bare and cookie:-prefixed).")
-    sys.exit(1)
+    # tenki SDK 1.x accepts only `tk_` API keys / service tokens; the 0.5.x
+    # `cookie:` session-token form is rejected client-side.
+    if not token.startswith("tk_"):
+        print("Token must be a tk_ API key (tenki SDK 1.x). Set TENKI_API_KEY=tk_...")
+        sys.exit(1)
+    return token
 
 
-# 1. Registration: module import (top of file), barrel export, and the core
-# SDK bridge resolving the string "tenki" to a ready TenkiCompute instance.
+# 1. Registration: module imports (top of file), legacy path + barrel export,
+# and the core SDK bridge resolving the string "tenki" to a TenkiCompute.
+assert TenkiComputeLegacy is TenkiCompute
 assert TenkiComputeBarrel is TenkiCompute
 provider = resolve_compute("tenki")
 assert isinstance(provider, TenkiCompute), f"resolve_compute gave {type(provider)}"

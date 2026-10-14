@@ -24,11 +24,13 @@ The snippet needs an LLM key (e.g. `OPENAI_API_KEY`) like any PraisonAI run; the
 
 ```bash
 uv venv --python 3.12                # or: python3.12 -m venv .venv
-uv pip install -r requirements.txt   # praisonai + praisonaiagents (git) + tenki SDK
+uv pip install -r requirements.txt   # praisonai[tenki]>=4.7.14
 export TENKI_API_KEY=tk_...          # or TENKI_AUTH_TOKEN; optional TENKI_WORKSPACE_ID
 ```
 
-**Install note.** The Tenki provider merged to PraisonAI main on 2026-08-14 ([#3242](https://github.com/MervinPraison/PraisonAI/pull/3242) added `TenkiCompute`, [#3949](https://github.com/MervinPraison/PraisonAI/pull/3949) the shared team/workflow sandbox), and the newest PyPI releases (`praisonai` 4.6.162, `praisonaiagents` 1.6.166) predate both — so [`requirements.txt`](requirements.txt) pins **both packages from the same git commit**. Don't mix: an older `praisonaiagents` with a newer `praisonai` breaks the `compute="tenki"` lookup. Once releases newer than 2026-08-14 ship (upstream also has a `praisonai[tenki]` extra), swap the git pins for PyPI ones. The base install is heavy (litellm, textual, several `praisonai-*` packages) — expect a couple of minutes.
+**Install note.** `praisonai[tenki]` installs `praisonaiagents`, `praisonai-sandbox` (where `TenkiCompute` lives, as `praisonai_sandbox.compute.tenki`; the old `praisonai.integrations.compute` import still works) and the `tenki` SDK (>=1.4.0). Use releases from `praisonai` 4.7.14 / `praisonaiagents` 1.7.12 on, and don't pair an older `praisonaiagents` with a newer `praisonai`, or the `compute="tenki"` lookup breaks. The base install is heavy (litellm, textual, several `praisonai-*` packages), so expect a couple of minutes.
+
+The provider uses `tenki` SDK 1.x, which accepts only `tk_` API keys.
 
 Without `TENKI_WORKSPACE_ID`, sandboxes land in the first workspace on your account.
 
@@ -41,7 +43,7 @@ Without `TENKI_WORKSPACE_ID`, sandboxes land in the first workspace on your acco
 | `networking={"type": "unrestricted"}` | `allow_outbound=True` | Tenki's outbound control is a single boolean, so any other type (e.g. `"limited"`) disables outbound entirely |
 | `metadata={"tenki_image": ...}` | `image` | a Tenki registry snapshot ref; wins over `ComputeConfig.image`, whose Docker-style default means "Tenki's stock image" |
 | `packages={"pip": [...], "npm": [...]}` | bootstrapped after boot | installs pip/npm via `apt-get` if missing; a failed install **tears the sandbox down** instead of reporting it ready |
-| `auto_shutdown` + `idle_timeout_s` | `idle_timeout_minutes` | server-side idle reaper — no leaked billing if your process dies |
+| `auto_shutdown` + `idle_timeout_s` | in-process idle timer | the provider shuts the sandbox down after `idle_timeout_s` with no activity. The timer runs in your Python process, so it stops if the process dies |
 
 ## Verify
 
@@ -58,6 +60,6 @@ node verify.mjs      # or: .venv/bin/python verify.py
 ## Notes
 
 - The provider uses the **new `tenki` SDK** (`pip install tenki`), not the older `tenki-sandbox` package.
-- Tenki's stock image runs commands as user `tenki` (passwordless sudo) and ships **without a `/workspace` directory** — the shared-workspace tools don't create it either. Have the first agent run `execute_command('sudo mkdir -p /workspace && sudo chown "$(id -un)" /workspace')`, use `$HOME` paths instead, or bake it into a custom image via `metadata={"tenki_image": ...}`. `verify.py` does exactly this.
+- Tenki's stock image runs commands as user `tenki` (passwordless sudo) and ships **without a `/workspace` directory**. The shared-workspace tools don't create it either (still true in praisonai 4.7.14). Have the first agent run `execute_command('sudo mkdir -p /workspace && sudo chown "$(id -un)" /workspace')`, use `$HOME` paths instead, or bake it into a custom image via `metadata={"tenki_image": ...}`. `verify.py` does exactly this.
 - `get_status` / `list_instances` reconcile against live Tenki state, so a sandbox reaped by the idle timeout stops reporting `RUNNING`.
 - The deprecated spelling `ManagedAgent(provider="tenki")` still works but warns; use `compute="tenki"` (or `LocalAgent(compute="tenki")` for a single agent).
