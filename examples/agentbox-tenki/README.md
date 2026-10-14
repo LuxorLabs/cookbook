@@ -1,17 +1,19 @@
 # AgentBox coding agents on Tenki
 
-[AgentBox](https://github.com/madarco/agentbox) moves your project into a dedicated VM — local or cloud — and runs coding agents (`claude`, `codex`, `opencode`) inside it, in parallel, with your own settings along for the ride. Tenki is a community provider ([agentbox#296](https://github.com/madarco/agentbox/pull/296)): with the [`@tenkicloud/agentbox-provider`](https://www.npmjs.com/package/@tenkicloud/agentbox-provider) plugin, every box becomes a [Tenki](https://tenki.cloud) Firecracker microVM — its own kernel, Docker inside the box, public preview URLs, and free pause/resume, with no local Docker needed.
+[AgentBox](https://github.com/madarco/agentbox) moves your project into a dedicated VM — local or cloud — and runs coding agents (`claude`, `codex`, `opencode`) inside it, in parallel, with your own settings along for the ride. Tenki is a community provider ([agentbox#296](https://github.com/madarco/agentbox/pull/296)): with the [`@tenkicloud/agentbox-provider`](https://www.npmjs.com/package/@tenkicloud/agentbox-provider) plugin, every box becomes a [Tenki](https://tenki.cloud) VM — its own kernel, Docker inside the box, public preview URLs, and free pause/resume, with no local Docker needed.
 
 ## Set it up
 
 ```bash
-npm i -g @madarco/agentbox @tenkicloud/agentbox-provider
+npm i -g @madarco/agentbox@0.29.2 @tenkicloud/agentbox-provider
 agentbox plugin add @tenkicloud/agentbox-provider
 agentbox plugin list                 # -> tenki … (SDK v2)
 
 export TENKI_AUTH_TOKEN=tk_...       # or add it to ~/.agentbox/secrets.env
 agentbox doctor                      # shows the `tenki:` group
 ```
+
+**Pin the CLI to 0.29.2.** The published plugin (0.1.1) targets provider SDK v2. AgentBox 0.27.1 (the plugin's documented minimum) through 0.29.2 loads it; 0.30.0 and later accept only v4 and refuse this one at `plugin add` (`targets provider SDK v2; this AgentBox supports v4`). SDK v4 support is in progress upstream ([tenki-agentbox-provider#6](https://github.com/LuxorLabs/tenki-agentbox-provider/pull/6)) but hasn't been released yet.
 
 A plugin runs in-process with full host and credential access — **`plugin add` is the trust boundary**.
 
