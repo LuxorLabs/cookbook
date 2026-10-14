@@ -44,8 +44,11 @@ if (mode === "create") {
 	// The SSH host key belongs to Tenki's gateway, not to the sandbox's own sshd, and
 	// cert.caPub signs *user* certs so it cannot pin it. Learn it once here under a
 	// per-sandbox alias, so later connections verify normally instead of skipping the check.
-	const alias = `tenki-${sandbox.id.slice(0, 8)}`;
+	// Session ids are UUIDv7: the front is a timestamp, so a prefix collides across
+	// sandboxes created near each other — alias on the random tail instead.
+	const alias = `tenki-${sandbox.id.replaceAll("-", "").slice(-12)}`;
 	mkdirSync(`${homedir()}/.ssh`, { recursive: true });
+	if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
 	execFileSync("ssh", ["-o", `ProxyCommand=node "${proxy}" ${sandbox.id}`, "-o", "StrictHostKeyChecking=accept-new",
 		"-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=30", "-i", `${keyDir}/id`, `tenki@${alias}`, "true"], { stdio: "ignore" });
 
@@ -85,6 +88,11 @@ if (mode === "create") {
 		// Certs are short-lived; mint a fresh one so a resumed VM is reachable again.
 		const cert = await tenki.issueSandboxSSHCert(sessionId, readFileSync(`${keyDir}/id.pub`, "utf8").trim());
 		writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
+		// A resumed session can come back behind a different gateway, and with it a
+		// different host key — drop the stale pin and learn the current one, as create did.
+		if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
+		execFileSync("ssh", ["-o", `ProxyCommand=node "${proxy}" ${sessionId}`, "-o", "StrictHostKeyChecking=accept-new",
+			"-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=30", "-i", `${keyDir}/id`, `tenki@${alias}`, "true"], { stdio: "ignore" });
 	} else if (mode === "destroy") {
 		await sandbox[Symbol.asyncDispose]();
 		rmSync(keyDir, { recursive: true, force: true });
