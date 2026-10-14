@@ -4,7 +4,7 @@ task finishes).
 
 Full run (needs a Covalent dispatcher):
     covalent start
-    export TENKI_AUTH_TOKEN=tk_...     # a tk_ API key (see README for the session-token note)
+    export TENKI_API_KEY=tk_...       # a tk_ API key (see README)
     python workflow.py
 """
 import covalent as ct

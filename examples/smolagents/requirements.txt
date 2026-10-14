@@ -1,2 +1,2 @@
-tenki-sandbox>=0.4
+tenki>=1.4.1
 smolagents>=1.20
