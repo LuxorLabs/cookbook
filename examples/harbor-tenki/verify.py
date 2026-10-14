@@ -4,18 +4,8 @@ Verify the Harbor walkthrough without a model key:
   2. a real Harbor trial runs on Tenki: Harbor's hello-world task with the
      `oracle` agent (the task's reference solution), graded by the task's own
      tests -> reward 1.0, and the trial's Tenki session is terminated after.
-
-This is the same smoke test tenki-harbor runs in its own CI.
-Token from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
 """
-import asyncio
-import glob
-import json
-import os
-import shutil
-import subprocess
-import sys
-import tempfile
+import asyncio, glob, json, os, re, shutil, subprocess, sys, tempfile  # noqa: E401
 
 from harbor.environments.base import BaseEnvironment
 from tenki import AsyncClient
@@ -24,13 +14,10 @@ from tenki_harbor import TenkiEnvironment
 
 def cfg(key):
     try:
-        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
-            for line in f:
-                if line.startswith(key + ":"):
-                    return line.split(":", 1)[1].strip()
-    except Exception:
-        pass
-    return ""
+        text = open(os.path.expanduser("~/.config/tenki/config.yaml")).read()
+        return re.search(rf"^{key}:\s*(.+)$", text, re.M).group(1).strip()
+    except (OSError, AttributeError):
+        return ""
 
 
 token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
@@ -69,11 +56,9 @@ try:
             raise AssertionError(f"expected 1 trial result, found {len(trials)}")
         with open(trials[0]) as f:
             trial = json.load(f)
-        if trial.get("exception_info"):
-            raise AssertionError(f"trial raised: {trial['exception_info']}")
         reward = ((trial.get("verifier_result") or {}).get("rewards") or {}).get("reward")
-        if reward != 1.0:
-            raise AssertionError(f"reward {reward!r}, expected 1.0")
+        if trial.get("exception_info") or reward != 1.0:
+            raise AssertionError(f"reward {reward!r} (expected 1.0), exception_info: {trial.get('exception_info')}")
 
     state = asyncio.run(session_state(trial["trial_name"]))
     if state not in {"TERMINATING", "TERMINATED"}:

@@ -88,14 +88,7 @@ With Harbor's `oracle` agent on all 89 Terminal-Bench 2.0 tasks, 16 at a time, 7
 
 ## Compare harnesses on one model
 
-[`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals) builds on this to run one model behind an OpenAI-compatible endpoint across several harnesses (Terminus, mini-swe-agent, Goose, OpenCode, Qwen Code, Claude Code) and report, per harness, what passed, what failed the task, and what hit an API error from the endpoint:
-
-```bash
-git clone https://github.com/LuxorLabs/tenki-harness-evals.git
-cd tenki-harness-evals && uv sync
-cp .env.example .env              # Tenki key + model endpoint
-uv run evals run --model your-org/your-model
-```
+[`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals) builds on this to run one model behind an OpenAI-compatible endpoint across several harnesses (Terminus, mini-swe-agent, Goose, OpenCode, Qwen Code, Claude Code) and report, per harness, what passed, what failed the task, and what hit an API error from the endpoint.
 
 ## Verify
 
