@@ -58,6 +58,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [Hugging Face smolagents](examples/smolagents/) | Remote Python executor for a `CodeAgent` |
 | [AG2](examples/ag2-tenki/) | Native sandbox backend for shell + code tools |
 | [PraisonAI](examples/praisonai-tenki/) | One shared microVM for a whole agent team |
+| [Pi Durable](examples/pi-durable-tenki/) | Remote execution env — every tool call in a disposable VM |
 
 ### Developer tools
 
