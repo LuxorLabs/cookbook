@@ -1,4 +1,3 @@
 # ag2 1.1.2 is the first PyPI release that ships ag2/extensions/tenki.
-# The tenki range matches what the extension itself declares (tenki>=1.4.0,<2).
 ag2>=1.1.2
-tenki>=1.4.0,<2
+tenki>=1.4.1

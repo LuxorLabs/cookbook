@@ -44,7 +44,7 @@ export TENKI_API_KEY=tk_...             # from the Tenki dashboard
 The extension ships in ag2 1.1.2 and later. To run the agent above, add the Anthropic extra:
 
 ```bash
-pip install "ag2[anthropic]>=1.1.2" "tenki>=1.4.0,<2"
+pip install "ag2[anthropic]>=1.1.2" "tenki>=1.4.1"
 ```
 
 ## Configuring `TenkiEnvironment`
