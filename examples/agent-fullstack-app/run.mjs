@@ -11,13 +11,12 @@ const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
 // allowInbound: the gateway routes public traffic to the sandbox (for the preview URL).
 // This script deliberately leaves the sandbox running so you can open the URL, so
-// set billing guards: it self-terminates after 30 idle minutes / 2 hours max.
+// set a billing guard: it self-terminates after 2 hours.
 const sandbox = await tenki.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
 	allowInbound: true,
-	idleTimeoutMinutes: 30,
-	maxDuration: "7200s",
+	maxDurationMs: 2 * 60 * 60_000,
 	workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 
@@ -59,7 +58,7 @@ def go(method, path, body=None):
 	console.log(`\n-- the UI is live --\n   ${previewUrl}`);
 	const res = await fetch(previewUrl);
 	console.log(`   GET ${res.status} · ${(await res.text()).includes("<title>") ? "frontend served" : "unexpected body"}`);
-	console.log("\n(sandbox left running so you can open the URL; it self-terminates after 30 idle min / 2h max)");
+	console.log("\n(sandbox left running so you can open the URL; it self-terminates after 2 hours)");
 	console.log(`   terminate now:  node -e "import('@tenkicloud/sandbox').then(async m=>{const s=await new m.TenkiSandbox({authToken:process.env.TENKI_AUTH_TOKEN}).get('${sandbox.id}');await s[Symbol.asyncDispose]()})"`);
 } catch (e) {
 	console.error("error:", e?.message ?? e);
