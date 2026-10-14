@@ -4,7 +4,7 @@
 
 ## Enable it
 
-The provider's `tenki-sandbox` dependency is an optional extra — uninstalled by default, lazily imported only when selected:
+The provider's Tenki SDK dependency is an optional extra — uninstalled by default, lazily imported only when selected:
 
 ```bash
 git clone https://github.com/bytedance/deer-flow && cd deer-flow/backend
@@ -29,7 +29,7 @@ sandbox:
 
 Optional keys: `base_url`, `image`, `home_dir` (default `/home/tenki`), and an `environment:` map injected into every sandbox.
 
-**Scope:** the provider resolves a Tenki project for `create` on its own only when your account has exactly one workspace and one project. With more than one of either, it raises at startup listing the choices — set `project_id` (and `workspace_id`) in the `sandbox:` block explicitly.
+**Scope:** the provider resolves your Tenki workspace for `create` on its own only when your account has exactly one workspace. With more than one, it raises at startup listing the choices — set `workspace_id` in the `sandbox:` block explicitly.
 
 ## What the provider does
 
@@ -50,6 +50,6 @@ node verify.mjs        # or: .venv/bin/python verify.py
 
 ## Notes
 
-- **Auth:** the Python SDK wants a `tk_` API key (`export TENKI_API_KEY=tk_…`). A `tenki login` browser session token works too, but must be prefixed `cookie:` — `verify.py` does this for you.
+- **Auth:** the SDK takes a `tk_` API key — set `TENKI_API_KEY`, or run `tenki login --api-key <key>` to store one in `~/.config/tenki/config.yaml` (`verify.py` reads it from there).
 - The provider is fully opt-in: with `sandbox.use` unset, DeerFlow behaves exactly as before.
 - Every sandbox carries `max_duration` server-side, so orphans self-terminate even if the harness crashes — no leaked billing.

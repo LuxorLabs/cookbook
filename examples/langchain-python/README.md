@@ -1,12 +1,12 @@
 # LangChain agent on Tenki — Python (code interpreter)
 
-Give a [LangChain](https://www.langchain.com) **Python** agent a **code interpreter** — a tool that runs Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. This is the Python port of [`langchain-code-interpreter`](../langchain-code-interpreter/) (the JS one), on the official [`tenki-sandbox`](https://tenki.cloud/docs/sandbox/sdk) SDK. One sandbox per agent session; a `run_python` tool the agent calls to execute code in an isolated microVM.
+Give a [LangChain](https://www.langchain.com) **Python** agent a **code interpreter** — a tool that runs Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. This is the Python port of [`langchain-code-interpreter`](../langchain-code-interpreter/) (the JS one), on the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK. One sandbox per agent session; a `run_python` tool the agent calls to execute code in an isolated microVM.
 
 ## The tool (`tenki_tool.py`)
 
 ```python
 from langchain_core.tools import tool
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 def make_code_tool(sandbox: Sandbox):
     @tool
@@ -42,11 +42,11 @@ with Sandbox.create(**opts) as sandbox:
 
 ```bash
 uv venv                                   # or: python3.11 -m venv .venv
-uv pip install -r requirements.txt        # tenki-sandbox + langchain + langgraph
-export TENKI_AUTH_TOKEN=...               # see the auth note below
+uv pip install -r requirements.txt        # the tenki SDK + langchain + langgraph
+export TENKI_API_KEY=tk_...               # or: tenki login --api-key <key>
 ```
 
-**Auth note.** The Python SDK authenticates cleanly with a **`tk_` API key** (`export TENKI_AUTH_TOKEN=tk_…`). A `tenki login` browser session token also works, but — unlike the Node SDK — the Python SDK won't auto-detect it; pass it as **`cookie:<token>`** so it's sent as a cookie (`verify.py` and `agent.py` do this for you). It's an SDK gap, not yours.
+The SDK takes a `tk_` API key: set `TENKI_API_KEY`, or run `tenki login --api-key <key>` to store one in `~/.config/tenki/config.yaml` (the scripts read it from there).
 
 ## Verify it (no LLM needed)
 
@@ -66,7 +66,7 @@ export OPENAI_API_KEY=sk-...
 ## Notes
 
 - **One sandbox per session, reused across tool calls** — cheaper than a sandbox per call; terminated when the `with` block exits.
-- Requires **Python 3.10+** (a `tenki-sandbox` requirement); the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim.
-- Stdlib only by default — sandboxes have no outbound network unless you create them with `allow_outbound` (needed for `pip install`).
+- Requires **Python 3.10+** (a `tenki` SDK requirement); the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim.
+- The sandbox image ships a stdlib-only Python; outbound network is on by default (`allow_outbound=True`), so the agent's code can `pip install` — pass `allow_outbound=False` to lock the sandbox down.
 - Tenki confines file I/O to `/home/tenki` — write to relative paths.
 - Official SDK + full API: [tenki.cloud/docs/sandbox/sdk](https://tenki.cloud/docs/sandbox/sdk). Same tool-backed-by-a-sandbox pattern as the [JS version](../langchain-code-interpreter/).

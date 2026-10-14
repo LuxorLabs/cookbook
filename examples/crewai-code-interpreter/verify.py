@@ -3,13 +3,13 @@ Proves the Tenki-facing half of this example: the CrewAI tool executes Python in
 a live Tenki sandbox. No LLM needed — we call the tool directly and assert its
 output. (The full crew, which needs a model key, is in agent.py.)
 
-Needs Python 3.10+ and the deps in requirements.txt. Token/workspace from env (CI)
-or ~/.config/tenki/config.yaml (local `tenki login`).
+Needs Python 3.10+ and the deps in requirements.txt. API key/workspace from env (CI)
+or ~/.config/tenki/config.yaml (local `tenki login --api-key`).
 """
 import os
 import sys
 
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 from tenki_tool import TenkiCodeInterpreter
 
 
@@ -26,16 +26,8 @@ def cfg(key):
 
 token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 if not token:
-    print("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.")
+    print("No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.")
     sys.exit(1)
-
-# The Python SDK (unlike the Node SDK) doesn't auto-handle a bare browser session
-# token — it sends anything without a known prefix as `Authorization: Bearer`,
-# which the server rejects. A `tk_` API key works as-is; a `tenki login` session
-# token must be sent as a cookie, which the SDK does when you prefix it `cookie:`.
-# (SDK auth gap — see the pip-tenki / Python-SDK-auth issue.)
-if not token.startswith(("tk_", "ory_st_", "cookie:")):
-    token = f"cookie:{token}"
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
 workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
