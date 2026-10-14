@@ -8,7 +8,7 @@ Give a [LlamaIndex](https://github.com/run-llama/llama_index) agent a **code-exe
 
 ```python
 from llama_index.core.tools import FunctionTool
-from tenki_sandbox import Sandbox
+from tenki import Sandbox
 
 def make_code_tool(sandbox: Sandbox) -> FunctionTool:
     def run_python(code: str) -> str:
@@ -38,7 +38,7 @@ export OPENAI_API_KEY=...
 
 ## Notes
 
-- **Auth:** a `tk_` API key works as-is. A `tenki login` session token must be sent as a cookie — prefix it `cookie:` (the examples do this automatically). Set `TENKI_AUTH_TOKEN` or run `tenki login`.
+- **Auth:** the SDK takes a `tk_` API key — set `TENKI_API_KEY`, or run `tenki login --api-key <key>` to store one in `~/.config/tenki/config.yaml` (the scripts read it from there).
 - Tenki confines file I/O to `/home/tenki`; use relative paths.
-- Set `allow_outbound=True` at create time if the agent's code needs the network (`pip install`, HTTP).
+- Outbound network is on by default (`allow_outbound=True`), so the agent's code can `pip install` — pass `allow_outbound=False` to lock the sandbox down.
 - Products used: **Tenki Sandbox**. More at [tenki.cloud](https://tenki.cloud).

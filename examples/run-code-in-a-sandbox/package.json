@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example — run code in a disposable Tenki sandbox with the official SDK.",
   "dependencies": {
-    "@tenkicloud/sandbox": "^0.4.0"
+    "@tenkicloud/sandbox": "^1.4.1"
   }
 }
