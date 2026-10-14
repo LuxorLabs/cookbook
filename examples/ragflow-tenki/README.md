@@ -34,7 +34,7 @@ Without saved settings the provider falls back to `TENKI_API_KEY` (and `TENKI_AP
 node verify.mjs        # or: go run .   (Go 1.21+; `go.mod` pins toolchain 1.25.3)
 ```
 
-[`main.go`](main.go) proves the Tenki surface the provider is built on without running RAGFlow, using the same SDK module and version RAGFlow pins (`v0.7.0`): the **`WhoAmI`** health check → a disposable sandbox with **outbound network off** (RAGFlow's security default) → the work dir with `artifacts/` → **`python3 -c`** and **`node -e`** with a timeout → **artifact collection** (list, stat, read) → close. RAGFlow's own `tenki_test.go` covers the RAGFlow-side contract.
+[`main.go`](main.go) proves the Tenki surface the provider is built on without running RAGFlow, using the same SDK module RAGFlow uses, at its latest release (`v1.4.1`; RAGFlow itself still pins `v0.7.0`): the **`WhoAmI`** health check → a disposable sandbox with **outbound network off** (RAGFlow's security default) → the work dir with `artifacts/` → **`python3 -c`** and **`node -e`** with a timeout → **artifact collection** (list, stat, read) → close. RAGFlow's own `tenki_test.go` covers the RAGFlow-side contract.
 
 ## Notes
 
