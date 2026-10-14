@@ -100,6 +100,7 @@ Speed up GitHub Actions jobs on [Tenki Runners](https://tenki.cloud/products/run
 | Example | What it covers |
 | --- | --- |
 | [Sticky disks](examples/stickydisk-tenki/) | Keep dependency caches on a persistent disk between jobs |
+| [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
 
 ### Migrating from another provider
 
@@ -149,6 +150,8 @@ These open-source projects ship a Tenki provider or backend out of the box:
 | [AgentBox](https://github.com/madarco/agentbox) | Provider for running parallel agents in sandboxed VMs — [example](examples/agentbox-tenki/) |
 | [ComputeSDK](https://github.com/computesdk/computesdk) | Tenki provider for the multi-provider compute toolkit — [example](examples/computesdk-tenki/) |
 | [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) | Sandboxed exec backend for AI agent fleets — [example](examples/openhermit-tenki/) |
+| [AgentEnv Framework](https://github.com/scaleapi/agentenv-framework) | Sandbox backend for Scale AI's RL environments — [example](examples/agentenv-tenki/) |
+| [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) | Sandboxed exec backend for AI agent fleets |
 
 ## Contributing
 
