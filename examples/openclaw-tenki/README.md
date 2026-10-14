@@ -59,5 +59,5 @@ No OpenClaw host needed: [`verify.mjs`](verify.mjs) asserts the published plugin
 ## Notes
 
 - This is a **community plugin** installed from ClawHub — it does not ship with OpenClaw. (It was proposed upstream in [openclaw/openclaw#111792](https://github.com/openclaw/openclaw/pull/111792), which was closed; the standalone package is the supported path.)
-- The plugin pins `@tenkicloud/sandbox` 0.5.2; this example depends on `^0.5.4`, which has the same session surface.
+- The published plugin pins `@tenkicloud/sandbox` 0.5.2; this example declares `>=1.4.1`, and `verify.mjs` runs the same session calls against it.
 - Bugs go to [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw/issues), not the OpenClaw tracker.
