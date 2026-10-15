@@ -1,10 +1,11 @@
 # Claude Code on Tenki (headless, on a real repo)
 
-Run [Claude Code](https://www.npmjs.com/package/@anthropic-ai/claude-code) non-interactively against a real Git checkout inside a disposable [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM, then read back the diff the agent produced and throw the machine away.
+Give [Claude Code](https://www.npmjs.com/package/@anthropic-ai/claude-code) a coding task and let it work unsupervised — no permission prompts — inside a disposable [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM. `--dangerously-skip-permissions` is reckless on your laptop; here the blast radius is one VM that is deleted when the script ends. What comes back is the agent's work as a patch: apply it to your checkout, open a PR from it, or run many of these in parallel and keep the good ones.
 
 ## The code (`run.mjs`)
 
 ```js
+import { writeFileSync } from "node:fs";
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
@@ -22,11 +23,11 @@ await using sandbox = await tenki.createAndWait({
 });
 
 // Outbound is on by default, so no allowOutbound is needed to reach the npm registry.
-const install = await sandbox.exec("npm", { args: ["i", "-g", "@anthropic-ai/claude-code"] });
+const install = await sandbox.exec("npm", { args: ["i", "-g", "@anthropic-ai/claude-code"], timeoutMs: 300_000 });
 if (install.exitCode !== 0) throw new Error(`npm i -g @anthropic-ai/claude-code exited ${install.exitCode}`);
 
 const decoder = new TextDecoder();
-await sandbox.exec("claude", {
+const run = await sandbox.exec("claude", {
   // Skipping permission prompts is what the throwaway VM buys you: the agent gets a
   // free hand on a machine whose entire filesystem you delete at the end of this script.
   args: ["-p", TASK, "--dangerously-skip-permissions"],
@@ -35,14 +36,21 @@ await sandbox.exec("claude", {
   // An env value of undefined arrives as an empty string, not as unset — an empty
   // ANTHROPIC_BASE_URL is worse than none, so filter to the vars you actually have.
   env: Object.fromEntries(PASSTHROUGH.filter((k) => process.env[k]).map((k) => [k, process.env[k]])),
-  onOutput: ({ data }) => process.stdout.write(decoder.decode(data)), // data is a Uint8Array
+  onOutput: ({ data }) => process.stdout.write(decoder.decode(data, { stream: true })), // a multi-byte character can span two chunks
 });
+// Without this, a failed run (a bad key, say) prints an empty diff as if nothing went wrong.
+if (run.exitCode !== 0) throw new Error(`claude exited ${run.exitCode}`);
 
+// The diff is how the work leaves the VM: save it before the sandbox is torn down.
 // sandbox.git.* runs at the workdir; the checkout is one level down, so point it at ./repo.
-console.log(await sandbox.git.diff({ directory: "repo" }));
+const patch = await sandbox.git.diff({ directory: "repo" });
+if (!patch.trim()) throw new Error("the agent finished without changing anything");
+writeFileSync("agent.patch", patch);
+console.log(patch);
+console.log(`Saved agent.patch. Apply it to a clone of ${REPO} with \`git apply agent.patch\`, or open a PR from it.`);
 ```
 
-The last line is the point: a unified diff against a real upstream checkout, produced by an agent that had root-free run of a machine you are about to delete.
+Everything the agent did inside the VM is deleted when the script ends; `agent.patch` is what you keep.
 
 ## Run it
 
@@ -51,7 +59,7 @@ npm install
 export TENKI_AUTH_TOKEN=...      # from `tenki login` (~/.config/tenki/config.yaml)
 export TENKI_WORKSPACE_ID=...
 export ANTHROPIC_API_KEY=...     # ANTHROPIC_BASE_URL and ANTHROPIC_MODEL pass through too, if set
-node run.mjs                     # streams the agent's turn, then prints the diff
+node run.mjs                     # streams the agent's turn, then saves the diff to agent.patch
 ```
 
 `run.mjs` uses top-level `await using`, which needs Node 24+.

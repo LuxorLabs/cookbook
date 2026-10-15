@@ -13,8 +13,12 @@ export function makeTenkiTools(sandbox) {
 	return [
 		// The schema argument is a raw Zod shape — a bare object of fields, not z.object({...}).
 		tool("bash", "Run a shell command in the sandbox and return its stdout and stderr.", { command: z.string() }, async ({ command }) => {
-			const r = await sandbox.exec("sh", { args: ["-c", command] });
+			// Unbounded by default, so one `sleep infinity` would stall the agent for the sandbox's
+			// whole lifetime. A spent budget resolves (status TIMED_OUT, exitCode -1) rather than
+			// rejecting, and "exit -1" alone tells the model nothing, so name it.
+			const r = await sandbox.exec("sh", { args: ["-c", command], timeoutMs: 120_000 });
 			const out = `${stdoutText(r)}${stderrText(r)}`.trim();
+			if (r.status === "TIMED_OUT") return say(`timed out after 120s\n${out}`.trim());
 			// Nothing carries the exit status to the model, so a failure that printed to
 			// stderr looks like success. Say it out loud instead.
 			return say(r.exitCode === 0 ? out || "(no output)" : `exit ${r.exitCode}\n${out}`.trim());

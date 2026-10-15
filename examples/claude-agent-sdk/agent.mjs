@@ -3,7 +3,7 @@
 //
 // Needs a model key: export ANTHROPIC_API_KEY=...
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
-import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
+import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
 import { makeTenkiTools } from "./tenki-tools.mjs";
 
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
@@ -35,4 +35,5 @@ for await (const message of query({
 }
 
 // The proof: the script the agent wrote is in the sandbox, and nowhere on this machine.
-console.log(stdoutText(await sandbox.exec("sh", { args: ["-c", "ls -l fib.py"] })));
+const proof = await sandbox.exec("ls", { args: ["-l", "fib.py"] });
+console.log(proof.exitCode === 0 ? stdoutText(proof) : `fib.py is not in the sandbox: ${stderrText(proof).trim()}`);

@@ -14,8 +14,12 @@ const say = (text) => ({ content: [{ type: "text", text }] });
 export function makeTenkiTools(sandbox) {
   return [
     tool("bash", "Run a shell command in the sandbox and return its stdout and stderr.", { command: z.string() }, async ({ command }) => {
-      const r = await sandbox.exec("sh", { args: ["-c", command] });
+      // Unbounded by default, so one `sleep infinity` would stall the agent for the sandbox's
+      // whole lifetime. A spent budget resolves (status TIMED_OUT, exitCode -1) rather than
+      // rejecting, and "exit -1" alone tells the model nothing, so name it.
+      const r = await sandbox.exec("sh", { args: ["-c", command], timeoutMs: 120_000 });
       const out = `${stdoutText(r)}${stderrText(r)}`.trim();
+      if (r.status === "TIMED_OUT") return say(`timed out after 120s\n${out}`.trim());
       return say(r.exitCode === 0 ? out || "(no output)" : `exit ${r.exitCode}\n${out}`.trim());
     }),
 
@@ -58,10 +62,11 @@ for await (const message of query({
   if (message.type === "result") console.log(message.result);
 }
 
-console.log(stdoutText(await sandbox.exec("sh", { args: ["-c", "ls -l fib.py"] })));
+const proof = await sandbox.exec("ls", { args: ["-l", "fib.py"] });
+console.log(proof.exitCode === 0 ? stdoutText(proof) : `fib.py is not in the sandbox: ${stderrText(proof).trim()}`);
 ```
 
-Which prints the routing, the answer, and the evidence:
+Which prints each tool call the agent makes, its final answer, and an `ls` run inside the sandbox showing `fib.py` is there:
 
 ```
 → mcp__tenki__write_file {"path":"fib.py","content":"def fib(n):\n    a, b = 0, 1\n    for _ in
@@ -95,5 +100,6 @@ node verify.mjs   # calls the tool handlers directly → runs Python in Tenki �
 - Tools registered through `createSdkMcpServer` run in this process, but they are still named `mcp__<server>__<tool>` — list those full names in `allowedTools` or the agent will ask for permission on every call.
 - **A tool result carries no exit status.** `sandbox.exec` reports one, but the model only ever sees the text you return, so a command that failed after printing to stderr reads as success. `bash` prefixes `exit N` when the code is non-zero.
 - A tool handler that throws is caught by the SDK and delivered as an `is_error` tool result, so `read_file` on a missing path shows the agent the real `[not_found]` message and it recovers on its own — no try/catch needed in the tool.
-- `sandbox.readFile` resolves to a `Uint8Array`, not a string; decode it before handing it back to the model. `exec(command, { args })` does no shell splitting, so `sh -c` is what makes `bash` behave like a shell.
-- One sandbox per agent session, reused across every tool call — cheaper than one per call, and files the agent writes are still there on the next call. `verify.mjs` uses `try`/`finally` rather than `await using`, so CI runs it on Node 20.
+- `sandbox.readFile` resolves to a `Uint8Array`, not a string; decode it before handing it back to the model. `exec(command, { args })` does no shell splitting, so the `bash` tool wraps the command in `sh -c` to get shell behavior.
+- One sandbox per agent session, reused across every tool call — cheaper than one per call, and files the agent writes are still there on the next call.
+- `verify.mjs` uses `try`/`finally` rather than `await using`, so CI runs it on Node 20.
