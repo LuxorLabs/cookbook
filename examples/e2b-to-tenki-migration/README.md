@@ -92,8 +92,8 @@ node verify.mjs   # ✓ create → exec sh + python3 → "hello-from-tenki" / 42
 
 - **Output is bytes.** `ExecResult.stdout` / `.stderr` are `Uint8Array`; use `stdoutText(r)` / `stderrText(r)` to get strings (E2B hands you strings directly).
 - **Auth is explicit.** E2B reads `E2B_API_KEY` implicitly; Tenki takes an `authToken` on the client, plus a `workspaceId` for placement (from `tenki login`).
-- **Disposal.** `await sandbox.close()` maps to E2B's `sandbox.kill()`. The `Session` object that `createAndWait()` returns is an `AsyncDisposable`, so you can also write `await using sandbox = await tenki.createAndWait(...)` and the sandbox is terminated when the scope exits. Either way, the sandbox is a microVM billed per second, and it terminates itself when it hits its idle or lifetime cap.
+- **Disposal.** `await sandbox.close()` maps to E2B's `sandbox.kill()`. The `Session` object that `createAndWait()` returns is an `AsyncDisposable`, so you can also write `await using sandbox = await tenki.createAndWait(...)` and the sandbox is terminated when the scope exits. Either way, the sandbox is a microVM billed per second, and it terminates itself when it reaches its lifetime cap.
 - **Networking is off by default.** If your code needs outbound network, pass `createAndWait({ allowOutbound: true })`.
-- `await using` requires Node 20+. The `run.mjs` here uses explicit `close()`, so it runs on Node 18+.
+- `await using` requires Node 24+. The `run.mjs` here uses explicit `close()`, so it runs on Node 18+.
 
 Built with the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK. Learn more at [tenki.cloud](https://tenki.cloud).

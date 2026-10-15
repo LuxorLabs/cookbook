@@ -66,6 +66,6 @@ node verify.mjs   # calls the tool directly → runs Python in Tenki → asserts
 
 - **One sandbox per session, reused across tool calls** — cheaper than a sandbox per call; disposed (`Symbol.asyncDispose`) when the agent finishes.
 - `exec("python3", { args: ["-c", code] })` passes the code as a single argument (no shell), so multi-line agent-generated code goes through without escaping issues.
-- Only the Python standard library is available by default. Sandboxes have no outbound network unless you create them with `allowOutbound: true`, which `pip install` needs.
+- Only the Python standard library is installed by default. Outbound network is on, so the agent's code can `pip install` more; create the sandbox with `allowOutbound: false` to cut it off.
 - Tenki confines file I/O to `/home/tenki` — write to relative paths.
 - Built on the [OpenAI Agents SDK (JS)](https://openai.github.io/openai-agents-js/) + [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox). The [LangChain](../langchain-code-interpreter/) and [Vercel AI SDK](../vercel-ai-sdk/) examples use the same tool-backed-by-a-sandbox pattern.
