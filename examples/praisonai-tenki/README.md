@@ -28,7 +28,7 @@ uv pip install -r requirements.txt   # praisonai[tenki]>=4.7.14
 export TENKI_API_KEY=tk_...          # or TENKI_AUTH_TOKEN; optional TENKI_WORKSPACE_ID
 ```
 
-**Install note.** `praisonai[tenki]` installs `praisonaiagents`, `praisonai-sandbox` (where `TenkiCompute` lives, as `praisonai_sandbox.compute.tenki`; the old `praisonai.integrations.compute` import still works) and the `tenki` SDK (>=1.4.0). Use releases from `praisonai` 4.7.14 / `praisonaiagents` 1.7.12 on, and don't pair an older `praisonaiagents` with a newer `praisonai`, or the `compute="tenki"` lookup breaks. The base install is heavy (litellm, textual, several `praisonai-*` packages), so expect a couple of minutes.
+`praisonai[tenki]` installs `praisonaiagents`, `praisonai-sandbox`, and the `tenki` SDK (>=1.4.0). `TenkiCompute` lives in `praisonai-sandbox` as `praisonai_sandbox.compute.tenki`; the old `praisonai.integrations.compute` import still works. Use `praisonai` 4.7.14 or later with `praisonaiagents` 1.7.12 or later. Pairing an older `praisonaiagents` with a newer `praisonai` breaks the `compute="tenki"` lookup. The base install is heavy (litellm, textual, several `praisonai-*` packages), so expect a couple of minutes.
 
 The provider uses `tenki` SDK 1.x, which accepts only `tk_` API keys.
 
@@ -51,7 +51,7 @@ Without `TENKI_WORKSPACE_ID`, sandboxes land in the first workspace on your acco
 node verify.mjs      # or: .venv/bin/python verify.py
 ```
 
-[`verify.py`](verify.py) proves the two halves without needing an LLM key: **registration** — `TenkiCompute` imports and the core SDK's compute bridge resolves the string `"tenki"` to it, the exact path `compute="tenki"` takes — and **live** — provision a real microVM through the provider, run a command, round-trip a file byte-for-byte, shut down:
+[`verify.py`](verify.py) checks two things without needing an LLM key. The registration check confirms that `TenkiCompute` imports and that the compute bridge in the core SDK (`praisonaiagents`) resolves the string `"tenki"` to it, which is the exact path `compute="tenki"` takes. The live check provisions a real microVM through the provider, runs a command, round-trips a file byte-for-byte, and shuts down:
 
 ```
 ✓ praisonai-tenki: compute="tenki" resolves → provision → execute 42 → file round-trip → shutdown
@@ -59,6 +59,6 @@ node verify.mjs      # or: .venv/bin/python verify.py
 
 ## Notes
 
-- Tenki's stock image runs commands as user `tenki` (passwordless sudo) and ships **without a `/workspace` directory**. The shared-workspace tools don't create it either (still true in praisonai 4.7.14). Have the first agent run `execute_command('sudo mkdir -p /workspace && sudo chown "$(id -un)" /workspace')`, use `$HOME` paths instead, or bake it into a custom image via `metadata={"tenki_image": ...}`. `verify.py` does exactly this.
+- Tenki's stock image runs commands as user `tenki` (passwordless sudo) and ships **without a `/workspace` directory**. The shared-workspace tools don't create it either (still true in praisonai 4.7.14). Have the first agent run `execute_command('sudo mkdir -p /workspace && sudo chown "$(id -un)" /workspace')`, use `$HOME` paths instead, or bake it into a custom image via `metadata={"tenki_image": ...}`. `verify.py` runs that same `sudo mkdir` command before its file round-trip.
 - `get_status` / `list_instances` reconcile against live Tenki state, so a sandbox reaped by the idle timeout stops reporting `RUNNING`.
 - The deprecated spelling `ManagedAgent(provider="tenki")` still works but warns; use `compute="tenki"` (or `LocalAgent(compute="tenki")` for a single agent).

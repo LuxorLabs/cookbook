@@ -1,4 +1,5 @@
 # praisonai 4.7.14+ ships the Tenki compute provider. The [tenki] extra pulls in
-# praisonai-sandbox (where TenkiCompute now lives) and tenki>=1.4.0; praisonai
-# itself requires the matching praisonaiagents>=1.7.12.
+# praisonai-sandbox (where TenkiCompute now lives); praisonai itself requires the
+# matching praisonaiagents>=1.7.12.
 praisonai[tenki]>=4.7.14
+tenki>=1.4.1
