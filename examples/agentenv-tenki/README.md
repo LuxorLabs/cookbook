@@ -1,6 +1,6 @@
 # Scale AI's AgentEnv on Tenki
 
-[AgentEnv Framework](https://www.agentenvframework.com) is Scale AI's open-source (Apache-2.0) framework for building RL environments: apps exposed over MCP, seed data, a virtual clock, triggers and RBAC, with tasks written as DAGs of steps that deploy an environment, bring in an agent and grade the result. Sandboxes are pluggable, and since [agentenv-framework#187](https://github.com/scaleapi/agentenv-framework/pull/187) (released in `agentenv-framework` 0.9.1326) `tenki` is a built-in backend: each environment and each agent gets its own [Tenki](https://tenki.cloud) VM, with Docker inside and a public HTTPS URL for every exposed port.
+[AgentEnv Framework](https://www.agentenvframework.com) is Scale AI's open-source (Apache-2.0) framework for building RL environments: apps exposed over MCP, seed data, a virtual clock, triggers and RBAC. Tasks are written as DAGs of steps that deploy an environment, bring in an agent and grade the result. Sandboxes are pluggable, and `tenki` has been a built-in backend since [agentenv-framework#187](https://github.com/scaleapi/agentenv-framework/pull/187), released in `agentenv-framework` 0.9.1326. With it, each environment and each agent gets its own [Tenki](https://tenki.cloud) VM, with Docker inside and a public HTTPS URL for every exposed port.
 
 ## Set up (Python 3.11.4+)
 
@@ -14,7 +14,7 @@ export TENKI_API_KEY=tk_...             # https://tenki.cloud/docs/account/api-k
 
 Or install the CLI as a tool: `uv tool install 'agentenv-framework[tenki]'`.
 
-The provider authenticates with the `tenki` Python SDK (1.4), which takes only a `tk_` API key. It reads the key from its config, never from the environment directly, so this folder ships an [`.agentenv/config.toml`](.agentenv/config.toml) that points at it:
+The provider authenticates with the `tenki` Python SDK (1.4), which takes only a `tk_` API key. The provider reads that key from AgentEnv's config, never from the environment directly, so this folder ships an [`.agentenv/config.toml`](.agentenv/config.toml) that points it at `TENKI_API_KEY`:
 
 ```toml
 [sandbox]
@@ -40,7 +40,7 @@ From there, the [AgentEnv docs](https://www.agentenvframework.com/docs) cover en
 
 ## Faster startup
 
-A VM booted from the Tenki base image installs Docker and Compose v2 the first time AgentEnv uses it. Snapshot a VM that has them once:
+A VM booted from the Tenki base image installs Docker and Compose v2 the first time AgentEnv uses it. To skip that install on every new VM, build one VM that has them and snapshot it once:
 
 ```bash
 tenki sandbox create --name agentenv-docker --cpu 2 --memory-mb 4096 --disk-size-gb 20 --max-duration 30m
@@ -67,7 +67,7 @@ Then add `snapshot_id = "<id>"` under `[sandbox.providers.tenki.config]`. Keep t
 node verify.mjs        # or: .venv/bin/python verify.py
 ```
 
-[`verify.py`](verify.py) resolves the `tenki` backend through `agent-env`'s own registry from this folder's `config.toml`, then drives that provider against the live API: `create_vm` with an exposed port → checks the `https://` port URL → runs a command as root (`42`) → terminates. It skips the Docker bootstrap that `agent-env run hello` does, which takes a few minutes on the base image; the provider's own unit and smoke tests live upstream in [scaleapi/agentenv-framework](https://github.com/scaleapi/agentenv-framework/tree/main/src/agent_env/providers/sandbox_providers/tenki).
+[`verify.py`](verify.py) resolves the `tenki` backend through `agent-env`'s own registry from this folder's `config.toml`, then drives that provider against the live API: it calls `create_vm` with an exposed port, checks that the port URL is `https://`, runs a command as root (`42`) and terminates the VM. It skips the Docker bootstrap that `agent-env run hello` does, which takes a few minutes on the base image. The provider's own unit and smoke tests live upstream in [scaleapi/agentenv-framework](https://github.com/scaleapi/agentenv-framework/tree/main/src/agent_env/providers/sandbox_providers/tenki).
 
 ## Notes
 
