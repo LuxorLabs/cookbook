@@ -2,8 +2,8 @@
 
 Give every user of a [Convex](https://www.convex.dev) app its own [Tenki](https://tenki.cloud) microVM. The official [`@tenkicloud/convex`](https://www.npmjs.com/package/@tenkicloud/convex) component creates and drives sandboxes from your Convex actions and keeps each one's state in a Convex table, so your UI updates live as a sandbox goes from `provisioning` to `ready` to `paused` — no polling.
 
-- **One sandbox per identity.** Sandboxes are keyed by `(ownerId, key)`; `create` is safe to retry and to call concurrently, and every call ends up with the same sandbox.
-- **Crash-safe.** A `create` that dies mid-flight leaves a tagged session the next call adopts; `destroy` cleans up such orphans too.
+- **One sandbox per identity.** Sandboxes are keyed by `(ownerId, key)`. `create` is safe to retry and to call concurrently: every call with the same `(ownerId, key)` ends up with the same sandbox.
+- **Crash-safe.** If a `create` dies mid-flight, the sandbox it started is already tagged with its `(ownerId, key)`, so the next `create` for that pair picks it up instead of starting another. `destroy` cleans up such orphans too.
 - **The API key stays on the server** as a Convex environment variable.
 
 ## Install
@@ -87,7 +87,7 @@ const sandbox = useQuery(api.sandboxQueries.mine);
 
 ## Keep rows in sync
 
-A sandbox runs for at most `maxDurationMs` per run; at the deadline Tenki pauses it. [`convex/crons.ts`](convex/crons.ts) calls `tenki.reconcile` every 5 minutes ([`convex/maintenance.ts`](convex/maintenance.ts)) so rows catch up with sandboxes that hit their deadline. The next `create` resumes a paused sandbox with its memory and disk intact.
+A sandbox runs for at most `maxDurationMs` at a time; at the deadline Tenki pauses it, but its row in the component's table keeps its last known phase. [`convex/crons.ts`](convex/crons.ts) calls `tenki.reconcile` every 5 minutes ([`convex/maintenance.ts`](convex/maintenance.ts)) so rows catch up with sandboxes that hit their deadline. The next `create` resumes a paused sandbox with its memory and disk intact.
 
 ## Run it
 
@@ -119,5 +119,5 @@ No Convex deployment needed: [`verify.mjs`](verify.mjs) uses [`convex-test`](htt
 
 - **Beyond this example:** `spawn`/`processStatus`/`kill` for background processes, `exposePort` for public preview URLs (recorded on the row's `previews`), `extend`, `snapshot`, and `fork` to clone a sandbox under a new key.
 - **Errors** are `ConvexError`s with a `code` — e.g. `not_found`, `capacity_exceeded`, `insufficient_credits`, `unauthenticated` (`TENKI_API_KEY` missing or invalid). A failed `create` records `phase: "error"` and `lastError` on the row; the next `create` retries.
-- **`exec` limits:** a string command runs under `bash -lc`; output is capped at 1 MiB per stream by default and the timeout at 9 minutes, inside Convex's action limit.
+- **`exec` limits:** a string command runs under `bash -lc`. Output is capped at 1 MiB per stream by default, and the timeout is capped at 9 minutes so `exec` fits inside Convex's action limit.
 - Component source, full API and a React demo app: [LuxorLabs/tenki-convex](https://github.com/LuxorLabs/tenki-convex).
