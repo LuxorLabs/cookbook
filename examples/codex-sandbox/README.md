@@ -58,7 +58,7 @@ node run.mjs                     # streams the agent's turn, then prints the dif
 
 `run.mjs` uses top-level `await using`, which needs Node 24+.
 
-Verify the Tenki half without a model key — this is what CI runs:
+Verify everything except the agent's turn, without a model key (this is what CI runs):
 
 ```bash
 node verify.mjs   # create + clone → install the CLI → check its version and flags → edit → git diff
