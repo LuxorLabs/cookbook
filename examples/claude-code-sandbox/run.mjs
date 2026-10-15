@@ -1,5 +1,6 @@
 // Claude Code, headless, on a real repo in a disposable Tenki sandbox:
-// clone -> install the CLI -> let the agent edit the checkout -> read back the diff.
+// clone -> install the CLI -> let the agent edit the checkout -> save its diff as a patch.
+import { writeFileSync } from "node:fs";
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
@@ -35,5 +36,10 @@ const run = await sandbox.exec("claude", {
 // Without this, a failed run (a bad key, say) prints an empty diff as if nothing went wrong.
 if (run.exitCode !== 0) throw new Error(`claude exited ${run.exitCode}`);
 
+// The diff is how the work leaves the VM: save it before the sandbox is torn down.
 // sandbox.git.* runs at the workdir; the checkout is one level down, so point it at ./repo.
-console.log(await sandbox.git.diff({ directory: "repo" }));
+const patch = await sandbox.git.diff({ directory: "repo" });
+if (!patch.trim()) throw new Error("the agent finished without changing anything");
+writeFileSync("agent.patch", patch);
+console.log(patch);
+console.log(`Saved agent.patch. Apply it to a clone of ${REPO} with \`git apply agent.patch\`, or open a PR from it.`);
