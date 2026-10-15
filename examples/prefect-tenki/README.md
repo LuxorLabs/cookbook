@@ -30,7 +30,7 @@ TenkiCredentials(api_key="tk_...").save("tenki-prod")
 
 **3. Set job variables** on the pool (UI or `prefect work-pool update`): `workspace_id`, sizing (`cpu_cores` default 2, `memory_mb` default 4096, optional `disk_size_gb`), and `image` *or* `snapshot_id`.
 
-> **The image must be able to run Prefect.** Inside the sandbox the worker runs Prefect's prepared `prefect flow-run execute` command — the guest pulls your flow code itself. So the image/snapshot needs **Prefect + your flow's dependencies preinstalled**, and `allow_outbound: true` (the default) so it can **reach the Prefect API and your code source**. That also means the Prefect API must be reachable *from the microVM*: use Prefect Cloud or a server on a real address — `http://localhost:4200` only exists on your laptop.
+> **The image must be able to run Prefect.** The worker runs Prefect's prepared `prefect flow-run execute` command inside the sandbox, and the guest VM pulls your flow code itself. So the image/snapshot needs **Prefect + your flow's dependencies preinstalled**, and `allow_outbound: true` (the default) so it can **reach the Prefect API and your code source**. That also means the Prefect API must be reachable *from the microVM*: use Prefect Cloud or a server on a real address — `http://localhost:4200` only exists on your laptop.
 
 **4. Start a worker** (any machine with the venv + credentials — your laptop works):
 
@@ -53,7 +53,7 @@ hello.from_source('https://github.com/you/your-repo', entrypoint='flows.py:hello
 prefect deployment run 'hello/hello-tenki'
 ```
 
-Each run now gets its own microVM: the worker creates a sandbox (`create_timeout_seconds`, default 180 s), streams stdout/stderr into the flow-run logs, and closes it when the command exits.
+Each run now gets its own microVM: the worker creates a sandbox (waiting up to `create_timeout_seconds`, default 180 s), streams stdout/stderr into the flow-run logs, and closes it when the command exits.
 
 ## Lifecycle guarantees
 
@@ -68,4 +68,4 @@ Each run now gets its own microVM: the worker creates a sandbox (`create_timeout
 node verify.mjs      # or: .venv/bin/python verify.py
 ```
 
-CI can't run a real flow: the guest must reach the Prefect API, and a localhost `prefect server` is unreachable from inside the microVM. So [`verify.py`](verify.py) does what the upstream repo's own live smoke test does — checks the worker type registers, then drives **`TenkiWorker.run()` directly** with a stand-in command: create a live microVM → run it → assert exit 0 → teardown. That exercises everything Tenki-specific in the worker; the Prefect-side orchestration is covered by Prefect itself and the plugin's CI in [luxorlabs/tenki-prefect](https://github.com/luxorlabs/tenki-prefect).
+[`verify.py`](verify.py) doesn't run a real flow, because CI can't: the guest must reach the Prefect API, and a localhost `prefect server` is unreachable from inside the microVM. Instead it does what `prefect-tenki`'s own live smoke test does. It checks that the worker type registers, then drives **`TenkiWorker.run()` directly** with a stand-in command: create a live microVM, run the command, assert exit 0, tear down. That exercises everything Tenki-specific in the worker; the Prefect-side orchestration is covered by Prefect itself and the plugin's CI in [luxorlabs/tenki-prefect](https://github.com/luxorlabs/tenki-prefect).
