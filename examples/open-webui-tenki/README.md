@@ -27,7 +27,7 @@ Both are single-file plugins built from the same execution core — install eith
 | `cpu_cores` / `memory_mb` / `disk_size_gb` | 1 / 512 / 5 | Per-sandbox size. |
 | `timeout_seconds` | 300 | Hard cap per run; the microVM also self-destructs server-side. |
 | `network_egress` | **false** | Sandboxes get no outbound network unless you opt in. |
-| `max_concurrent_executions` | 5 | Instance-wide semaphore. |
+| `max_concurrent_executions` | 5 | Instance-wide cap on sandboxes running at once. |
 | `max_output_bytes` | 100000 | Output truncation cap. |
 
 **Per-user keys:** each user can set their own `tenki_api_key` in UserValves (chat settings); it takes precedence over the admin key, so usage bills to the right account on shared instances.
