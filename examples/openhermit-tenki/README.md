@@ -4,7 +4,7 @@
 
 ## Point an agent at Tenki
 
-> **Version note:** the Tenki backend merged after OpenHermit's latest npm release (`0.10.0`), and since [openhermit#313](https://github.com/HCF-STUDIOS/openhermit/pull/313) it needs `@tenkicloud/sandbox` 1.4 or newer. Until the next release ships, run from a source checkout — `git clone https://github.com/HCF-STUDIOS/openhermit && cd openhermit && npm install`, then substitute `npm run dev:cli --` wherever `hermit` appears below (see the repo's Development section).
+> OpenHermit's latest npm release (`0.10.0`) does not include the Tenki backend, which merged after it. Since [openhermit#313](https://github.com/HCF-STUDIOS/openhermit/pull/313), the backend also needs `@tenkicloud/sandbox` 1.4 or newer. Until the next release ships, run from a source checkout — `git clone https://github.com/HCF-STUDIOS/openhermit && cd openhermit && npm install`, then substitute `npm run dev:cli --` wherever `hermit` appears below (see the repo's Development section).
 
 ```bash
 hermit setup                                        # DATABASE_URL, tokens
@@ -31,7 +31,7 @@ Config keys (all optional; `--config` can be omitted entirely):
 | `workspace_id` | token's own scope | explicit Tenki workspace |
 | `base_url` | Tenki cloud | self-hosted / staging endpoint |
 
-Operators can also register the same blob as a preset in `gateway.json` (`"sandboxPresets": { "tenki-default": { "type": "tenki", "config": { ... } } }`) and set `"autoProvisionSandbox": "tenki-default"` so every new agent lands on Tenki automatically — or pick it per agent with `hermit agents create main --sandbox tenki-default` (no `--no-sandbox` needed on either path).
+Operators can also register the same `--config` JSON as a preset in `gateway.json` (`"sandboxPresets": { "tenki-default": { "type": "tenki", "config": { ... } } }`). Setting `"autoProvisionSandbox": "tenki-default"` then puts every new agent on Tenki automatically; to choose it per agent instead, use `hermit agents create main --sandbox tenki-default`. Neither path needs `--no-sandbox`.
 
 ## What the backend does with it
 
@@ -46,7 +46,7 @@ npm install
 node verify.mjs
 ```
 
-No gateway or database needed: [`verify.mjs`](verify.mjs) drives the exact Tenki surface the backend is built on — boot a sticky session → `sh -c` exec with env pass-through → a timed-out command that keeps its partial output → skill-file round-trip → **reattach by session id** → dispose — against the live API. The backend's internals (state rows, the skill dirty flag) are covered by OpenHermit's own test suite.
+No gateway or database needed: [`verify.mjs`](verify.mjs) runs the exact Tenki SDK calls the backend is built on against the live API. It boots a sticky session, runs an `sh -c` exec with env pass-through, runs a command that times out and keeps its partial output, round-trips a skill file, **reattaches by session id**, and disposes the session. The backend's internals (state rows, the skill dirty flag) are covered by OpenHermit's own test suite.
 
 ## Notes
 
