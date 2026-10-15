@@ -2,7 +2,7 @@
 
 Stand up a backend API + frontend + seeded database inside one [Tenki](https://tenki.cloud) microVM, call the endpoints, change the data, and open the live UI — the loop an AI agent runs when you ask it to build and drive an app.
 
-Every step maps to a **[Tenki MCP](https://www.npmjs.com/package/@tenkicloud/mcp) tool**, so Claude (or any MCP agent) can do this itself with no bespoke backend:
+Every step maps to a [Tenki MCP](https://www.npmjs.com/package/@tenkicloud/mcp) tool, so Claude (or any MCP agent) can run the same steps itself through the MCP server, with no bespoke backend of yours orchestrating them:
 
 | Step | This example | Agent does it with |
 | --- | --- | --- |
@@ -36,7 +36,7 @@ Swap in FastAPI/Express/Next and Postgres and the shape is identical — the san
 
 ## Multiple services
 
-One sandbox runs several processes (API, worker, DB) over `localhost` — usually what you want. For true per-service isolation, run one sandbox per service, `exposePort()` each, and pass the URLs as config; sandboxes reach each other over those public URLs. Note that's a public-gateway hop, not a private mesh — set `allowOutbound: true` on any sandbox that calls another.
+One sandbox can run several processes (API, worker, DB) that talk to each other over `localhost`, which is usually what you want. For true per-service isolation, run one sandbox per service, `exposePort()` each, and pass the URLs as config; sandboxes reach each other over those public URLs. That traffic goes through the public gateway, not a private mesh, so set `allowOutbound: true` on any sandbox that calls another.
 
 ## Notes
 
