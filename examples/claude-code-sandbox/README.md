@@ -64,7 +64,7 @@ node run.mjs                     # streams the agent's turn, then saves the diff
 
 `run.mjs` uses top-level `await using`, which needs Node 24+.
 
-Verify the Tenki half without a model key — this is what CI runs:
+`verify.mjs` checks everything except the agent's turn, so it runs without a model key. This is what CI runs:
 
 ```bash
 node verify.mjs   # create + clone → install the CLI → check its version and flags → edit → git diff
@@ -76,4 +76,4 @@ node verify.mjs   # create + clone → install the CLI → check its version and
 - The default image already ships Node 24, npm 11, and git 2.43, and outbound network is on for a bare `create`. `npm i -g @anthropic-ai/claude-code` finishes in about five seconds — no `allowOutbound`, no custom image, no baked-in CLI.
 - `--dangerously-skip-permissions` refuses to run as root; the sandbox user is `tenki`, so it works as written. It is the right flag *here* precisely because the blast radius is one microVM.
 - `exec(command, { args })` runs a bare binary and its args with no shell splitting, so the whole task prompt goes through as a single argument. `ExecOptions.env` is scoped to that one process — the model key never lands in the repo or the image.
-- Secrets in, diffs out: nothing else from your shell crosses into the VM, and `await using` terminates it when the scope ends (`Session` is an `AsyncDisposable`). `verify.mjs` uses `try`/`finally` instead, so CI runs fine on Node 20.
+- Secrets in, diffs out: nothing else from your shell crosses into the VM. `createAndWait` returns a `Session`, which is an `AsyncDisposable`, so `await using` terminates the VM when the scope ends. `verify.mjs` uses `try`/`finally` instead of `await using`, so CI runs fine on Node 20.
