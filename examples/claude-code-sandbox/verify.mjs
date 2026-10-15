@@ -1,6 +1,6 @@
 /**
  * Proves the Tenki-facing half of this example without a model key: boot a sandbox with
- * the repo cloned, install the Claude Code CLI, check its version and run.mjs's flags,
+ * the repo cloned, check the image's Claude Code CLI version and run.mjs's flags,
  * edit a file in the checkout, assert the diff round-trips. (The agent turn needs a
  * model key; CONTRIBUTING says CI verifies the backend, not the model.)
  * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
@@ -34,13 +34,11 @@ try {
 	const pkg = JSON.parse(stdoutText(await sandbox.exec("cat", { args: ["repo/package.json"] })));
 	if (pkg.name !== "yocto-queue") throw new Error(`clone landed wrong: repo/package.json is ${pkg.name}`);
 
-	const install = await sandbox.exec("npm", { args: ["i", "-g", "@anthropic-ai/claude-code"], timeoutMs: 300_000 });
-	if (install.exitCode !== 0) throw new Error(`npm i -g @anthropic-ai/claude-code exited ${install.exitCode}`);
-
 	const version = stdoutText(await sandbox.exec("claude", { args: ["--version"] })).trim();
 	if (!/^\d+\.\d+\.\d+ \(Claude Code\)$/.test(version)) throw new Error(`claude --version said ${JSON.stringify(version)}`);
 
-	// npm always installs the latest CLI, so check run.mjs's flags still exist in it.
+	// The CLI comes with the default image and changes when Tenki rebuilds it,
+	// so check run.mjs's flags still exist in it.
 	const help = stdoutText(await sandbox.exec("claude", { args: ["--help"] }));
 	const missing = ["-p, --print", "--dangerously-skip-permissions"].filter((f) => !help.includes(f));
 	if (missing.length) throw new Error(`claude --help no longer lists ${missing.join(", ")}`);
@@ -52,7 +50,7 @@ try {
 		throw new Error(`diff did not round-trip: ${JSON.stringify(diff.slice(0, 200))}`);
 	}
 
-	console.log(`✓ claude-code-sandbox: create + clone → npm i -g claude-code → ${version} → edit → git diff → dispose`);
+	console.log(`✓ claude-code-sandbox: create + clone → ${version} on PATH → edit → git diff → dispose`);
 } catch (e) {
 	console.error("✗ " + (e?.message ?? e));
 	process.exitCode = 1;

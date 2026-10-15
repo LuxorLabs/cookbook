@@ -1,5 +1,5 @@
 // Claude Code, headless, on a real repo in a disposable Tenki sandbox:
-// clone -> install the CLI -> let the agent edit the checkout -> save its diff as a patch.
+// clone -> let the agent edit the checkout -> save its diff as a patch.
 import { writeFileSync } from "node:fs";
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 
@@ -17,10 +17,7 @@ await using sandbox = await tenki.createAndWait({
 	workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 
-// Outbound is on by default, so no allowOutbound is needed to reach the npm registry.
-const install = await sandbox.exec("npm", { args: ["i", "-g", "@anthropic-ai/claude-code"], timeoutMs: 300_000 });
-if (install.exitCode !== 0) throw new Error(`npm i -g @anthropic-ai/claude-code exited ${install.exitCode}`);
-
+// The default image ships the Claude Code CLI on PATH, so there is nothing to install.
 const decoder = new TextDecoder();
 const run = await sandbox.exec("claude", {
 	// Skipping permission prompts is what the throwaway VM buys you: the agent gets a
