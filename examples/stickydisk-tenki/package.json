@@ -1,9 +1,0 @@
-{
-  "name": "stickydisk-tenki",
-  "private": true,
-  "type": "module",
-  "description": "Cookbook example — persistent, workspace-scoped cache disks on Tenki runners with LuxorLabs/stickydisk@v1.",
-  "dependencies": {
-    "yaml": "^2.9.1"
-  }
-}

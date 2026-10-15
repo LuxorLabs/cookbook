@@ -1,7 +1,7 @@
 # Tenki Cookbook
 
-Working examples for [Tenki](https://tenki.cloud): sandbox microVMs, runners,
-and the products built on them.
+Working examples for [Tenki Sandbox](https://tenki.cloud/products/sandbox):
+disposable Linux VMs for running code and AI agents in isolation.
 
 Each example is self-contained, with its own README, source code, and run
 instructions. New to Tenki? Start with
@@ -97,16 +97,6 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | [Open WebUI](examples/open-webui-tenki/) | Sandboxed code interpreter for the self-hosted chat platform |
 | [OpenClaw](examples/openclaw-tenki/) | Sandbox backend for the personal AI assistant |
 
-### Tenki Runners
-
-Speed up GitHub Actions jobs on [Tenki Runners](https://tenki.cloud/products/runners).
-
-| Example | What it covers |
-| --- | --- |
-| [Sticky disks](examples/stickydisk-tenki/) | Keep dependency caches on a persistent disk between jobs |
-| [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
-| [orca](examples/orca-tenki/) | One microVM per parallel coding agent, via its ephemeral-VM recipe hook |
-
 ### Migrating from another provider
 
 Each guide has side-by-side code and an API mapping.
@@ -145,7 +135,6 @@ First-party packages you can install directly in your own project:
 | [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki microVMs |
 | [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
 | [Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) | `go get github.com/LuxorLabs/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
-| [Sticky disk action](https://github.com/LuxorLabs/stickydisk) | `uses: LuxorLabs/stickydisk@v1` | Mounts a persistent, workspace-scoped cache disk on Tenki runners |
 | [Go SDK](https://github.com/TenkiCloud/tenki-sdk-go) | `go get github.com/TenkiCloud/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
 
 ## Projects with built-in Tenki support
