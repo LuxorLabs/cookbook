@@ -1,8 +1,9 @@
 /**
  * Proves the Tenki-facing half of this example without a model key: boot a sandbox with
- * OpenCode baked in and a repo cloned, start the headless server, expose it, and assert the
- * public URL is both password-protected and serving the checkout. (Driving the agent needs
- * a model key; CONTRIBUTING says CI verifies the backend, not the model.)
+ * OpenCode baked in and a repo cloned, check it reads OPENAI_API_KEY, start the headless
+ * server, expose it, and assert the public URL is both password-protected and serving the
+ * checkout. (Driving the agent needs a model key; CONTRIBUTING says CI verifies the backend,
+ * not the model.)
  * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  */
 import { TenkiSandbox, WaitReadyFailedError, stdoutText } from "@tenkicloud/sandbox";
@@ -42,6 +43,11 @@ try {
 	const version = stdoutText(await sandbox.exec("opencode", { args: ["--version"] })).trim();
 	if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error(`opencode --version said ${JSON.stringify(version)}`);
 
+	// run.mjs hands your key to OpenCode as OPENAI_API_KEY. With a dummy key in that variable,
+	// OpenCode should enable its openai provider and list that provider's models.
+	const models = stdoutText(await sandbox.exec("opencode", { args: ["models"], env: { OPENAI_API_KEY: "sk-verify-dummy" }, timeoutMs: 120_000 }));
+	if (!/^openai\//m.test(models)) throw new Error("opencode models lists no openai/ models with OPENAI_API_KEY set");
+
 	await sandbox.exec("sh", {
 		args: ["-c", `cd repo && setsid opencode serve --port ${PORT} --hostname 0.0.0.0 >/tmp/opencode.log 2>&1 </dev/null & sleep 5`],
 		env: { OPENCODE_SERVER_PASSWORD: PASSWORD },
@@ -65,7 +71,7 @@ try {
 	const open = (await get()).status;
 	if (open !== 401) throw new Error(`unauthenticated request returned ${open}, expected 401`);
 
-	console.log(`✓ opencode-sandbox: create + clone → opencode ${version} serve → exposePort → 401 unauthed, 200 → ${project.worktree} → dispose`);
+	console.log(`✓ opencode-sandbox: create + clone → opencode ${version} reads OPENAI_API_KEY → serve → exposePort → 401 unauthed, 200 → ${project.worktree} → dispose`);
 } catch (e) {
 	console.error("✗ " + (e?.message ?? e));
 	process.exitCode = 1;
