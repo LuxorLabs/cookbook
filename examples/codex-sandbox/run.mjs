@@ -1,10 +1,11 @@
 // OpenAI Codex, headless, on a real repo in a disposable Tenki sandbox:
-// clone -> install the CLI -> let the agent edit the checkout -> read back the diff.
+// clone -> let the agent edit the checkout -> read back the diff.
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
 const TASK = "Add a toArray() method to the Queue class in index.js that returns the queued values as an array, oldest first. Declare it in index.d.ts and add a test for it in test.js.";
-const PASSTHROUGH = ["OPENAI_API_KEY"];
+// codex exec reads its key from CODEX_API_KEY and ignores OPENAI_API_KEY.
+const PASSTHROUGH = ["CODEX_API_KEY"];
 
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
@@ -16,10 +17,7 @@ await using sandbox = await tenki.createAndWait({
 	workspaceId: process.env.TENKI_WORKSPACE_ID,
 });
 
-// Outbound is on by default, so no allowOutbound is needed to reach the npm registry.
-const install = await sandbox.exec("npm", { args: ["i", "-g", "@openai/codex"], timeoutMs: 300_000 });
-if (install.exitCode !== 0) throw new Error(`npm i -g @openai/codex exited ${install.exitCode}`);
-
+// The default image ships the Codex CLI on PATH, so there is nothing to install.
 const decoder = new TextDecoder();
 const run = await sandbox.exec("codex", {
 	// Codex sandboxes itself with bubblewrap. Inside a microVM that layer is redundant, and
