@@ -1,0 +1,6 @@
+:root { color-scheme: light; }
+html, body { height: 100%; margin: 0; background: #fafafa; color: #0b1220; font-family: ui-sans-serif, system-ui, sans-serif; }
+.shell { display: flex; flex-direction: column; height: 100dvh; }
+.shell > header { padding: 12px 20px; border-bottom: 1px solid #e5e8ed; background: #fff; font-size: 14px; color: #5b6573; }
+.shell > header b { color: #0b1220; }
+.chat { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; min-height: 0; }

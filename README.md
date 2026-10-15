@@ -60,6 +60,7 @@ Give an agent a sandboxed place to run the code it writes.
 | Example | Integration |
 | --- | --- |
 | [MCP server](examples/mcp-tenki-sandbox/) | Sandbox tools for Claude, Cursor, or any MCP client |
+| [MCP Apps](examples/copilotkit-mcp-apps/) | Tools that bring their own UI, rendered in a CopilotKit chat |
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Firecracker microVMs |
