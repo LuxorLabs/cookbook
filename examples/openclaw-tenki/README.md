@@ -2,7 +2,7 @@
 
 [OpenClaw](https://github.com/openclaw/openclaw) is an open-source personal AI assistant you run yourself, with plugins and skills distributed through [ClawHub](https://clawhub.ai). The [`@tenkicloud/openclaw`](https://www.npmjs.com/package/@tenkicloud/openclaw) plugin ([LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw)) is a sandbox **backend**: with `sandbox.mode: "all"`, every agent tool execution — shell commands, the filesystem bridge, interactive PTY sessions — runs inside a [Tenki](https://tenki.cloud) Firecracker microVM instead of on your machine.
 
-Each sandbox scope gets one session, found-or-created by a runtime tag (`oc-tenki-<slug>-<hash>`, plus `openclaw` on all of them): existing sessions are reused, `PAUSED` ones are resumed, and an idle session that pauses stops billing until the agent comes back.
+Each sandbox scope gets one Tenki session (the microVM its commands run in). The plugin finds that session by a runtime tag (`oc-tenki-<slug>-<hash>`; every session also carries `openclaw`) and creates it only if none exists, so existing sessions are reused and `PAUSED` ones are resumed. An idle session that pauses stops billing until the agent comes back.
 
 ## Set it up
 
@@ -45,7 +45,7 @@ The config schema is strict — `authToken`, `baseUrl`, `workspaceId`, `image`, 
 
 ## How execution reaches the VM
 
-Shell scripts run over the SDK exec surface as `/bin/sh -c`, with a `set --` prefix carrying positional args and stdin staged as a session file that the script redirects onto fd 0. Interactive PTY sessions are plain `ssh -tt` — but there is no raw host or port to point it at: the plugin listens on a loopback socket and pipes each connection into the SDK's gateway **WebSocket** SSH stream. Tenki's edge gateway accepts only certificate auth, so the plugin keeps a dedicated ed25519 key and mints short-lived per-session user certificates through the SDK, re-minting near expiry.
+Shell scripts run over the SDK exec surface as `/bin/sh -c`, with a `set --` prefix carrying positional args and stdin staged as a session file that the script redirects onto fd 0. Interactive PTY sessions are plain `ssh -tt`, but the VM has no raw host or port to point `ssh` at. Instead, the plugin listens on a loopback socket and pipes each connection into an SSH stream that the SDK opens over a WebSocket to Tenki's gateway. Tenki's edge gateway accepts only certificate auth, so the plugin keeps a dedicated ed25519 key and mints short-lived per-session user certificates through the SDK, re-minting near expiry.
 
 ## Verify
 
@@ -54,10 +54,10 @@ npm install
 node verify.mjs
 ```
 
-No OpenClaw host needed: [`verify.mjs`](verify.mjs) asserts the published plugin's OpenClaw manifest contract (plugin id `tenki`, strict `configSchema`, extension entry, host version pin), then proves the live path the backend rides on — create a tagged session, find it by tag, exec with the `set --` prefix, round-trip stdin through a staged session file, mint an SSH cert and open the gateway stream, dispose. The backend's own behavior is covered by CI at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
+No OpenClaw host is needed. [`verify.mjs`](verify.mjs) first checks the published plugin's OpenClaw manifest contract (plugin id `tenki`, strict `configSchema`, extension entry, host version pin). It then makes the same Tenki calls the backend relies on, against a live session: create a tagged session, find it by tag, exec with the `set --` prefix, round-trip stdin through a staged session file, mint an SSH cert and open the gateway stream, dispose. It does not run the backend itself; that behavior is covered by CI at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
 
 ## Notes
 
 - This is a **community plugin** installed from ClawHub — it does not ship with OpenClaw. (It was proposed upstream in [openclaw/openclaw#111792](https://github.com/openclaw/openclaw/pull/111792), which was closed; the standalone package is the supported path.)
-- The plugin pins `@tenkicloud/sandbox` 0.5.2; this example depends on `^0.5.4`, which has the same session surface.
+- The published plugin pins `@tenkicloud/sandbox` 0.5.2. This example declares `>=1.4.1`, and `verify.mjs` runs the same session calls against that newer SDK.
 - Bugs go to [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw/issues), not the OpenClaw tracker.
