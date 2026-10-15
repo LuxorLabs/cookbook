@@ -5,8 +5,8 @@ Smoke-verify the PraisonAI Tenki compute provider, end to end:
      (where it lives since praisonai 4.7.x) and from the legacy
      ``praisonai.integrations.compute`` path, and the core SDK's compute
      bridge resolves the string ``"tenki"`` to it. That bridge is the exact
-     path ``PraisonAIAgents(..., compute="tenki")`` and
-     ``Workflow(..., compute="tenki")`` take, so this proves the string wiring
+     path ``PraisonAIAgents(..., tools_run_on="tenki")`` and
+     ``Workflow(..., tools_run_on="tenki")`` take, so this proves the string wiring
      without an LLM call.
   2. live — provision a real Tenki microVM through the provider, run a
      command, round-trip a file byte-for-byte, and shut it down.
@@ -99,7 +99,7 @@ try:
         with open(dst, "rb") as f:
             assert f.read() == payload, "downloaded bytes differ"
 
-    print('✓ praisonai-tenki: compute="tenki" resolves → provision → execute 42 → file round-trip → shutdown')
+    print('✓ praisonai-tenki: tools_run_on="tenki" resolves → provision → execute 42 → file round-trip → shutdown')
 except Exception as e:  # noqa
     print(f"✗ {type(e).__name__}: {e}")
     sys.exit(1)
