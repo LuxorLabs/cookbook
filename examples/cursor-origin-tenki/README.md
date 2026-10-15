@@ -26,7 +26,7 @@ origin auth login                                                # also sets up 
 Either side works:
 
 - **From Tenki:** open **Code Reviewer** in your workspace and select **Install App** next to **Cursor Origin**. Cursor opens its install page; choose **All repositories** or **Select repositories**, review the permissions, and select **Install**.
-- **From Cursor:** in codebase settings, open **Apps**, find **Tenki** under **Code Review**, and select **Install**. Cursor sends you to Tenki: sign in with the **same email you use on Cursor**, pick a workspace, and select **Connect**. The link expires after 2 hours.
+- **From Cursor:** in codebase settings, open **Apps**, find **Tenki** under **Code Review**, and select **Install**. Cursor sends you to Tenki: sign in with the **same email you use on Cursor**, pick a workspace, and select **Connect**. The link Cursor sends you to expires after 2 hours.
 
 A workspace connects to one Origin namespace and vice versa. Tenki asks only for read access to code plus write access to PR comments, reviews, checks, and the PR description, and never pushes code ([full list](https://tenki.cloud/docs/reviewer/cursor-origin#permissions)).
 
@@ -44,7 +44,7 @@ git push -u origin main
 
 Create the repo on Origin; don't mirror it from GitHub. Cursor gives apps read-only access to GitHub-synced repos, so Tenki reviews those through its GitHub app instead. If you installed Tenki for **Select repositories**, add `invoices-api` under **Apps → Tenki → Repository Access → Manage** in Cursor's codebase settings; with **All repositories**, new repos are picked up automatically.
 
-[`AGENTS.md`](starter/AGENTS.md) is how you give the reviewer house rules. Tenki reads `AGENTS.md` (or `CLAUDE.md`; `AGENTS.md` wins if both exist) from the repo root, plus any in parent directories of a changed file, and layers it on top of its default checks. There's nothing to configure in the dashboard ([Custom Context](https://tenki.cloud/docs/reviewer/custom-context)).
+[`AGENTS.md`](starter/AGENTS.md) is how you give the reviewer house rules. Tenki reads `AGENTS.md` from the repo root, plus any in parent directories of a changed file, and layers those rules on top of its default checks. `CLAUDE.md` works too; if both exist, `AGENTS.md` wins. There's nothing to configure in the dashboard ([Custom Context](https://tenki.cloud/docs/reviewer/custom-context)).
 
 ## 3. Open the pull request
 
@@ -88,7 +88,7 @@ git commit -am "Check team membership on invoice totals" && git push
 origin pr comment -b "@tenki-reviewer"
 ```
 
-Pushes aren't re-reviewed by default. Turn on **Review on Push** in **Code Reviewer → Configuration** to skip the comment; each re-review is billed as a review. With no blocking findings left, Tenki approves (**Approve on Clean Review** is on by default), the check passes, and you can `origin pr merge`. The check doesn't block merging unless you require it under the repo's Rules and Protections in Origin.
+Pushes aren't re-reviewed by default, which is why you comment `@tenki-reviewer`. To have each push re-reviewed without the comment, turn on **Review on Push** in **Code Reviewer → Configuration**; each re-review is billed as a review. With no blocking findings left, Tenki approves (**Approve on Clean Review** is on by default), the check passes, and you can `origin pr merge`. The check doesn't block merging unless you require it under the repo's Rules and Protections in Origin.
 
 To dismiss a finding that doesn't apply, reply in its thread with "false positive", "not a bug", "won't fix", "by design", or similar (`origin pr thread reply <thread-id> -b "won't fix: …"`). Tenki won't raise it again.
 
@@ -118,5 +118,5 @@ A real review needs an Origin namespace with the Tenki app installed, so [`verif
 ## Notes
 
 - Reopened PRs aren't reviewed automatically; comment `@tenki-reviewer`.
-- Reviews from both providers show up on the **Reviews** tab of Code Reviewer; filter by provider to see only Origin.
+- Reviews from GitHub and Origin both show up on the **Reviews** tab of Code Reviewer; filter by provider to see only Origin.
 - Troubleshooting: [Tenki isn't reviewing Cursor Origin pull requests](https://tenki.cloud/docs/reviewer/troubleshooting#tenki-isnt-reviewing-cursor-origin-pull-requests).
