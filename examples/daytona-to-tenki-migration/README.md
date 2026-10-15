@@ -91,7 +91,7 @@ export TENKI_WORKSPACE_ID=...
 node run.mjs                     # hello from tenki · exit 0
 ```
 
-`verify.mjs` is the CI proof: it reads your token from `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` or `~/.config/tenki/config.yaml`, then does the full loop against live Tenki — create → `exec` a shell command and a bare binary → assert the captured output → terminate — and exits non-zero on any failure.
+`verify.mjs` is the CI proof. It reads your token from `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` or `~/.config/tenki/config.yaml`, then runs the full loop against live Tenki: it creates a sandbox, `exec`s a shell command and a bare binary, asserts the captured output, and terminates the sandbox. It exits non-zero on any failure.
 
 ```bash
 node verify.mjs   # ✓ create → exec sh + python3 → "hello-from-tenki" / 42 → dispose
@@ -100,9 +100,9 @@ node verify.mjs   # ✓ create → exec sh + python3 → "hello-from-tenki" / 42
 ## Notes
 
 - **Output is bytes.** `ExecResult.stdout` / `.stderr` are `Uint8Array`; use `stdoutText(r)` / `stderrText(r)` to get strings (Daytona hands you a `result` string directly).
-- **Auth is explicit.** Daytona reads `DAYTONA_API_KEY` (implicitly, or via `new Daytona({ apiKey })`); Tenki takes an `authToken` on the client, plus a `workspaceId` for placement (from `tenki login`).
+- **Auth is explicit.** Daytona reads `DAYTONA_API_KEY` (implicitly, or via `new Daytona({ apiKey })`); Tenki takes an `authToken` on the client, plus a `workspaceId` that picks the workspace the sandbox is created in. `tenki login` gives you both.
 - **Disposal.** `await sandbox.close()` maps to Daytona's `daytona.delete(sandbox)`. Because `Session` is an `AsyncDisposable`, you can also write `await using sandbox = await tenki.createAndWait(...)` and let the scope terminate it for you. Either way the microVM is billed per second and self-reaps on its idle / lifetime caps.
 - **Networking is off by default.** If your code needs outbound network, pass `createAndWait({ allowOutbound: true })`.
-- Requires Node 20+ for `await using` (the `run.mjs` here uses explicit `close()`, so Node 18+ is fine).
+- `await using` requires Node 20+. The `run.mjs` here uses explicit `close()`, so it runs on Node 18+.
 
 Built with the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK. Learn more at [tenki.cloud](https://tenki.cloud).

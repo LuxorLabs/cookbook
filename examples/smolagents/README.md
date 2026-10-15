@@ -4,7 +4,7 @@ Hugging Face [**smolagents**](https://github.com/huggingface/smolagents) `CodeAg
 
 ## The executor (`tenki_executor.py`)
 
-`CodeAgent` needs a **stateful** namespace: it defines the tools once (`send_tools`), then every step's code shares variables with the last. Tenki's `exec()` starts a fresh `python3` each call, so `TenkiExecutor` runs a tiny **persistent kernel inside the sandbox** — a stdlib-only daemon on sandbox-loopback TCP that holds one namespace and executes the code sent to it (no outbound network, no extra packages). That's the same reason smolagents' own remote executors all talk to a live kernel.
+`CodeAgent` needs a **stateful** namespace: it defines the tools once (`send_tools`), then every step's code shares variables with the last. Tenki's `sandbox.exec()` starts a fresh `python3` on each call, so `TenkiExecutor` runs a tiny **persistent kernel inside the sandbox**. smolagents' own remote executors all talk to a live kernel for the same reason. The kernel is a stdlib-only daemon on sandbox-loopback TCP that holds one namespace and executes the code sent to it; it needs no outbound network and no extra packages.
 
 ```python
 from smolagents.remote_executors import RemotePythonExecutor
@@ -57,7 +57,7 @@ The SDK takes a `tk_` API key: set `TENKI_API_KEY`, or run `tenki login --api-ke
 node verify.mjs      # or: .venv/bin/python verify.py
 ```
 
-`verify.py` builds the executor against a live sandbox and drives it exactly as `CodeAgent` does — **runs Python (`42`), proves state persists across steps (`55`), catches `final_answer(...)` (`42`), and surfaces an error as `AgentError`** — then terminates the microVM. It proves the whole Tenki-facing seam with no model key. This is what CI runs (via the `verify.mjs` → `verify.py` shim, same pattern as [`run-code-python`](../run-code-python/)).
+`verify.py` builds the executor against a live sandbox and drives it exactly as `CodeAgent` does — **runs Python (`42`), proves state persists across steps (`55`), catches `final_answer(...)` (`42`), and surfaces an error as `AgentError`** — then terminates the microVM. It proves the whole Tenki-facing seam with no model key. CI runs it through `verify.mjs`, a Node shim that calls `verify.py` (same pattern as [`run-code-python`](../run-code-python/)).
 
 ## Run the full agent
 
@@ -70,9 +70,9 @@ export OPENAI_API_KEY=sk-...   # OpenAIServerModel (pip install 'smolagents[open
 ## Notes
 
 - **The persistent kernel is what makes `CodeAgent` work** — it keeps tool definitions and intermediate variables alive across steps. It listens on sandbox **loopback only** (never exposed) and is pure stdlib, so it needs no outbound network and no image changes.
-- **One microVM per agent session**, reused across every step and terminated by `executor.cleanup()` (a real `TerminateSession`). smolagents calls `cleanup()` for you when the agent is done.
+- **One microVM per agent session**, reused across every step and terminated by `executor.cleanup()`, which makes a real `TerminateSession` control call to Tenki. smolagents calls `cleanup()` for you when the agent is done.
 - **A live run needs outbound network** (on by default, `allow_outbound=True`): `CodeAgent` patches its `final_answer` tool, and smolagents then pip-installs that tool's inferred requirements (numpy, pillow) into the sandbox at `send_tools` time. Give any extra packages your agent needs to `TenkiExecutor(additional_imports=[...])`.
-- `exec(command, *args)` passes args straight through (no shell splitting); this example base64-encodes code across that boundary, so multi-line model output never hits an escaping surprise.
+- Tenki's `sandbox.exec(command, *args)` passes args straight through (no shell splitting). This example base64-encodes the code it sends as an arg, so multi-line model output never hits an escaping surprise.
 - Tenki confines file I/O to `/home/tenki` — use relative paths.
 - Requires **Python 3.10+** (a `tenki` SDK requirement); the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim.
 - Official SDK + full API: [tenki.cloud/docs/sandbox/sdk](https://tenki.cloud/docs/sandbox/sdk). Same executor seam as smolagents' [E2B / Docker executors](https://github.com/huggingface/smolagents/blob/main/src/smolagents/remote_executors.py).

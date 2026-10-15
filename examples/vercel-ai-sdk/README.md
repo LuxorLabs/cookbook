@@ -22,7 +22,7 @@ of that on its `Session`, so this example is a **thin adapter**, not a new backe
 | `readFile` (stream)                | `session.readFile(path)` → `ReadableStream`  |
 | `writeTextFile` / `writeBinaryFile` / `writeFile` | `session.writeFile(path, data)` (parents `mkdir -p`'d) |
 
-`createTenkiSandbox()` wraps that with lifecycle — it boots a microVM and returns
+`createTenkiSandbox()` adds the lifecycle around `toSandboxSession()`: it boots a microVM and returns
 `{ sandbox, session, dispose }`.
 
 ## The minimal integration (`example.mjs`)
@@ -72,17 +72,18 @@ npm install
 node verify.mjs        # or: TENKI_AUTH_TOKEN=... node verify.mjs
 ```
 
-`verify.mjs` drives the adapter's `Experimental_SandboxSession` surface directly against a live
-Tenki sandbox — **`run` (→ 42) → `writeTextFile`/`readTextFile` round-trip → missing file → `null`
-→ `spawn`** — then disposes the microVM. No model key required. This is what CI runs.
+`verify.mjs` calls the adapter's `Experimental_SandboxSession` methods directly against a live
+Tenki sandbox: `run` (expects 42), a `writeTextFile`/`readTextFile` round-trip, a read of a
+missing file (expects `null`), and `spawn`. Then it disposes the microVM. No model key required. This is what CI runs.
 
 ## Notes
 
-- **`run`/`spawn` take one command string.** The AI SDK passes a single `command`; Tenki's
-  `exec`/`run` take a bare argv with no shell splitting — so the adapter routes through
-  `sh -c` to preserve pipes, `&&`, redirects, and quoting.
-- **Files live under `/home/tenki`.** Tenki confines file I/O there; use **relative paths**
-  (they anchor to the guest workdir). Writes `mkdir -p` their parent, per the AI SDK contract.
+- **`run`/`spawn` take one command string.** The AI SDK passes a single `command` string, but Tenki's
+  `session.exec`/`session.run` take a bare argv with no shell splitting, so the adapter
+  routes through `sh -c` to preserve pipes, `&&`, redirects, and quoting.
+- **Files live under `/home/tenki`.** Tenki confines file I/O there; use **relative paths**,
+  which resolve from the VM's working directory (`/home/tenki`). Writes create missing parent
+  directories (`mkdir -p`), per the AI SDK contract.
 - **Network is off by default.** For `pip install` or fetching, boot with outbound enabled:
   `createTenkiSandbox({ allowOutbound: true })`. Tune the VM the same way:
   `createTenkiSandbox({ cpuCores: 4, memoryMb: 4096 })`.

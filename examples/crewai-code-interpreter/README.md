@@ -35,7 +35,7 @@ The SDK takes a `tk_` API key: set `TENKI_API_KEY`, or run `tenki login --api-ke
 node verify.mjs      # or: .venv/bin/python verify.py
 ```
 
-`verify.py` builds the tool over a live sandbox and calls it directly (`tool._run(code=...)`), asserting the result — proving the Tenki-facing half without a model key. This is what CI runs.
+`verify.py` creates a live sandbox, builds the tool on it, and calls the tool directly (`tool._run(code=...)`), then asserts the result. That proves the Tenki-facing half of the example (the tool running code in a sandbox) without a model key. This is what CI runs.
 
 ## Run the full agent
 
@@ -46,6 +46,6 @@ export OPENAI_API_KEY=sk-...
 
 ## Notes
 
-- Requires **Python 3.10+** (a CrewAI requirement); the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim.
+- Requires **Python 3.10+** (a CrewAI requirement). The rest of the cookbook is Node, so this example is verified through `verify.mjs`, a shim that runs `verify.py`.
 - Tenki confines file I/O to `/home/tenki` — write to relative paths.
 - Official SDK + full API: [tenki.cloud/docs/sandbox/sdk](https://tenki.cloud/docs/sandbox/sdk).

@@ -66,7 +66,7 @@ await tenki.deleteSnapshot(snap.id); // when you no longer need the base
 
 ## Notes
 
-- **`pause()` / `resume()` resolve as the transition begins**, so `sandbox.state` reads `PAUSING` / `RESUMING` right after. Call `await sandbox.refresh()` to read the settled `PAUSED` / `RUNNING` state (that's what `verify.mjs` asserts on).
+- **`pause()` / `resume()` resolve as the transition begins**, so `sandbox.state` reads `PAUSING` / `RESUMING` right after. Poll `await sandbox.refresh()` until `sandbox.state` settles at `PAUSED` / `RUNNING`; `verify.mjs` does this and asserts on the settled state.
 - **Pausing is not instant** — snapshotting memory + disk takes ~20s in this example. `resume()` is quick (~1s), and file/exec calls work immediately after it returns.
 - **How long a paused sandbox stays resumable** is set by `pauseRetentionMs` at create time; after that the pause snapshot expires and the sandbox can't be resumed.
 - **The two paths share one mechanism:** a pause snapshot revives the *same* sandbox; an explicit snapshot (`createSnapshotAndWait`) restores into a *new* one via `createAndWait({ snapshotId })`.

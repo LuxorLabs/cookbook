@@ -19,7 +19,7 @@ with Sandbox.create(
     print(f"exit {result.exit_code} -> {result.stdout_text.strip()}")  # exit 0 -> 42
 ```
 
-`Sandbox.create(...)` boots the microVM and blocks until it's `RUNNING` (~2s). `exec(command, *args)` passes args straight through (no shell splitting), so multi-line, model-generated code goes across as one `-c` argument with no escaping surprises. Leaving the `with` block terminates the VM (`__exit__` → `close()`, aliased to `terminate` — a real `TerminateSession`), so you never leak a sandbox.
+`Sandbox.create(...)` boots the microVM and blocks until it's `RUNNING` (~2s). `exec(command, *args)` passes args straight through (no shell splitting), so multi-line, model-generated code goes across as one `-c` argument with no escaping surprises. Leaving the `with` block terminates the VM, so you never leak a sandbox: `__exit__` calls `close()`, which is an alias for `terminate` and issues a real `TerminateSession`.
 
 ## Setup (Python 3.10+)
 
@@ -44,6 +44,6 @@ node verify.mjs      # or: .venv/bin/python verify.py
 
 - **`exec(command, *args)` runs a bare binary + its args — no shell splitting.** For a shell one-liner, use `sandbox.exec("sh", "-c", "echo hi && ls")`.
 - The sandbox boots in ~2s and is billed per second. The `with` block disposes it automatically; or call `sandbox.terminate()` explicitly.
-- Requires **Python 3.10+**; the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim (the same pattern as [`crewai-code-interpreter`](../crewai-code-interpreter/)).
+- Requires **Python 3.10+**. The rest of the cookbook is Node, so CI verifies this example through the `verify.mjs` shim, which runs `verify.py` (the same pattern as [`crewai-code-interpreter`](../crewai-code-interpreter/)).
 - Tenki confines file I/O to `/home/tenki` — write to relative paths.
 - Official SDK + full API: [tenki.cloud/docs/sandbox/sdk](https://tenki.cloud/docs/sandbox/sdk).

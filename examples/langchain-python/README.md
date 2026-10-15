@@ -1,6 +1,6 @@
 # LangChain agent on Tenki — Python (code interpreter)
 
-Give a [LangChain](https://www.langchain.com) **Python** agent a **code interpreter** — a tool that runs Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. This is the Python port of [`langchain-code-interpreter`](../langchain-code-interpreter/) (the JS one), on the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK. One sandbox per agent session; a `run_python` tool the agent calls to execute code in an isolated microVM.
+Give a [LangChain](https://www.langchain.com) **Python** agent a **code interpreter**, so it can answer questions that need real computation by running code. The agent calls a `run_python` tool, which executes its Python in a disposable [Tenki](https://tenki.cloud) sandbox (an isolated microVM) and hands the output back. One sandbox serves the whole agent session. This is the Python port of the JavaScript example [`langchain-code-interpreter`](../langchain-code-interpreter/), built on the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK.
 
 ## The tool (`tenki_tool.py`)
 
@@ -54,7 +54,7 @@ The SDK takes a `tk_` API key: set `TENKI_API_KEY`, or run `tenki login --api-ke
 node verify.mjs      # or: .venv/bin/python verify.py
 ```
 
-`verify.py` builds the tool over a live sandbox and calls it directly (`run_python.invoke({"code": ...})`), asserting the result — proving the Tenki-facing half without a model key. This is what CI runs.
+`verify.py` creates a live sandbox, builds the tool on it, and calls the tool directly (`run_python.invoke({"code": ...})`) with no agent involved, then asserts the result. That tests the half of the example that talks to Tenki, without needing a model key. CI runs this check.
 
 ## Run the full agent
 
@@ -67,6 +67,6 @@ export OPENAI_API_KEY=sk-...
 
 - **One sandbox per session, reused across tool calls** — cheaper than a sandbox per call; terminated when the `with` block exits.
 - Requires **Python 3.10+** (a `tenki` SDK requirement); the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim.
-- The sandbox image ships a stdlib-only Python; outbound network is on by default (`allow_outbound=True`), so the agent's code can `pip install` — pass `allow_outbound=False` to lock the sandbox down.
+- The sandbox image ships a stdlib-only Python. Outbound network is on by default (`allow_outbound=True`), so the agent's code can `pip install` any other packages it needs. To lock the sandbox down, add `allow_outbound=False` to the options passed to `Sandbox.create`.
 - Tenki confines file I/O to `/home/tenki` — write to relative paths.
 - Official SDK + full API: [tenki.cloud/docs/sandbox/sdk](https://tenki.cloud/docs/sandbox/sdk). Same tool-backed-by-a-sandbox pattern as the [JS version](../langchain-code-interpreter/).

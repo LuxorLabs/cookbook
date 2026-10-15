@@ -57,8 +57,8 @@ node verify.mjs   # server -> exposePort -> host GET 200 -> "Hello from Tenki �
 ## How it works
 
 1. **`allowInbound: true`** on `createAndWait` tells Tenki to accept inbound traffic for this sandbox. Omit it and `exposePort` throws `InboundDisabledError`. *Outbound* isn't needed here — the **host** fetches the URL, the sandbox only listens.
-2. **`sandbox.exposePort(port, { ttlMs?, slug? })`** maps a guest port at the Tenki gateway and returns an [`ExposedPort`](https://www.npmjs.com/package/@tenkicloud/sandbox): `{ port, previewUrl, expiresAt?, previewUrlId?, slug? }`. The `previewUrl` is a real public HTTPS endpoint.
-3. Anyone (your host, a browser, a webhook) can now `GET` that URL and reach the server inside the microVM.
+2. **`sandbox.exposePort(port, { ttlMs?, slug? })`** maps a sandbox (guest) port at the Tenki gateway and returns an [`ExposedPort`](https://www.npmjs.com/package/@tenkicloud/sandbox): `{ port, previewUrl, expiresAt?, previewUrlId?, slug? }`. The `previewUrl` is a real public HTTPS endpoint.
+3. Anyone (your host, a browser, a webhook) can now `GET` that URL and reach the server inside the sandbox's microVM.
 4. `sandbox.unexposePort(port)` tears the mapping down; `sandbox.listExposedPorts()` lists what's live.
 
 ## Notes
@@ -66,7 +66,7 @@ node verify.mjs   # server -> exposePort -> host GET 200 -> "Hello from Tenki �
 - **The server must be running when the URL is hit.** `exec()` blocks until its command exits, so a foreground `python3 -m http.server` would never return. Background it with `setsid … >log 2>&1 </dev/null &` (as above) so it outlives the `exec()` call, then expose the port.
 - **First requests may need a beat.** The server and the gateway route take a moment to warm up — retry the fetch a few times (see `verify.mjs`).
 - **Pass a `slug`** (`exposePort(PORT, { slug: "my-app" })`) for a stable, readable hostname, or **`ttlMs`** to auto-expire the mapping.
-- `await using` disposes the sandbox — and its preview URL — when the scope ends (`Session` is an `AsyncDisposable`). Requires Node 20+.
+- `await using` disposes the sandbox, and its preview URL with it, when the scope ends: the `Session` that `createAndWait` returns is an `AsyncDisposable`. Requires Node 20+.
 - Tenki confines file I/O to `/home/tenki` — the site is written there.
 
 Built on [Tenki](https://tenki.cloud) sandboxes.

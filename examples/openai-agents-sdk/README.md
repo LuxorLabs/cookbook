@@ -1,6 +1,6 @@
 # OpenAI Agents SDK on Tenki (code interpreter)
 
-Give an [OpenAI Agents SDK](https://openai.github.io/openai-agents-js/) agent a **code interpreter** — a `run_python` tool that executes the model's Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. The agent reasons and writes code; [Tenki](https://tenki.cloud/docs/sandbox) is the execution backend — an isolated microVM, not your process. One sandbox per agent session, reused across every tool call.
+Give an [OpenAI Agents SDK](https://openai.github.io/openai-agents-js/) agent a **code interpreter** — a `run_python` tool that executes the model's Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. The agent reasons and writes code; [Tenki](https://tenki.cloud/docs/sandbox) runs that code in an isolated microVM instead of your own process. One sandbox per agent session, reused across every tool call.
 
 ## The tool (`tenki-tool.mjs`)
 
@@ -66,6 +66,6 @@ node verify.mjs   # calls the tool directly → runs Python in Tenki → asserts
 
 - **One sandbox per session, reused across tool calls** — cheaper than a sandbox per call; disposed (`Symbol.asyncDispose`) when the agent finishes.
 - `exec("python3", { args: ["-c", code] })` passes the code as a single argument (no shell), so multi-line agent-generated code goes through without escaping issues.
-- Stdlib only by default — sandboxes have no outbound network unless you create them with `allowOutbound: true` (needed for `pip install`).
+- Only the Python standard library is available by default. Sandboxes have no outbound network unless you create them with `allowOutbound: true`, which `pip install` needs.
 - Tenki confines file I/O to `/home/tenki` — write to relative paths.
-- Built on the [OpenAI Agents SDK (JS)](https://openai.github.io/openai-agents-js/) + [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox). The same tool-backed-by-a-sandbox pattern is the [LangChain](../langchain-code-interpreter/) and [Vercel AI SDK](../vercel-ai-sdk/) examples too.
+- Built on the [OpenAI Agents SDK (JS)](https://openai.github.io/openai-agents-js/) + [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox). The [LangChain](../langchain-code-interpreter/) and [Vercel AI SDK](../vercel-ai-sdk/) examples use the same tool-backed-by-a-sandbox pattern.
