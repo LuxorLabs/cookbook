@@ -25,7 +25,7 @@ export TENKI_API_KEY=tk_...
 
 This gives you `harbor` with the Tenki environment loaded, plus the `tenki-harbor` command for setup and cleanup. `tenki-harbor` pins `harbor>=0.23,<0.24`, so you get Harbor 0.23.x. To work from this folder instead: `uv venv --python 3.12 && uv pip install -r requirements.txt`.
 
-**Auth:** `tenki-harbor` reads `TENKI_API_KEY` (or `TENKI_AUTH_TOKEN`) from the environment only, and the Python SDK accepts `tk_` API keys. The CLI's saved login is not used (`verify.py` exports it from `~/.config/tenki/config.yaml` for you).
+`tenki-harbor` reads `TENKI_API_KEY` (or `TENKI_AUTH_TOKEN`) from the environment only, and the Python SDK accepts `tk_` API keys. It does not use the Tenki CLI's saved login, so export the key yourself; `verify.py` does that for you from `~/.config/tenki/config.yaml`.
 
 ## 1. Check the setup, no model needed
 
@@ -84,11 +84,11 @@ Pass with `--ek key=value`, or under `environment.kwargs` in a job config.
 | GPUs, Windows containers | No |
 | Up to 16 vCPU, 64 GB memory, 100 GB disk per trial | Larger requests are rejected, not shrunk |
 
-With Harbor's `oracle` agent on all 89 Terminal-Bench 2.0 tasks, 16 at a time, 79 pass on Tenki; the [tenki-harbor README](https://github.com/LuxorLabs/tenki-harbor#terminal-bench-20-results) lists why each of the other 10 fails in the task itself.
+With Harbor's `oracle` agent on all 89 Terminal-Bench 2.0 tasks, 16 at a time, 79 pass on Tenki. The other 10 fail for reasons in the tasks themselves, not in Tenki; the [tenki-harbor README](https://github.com/LuxorLabs/tenki-harbor#terminal-bench-20-results) lists the reason for each.
 
 ## Compare harnesses on one model
 
-[`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals) builds on this to run one model behind an OpenAI-compatible endpoint across several harnesses (Terminus, mini-swe-agent, Goose, OpenCode, Qwen Code, Claude Code) and report, per harness, what passed, what failed the task, and what hit an API error from the endpoint.
+[`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals) builds on `tenki-harbor` to run one model, served from an OpenAI-compatible endpoint, through several agent harnesses (Terminus, mini-swe-agent, Goose, OpenCode, Qwen Code, Claude Code). For each harness it reports what passed, what failed the task, and what hit an API error from the endpoint.
 
 ## Verify
 
