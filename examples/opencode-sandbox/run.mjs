@@ -10,7 +10,6 @@ const PASSWORD = randomBytes(24).toString("hex"); // this URL is public; see the
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
 // enableOpenCode bakes the CLI into the guest — nothing to npm install.
-// openCodeProvider.apiKey lands in the guest as OPENCODE_API_KEY.
 // No `await using` here: it would terminate the sandbox at the end of this scope and the
 // URL below would 404 before you could open it. maxDurationMs caps it instead.
 // createAndWait does not clean up after itself: a VM that is provisioned but never gets
@@ -19,7 +18,6 @@ const sandbox = await tenki.createAndWait({
 	cpuCores: 2,
 	memoryMb: 4096,
 	enableOpenCode: true,
-	openCodeProvider: { apiKey: process.env.OPENAI_API_KEY },
 	allowInbound: true,
 	cloneRepoUrl: REPO,
 	maxDurationMs: 2 * 60 * 60_000,
@@ -35,11 +33,18 @@ try {
 	// setsid + redirected stdio keeps the server running after this exec() returns.
 	await sandbox.exec("sh", {
 		args: ["-c", `cd repo && setsid opencode serve --port ${PORT} --hostname 0.0.0.0 >/tmp/opencode.log 2>&1 </dev/null & sleep 5`],
-		env: { OPENCODE_SERVER_PASSWORD: PASSWORD },
+		// OpenCode's built-in openai provider reads OPENAI_API_KEY. (openCodeProvider.apiKey would
+		// arrive as OPENCODE_API_KEY, the key for OpenCode's own hosted models, not OpenAI's.)
+		// An env value of undefined arrives as an empty string, so pass the key only if you have it.
+		env: {
+			OPENCODE_SERVER_PASSWORD: PASSWORD,
+			...(process.env.OPENAI_API_KEY && { OPENAI_API_KEY: process.env.OPENAI_API_KEY }),
+		},
 	});
 
 	const { previewUrl } = await sandbox.exposePort(PORT);
-	// Auth is HTTP Basic — any username, the password above. A Bearer token is rejected.
+	// Auth is HTTP Basic — username opencode (OPENCODE_SERVER_USERNAME's default), the password above.
+	// A Bearer token is rejected.
 	const auth = { Authorization: "Basic " + Buffer.from(`opencode:${PASSWORD}`).toString("base64") };
 
 	// The gateway can take a few seconds to route a fresh URL, so retry the first fetch.
@@ -54,7 +59,7 @@ try {
 	if (!project) throw new Error("opencode serve never answered; see /tmp/opencode.log in the sandbox");
 
 	console.log(`${project.worktree} (${project.vcs}) is live at ${previewUrl}/app`);
-	console.log(`user: anything, password: ${PASSWORD}\nCtrl-C to terminate the sandbox.`);
+	console.log(`user: opencode, password: ${PASSWORD}\nCtrl-C to terminate the sandbox.`);
 } catch (e) {
 	await sandbox[Symbol.asyncDispose]();
 	throw e;
