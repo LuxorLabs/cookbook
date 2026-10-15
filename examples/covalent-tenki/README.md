@@ -47,11 +47,11 @@ python workflow.py      # dispatches; each task runs in a Tenki microVM
 node verify.mjs      # or: .venv/bin/python verify.py
 ```
 
-`verify.py` checks the two things that actually break this walkthrough: the plugin imports and its `TenkiExecutor` constructs, and the live Tenki sandbox path the executor runs on is healthy (it creates a sandbox, runs a command that must print `42`, and terminates it). It does **not** dispatch a full workflow (that needs the dispatcher + the ~2–3 min bootstrap above); the executor's internals are covered by the plugin's own CI in [TenkiCloud/covalent-tenki-plugin](https://github.com/TenkiCloud/covalent-tenki-plugin).
+`verify.py` checks the two things that actually break this walkthrough — the **plugin imports and constructs**, and the **live Tenki sandbox path** the executor runs on is healthy (create → exec → terminate) → `42`. It does **not** dispatch a full workflow (that needs the dispatcher + the ~2–3 min bootstrap above); the executor's internals are covered by the plugin's own CI in [TenkiCloud/covalent-tenki-plugin](https://github.com/TenkiCloud/covalent-tenki-plugin).
 
 ## Notes
 
-- `covalent-tenki-plugin` 0.1.0 depends on `tenki-sandbox`, the SDK's old PyPI name (now `tenki`), so 0.1.0 no longer installs; this example needs 0.1.1 or later.
-- As a safety net, each electron's sandbox self-destructs server-side after `sandbox_max_duration_seconds` (default 3600) even if the dispatcher crashes, so a crash can't leave a billed VM running.
-- The plugin sends each pickled task into the sandbox and reads its result back through the SDK's exec calls, so it needs no SSH and no object storage.
+- `covalent-tenki-plugin` 0.1.0 declares the renamed `tenki-sandbox` package and no longer installs; this example needs 0.1.1 or later.
+- Each electron self-destructs server-side after `sandbox_max_duration_seconds` (default 3600) even if the dispatcher crashes — no leaked billing.
+- Tasks ship over the SDK's exec data plane (no SSH, no object storage).
 - Official plugin + full config: [github.com/TenkiCloud/covalent-tenki-plugin](https://github.com/TenkiCloud/covalent-tenki-plugin).
