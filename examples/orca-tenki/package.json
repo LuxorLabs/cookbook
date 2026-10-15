@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example — Tenki microVMs as orca ephemeral-VM recipes.",
   "dependencies": {
-    "@tenkicloud/sandbox": "^1.4.1"
+    "@tenkicloud/sandbox": ">=1.4.1"
   }
 }
