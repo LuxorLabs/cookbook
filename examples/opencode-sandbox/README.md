@@ -1,11 +1,11 @@
 # OpenCode on Tenki (headless server on a public URL)
 
-Boot a disposable [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM with [OpenCode](https://opencode.ai) and a Git checkout already inside it, start the agent's headless server, and expose it on a public HTTPS URL — a coding agent, and its web UI, running on a machine you can throw away. No install step: `enableOpenCode` bakes the CLI into the guest.
+Get the [OpenCode](https://opencode.ai) coding agent, and its web UI, running on a machine you can throw away. The script boots a disposable [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM with OpenCode and a Git checkout already inside it, starts the agent's headless server, and exposes it on a public HTTPS URL. No install step: `enableOpenCode` bakes the CLI into the guest.
 
 ## The code (`run.mjs`)
 
 ```js
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { TenkiSandbox, WaitReadyFailedError } from "@tenkicloud/sandbox";
 import { randomBytes } from "node:crypto";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
@@ -17,7 +17,9 @@ const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 // enableOpenCode bakes the CLI into the guest — nothing to npm install.
 // openCodeProvider.apiKey lands in the guest as OPENCODE_API_KEY.
 // No `await using` here: it would terminate the sandbox at the end of this scope and the
-// URL below would 404 before you could open it. idleTimeoutMinutes caps it instead.
+// URL below would 404 before you could open it. maxDurationMs caps it instead.
+// createAndWait does not clean up after itself: a VM that is provisioned but never gets
+// ready comes back as WaitReadyFailedError, half-born and billing, with its session attached.
 const sandbox = await tenki.createAndWait({
   cpuCores: 2,
   memoryMb: 4096,
@@ -25,11 +27,14 @@ const sandbox = await tenki.createAndWait({
   openCodeProvider: { apiKey: process.env.OPENAI_API_KEY },
   allowInbound: true,
   cloneRepoUrl: REPO,
-  idleTimeoutMinutes: 30,
+  maxDurationMs: 2 * 60 * 60_000,
   workspaceId: process.env.TENKI_WORKSPACE_ID,
+}).catch(async (e) => {
+  if (e instanceof WaitReadyFailedError) await e.session[Symbol.asyncDispose]();
+  throw e;
 });
 
-// From here on a throw must dispose the sandbox, or it leaks until the idle timeout.
+// From here on a throw must dispose the sandbox, or it runs until its two-hour cap.
 try {
   // --hostname 0.0.0.0 is load-bearing: the default 127.0.0.1 is unreachable from the gateway.
   // setsid + redirected stdio keeps the server running after this exec() returns.
@@ -67,7 +72,7 @@ process.on("SIGINT", async () => {
 setInterval(() => {}, 1 << 30); // hold the event loop open; an unsettled await would exit 13
 ```
 
-The script stays in the foreground so the URL keeps working. Open the printed `/app` URL in a browser and you are looking at OpenCode's own UI, driving a repo inside the microVM; the same URL serves the JSON API — `/session`, `/agent`, `/project/current` — so a script can drive it. Ctrl-C terminates the sandbox and the URL with it.
+The script stays in the foreground so the URL keeps working. Open the printed `/app` URL in a browser and you are looking at OpenCode's own UI, driving a repo inside the microVM. The same URL also serves OpenCode's JSON API (`/session`, `/agent`, `/project/current`), so a script can drive the agent too. Ctrl-C terminates the sandbox and the URL with it.
 
 ## Run it
 
@@ -88,7 +93,7 @@ node verify.mjs   # boot → serve → exposePort → assert 401 unauthed, then 
 
 ## Notes
 
-- **This example deliberately does not use `await using`.** It would terminate the sandbox at the end of the script's scope, and the URL it just printed would `404` before you could open it — the whole point here is a machine that outlives the script. So it disposes on `SIGINT` instead, and sets `idleTimeoutMinutes: 30` so a forgotten sandbox still reaps itself. Holding the process open needs a ref'd handle (`setInterval`); an unsettled top-level `await` makes Node exit 13 with `Detected unsettled top-level await`.
+- **This example deliberately does not use `await using`.** It would terminate the sandbox at the end of the script's scope, and the URL the script just printed would `404` before you could open it. The sandbox has to stay up past that point, so the script disposes it on `SIGINT` instead, and sets `maxDurationMs` to two hours so a forgotten sandbox still terminates itself. Holding the process open needs a ref'd handle (`setInterval`); an unsettled top-level `await` makes Node exit 13 with `Detected unsettled top-level await`.
 - **Set `OPENCODE_SERVER_PASSWORD`, always.** Without it the server logs `OPENCODE_SERVER_PASSWORD is not set; server is unsecured` and answers every caller — and `exposePort` has just put it on the public internet, so that is an open coding agent with a shell. With it set, unauthenticated requests get `401`. Auth is HTTP **Basic** (any username, that password); a `Bearer` token is rejected. `verify.mjs` asserts the `401` precisely so this cannot regress unnoticed.
 - **Port 7681 is spoken for.** Tenki's own `ttyd` console listens there, and `exposePort(7681)` fails with `[invalid_argument] port 7681 cannot be exposed as a preview`. Pick any other port for your server.
 - **`--hostname 0.0.0.0` is required.** `opencode serve` defaults to `127.0.0.1`, which the gateway cannot reach, so the preview URL would just hang.

@@ -5,7 +5,7 @@
  * a model key; CONTRIBUTING says CI verifies the backend, not the model.)
  * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  */
-import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
+import { TenkiSandbox, WaitReadyFailedError, stdoutText } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { randomBytes } from "node:crypto";
@@ -32,7 +32,11 @@ const tenki = new TenkiSandbox({ authToken });
 let sandbox;
 try {
 	const cloneRepoUrl = "https://github.com/sindresorhus/yocto-queue";
-	sandbox = await tenki.createAndWait({ cpuCores: 2, memoryMb: 4096, enableOpenCode: true, allowInbound: true, cloneRepoUrl, workspaceId });
+	// A failed wait never assigns `sandbox`, so finally cannot reach it: dispose the attached session here.
+	sandbox = await tenki.createAndWait({ cpuCores: 2, memoryMb: 4096, enableOpenCode: true, allowInbound: true, cloneRepoUrl, workspaceId }).catch(async (e) => {
+		if (e instanceof WaitReadyFailedError) await e.session[Symbol.asyncDispose]();
+		throw e;
+	});
 
 	// enableOpenCode should have baked the CLI in — no install step anywhere in this script.
 	const version = stdoutText(await sandbox.exec("opencode", { args: ["--version"] })).trim();
@@ -70,7 +74,7 @@ try {
 		try {
 			await sandbox[Symbol.asyncDispose]();
 		} catch {
-			/* self-reaps via idle/lifetime caps */
+			/* self-reaps at its lifetime cap */
 		}
 	}
 }
