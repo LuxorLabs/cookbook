@@ -70,6 +70,6 @@ await tenki.deleteSnapshot(snap.id); // when you no longer need the base
 - **Pausing is not instant** — snapshotting memory + disk takes ~20s in this example. `resume()` is quick (~1s), and file/exec calls work immediately after it returns.
 - **How long a paused sandbox stays resumable** is set by `pauseRetentionMs` at create time; after that the pause snapshot expires and the sandbox can't be resumed.
 - **The two paths share one mechanism:** a pause snapshot revives the *same* sandbox; an explicit snapshot (`createSnapshotAndWait`) restores into a *new* one via `createAndWait({ snapshotId })`.
-- Tenki confines file I/O to `/home/tenki` — use relative paths. Requires Node 20+ for `await using`.
+- Tenki confines file I/O to `/home/tenki` — use relative paths. Requires Node 24+ for `await using`.
 
 Built on [Tenki](https://tenki.cloud) sandboxes.

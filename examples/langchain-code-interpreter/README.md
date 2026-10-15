@@ -60,5 +60,5 @@ This is what CI runs: it proves the Tenki integration end-to-end without a model
 
 - **One sandbox per session, reused across tool calls** — cheaper than a sandbox per call; disposed when the agent finishes.
 - `exec("python3", { args: ["-c", code] })` passes the code as a single argument (no shell), so multi-line agent-generated code goes through without escaping issues.
-- Stdlib only by default — sandboxes have no outbound network unless you pass `allowOutbound: true` (needed for `pip install`).
+- Stdlib only by default. Outbound network is on, so the agent's code can `pip install` more packages; pass `allowOutbound: false` to cut it off.
 - Built on LangChain.js v1 + [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox). The same tool-backed-by-a-sandbox pattern works in LangChain Python.

@@ -97,7 +97,7 @@ export TENKI_API_KEY=tk_...                # see the auth note below
 python run.py                              # 42 · exit 0
 ```
 
-`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login --api-key <key>`) for the key and workspace, so with the CLI configured you can run it with no env vars.
+`run.py` falls back to `~/.config/tenki/config.yaml` for the key (`tenki login --api-key <key>` writes it there, and the workspace is inferred from the key), so with the CLI configured you can run it with no env vars.
 
 **Auth note.** Modal authenticates implicitly from `~/.modal.toml` (or `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET`). Tenki takes a **`tk_` API key**, from `TENKI_API_KEY` or passed explicitly via `Sandbox.create(auth_token=…)`, plus a `workspace_id` that sets which workspace the sandbox is created in.
 

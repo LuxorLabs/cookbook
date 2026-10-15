@@ -62,6 +62,6 @@ The session also exposes `mkdir(path)`, `stat(path)`, and `remove(path)` for the
 - **Tenki confines file I/O to `/home/tenki`** (the guest home and default working dir). Relative paths like `notes.txt` resolve there; `sandbox.list(".")` lists it.
 - `size` on a `FileInfo` is a **`bigint`**, so don't compare it directly against a JS number literal in arithmetic-sensitive code. Compare with `Number(f.size)` instead, or format it with `String(f.size)`.
 - The sandbox boots in ~2s and is billed per second. `await using` disposes it automatically (`Session` is an `AsyncDisposable`); or call `await sandbox[Symbol.asyncDispose]()` explicitly.
-- Requires Node 20+ for `await using`.
+- Requires Node 24+ for `await using`.
 
 Learn more at [tenki.cloud](https://tenki.cloud).

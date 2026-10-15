@@ -30,7 +30,7 @@ export TENKI_API_KEY=tk_...                # a tk_ API key — the only credenti
 python run.py                              # exit 0 -> 42
 ```
 
-`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login --api-key <key>`) for the key and workspace, so with the CLI configured you can run it with no env vars.
+`run.py` falls back to `~/.config/tenki/config.yaml` for the key (`tenki login --api-key <key>` writes it there, and the workspace is inferred from the key), so with the CLI configured you can run it with no env vars.
 
 ## Verify it
 
