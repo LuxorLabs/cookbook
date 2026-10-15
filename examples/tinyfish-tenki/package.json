@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example — drive TinyFish's fetch, search, and remote browser APIs from a Tenki sandbox.",
   "dependencies": {
-    "@tenkicloud/sandbox": "^1.4.1"
+    "@tenkicloud/sandbox": ">=1.4.1"
   }
 }
