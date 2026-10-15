@@ -1,11 +1,11 @@
 /**
  * Proves the Tenki-facing half of this example without a model key: boot a sandbox with
- * the repo cloned, install the Codex CLI, check its version and run.mjs's flags, edit a
- * file in the checkout, assert the diff round-trips. (The agent turn needs a model key;
- * CONTRIBUTING says CI verifies the backend, not the model.)
+ * the repo cloned, check the image's Codex CLI version and run.mjs's flags, check it still
+ * reads CODEX_API_KEY, edit a file in the checkout, assert the diff round-trips. (The agent
+ * turn needs a model key; CONTRIBUTING says CI verifies the backend, not the model.)
  * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  */
-import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
+import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 
@@ -34,16 +34,26 @@ try {
 	const pkg = JSON.parse(stdoutText(await sandbox.exec("cat", { args: ["repo/package.json"] })));
 	if (pkg.name !== "yocto-queue") throw new Error(`clone landed wrong: repo/package.json is ${pkg.name}`);
 
-	const install = await sandbox.exec("npm", { args: ["i", "-g", "@openai/codex"], timeoutMs: 300_000 });
-	if (install.exitCode !== 0) throw new Error(`npm i -g @openai/codex exited ${install.exitCode}`);
-
 	const version = stdoutText(await sandbox.exec("codex", { args: ["--version"] })).trim();
 	if (!/^codex-cli \d+\.\d+\.\d+$/.test(version)) throw new Error(`codex --version said ${JSON.stringify(version)}`);
 
-	// npm always installs the latest CLI, so check run.mjs's flags still exist in it.
+	// The CLI comes with the default image and changes when Tenki rebuilds it,
+	// so check run.mjs's flags still exist in it.
 	const help = stdoutText(await sandbox.exec("codex", { args: ["exec", "--help"] }));
 	const missing = ["--dangerously-bypass-approvals-and-sandbox", "-C, --cd"].filter((f) => !help.includes(f));
 	if (missing.length) throw new Error(`codex exec --help no longer lists ${missing.join(", ")}`);
+
+	// run.mjs forwards the model key as CODEX_API_KEY. A dummy key proves codex exec still reads that
+	// name: OpenAI rejects a key it was sent ("Incorrect API key"), but reports a missing one differently.
+	const probe = await sandbox.exec("codex", {
+		args: ["exec", "--dangerously-bypass-approvals-and-sandbox", "say hi"],
+		cwd: "repo",
+		env: { CODEX_API_KEY: "sk-verify-dummy" },
+		timeoutMs: 120_000,
+	});
+	if (!/Incorrect API key|invalid_api_key/.test(stdoutText(probe) + stderrText(probe))) {
+		throw new Error("codex exec never sent CODEX_API_KEY to OpenAI; check which env var it reads now");
+	}
 
 	// Stand in for the agent's edit, then read it back the way run.mjs reads the agent's.
 	await sandbox.exec("sh", { args: ["-c", "printf '\\nexport const verified = true;\\n' >> repo/index.js"] });
@@ -52,7 +62,7 @@ try {
 		throw new Error(`diff did not round-trip: ${JSON.stringify(diff.slice(0, 200))}`);
 	}
 
-	console.log(`✓ codex-sandbox: create + clone → npm i -g @openai/codex → ${version} → edit → git diff → dispose`);
+	console.log(`✓ codex-sandbox: create + clone → ${version} on PATH → reads CODEX_API_KEY → edit → git diff → dispose`);
 } catch (e) {
 	console.error("✗ " + (e?.message ?? e));
 	process.exitCode = 1;
