@@ -19,6 +19,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"   # Python examples (crewai) need 3.10+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: examples/ragflow-tenki/go.mod
       - name: Install + verify each example against Tenki
         env:
           TENKI_API_KEY: ${{ secrets.TENKI_API_KEY }}
