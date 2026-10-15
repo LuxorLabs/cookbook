@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example — Tenki Code Reviewer on Cursor Origin pull requests: a starter repo with AGENTS.md review rules and a PR that plants an authorization bug.",
   "dependencies": {
-    "@tenkicloud/sandbox": "^1.4.1"
+    "@tenkicloud/sandbox": ">=1.4.1"
   }
 }
