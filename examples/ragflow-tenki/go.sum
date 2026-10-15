@@ -2,8 +2,8 @@ buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-202604152011
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260415201107-50325440f8f2.1/go.mod h1:tvtbpgaVXZX4g6Pn+AnzFycuRK3MOz5HJfEGeEllXYM=
 connectrpc.com/connect v1.20.0 h1:6TNDAB+WeNd2uolWNlYczB5E0KNNaVMNUEx8JEUsPmQ=
 connectrpc.com/connect v1.20.0/go.mod h1:A2ygJrukXwWy32vkCAAHNVguZrqZ+jeZ9rGRnGR4dN4=
-github.com/LuxorLabs/tenki-sdk-go/sandbox v0.7.0 h1:PBQ+ad8fZiLH/1ij1hoynR9aAPVmI3EzT7DiLNmUdBM=
-github.com/LuxorLabs/tenki-sdk-go/sandbox v0.7.0/go.mod h1:rBypesed6hSrj+OgpJwyMVBF76PaQ1iOqc2RGUL4RmI=
+github.com/LuxorLabs/tenki-sdk-go/sandbox v1.4.1 h1:uOfHuYlPgaFKceXjGXXgo1qDsHx3BOkXGo8RaJeqdq4=
+github.com/LuxorLabs/tenki-sdk-go/sandbox v1.4.1/go.mod h1:rBypesed6hSrj+OgpJwyMVBF76PaQ1iOqc2RGUL4RmI=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
 github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=

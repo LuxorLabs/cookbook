@@ -2,7 +2,7 @@ module ragflow-tenki-verify
 
 go 1.25.3
 
-require github.com/LuxorLabs/tenki-sdk-go/sandbox v0.7.0
+require github.com/LuxorLabs/tenki-sdk-go/sandbox v1.4.1
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260415201107-50325440f8f2.1 // indirect
