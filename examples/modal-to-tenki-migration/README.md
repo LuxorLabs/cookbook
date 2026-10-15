@@ -97,9 +97,9 @@ export TENKI_API_KEY=tk_...                # see the auth note below
 python run.py                              # 42 · exit 0
 ```
 
-`run.py` falls back to `~/.config/tenki/config.yaml` (written by `tenki login --api-key <key>`) for the key and workspace, so with the CLI configured you can run it with no env vars.
+`run.py` falls back to `~/.config/tenki/config.yaml` for the key (`tenki login --api-key <key>` writes it there, and the workspace is inferred from the key), so with the CLI configured you can run it with no env vars.
 
-**Auth note.** Modal authenticates from `~/.modal.toml` (or `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET`) implicitly; Tenki takes a **`tk_` API key** — from `TENKI_API_KEY`, or explicitly via `Sandbox.create(auth_token=…)` — plus a `workspace_id` for placement.
+**Auth note.** Modal authenticates implicitly from `~/.modal.toml` (or `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET`). Tenki takes a **`tk_` API key**, from `TENKI_API_KEY` or passed explicitly via `Sandbox.create(auth_token=…)`, plus a `workspace_id` that sets which workspace the sandbox is created in.
 
 ## Verify it
 
@@ -117,7 +117,7 @@ node verify.mjs   # ✓ create → exec python3 + sh + fs round-trip → 42 → 
 
 - **No `App` object.** Modal ties every sandbox to a `modal.App` (`modal.App.lookup(...)` first). Tenki has no app concept — a sandbox is placed directly by `workspace_id`.
 - **`exec` blocks and returns a result.** Modal's `ContainerProcess` (drain `p.stdout.read()`, `p.wait()`) becomes Tenki's `CommandResult` (`r.stdout_text`, `r.exit_code`) — see the gotcha above.
-- **Disposal.** `sb.terminate()` maps 1:1 to Modal's `sandbox.terminate()`. Because `Sandbox` is a context manager, `with Sandbox.create(...) as sb:` disposes it for you at scope end. Either way the microVM is billed per second and self-reaps on its idle / lifetime caps.
+- **Disposal.** `sb.terminate()` maps 1:1 to Modal's `sandbox.terminate()`. Because `Sandbox` is a context manager, `with Sandbox.create(...) as sb:` disposes it for you at scope end. Either way, the sandbox (a microVM) is billed per second, and it terminates itself when it reaches its lifetime cap.
 - **Networking is on by default** in the Python SDK (`allow_outbound=True`), matching Modal's default. Pass `create(..., allow_outbound=False)` to lock a sandbox down.
 - Tenki confines file I/O to `/home/tenki` — write to relative paths.
 - Requires **Python 3.10+**; the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim (the same pattern as [`run-code-python`](../run-code-python/) and [`crewai-code-interpreter`](../crewai-code-interpreter/)).

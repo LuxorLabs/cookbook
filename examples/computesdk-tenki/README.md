@@ -31,7 +31,7 @@ export TENKI_API_KEY=tk_...      # or TENKI_AUTH_TOKEN; from your Tenki workspac
 node run.mjs                     # Hello from Linux ... / 42
 ```
 
-Workspace API keys infer their workspace server-side; set `TENKI_WORKSPACE_ID` only for trusted service credentials that need explicit scope.
+With a workspace API key you don't need `TENKI_WORKSPACE_ID`, because Tenki infers the workspace from the key server-side. Set it only for trusted service credentials that need explicit scope.
 
 ## Beyond commands and files
 

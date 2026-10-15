@@ -49,7 +49,7 @@ node verify.mjs   # ✓ files-in-a-sandbox: write → read "hello from tenki" �
 
 ## The file API
 
-Three methods on the session handle the whole loop — no subprocess needed:
+Three methods on the `sandbox` object (the `Session` that `createAndWait` returns) cover the whole loop, with no subprocess needed:
 
 - **`sandbox.writeFile(path, data)`** — `data` is a `string` or `Uint8Array`. Writes atomically to the guest filesystem.
 - **`sandbox.readFile(path)`** — returns a `Uint8Array`. Wrap it in `new TextDecoder().decode(...)` for text.
@@ -60,8 +60,8 @@ The session also exposes `mkdir(path)`, `stat(path)`, and `remove(path)` for the
 ## Notes
 
 - **Tenki confines file I/O to `/home/tenki`** (the guest home and default working dir). Relative paths like `notes.txt` resolve there; `sandbox.list(".")` lists it.
-- `size` on a `FileInfo` is a **`bigint`** — compare with `Number(f.size)` or format with `String(f.size)`, not directly against a JS number literal in arithmetic-sensitive code.
+- `size` on a `FileInfo` is a **`bigint`**, so don't compare it directly against a JS number literal in arithmetic-sensitive code. Compare with `Number(f.size)` instead, or format it with `String(f.size)`.
 - The sandbox boots in ~2s and is billed per second. `await using` disposes it automatically (`Session` is an `AsyncDisposable`); or call `await sandbox[Symbol.asyncDispose]()` explicitly.
-- Requires Node 20+ for `await using`.
+- Requires Node 24+ for `await using`.
 
 Learn more at [tenki.cloud](https://tenki.cloud).

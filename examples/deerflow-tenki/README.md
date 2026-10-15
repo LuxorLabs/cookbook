@@ -1,6 +1,6 @@
 # DeerFlow's sandbox on Tenki
 
-[DeerFlow](https://github.com/bytedance/deer-flow) — ByteDance's open-source SuperAgent harness — runs the code its agents write inside pluggable sandboxes. Since [deer-flow#4382](https://github.com/bytedance/deer-flow/pull/4382), Tenki ships as a community-supported provider alongside E2B and AIO: teams already running agent infrastructure on [Tenki](https://tenki.cloud) microVMs point DeerFlow at the same workspace instead of provisioning a parallel sandbox vendor.
+[DeerFlow](https://github.com/bytedance/deer-flow) — ByteDance's open-source SuperAgent harness — runs the code its agents write inside pluggable sandboxes. Since [deer-flow#4382](https://github.com/bytedance/deer-flow/pull/4382), Tenki ships as a community-supported sandbox provider alongside E2B and AIO. If your team already runs agent infrastructure on [Tenki](https://tenki.cloud) microVMs, you can point DeerFlow at that same Tenki workspace instead of provisioning a parallel sandbox vendor.
 
 ## Enable it
 
