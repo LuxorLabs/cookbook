@@ -4,7 +4,7 @@
 
 ## Enable it
 
-The provider lives in RAGFlow's Go server ([`internal/agent/sandbox/tenki.go`](https://github.com/infiniflow/ragflow/blob/main/internal/agent/sandbox/tenki.go)) and its SDK, `github.com/LuxorLabs/tenki-sdk-go/sandbox`, is a regular `go.mod` dependency, so there is nothing to install. That is what RAGFlow v1.0.0-rc1 and later run. The older Python provider was removed from RAGFlow main in [ragflow#20389](https://github.com/infiniflow/ragflow/pull/20389). On v0.27.x with the default Python server, that Python provider is used instead: install the SDK into the RAGFlow runtime with `pip install tenki` (the old `tenki-sandbox` package is no longer on PyPI).
+On RAGFlow v1.0.0-rc1 and later, the provider lives in RAGFlow's Go server ([`internal/agent/sandbox/tenki.go`](https://github.com/infiniflow/ragflow/blob/main/internal/agent/sandbox/tenki.go)) and its SDK, `github.com/LuxorLabs/tenki-sdk-go/sandbox`, is a regular `go.mod` dependency, so there is nothing to install. On v0.27.x with the default Python server, RAGFlow uses the older Python provider instead, which was removed from RAGFlow main in [ragflow#20389](https://github.com/infiniflow/ragflow/pull/20389). For that provider, install the SDK into the RAGFlow runtime with `pip install tenki` (the old `tenki-sandbox` package is no longer on PyPI).
 
 Configure it in **Admin > Sandbox Settings** (saved settings apply to the next execution, no restart):
 
@@ -34,10 +34,10 @@ Without saved settings the provider falls back to `TENKI_API_KEY` (and `TENKI_AP
 node verify.mjs        # or: go run .   (Go 1.21+; `go.mod` pins toolchain 1.25.3)
 ```
 
-[`main.go`](main.go) proves the Tenki surface the provider is built on without running RAGFlow, using the same SDK module RAGFlow uses, at its latest release (`v1.4.1`; RAGFlow itself still pins `v0.7.0`): the **`WhoAmI`** health check → a disposable sandbox with **outbound network off** (RAGFlow's security default) → the work dir with `artifacts/` → **`python3 -c`** and **`node -e`** with a timeout → **artifact collection** (list, stat, read) → close. RAGFlow's own `tenki_test.go` covers the RAGFlow-side contract.
+[`main.go`](main.go) exercises the Tenki calls the provider is built on, without running RAGFlow: the `WhoAmI` health check, a disposable sandbox with outbound network off (RAGFlow's security default), the work dir with `artifacts/`, `python3 -c` and `node -e` with a timeout, artifact collection (list, stat, read), and close. It uses the same SDK module RAGFlow uses, at its latest release (`v1.4.1`; RAGFlow itself still pins `v0.7.0`). RAGFlow's own `tenki_test.go` covers the RAGFlow-side contract.
 
 ## Notes
 
 - **Auth:** use a `tk_` API key (`export TENKI_API_KEY=tk_…`).
-- With `allow_outbound: false`, `pip install` inside components will fail by design; flip it on per RAGFlow's settings page when needed.
+- With `allow_outbound: false`, `pip install` inside components will fail by design; turn it on in **Admin > Sandbox Settings** when needed.
 - Full setup docs: [sandbox quickstart](https://github.com/infiniflow/ragflow/blob/main/docs/administrator/configurations/sandbox_quickstart.md) in the RAGFlow repo.
