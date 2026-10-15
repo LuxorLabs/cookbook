@@ -1,6 +1,6 @@
 # TinyFish web agents from a Tenki sandbox
 
-[TinyFish](https://docs.tinyfish.ai/) runs web automation for agents: a natural-language **agent** that browses a page and returns JSON, a remote Chromium **browser** you drive over CDP, **fetch** (up to 10 URLs per call as markdown, HTML, or JSON), and **search**. This example runs the TinyFish TypeScript SDK ([`@tiny-fish/sdk`](https://www.npmjs.com/package/@tiny-fish/sdk)) and `playwright-core` inside a [Tenki](https://tenki.cloud) microVM: your code runs in the sandbox, and the browsers and agents run at TinyFish.
+[TinyFish](https://docs.tinyfish.ai/) runs web automation for agents: a natural-language **agent** that browses a page and returns JSON, a remote Chromium **browser** you drive over the Chrome DevTools Protocol (CDP), **fetch** (up to 10 URLs per call as markdown, HTML, or JSON), and **search**. This example runs the TinyFish TypeScript SDK ([`@tiny-fish/sdk`](https://www.npmjs.com/package/@tiny-fish/sdk)) and `playwright-core` inside a [Tenki](https://tenki.cloud) microVM: your code runs in the sandbox, and the browsers and agents run at TinyFish.
 
 ## How it works
 
@@ -55,7 +55,7 @@ try {
 }
 ```
 
-Always end the browser session in `finally`. The SDK has no close method, so call TinyFish's [`DELETE` endpoint](https://docs.tinyfish.ai/browser-api/reference.md) directly. `timeout_seconds` (5 to 86400) is the inactivity timeout, so a session your code fails to close still ends soon after.
+Always end the browser session in `finally`. The SDK has no close method, so call TinyFish's [`DELETE` endpoint](https://docs.tinyfish.ai/browser-api/reference.md) directly. `timeout_seconds` (5 to 86400) is the inactivity timeout, so a session your code fails to close still ends once it has been idle that long.
 
 ## Run it
 
@@ -94,10 +94,10 @@ node verify.mjs
 
 ## Notes
 
-- The sandbox talks to TinyFish over the public internet, so a TinyFish browser can't reach a dev server on `localhost` inside your VM. Every Playwright action is a round trip to TinyFish's browser.
+- The TinyFish browser runs at TinyFish, not in your VM, and the sandbox talks to it over the public internet. The browser can't reach a dev server on `localhost` inside your VM, and every Playwright action is a round trip to TinyFish's browser.
 - Creating a TinyFish browser session typically takes 10 to 30 seconds. If you pass `url` to `sessions.create`, the call returns before that first navigation finishes, so wait for the page to load before reading it.
 - Browser sessions use TinyFish's US residential proxy unless you set `proxy_config` (`{ enabled: false }` connects directly).
 - `@tiny-fish/sdk` is an ES module. Use `.mjs` files or `"type": "module"`.
 - The official Python SDK is [`tinyfish`](https://pypi.org/project/tinyfish/) on PyPI (`pip install tinyfish`), with the same `client.browser.sessions.create(...)` shape.
-- [`@tiny-fish/cli`](https://www.npmjs.com/package/@tiny-fish/cli) installs a `tinyfish` command (`tinyfish agent run "<goal>" --url <url> --sync`, `tinyfish fetch content get <url> --format markdown`, `tinyfish search query "<terms>"`) that prints JSON, which suits an agent shelling out from the sandbox.
+- [`@tiny-fish/cli`](https://www.npmjs.com/package/@tiny-fish/cli) installs a `tinyfish` command that prints JSON, which suits an agent shelling out from the sandbox: `tinyfish agent run "<goal>" --url <url> --sync`, `tinyfish fetch content get <url> --format markdown`, `tinyfish search query "<terms>"`.
 - Tenki is preparing a `tenki/tinyfish:stable` image with the CLI, SDK, and `playwright-core` preinstalled. It isn't published yet, so this example installs the packages itself.
