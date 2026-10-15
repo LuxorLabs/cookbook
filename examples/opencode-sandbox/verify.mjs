@@ -74,7 +74,7 @@ try {
 		try {
 			await sandbox[Symbol.asyncDispose]();
 		} catch {
-			/* self-reaps via idle/lifetime caps */
+			/* self-reaps at its lifetime cap */
 		}
 	}
 }
