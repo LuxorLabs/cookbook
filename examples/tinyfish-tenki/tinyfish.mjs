@@ -46,6 +46,10 @@ try {
 	await page.goto(url);
 	console.log("browser:", await page.title());
 } finally {
-	await browser?.close();
-	await endSession(session.session_id);
+	// End the session even if closing the CDP connection throws.
+	try {
+		await browser?.close();
+	} finally {
+		await endSession(session.session_id);
+	}
 }
