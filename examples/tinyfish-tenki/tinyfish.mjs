@@ -5,6 +5,23 @@ import { chromium } from "playwright-core";
 const client = new TinyFish(); // reads TINYFISH_API_KEY
 const url = process.argv[2] ?? "https://example.com";
 
+// The SDK has no close method, so end the session with TinyFish's DELETE endpoint. TinyFish says a
+// 409, 500, 503 or 504 means termination wasn't confirmed and to retry; on 429 or 503, wait for Retry-After.
+async function endSession(id) {
+	for (let attempt = 1; ; attempt++) {
+		const res = await fetch(`https://api.browser.tinyfish.ai/${id}`, {
+			method: "DELETE",
+			headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
+		});
+		if (res.ok) return;
+		if (![409, 429, 500, 503, 504].includes(res.status) || attempt === 3) {
+			throw new Error(`TinyFish browser session ${id} not confirmed ended: HTTP ${res.status}`);
+		}
+		const wait = Math.min(Number(res.headers.get("retry-after")) || attempt, 30);
+		await new Promise((resolve) => setTimeout(resolve, wait * 1000));
+	}
+}
+
 const fetched = await client.fetch.getContents({ urls: [url], format: "markdown" });
 console.log("fetch:", fetched.results[0]?.title);
 
@@ -22,9 +39,5 @@ try {
 	console.log("browser:", await page.title());
 } finally {
 	await browser?.close();
-	// The SDK has no close method, and a session keeps running until it's deleted or its inactivity timeout fires.
-	await fetch(`https://api.browser.tinyfish.ai/${session.session_id}`, {
-		method: "DELETE",
-		headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
-	});
+	await endSession(session.session_id);
 }

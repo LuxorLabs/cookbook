@@ -31,12 +31,22 @@ Every later command runs from this directory.
 You need two keys:
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...                   # Tenki API key
+export TENKI_API_KEY=tk_...                      # Tenki API key
 export TINYFISH_API_KEY=sk-tinyfish-...          # from agent.tinyfish.ai/api-keys
 ```
 
-- **Tenki:** a `tk_` API key from https://app.tenki.cloud. `run.mjs` passes `TENKI_AUTH_TOKEN` to the SDK, and if that's unset the SDK falls back to `TENKI_API_KEY`. `run.mjs` doesn't read the key that `tenki login` stores in `~/.config/tenki/config.yaml`; `verify.mjs` does. With a workspace API key you don't need `TENKI_WORKSPACE_ID`, because Tenki infers the workspace from the key. `verify.mjs` passes it through if you set it.
+- **Tenki:** a `tk_` API key from https://app.tenki.cloud. `run.mjs` builds the client with `new TenkiSandbox()`, which reads `TENKI_API_KEY` (or `TENKI_AUTH_TOKEN`) from the environment. `run.mjs` doesn't read the key that `tenki login` stores in `~/.config/tenki/config.yaml`; `verify.mjs` does. With a workspace API key you don't need `TENKI_WORKSPACE_ID`, because Tenki infers the workspace from the key. `verify.mjs` passes it through if you set it.
 - **TinyFish:** a key from https://agent.tinyfish.ai/api-keys. `run.mjs` stops with `Set TINYFISH_API_KEY` if it's missing, then hands the key to the sandbox through `createAndWait`'s `env`.
+
+### Keeping the TinyFish key out of the VM
+
+Passing the key through `env` puts the real key inside the VM, where any code running there can read it. That's fine for a demo you run yourself. When the VM runs code you don't fully trust, such as an agent's, use Tenki [secret injection](https://tenki.cloud/docs/sandbox/secrets) instead. The VM then sees only a placeholder, and Tenki swaps in the real key on outbound HTTPS requests to hosts you allow. The steps:
+
+1. Save the key as a workspace secret.
+2. Create a request policy that allows it in the `X-API-Key` header, which is where `@tiny-fish/sdk` sends it. Cover each TinyFish host the example calls: `agent.tinyfish.ai`, `api.search.tinyfish.ai`, `api.fetch.tinyfish.ai`, and `api.browser.tinyfish.ai` (the browser-session `DELETE`).
+3. Pass `secretPolicies: ["<your policy>"]` to `createAndWait`, and set `env: { TINYFISH_API_KEY: "secrets://TINYFISH_API_KEY" }`.
+
+This example doesn't do that by default, because it needs a one-time workspace setup and a Tenki key with Secrets access. `verify.mjs` doesn't test that path, so check it with your own keys before you rely on it.
 
 ## Use it
 
@@ -49,12 +59,14 @@ import { readFileSync } from "node:fs";
 
 if (!process.env.TINYFISH_API_KEY) throw new Error("Set TINYFISH_API_KEY");
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const tenki = new TenkiSandbox(); // reads TENKI_API_KEY
 
 // The key lives in this session's environment only, never in an image or template.
+// maxDurationMs is a hard cap: Tenki ends the sandbox after 10 minutes even if this script dies.
 await using sandbox = await tenki.createAndWait({
   cpuCores: 2,
   memoryMb: 2048,
+  maxDurationMs: 10 * 60_000,
   env: { TINYFISH_API_KEY: process.env.TINYFISH_API_KEY },
 });
 
@@ -94,6 +106,23 @@ import { chromium } from "playwright-core";
 const client = new TinyFish(); // reads TINYFISH_API_KEY
 const url = process.argv[2] ?? "https://example.com";
 
+// The SDK has no close method, so end the session with TinyFish's DELETE endpoint. TinyFish says a
+// 409, 500, 503 or 504 means termination wasn't confirmed and to retry; on 429 or 503, wait for Retry-After.
+async function endSession(id) {
+  for (let attempt = 1; ; attempt++) {
+    const res = await fetch(`https://api.browser.tinyfish.ai/${id}`, {
+      method: "DELETE",
+      headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
+    });
+    if (res.ok) return;
+    if (![409, 429, 500, 503, 504].includes(res.status) || attempt === 3) {
+      throw new Error(`TinyFish browser session ${id} not confirmed ended: HTTP ${res.status}`);
+    }
+    const wait = Math.min(Number(res.headers.get("retry-after")) || attempt, 30);
+    await new Promise((resolve) => setTimeout(resolve, wait * 1000));
+  }
+}
+
 const fetched = await client.fetch.getContents({ urls: [url], format: "markdown" });
 console.log("fetch:", fetched.results[0]?.title);
 
@@ -111,11 +140,7 @@ try {
   console.log("browser:", await page.title());
 } finally {
   await browser?.close();
-  // The SDK has no close method, and a session keeps running until it's deleted or its inactivity timeout fires.
-  await fetch(`https://api.browser.tinyfish.ai/${session.session_id}`, {
-    method: "DELETE",
-    headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
-  });
+  await endSession(session.session_id);
 }
 ```
 
@@ -123,7 +148,7 @@ try {
 
 ## How a TinyFish browser session starts and ends
 
-- **Always end the browser session in `finally`.** `@tiny-fish/sdk` 0.8.0 has no close method (its `browser.sessions` resource has only `create`), so `tinyfish.mjs` calls TinyFish's [`DELETE` endpoint](https://docs.tinyfish.ai/browser-api/reference.md) directly. TinyFish documents that a `409`, `500`, `503`, or `504` from that call means termination wasn't confirmed and you should retry the delete. On a `503` or a `429` rate limit, wait for `Retry-After` before retrying. `tinyfish.mjs` doesn't check the response.
+- **Always end the browser session in `finally`.** `@tiny-fish/sdk` 0.8.0 has no close method (its `browser.sessions` resource has only `create`), so `tinyfish.mjs` calls TinyFish's [`DELETE` endpoint](https://docs.tinyfish.ai/browser-api/reference.md) directly. TinyFish documents that a `409`, `500`, `503`, or `504` from that call means termination wasn't confirmed and you should retry the delete. On a `503` or a `429` rate limit, wait for `Retry-After` before retrying. `tinyfish.mjs` does that: `endSession` retries those codes up to three times, waiting for `Retry-After` when TinyFish sends it (at most 30 seconds), and throws if the session still isn't confirmed ended. A session that fails to close then fails the run instead of passing quietly.
 - **`timeout_seconds` (5 to 86400) is the inactivity timeout**, so a session your code fails to close still ends once it has been idle that long. TinyFish counts a session as inactive when no CDP commands are being sent. If you omit `timeout_seconds`, or pass more than your plan allows, your plan's maximum applies. `tinyfish.mjs` sets 120.
 - **Creating a TinyFish browser session typically takes 10 to 30 seconds.** If you pass `url` to `sessions.create`, the call returns before that first navigation finishes, so wait for the page to load before reading it. `tinyfish.mjs` creates the session without a `url` and navigates with `page.goto`.
 - **Browser sessions use TinyFish's US residential proxy** unless you set `proxy_config` (`{ enabled: false }` connects directly).
@@ -162,7 +187,7 @@ Without it:
 
 [`verify.mjs`](verify.mjs) boots a sandbox, installs the same pinned `@tiny-fish/sdk` and `playwright-core`, and checks that both import and expose the methods this example uses: `browser.sessions.create`, `fetch.getContents`, `search.query`, `agent.run`, and `chromium.connectOverCDP`. That part needs only Tenki credentials. The probe builds the client with a placeholder key and makes no TinyFish call. With `TINYFISH_API_KEY` set, it also runs `tinyfish.mjs` in the VM and asserts the `fetch: Example Domain`, `search: https://…`, and `browser: Example Domain` lines. Without the key, it skips that step and says so in the `✓` line. On any failure it prints a `✗` line and exits non-zero.
 
-It reads the Tenki key from `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then the `auth_token` that `tenki login --api-key <key>` writes to `~/.config/tenki/config.yaml`. CI runs it on Node 20 with only `TENKI_API_KEY`, so CI covers the install and import check, not the live TinyFish calls.
+It reads the Tenki key from `TENKI_API_KEY`, then `TENKI_AUTH_TOKEN`, then the `auth_token` that `tenki login --api-key <key>` writes to `~/.config/tenki/config.yaml`. CI runs it on Node 20 with only `TENKI_API_KEY`, so CI covers the install and import check, not the live TinyFish calls.
 
 A pass with both keys proves that fetch, search, and a remote-browser page load work from inside a Tenki sandbox with your keys. It doesn't run `run.mjs` itself, and it only checks that `agent.run` exists, not that an agent run succeeds.
 
@@ -171,17 +196,18 @@ A pass with both keys proves that fetch, search, and a remote-browser page load 
 - ❌ **`Set TINYFISH_API_KEY`.** `run.mjs` checks for the TinyFish key before it boots anything. Export a key from https://agent.tinyfish.ai/api-keys in the shell you run it from.
 - ❌ **`missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY or use authToken option` from `node run.mjs`.** Neither variable is set, and `run.mjs` doesn't read `~/.config/tenki/config.yaml`, so `tenki login` alone isn't enough here. Export your `tk_` key.
 - ❌ **`invalid auth token - API keys and service tokens must start with tk_`.** Tenki SDK 1.x accepts only `tk_` API keys. Create one at https://app.tenki.cloud.
-- ❌ **``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.``** `verify.mjs` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or `~/.config/tenki/config.yaml`. Export a `tk_` key, or run `tenki login --api-key <key>`.
+- ❌ **``No token. Set TENKI_API_KEY, or run `tenki login`.``** `verify.mjs` found no key in `TENKI_API_KEY`, `TENKI_AUTH_TOKEN`, or `~/.config/tenki/config.yaml`. Export a `tk_` key, or run `tenki login --api-key <key>`.
 - ❌ **`node run.mjs` fails with a `SyntaxError` at `await using`.** Your Node is older than 24 and can't parse top-level `await using`. Upgrade to Node 24, or run `node verify.mjs` with `TINYFISH_API_KEY` set, which runs `tinyfish.mjs` in a sandbox the same way and works on Node 20. `verify.mjs` prints only the `✓` line, not the three output lines.
 - ❌ **`✗ import probe: …`.** One of the five methods isn't a function in the installed packages. `verify.mjs` pins `@tiny-fish/sdk@0.8.0` and `playwright-core@1.64.1`. If you changed a pin, check that version's API against the calls in `tinyfish.mjs`.
 - ❌ **`✗ node tinyfish.mjs: exit <code>, …`.** `tinyfish.mjs` threw inside the VM, and the message ends with the last 400 characters of its stderr. Run `node run.mjs` to see the full stderr.
 - ❌ **`✗ fetch leg: …`, `✗ search leg: …`, or `✗ browser leg: …`.** `tinyfish.mjs` ran, but a line didn't match what `verify.mjs` expects. The message includes the script's full output, so you can see which TinyFish call returned something else. Unset `TINYFISH_API_KEY` to check the Tenki half on its own.
+- ❌ **`TinyFish browser session <id> not confirmed ended: HTTP <status>`.** The `DELETE` that ends the browser session didn't succeed after three tries, or returned a status TinyFish doesn't document as retryable. The session still ends once it has had no CDP commands for `timeout_seconds` (120 here). Check the status code against TinyFish's [Browser API reference](https://docs.tinyfish.ai/browser-api/reference.md).
 
 ## FAQ
 
 **When shouldn't I use this?** When the browser has to reach something that exists only inside the VM, such as a dev server on `localhost`: TinyFish's browser runs at TinyFish, outside the sandbox. Also when you want Chromium running in the sandbox itself. This example installs `playwright-core`, which doesn't download a browser, so every Playwright action is a round trip to TinyFish.
 
-**What happens if my script dies before cleanup?** The TinyFish browser session ends once it has had no CDP commands for `timeout_seconds` (120 here). The Tenki sandbox is different: `await using` doesn't run if the process is killed, and Tenki doesn't pause idle sandboxes, so it keeps running. Neither script sets `maxDurationMs`, so pass `maxDurationMs` to `createAndWait` to cap its lifetime. To find and stop a leftover sandbox, run `tenki sandbox list` and then `tenki sandbox terminate <session-id>`.
+**What happens if my script dies before cleanup?** The TinyFish browser session ends once it has had no CDP commands for `timeout_seconds` (120 here). The Tenki sandbox is different: `await using` doesn't run if the process is killed, and Tenki doesn't pause idle sandboxes, so it keeps running. Both scripts pass `maxDurationMs: 10 * 60_000` to `createAndWait`, so Tenki ends the sandbox after 10 minutes even if the script dies first. Raise it if your own script needs longer. To find and stop a leftover sandbox, run `tenki sandbox list` and then `tenki sandbox terminate <session-id>`.
 
 **Can I use Python?** The official TinyFish Python SDK is [`tinyfish`](https://pypi.org/project/tinyfish/) on PyPI (`pip install tinyfish`), with the same `client.browser.sessions.create(...)` shape. This example is JavaScript only. Tenki's Python SDK is `tenki` (`pip install tenki`).
 

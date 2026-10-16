@@ -14,10 +14,10 @@ const cfg = (key) => {
 	}
 };
 
-const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+const authToken = process.env.TENKI_API_KEY || process.env.TENKI_AUTH_TOKEN || cfg("auth_token");
 const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
+	console.error("No token. Set TENKI_API_KEY, or run `tenki login`.");
 	process.exit(1);
 }
 const tfKey = process.env.TINYFISH_API_KEY;
@@ -34,6 +34,7 @@ try {
 	sandbox = await tenki.createAndWait({
 		cpuCores: 2,
 		memoryMb: 2048,
+		maxDurationMs: 10 * 60_000,
 		workspaceId,
 		...(tfKey ? { env: { TINYFISH_API_KEY: tfKey } } : {}),
 	});
@@ -67,7 +68,7 @@ try {
 		try {
 			await sandbox[Symbol.asyncDispose]();
 		} catch {
-			/* self-reaps via idle/lifetime caps */
+			/* maxDurationMs ends it within 10 minutes */
 		}
 	}
 }
