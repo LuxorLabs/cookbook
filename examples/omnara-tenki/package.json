@@ -1,0 +1,9 @@
+{
+  "name": "omnara-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — run Omnara agents on Tenki VMs with a Tenki machine pool.",
+  "dependencies": {
+    "@tenkicloud/sandbox": "^1.4.1"
+  }
+}
