@@ -7,17 +7,25 @@ const url = process.argv[2] ?? "https://example.com";
 
 // The SDK has no close method, so end the session with TinyFish's DELETE endpoint. TinyFish says a
 // 409, 500, 503 or 504 means termination wasn't confirmed and to retry; on 429 or 503, wait for Retry-After.
+// A network error or a request with no response in 15 seconds is retried too.
 async function endSession(id) {
 	for (let attempt = 1; ; attempt++) {
-		const res = await fetch(`https://api.browser.tinyfish.ai/${id}`, {
-			method: "DELETE",
-			headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
-		});
-		if (res.ok) return;
-		if (![409, 429, 500, 503, 504].includes(res.status) || attempt === 3) {
-			throw new Error(`TinyFish browser session ${id} not confirmed ended: HTTP ${res.status}`);
+		let res, failure;
+		try {
+			res = await fetch(`https://api.browser.tinyfish.ai/${id}`, {
+				method: "DELETE",
+				headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
+				signal: AbortSignal.timeout(15_000),
+			});
+			if (res.ok) return;
+			failure = `HTTP ${res.status}`;
+		} catch (err) {
+			failure = err.cause?.message ?? err.message;
 		}
-		const wait = Math.min(Number(res.headers.get("retry-after")) || attempt, 30);
+		if ((res && ![409, 429, 500, 503, 504].includes(res.status)) || attempt === 3) {
+			throw new Error(`TinyFish browser session ${id} not confirmed ended: ${failure}`);
+		}
+		const wait = Math.min(Number(res?.headers.get("retry-after")) || attempt, 30);
 		await new Promise((resolve) => setTimeout(resolve, wait * 1000));
 	}
 }

@@ -116,17 +116,25 @@ const url = process.argv[2] ?? "https://example.com";
 
 // The SDK has no close method, so end the session with TinyFish's DELETE endpoint. TinyFish says a
 // 409, 500, 503 or 504 means termination wasn't confirmed and to retry; on 429 or 503, wait for Retry-After.
+// A network error or a request with no response in 15 seconds is retried too.
 async function endSession(id) {
   for (let attempt = 1; ; attempt++) {
-    const res = await fetch(`https://api.browser.tinyfish.ai/${id}`, {
-      method: "DELETE",
-      headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
-    });
-    if (res.ok) return;
-    if (![409, 429, 500, 503, 504].includes(res.status) || attempt === 3) {
-      throw new Error(`TinyFish browser session ${id} not confirmed ended: HTTP ${res.status}`);
+    let res, failure;
+    try {
+      res = await fetch(`https://api.browser.tinyfish.ai/${id}`, {
+        method: "DELETE",
+        headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (res.ok) return;
+      failure = `HTTP ${res.status}`;
+    } catch (err) {
+      failure = err.cause?.message ?? err.message;
     }
-    const wait = Math.min(Number(res.headers.get("retry-after")) || attempt, 30);
+    if ((res && ![409, 429, 500, 503, 504].includes(res.status)) || attempt === 3) {
+      throw new Error(`TinyFish browser session ${id} not confirmed ended: ${failure}`);
+    }
+    const wait = Math.min(Number(res?.headers.get("retry-after")) || attempt, 30);
     await new Promise((resolve) => setTimeout(resolve, wait * 1000));
   }
 }
@@ -156,7 +164,7 @@ try {
 
 ## How a TinyFish browser session starts and ends
 
-- **Always end the browser session in `finally`.** `@tiny-fish/sdk` 0.8.0 has no close method (its `browser.sessions` resource has only `create`), so `tinyfish.mjs` calls TinyFish's [`DELETE` endpoint](https://docs.tinyfish.ai/browser-api/reference.md) directly. TinyFish documents that a `409`, `500`, `503`, or `504` from that call means termination wasn't confirmed and you should retry the delete. On a `503` or a `429` rate limit, wait for `Retry-After` before retrying. `tinyfish.mjs` does that: `endSession` retries those codes up to three times, waiting for `Retry-After` when TinyFish sends it (at most 30 seconds), and throws if the session still isn't confirmed ended. A session that fails to close then fails the run instead of passing quietly.
+- **Always end the browser session in `finally`.** `@tiny-fish/sdk` 0.8.0 has no close method (its `browser.sessions` resource has only `create`), so `tinyfish.mjs` calls TinyFish's [`DELETE` endpoint](https://docs.tinyfish.ai/browser-api/reference.md) directly. TinyFish documents that a `409`, `500`, `503`, or `504` from that call means termination wasn't confirmed and you should retry the delete. On a `503` or a `429` rate limit, wait for `Retry-After` before retrying. `tinyfish.mjs` does that: `endSession` retries those codes up to three times, waiting for `Retry-After` when TinyFish sends it (at most 30 seconds). It also retries a network error, and a request that gets no response within 15 seconds. It throws if the session still isn't confirmed ended. A session that fails to close then fails the run instead of passing quietly.
 - **`timeout_seconds` (5 to 86400) is the inactivity timeout**, so a session your code fails to close still ends once it has been idle that long. TinyFish counts a session as inactive when no CDP commands are being sent. If you omit `timeout_seconds`, or pass more than your plan allows, your plan's maximum applies. `tinyfish.mjs` sets 120.
 - **Creating a TinyFish browser session typically takes 10 to 30 seconds.** If you pass `url` to `sessions.create`, the call returns before that first navigation finishes, so wait for the page to load before reading it. `tinyfish.mjs` creates the session without a `url` and navigates with `page.goto`.
 - **Browser sessions use TinyFish's US residential proxy** unless you set `proxy_config` (`{ enabled: false }` connects directly).
@@ -209,7 +217,7 @@ A pass with both keys proves that fetch, search, and a remote-browser page load 
 - ❌ **`✗ import probe: …`.** One of the five methods isn't a function in the installed packages. `verify.mjs` pins `@tiny-fish/sdk@0.8.0` and `playwright-core@1.64.1`. If you changed a pin, check that version's API against the calls in `tinyfish.mjs`.
 - ❌ **`✗ node tinyfish.mjs: exit <code>, …`.** `tinyfish.mjs` threw inside the VM, and the message ends with the last 400 characters of its stderr. Run `node run.mjs` to see the full stderr.
 - ❌ **`✗ fetch leg: …`, `✗ search leg: …`, or `✗ browser leg: …`.** `tinyfish.mjs` ran, but a line didn't match what `verify.mjs` expects. The message includes the script's full output, so you can see which TinyFish call returned something else. Unset `TINYFISH_API_KEY` to check the Tenki half on its own.
-- ❌ **`TinyFish browser session <id> not confirmed ended: HTTP <status>`.** The `DELETE` that ends the browser session didn't succeed after three tries, or returned a status TinyFish doesn't document as retryable. The session still ends once it has had no CDP commands for `timeout_seconds` (120 here). Check the status code against TinyFish's [Browser API reference](https://docs.tinyfish.ai/browser-api/reference.md).
+- ❌ **`TinyFish browser session <id> not confirmed ended: …`.** The `DELETE` that ends the browser session didn't succeed after three tries, or returned a status TinyFish doesn't document as retryable. The message ends with the last failure: `HTTP <status>`, a network error, or `The operation was aborted due to timeout`. The session still ends once it has had no CDP commands for `timeout_seconds` (120 here). Check the status code against TinyFish's [Browser API reference](https://docs.tinyfish.ai/browser-api/reference.md).
 
 ## FAQ
 
