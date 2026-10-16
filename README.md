@@ -134,6 +134,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | [Open WebUI](examples/open-webui-tenki/) | Sandboxed code interpreter for the self-hosted chat platform |
 | [OpenClaw](examples/openclaw-tenki/) | Sandbox backend for the personal AI assistant |
 | [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
+| [Hermes Agent](examples/hermes-tenki/) | Hermes' terminal backend on Tenki, with snapshot-and-restore sessions (from a fork; not in a Hermes release yet) |
 | [orca](examples/orca-tenki/) | One microVM per parallel coding agent, via its ephemeral-VM recipe hook |
 
 ### Migrating from another provider
