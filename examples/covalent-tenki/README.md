@@ -59,11 +59,14 @@ To confirm your key can boot a Tenki VM before you start the dispatcher, you can
 
 ## Step 4 — Read the workflow
 
-From [`workflow.py`](workflow.py), everything after the module docstring:
+From [`workflow.py`](workflow.py), everything after the module docstring except the 422 workaround that Step 5 covers:
 
 ```python
 import covalent as ct
-from covalent_tenki_plugin import TenkiExecutor
+
+# … the Covalent 422 workaround (Step 5) …
+
+from covalent_tenki_plugin import TenkiExecutor  # noqa: E402 (after the patch)
 
 # Each electron assigned this executor runs in a fresh Tenki sandbox.
 tenki = TenkiExecutor(cpu_cores=2, memory_mb=4096, sandbox_requirements="numpy")
@@ -100,7 +103,7 @@ For each electron, the executor:
 
 With the current `covalent` release (0.240.0) and `requests>=2.34`, every `ct.dispatch()` fails with `422 Unprocessable Entity`, and a fresh install picks up both versions. Covalent's SDK posts the dispatch manifest without a `Content-Type: application/json` header. The bug is in Covalent, not this plugin.
 
-Add the [workaround from the plugin README](https://github.com/LuxorLabs/tenki-covalent-plugin#known-upstream-issue-unrelated-to-this-plugin) to `workflow.py`, above the `if __name__ == "__main__":` block. It patches the client that `ct.dispatch()` uses:
+`workflow.py` already applies the [workaround from the plugin README](https://github.com/LuxorLabs/tenki-covalent-plugin#known-upstream-issue-unrelated-to-this-plugin), right after `import covalent`. It patches the client that `ct.dispatch()` uses, and you can delete it once Covalent fixes the bug:
 
 ```python
 from covalent._dispatcher_plugins import local as ldisp
