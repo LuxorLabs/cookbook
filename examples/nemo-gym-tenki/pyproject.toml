@@ -1,0 +1,16 @@
+[project]
+name = "nemo-gym-tenki-example"
+version = "0.0.0"
+description = "Run NVIDIA NeMo Gym sandboxes on Tenki microVMs"
+# NeMo Gym 0.7.0 requires Python 3.13.14+. uv fetches a matching Python if you don't have one.
+requires-python = ">=3.13.14"
+dependencies = [
+  "nemo-gym>=0.7.0,<0.8",
+  # The `tenki` sandbox provider. Not on PyPI yet, so it installs from git at a pinned
+  # commit (opencolin/nemo-gym-tenki#1, which moved it to the tenki 1.x SDK).
+  "nemo-gym-tenki @ git+https://github.com/opencolin/nemo-gym-tenki@ec0ee66c089f628537f4d99264f8b532ad4d5440",
+  "tenki>=1.4.1,<2",
+]
+
+[tool.uv]
+package = false
