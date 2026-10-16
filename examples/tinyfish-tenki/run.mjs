@@ -4,12 +4,14 @@ import { readFileSync } from "node:fs";
 
 if (!process.env.TINYFISH_API_KEY) throw new Error("Set TINYFISH_API_KEY");
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const tenki = new TenkiSandbox(); // reads TENKI_API_KEY
 
 // The key lives in this session's environment only, never in an image or template.
+// maxDurationMs is a hard cap: Tenki ends the sandbox after 10 minutes even if this script dies.
 await using sandbox = await tenki.createAndWait({
 	cpuCores: 2,
 	memoryMb: 2048,
+	maxDurationMs: 10 * 60_000,
 	env: { TINYFISH_API_KEY: process.env.TINYFISH_API_KEY },
 });
 
