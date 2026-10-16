@@ -78,7 +78,7 @@ node verify.mjs
 [verify.mjs](verify.mjs) checks the Tenki side without an Omnara account. It starts a VM configured like Omnara's, with a test command in place of the daemon, and checks that:
 
 - the boot command runs as `tenki` with its environment
-- the VM can download Omnara's daemon installer and the `omnarad` release, whose checksum and version match
+- the VM can reach Omnara's daemon installer
 - `sudo` works without a password
 - the VM can be found by its tag and metadata, the way Omnara recovers a lost create
 

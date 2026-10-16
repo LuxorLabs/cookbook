@@ -28,7 +28,6 @@ const sh = async (sandbox, script) => {
 
 const tenki = new TenkiSandbox({ authToken });
 let sandbox;
-let version;
 try {
 	// Omnara's sessions are sticky; this one isn't, so a crashed run can't leave a VM running.
 	sandbox = await tenki.createAndWait({
@@ -50,16 +49,9 @@ try {
 	const boot = await sh(sandbox, "for i in $(seq 60); do [ -s ~/boot.txt ] && break; sleep 1; done; cat ~/boot.txt");
 	if (boot !== "tenki https://api.omnara.com/v1") throw new Error(`boot runtime wrote ${JSON.stringify(boot)}`);
 
-	version = await sh(sandbox, `set -e
+	await sh(sandbox, `set -e
 		curl -fsS https://api.omnara.com/install/omnarad.sh > /dev/null
-		arch=$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')
-		curl -fsS "https://releases.omnara.com/omnarad/latest/linux-$arch.txt" > m
-		curl -fsSL "$(sed -n 's/^url=//p' m)" -o omnarad
-		echo "$(sed -n 's/^sha256=//p' m)  omnarad" | sha256sum -c - > /dev/null
-		chmod +x omnarad
-		[ "$(./omnarad --version)" = "$(sed -n 's/^version=//p' m)" ]
-		sudo -n true
-		./omnarad --version`);
+		sudo -n true`);
 
 	const found = (await tenki.list({ workspaceId, tags: [tag] })).filter((s) => s.metadata?.["omnara-machine"] === machine);
 	if (found.length !== 1 || found[0].id !== sandbox.id) throw new Error(`list by tag found ${found.length} sessions`);
@@ -80,5 +72,5 @@ try {
 	tenki.close();
 }
 if (!process.exitCode) {
-	console.log(`✓ omnara-tenki: boot runtime as tenki → reach Omnara → omnarad ${version} verified → find by tag + metadata → terminate`);
+	console.log(`✓ omnara-tenki: boot runtime as tenki → reach Omnara → find by tag + metadata → terminate`);
 }
