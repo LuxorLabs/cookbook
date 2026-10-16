@@ -19,7 +19,7 @@ def bootstrap() -> None:
     if not (CHECKOUT / "tools" / "environments" / "tenki.py").is_file():
         raise SystemExit(f"No Hermes checkout with the Tenki backend at {CHECKOUT}. Run ./setup.sh first.")
     if not (os.getenv("TENKI_API_KEY") or os.getenv("TENKI_AUTH_TOKEN")):
-        raise SystemExit("Set TENKI_API_KEY (tk_...), or run `tenki login`.")
+        raise SystemExit("Set TENKI_API_KEY (tk_...). TENKI_AUTH_TOKEN also works.")
     sys.path.insert(0, str(CHECKOUT))
     # The backend writes snapshot pointers to $HERMES_HOME/tenki_snapshots.json.
     # A scratch home keeps this run away from your real ~/.hermes.

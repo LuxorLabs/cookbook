@@ -20,7 +20,7 @@ python run.py
 `run.py` runs a few commands in a sandbox, ends the session, starts a new one with the same task ID, and reads back a file the first session wrote:
 
 ```
-Session 1, sandbox 01a1…
+Session 1, sandbox 01a14663-…
 $ uname -srm && whoami && pwd
   exit 0: Linux … x86_64
 tenki
@@ -30,7 +30,7 @@ $ python3 -c 'print(sum(range(100)))'
 $ echo 'notes from session one' > notes.txt
   exit 0:
 
-Session 2, sandbox 01a1…
+Session 2, sandbox 01a14664-…
 $ cat notes.txt
   exit 0: notes from session one
 
@@ -102,7 +102,7 @@ It takes about three minutes, mostly waiting for the snapshot to become durable,
 
 - ❌ **`No Hermes checkout with the Tenki backend at …`.** Run `./setup.sh`, or set `HERMES_REPO` to an existing checkout of the fork.
 - ❌ **`Feature 'terminal.tenki' unavailable: pip install failed … tenki-sandbox`.** Your checkout predates `2890bd3` and still pins the old `tenki-sandbox` package, which no longer installs. Delete `./hermes-agent` and run `./setup.sh` again.
-- ❌ **`check_terminal_requirements() is True` fails.** Hermes found no Tenki credential. Set `TENKI_API_KEY` (`TENKI_AUTH_TOKEN` also works), or run `tenki login`.
+- ❌ **`Set TENKI_API_KEY (tk_...)`.** This example reads the key from the environment only. Export `TENKI_API_KEY` (`TENKI_AUTH_TOKEN` also works). Inside Hermes itself, the backend also falls back to the credential `tenki login` saves.
 - ❌ **A persistent session starts empty.** The task ID or the Hermes profile changed. Restores match on both.
 
 ## FAQ
