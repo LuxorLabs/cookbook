@@ -112,6 +112,8 @@ Give an agent a sandboxed place to run the code it writes.
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Tenki VMs |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
 | [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers driven from a microVM |
+| [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), each trial in its own VM |
+| [Convex](examples/convex-tenki/) | A sandbox per user from Convex actions, with live state in a Convex table |
 
 ### Tenki Code Reviewer
 
@@ -120,8 +122,6 @@ Review pull requests with [Tenki Code Reviewer](https://tenki.cloud/products/cod
 | Example | What it covers |
 | --- | --- |
 | [Cursor Origin](examples/cursor-origin-tenki/) | Tenki Code Reviewer on Origin pull requests, with `AGENTS.md` review rules |
-| [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), each trial in its own VM |
-| [Convex](examples/convex-tenki/) | A sandbox per user from Convex actions, with live state in a Convex table |
 
 ### Agent platforms
 
