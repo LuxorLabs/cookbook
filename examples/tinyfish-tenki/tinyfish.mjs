@@ -21,10 +21,12 @@ try {
 	await page.goto(url);
 	console.log("browser:", await page.title());
 } finally {
-	await browser?.close();
+	// A rejected close() must not skip the DELETE below: that would leave a billed session running.
+	await browser?.close().catch(() => {});
 	// The SDK has no close method, and a session keeps running until it's deleted or its inactivity timeout fires.
-	await fetch(`https://api.browser.tinyfish.ai/${session.session_id}`, {
+	const res = await fetch(`https://api.browser.tinyfish.ai/${session.session_id}`, {
 		method: "DELETE",
 		headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
-	});
+	}).catch((e) => ({ ok: false, status: e.message }));
+	if (!res.ok) console.error(`TinyFish session ${session.session_id} may still be running: DELETE -> ${res.status}`);
 }
