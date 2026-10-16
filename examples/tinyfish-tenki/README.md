@@ -40,13 +40,21 @@ export TINYFISH_API_KEY=sk-tinyfish-...          # from agent.tinyfish.ai/api-ke
 
 ### Keeping the TinyFish key out of the VM
 
-Passing the key through `env` puts the real key inside the VM, where any code running there can read it. That's fine for a demo you run yourself. When the VM runs code you don't fully trust, such as an agent's, use Tenki [secret injection](https://tenki.cloud/docs/sandbox/secrets) instead. The VM then sees only a placeholder, and Tenki swaps in the real key on outbound HTTPS requests to hosts you allow. The steps:
+Passing the key through `env` puts the real key inside the VM, where any code running there can read it. That's fine for a demo you run yourself. Tenki's [secret injection](https://tenki.cloud/docs/sandbox/secrets) avoids it: the VM sees only a placeholder, and Tenki swaps in the real key on outbound HTTPS requests to hosts you allow. The steps:
 
-1. Save the key as a workspace secret.
-2. Create a request policy that allows it in the `X-API-Key` header, which is where `@tiny-fish/sdk` sends it. Cover each TinyFish host the example calls: `agent.tinyfish.ai`, `api.search.tinyfish.ai`, `api.fetch.tinyfish.ai`, and `api.browser.tinyfish.ai` (the browser-session `DELETE`).
-3. Pass `secretPolicies: ["<your policy>"]` to `createAndWait`, and set `env: { TINYFISH_API_KEY: "secrets://TINYFISH_API_KEY" }`.
+1. Save the key as a workspace secret. This needs a Tenki API key with Secrets access.
+2. Create a request policy that allows the secret in the `X-API-Key` header, which is where `@tiny-fish/sdk` sends it. Add one rule per TinyFish host, each with methods `GET`, `POST` and `DELETE` and path prefix `/`:
+   - `https://agent.tinyfish.ai`
+   - `https://api.search.tinyfish.ai`
+   - `https://api.fetch.tinyfish.ai`
+   - `https://api.browser.tinyfish.ai`, for the browser-session `DELETE`
+3. Pass `secretPolicies: ["<your policy>"]` to `createAndWait`, and set `env: { TINYFISH_API_KEY: "secrets://<secret name>" }`.
 
-This example doesn't do that by default, because it needs a one-time workspace setup and a Tenki key with Secrets access. `verify.mjs` doesn't test that path, so check it with your own keys before you rely on it.
+**It breaks the remote browser.** A live test on 2026-10-16 found:
+- **The HTTPS calls work:** fetch, search, and creating and deleting a browser session, while the VM only saw the placeholder.
+- **The browser step fails:** Playwright's `connectOverCDP` gets `501 Not Implemented`, because a VM with a secret policy attached can't open WebSocket connections. A WebSocket to an unrelated echo server failed the same way, and succeeded from a VM with no policy.
+
+So this example passes the key through `env`, which the browser step needs. Use secret injection when your code calls only TinyFish's HTTPS APIs (fetch, search, agent). `verify.mjs` doesn't test the injected path.
 
 ## Use it
 
