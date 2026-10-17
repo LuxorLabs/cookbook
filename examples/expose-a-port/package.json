@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example — expose a sandbox port and get a public preview URL from Tenki.",
   "dependencies": {
-    "@tenkicloud/sandbox": "^1.4.1"
+    "@tenkicloud/sandbox": ">=1.4.1"
   }
 }
