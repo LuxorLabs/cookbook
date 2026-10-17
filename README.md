@@ -64,6 +64,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Firecracker microVMs |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
+| [Convex](examples/convex-tenki/) | A sandbox per user from Convex actions, with live state in a Convex table |
 
 ### Agent platforms
 
@@ -105,6 +106,7 @@ First-party packages you can install directly in your own project:
 | Integration | Install | What it does |
 | --- | --- | --- |
 | [Composio tools](https://github.com/TenkiCloud/composio-tools) | `npm install @tenkicloud/composio-tools` | Create, execute, snapshot, and terminate tools for Composio agents |
+| [Convex component](https://github.com/LuxorLabs/tenki-convex) | `npm install @tenkicloud/convex` | Creates and drives sandboxes from Convex actions, with each one's state in a Convex table |
 | [Covalent executor](https://github.com/TenkiCloud/covalent-tenki-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki microVMs |
 | [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
 | [Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) | `go get github.com/LuxorLabs/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
