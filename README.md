@@ -73,6 +73,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | --- | --- |
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
 | [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
+| [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
 
 ### Migrating from another provider
 
@@ -121,6 +122,7 @@ These open-source projects ship a Tenki provider or backend out of the box:
 | [ComputeSDK](https://github.com/computesdk/computesdk) | Tenki provider for the multi-provider compute toolkit — [example](examples/computesdk-tenki/) |
 | [AgentEnv Framework](https://github.com/scaleapi/agentenv-framework) | Sandbox backend for Scale AI's RL environments — [example](examples/agentenv-tenki/) |
 | [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) | Sandboxed exec backend for AI agent fleets |
+| [Omnara](https://github.com/omnara-ai/omnara) | Machine pool provider for the open-source managed agent platform — [example](examples/omnara-tenki/) |
 
 ## Contributing
 
