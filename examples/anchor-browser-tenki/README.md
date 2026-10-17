@@ -4,7 +4,7 @@
 **Time:** ~5 minutes.
 **Outcome:** `node run.mjs` boots a Tenki microVM from the public `tenki/anchor:stable` image, opens an Anchor browser session from inside it, loads a page over the Chrome DevTools Protocol (CDP) and prints its URL and title. `node verify.mjs` prints a `✓` line.
 
-> **Tested on 2026-10-17 without an Anchor key.** `node verify.mjs` passed against live Tenki: the `tenki/anchor:stable` image boots, `anchor-smoke` and `playwright-core` are there, and the session environment has no Anchor key. The Anchor leg (a real browser session) hasn't run yet; it runs when `ANCHOR_API_KEY` is set.
+> **Tested on 2026-10-17 against live Tenki and Anchor.** `node verify.mjs` and `node run.mjs` (Node 24) both passed: the `tenki/anchor:stable` image boots, `anchor.mjs` opens an Anchor session from inside it, loads example.com over CDP and ends the session, and the Anchor key never reaches the session environment.
 
 > **Honesty note:** The browser doesn't run in your sandbox. It runs at Anchor, and the sandbox drives it over the public internet. It can't reach a dev server on `localhost` inside your VM, and every Playwright action is a round trip to Anchor.
 
