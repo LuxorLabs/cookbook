@@ -54,6 +54,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [OpenAI Agents SDK](examples/openai-agents-sdk/) | Sandboxed execution as an agent tool |
 | [LlamaIndex](examples/llamaindex/) | Sandboxed execution as a `FunctionTool` |
 | [Hugging Face smolagents](examples/smolagents/) | Remote Python executor for a `CodeAgent` |
+| [AG2](examples/ag2-tenki/) | Native sandbox backend for shell + code tools |
 
 ### Developer tools
 
@@ -62,8 +63,9 @@ Give an agent a sandboxed place to run the code it writes.
 | [MCP server](examples/mcp-tenki-sandbox/) | Sandbox tools for Claude, Cursor, or any MCP client |
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
-| [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Firecracker microVMs |
+| [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Tenki VMs |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
+| [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), each trial in its own VM |
 
 ### Agent platforms
 
@@ -73,6 +75,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | --- | --- |
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
 | [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
+| [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent microVMs for an agent fleet |
 | [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
 
 ### Migrating from another provider
@@ -121,7 +124,7 @@ These open-source projects ship a Tenki provider or backend out of the box:
 | [AgentBox](https://github.com/madarco/agentbox) | Provider for running parallel agents in sandboxed VMs — [example](examples/agentbox-tenki/) |
 | [ComputeSDK](https://github.com/computesdk/computesdk) | Tenki provider for the multi-provider compute toolkit — [example](examples/computesdk-tenki/) |
 | [AgentEnv Framework](https://github.com/scaleapi/agentenv-framework) | Sandbox backend for Scale AI's RL environments — [example](examples/agentenv-tenki/) |
-| [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) | Sandboxed exec backend for AI agent fleets |
+| [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) | Sandboxed exec backend for AI agent fleets — [example](examples/openhermit-tenki/) |
 | [Omnara](https://github.com/omnara-ai/omnara) | Machine pool provider for the open-source managed agent platform — [example](examples/omnara-tenki/) |
 
 ## Contributing
