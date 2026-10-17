@@ -31,26 +31,38 @@ if (mode === "create") {
 	execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-q", "-f", `${keyDir}/id`]);
 	const publicKey = readFileSync(`${keyDir}/id.pub`, "utf8").trim();
 
-	const sandbox = await tenki.createAndWait({
-		cpuCores: 2,
-		memoryMb: 4096,
-		cloneRepoUrl: repoUrl,
-		sshAuthorizedKeys: [publicKey],
-		workspaceId: process.env.TENKI_WORKSPACE_ID,
-	});
-	const cert = await tenki.issueSandboxSSHCert(sandbox.id, publicKey);
-	writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
+	let sandbox, alias;
+	try {
+		sandbox = await tenki.createAndWait({
+			cpuCores: 2,
+			memoryMb: 4096,
+			cloneRepoUrl: repoUrl,
+			sshAuthorizedKeys: [publicKey],
+			workspaceId: process.env.TENKI_WORKSPACE_ID,
+		});
+		const cert = await tenki.issueSandboxSSHCert(sandbox.id, publicKey);
+		writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
 
-	// The SSH host key belongs to Tenki's gateway, not to the sandbox's own sshd, and
-	// cert.caPub signs *user* certs so it cannot pin it. Learn it once here under a
-	// per-sandbox alias, so later connections verify normally instead of skipping the check.
-	// Session ids are UUIDv7: the front is a timestamp, so a prefix collides across
-	// sandboxes created near each other — alias on the random tail instead.
-	const alias = `tenki-${sandbox.id.replaceAll("-", "").slice(-12)}`;
-	mkdirSync(`${homedir()}/.ssh`, { recursive: true });
-	if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
-	execFileSync("ssh", ["-o", `ProxyCommand=node "${proxy}" ${sandbox.id}`, "-o", "StrictHostKeyChecking=accept-new",
-		"-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=30", "-i", `${keyDir}/id`, `tenki@${alias}`, "true"], { stdio: "ignore" });
+		// The SSH host key belongs to Tenki's gateway, not to the sandbox's own sshd. Its host
+		// certs are signed by cert.caPub, but their principals are gateway hostnames and orca's
+		// target has no HostKeyAlias, so a @cert-authority pin can't match. Learn the key once
+		// here under a per-sandbox alias, so later connections verify normally instead of
+		// skipping the check.
+		// Session ids are UUIDv7: the front is a timestamp, so a prefix collides across
+		// sandboxes created near each other — alias on the random tail instead.
+		alias = `tenki-${sandbox.id.replaceAll("-", "").slice(-12)}`;
+		mkdirSync(`${homedir()}/.ssh`, { recursive: true });
+		if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
+		execFileSync("ssh", ["-o", `ProxyCommand=node "${proxy}" ${sandbox.id}`, "-o", "StrictHostKeyChecking=accept-new",
+			"-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=30", "-i", `${keyDir}/id`, `tenki@${alias}`, "true"], { stdio: "ignore" });
+	} catch (e) {
+		// orca never sees a session id from a failed create, so it can't destroy this one.
+		// createAndWait's WaitReadyFailedError carries the session it created but gave up on.
+		await (sandbox ?? e?.session)?.[Symbol.asyncDispose]().catch(() => {});
+		rmSync(keyDir, { recursive: true, force: true });
+		if (alias && existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
+		throw e;
+	}
 
 	process.stdout.write(JSON.stringify({
 		schemaVersion: 2,
@@ -90,6 +102,9 @@ if (mode === "create") {
 		writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
 		// A resumed session can come back behind a different gateway, and with it a
 		// different host key — drop the stale pin and learn the current one, as create did.
+		// Like create, this trusts the first key it sees (see above for why caPub can't pin it).
+		// The SSH stream rides the SDK's TLS WebSocket to Tenki, so an attacker would have to get
+		// inside that connection to present their own key here.
 		if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
 		execFileSync("ssh", ["-o", `ProxyCommand=node "${proxy}" ${sessionId}`, "-o", "StrictHostKeyChecking=accept-new",
 			"-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=30", "-i", `${keyDir}/id`, `tenki@${alias}`, "true"], { stdio: "ignore" });
