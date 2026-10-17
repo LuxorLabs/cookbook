@@ -31,7 +31,7 @@ const run = async (sandbox, cmd, args, env) => {
 let sandbox;
 try {
 	const tenki = new TenkiSandbox({ authToken });
-	sandbox = await tenki.createAndWait({ image: "tenki/anchor:stable", cpuCores: 2, memoryMb: 2048, maxDurationMs: 10 * 60_000, workspaceId });
+	sandbox = await tenki.createAndWait({ image: "tenki/anchor:stable", maxDurationMs: 10 * 60_000, workspaceId });
 
 	await run(sandbox, "sh", ["-c", "command -v anchor-smoke"]);
 	await sandbox.writeFile("probe.mjs", 'import { chromium } from "playwright-core"; console.log(typeof chromium.connectOverCDP);');

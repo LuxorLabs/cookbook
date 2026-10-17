@@ -4,7 +4,7 @@
 **Time:** ~5 minutes.
 **Outcome:** `node run.mjs` boots a Tenki microVM from the public `tenki/anchor:stable` image, opens an Anchor browser session from inside it, loads a page over the Chrome DevTools Protocol (CDP) and prints its URL and title. `node verify.mjs` prints a `✓` line.
 
-> **Not yet run against live Tenki.** This example was written on 2026-10-16 from the [Anchor docs page](https://tenki.cloud/docs/sandbox/anchor), the `@tenkicloud/sandbox` 1.4.1 type definitions and Anchor's API reference. Neither script has run end to end yet. Run `node verify.mjs` before merging.
+> **Tested on 2026-10-17 without an Anchor key.** `node verify.mjs` passed against live Tenki: the `tenki/anchor:stable` image boots, `anchor-smoke` and `playwright-core` are there, and the session environment has no Anchor key. The Anchor leg (a real browser session) hasn't run yet; it runs when `ANCHOR_API_KEY` is set.
 
 > **Honesty note:** The browser doesn't run in your sandbox. It runs at Anchor, and the sandbox drives it over the public internet. It can't reach a dev server on `localhost` inside your VM, and every Playwright action is a round trip to Anchor.
 
@@ -65,11 +65,10 @@ if (!anchorKey) throw new Error("Set ANCHOR_API_KEY");
 const tenki = new TenkiSandbox(); // reads TENKI_API_KEY or TENKI_AUTH_TOKEN
 
 // tenki/anchor:stable is the base image plus playwright-core and anchor-smoke: no browser, no key.
-// maxDurationMs is a hard cap: Tenki ends the sandbox after 10 minutes even if this script dies.
+// No cpuCores / memoryMb: the image restores from a snapshot at its own size (2 vCPU, 4 GiB), and a
+// smaller request is refused. maxDurationMs is a hard cap: Tenki ends the sandbox after 10 minutes even if this script dies.
 await using sandbox = await tenki.createAndWait({
   image: "tenki/anchor:stable",
-  cpuCores: 2,
-  memoryMb: 2048,
   maxDurationMs: 10 * 60_000,
 });
 
