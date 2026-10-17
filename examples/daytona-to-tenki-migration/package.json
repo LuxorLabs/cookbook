@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example — migrate a Daytona sandbox script to Tenki: side-by-side snippets, an API map, and a runnable Tenki port.",
   "dependencies": {
-    "@tenkicloud/sandbox": "^1.4.1"
+    "@tenkicloud/sandbox": ">=1.4.1"
   }
 }
