@@ -1,0 +1,18 @@
+# Crabbox config for the demo project. Copy it to the root of your own repository.
+provider: tenki
+target: linux
+tenki:
+  cpus: 2
+  memoryMB: 4096
+  diskGB: 20 # the default root disk is 5 GiB, and it can't grow later
+# Give every sandbox Crabbox creates a maximum duration. One-shot runs always get
+# lease.ttl as Tenki's --max-duration; warmup.keep: false makes `crabbox warmup` do
+# the same instead of creating a sticky session that runs until you stop it.
+lease:
+  ttl: 1h
+warmup:
+  keep: false
+jobs:
+  test:
+    command: npm test
+    stop: auto # stop a box the job created; leave one passed with --id running
