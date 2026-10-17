@@ -1,6 +1,7 @@
 """
 Smoke-verify the Open WebUI example against the REAL distributable:
-  1. download the pinned v0.1.0 Tool asset from the GitHub release,
+  1. download the pinned v0.1.0 Tool asset from the GitHub release and check
+     its SHA-256 before running it,
   2. load it standalone with only `tenki` + `pydantic` installed — proves the
      paste-into-Open-WebUI file has no hidden dependencies,
   3. assert the safe Valve defaults and per-user key precedence (offline),
@@ -9,6 +10,7 @@ Smoke-verify the Open WebUI example against the REAL distributable:
 Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
 """
 import asyncio
+import hashlib
 import importlib.util
 import os
 import sys
@@ -18,6 +20,8 @@ ASSET = (
     "https://github.com/LuxorLabs/tenki-open-webui/releases/download/"
     "v0.1.0/tenki_code_execution.py"
 )
+# SHA-256 of that exact asset (matches the digest GitHub lists on the release).
+ASSET_SHA256 = "1bec42092db92be229b6f3085189770eeaf9889eedb3a258637b5b890ebc9ce3"
 PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_release_tool.py")
 
 
@@ -34,6 +38,12 @@ def cfg(key):
 
 try:
     urllib.request.urlretrieve(ASSET, PATH)  # the exact file users paste in
+    with open(PATH, "rb") as f:
+        digest = hashlib.sha256(f.read()).hexdigest()
+    if digest != ASSET_SHA256:
+        os.remove(PATH)
+        print(f"✗ Release asset checksum mismatch: expected {ASSET_SHA256}, got {digest}. Not running it.")
+        sys.exit(1)
     spec = importlib.util.spec_from_file_location("tenki_owui_tool", PATH)
     mod = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = mod  # dataclasses resolve annotations via sys.modules
