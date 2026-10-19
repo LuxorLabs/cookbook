@@ -6,6 +6,11 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 
-const py = existsSync(".venv/bin/python") ? ".venv/bin/python" : process.env.PYTHON || "python3";
-const r = spawnSync(py, ["verify.py"], { stdio: "inherit" });
+// Resolve against this file, not the caller's cwd, so the harness can run it from anywhere.
+const dir = import.meta.dirname;
+const venv = `${dir}/.venv/bin/python`;
+const py = existsSync(venv) ? venv : process.env.PYTHON || "python3";
+const r = spawnSync(py, ["verify.py"], { cwd: dir, stdio: "inherit" });
+if (r.error) console.error(`Couldn't start ${py}: ${r.error.message}`);
+if (r.signal) console.error(`verify.py was killed by ${r.signal}`);
 process.exit(r.status ?? 1);
