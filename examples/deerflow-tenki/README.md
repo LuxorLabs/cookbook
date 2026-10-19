@@ -1,12 +1,12 @@
 # How to run DeerFlow's sandboxes on Tenki
 
-**Audience:** teams that run ByteDance's DeerFlow, or are setting it up, and want the code its agents write to run in Tenki microVMs instead of on the host, in Docker, or with another sandbox vendor.
+**Audience:** teams that run ByteDance's DeerFlow, or are setting it up, and want the code its agents write to run in Tenki sandboxes instead of on the host, in Docker, or with another sandbox vendor.
 **Time:** ~5 minutes for the Tenki check in this folder, which itself runs in a few seconds. DeerFlow's own setup comes on top: its setup wizard takes about 2 minutes, plus its dependency install.
-**Outcome:** `node verify.mjs` prints a `✓` line from a live Tenki microVM, and DeerFlow's `config.yaml` selects the Tenki provider, so each agent thread's commands and files run in its own Tenki microVM.
+**Outcome:** `node verify.mjs` prints a `✓` line from a live Tenki sandbox, and DeerFlow's `config.yaml` selects the Tenki provider, so each agent thread's commands and files run in its own Tenki sandbox.
 
-> **Honesty note:** this folder doesn't contain DeerFlow or any DeerFlow code. The Tenki provider ships inside DeerFlow. `verify.py` exercises the Tenki SDK surface the provider is built on, against a live microVM, without installing DeerFlow. It tells you that your key and the Tenki side work, not that your DeerFlow deployment does.
+> **Honesty note:** this folder doesn't contain DeerFlow or any DeerFlow code. The Tenki provider ships inside DeerFlow. `verify.py` exercises the Tenki SDK surface the provider is built on, against a live sandbox, without installing DeerFlow. It tells you that your key and the Tenki side work, not that your DeerFlow deployment does.
 
-[DeerFlow](https://github.com/bytedance/deer-flow), ByteDance's open-source SuperAgent harness, runs the code its agents write inside pluggable sandboxes. Since [deer-flow#4382](https://github.com/bytedance/deer-flow/pull/4382), Tenki ships as a community-supported sandbox provider, `deerflow.community.tenki`, alongside providers such as E2B and AIO. If your team already runs agent infrastructure on [Tenki](https://tenki.cloud) microVMs, you can point DeerFlow at that same Tenki workspace instead of provisioning a parallel sandbox vendor.
+[DeerFlow](https://github.com/bytedance/deer-flow), ByteDance's open-source SuperAgent harness, runs the code its agents write inside pluggable sandboxes. Since [deer-flow#4382](https://github.com/bytedance/deer-flow/pull/4382), Tenki ships as a community-supported sandbox provider, `deerflow.community.tenki`, alongside providers such as E2B and AIO. If your team already runs agent infrastructure on [Tenki](https://tenki.cloud) sandboxes, you can point DeerFlow at that same Tenki workspace instead of provisioning a parallel sandbox vendor.
 
 ## Prerequisites
 
@@ -91,7 +91,7 @@ try:
 
 Each step matches how the provider uses Tenki. It creates with `wait=False` and then calls `wait_ready()`, which is how the provider boots every sandbox, so a sandbox that never becomes ready is still in hand to terminate. It runs a command under `sh -lc`, as the provider runs every command. It round-trips a file through Tenki's native `sandbox.fs` streaming API (`mkdir`, `write_stream`, `read_text`, `stat`), which the provider uses for file transport. It runs busybox-portable `find` and `grep`, which the provider uses for `glob` and `grep`. A `finally` block then terminates the sandbox, even when a check fails.
 
-It doesn't test anything on the DeerFlow side: it never imports DeerFlow, needs no model key, and doesn't exercise path mapping, the warm pool or eviction. The provider's upstream test suite, [`backend/tests/test_tenki_provider.py`](https://github.com/bytedance/deer-flow/blob/main/backend/tests/test_tenki_provider.py), covers those, and its `test_integration_real_sandbox` runs against a live microVM when `TENKI_API_KEY` is set.
+It doesn't test anything on the DeerFlow side: it never imports DeerFlow, needs no model key, and doesn't exercise path mapping, the warm pool or eviction. The provider's upstream test suite, [`backend/tests/test_tenki_provider.py`](https://github.com/bytedance/deer-flow/blob/main/backend/tests/test_tenki_provider.py), covers those, and its `test_integration_real_sandbox` runs against a live sandbox when `TENKI_API_KEY` is set.
 
 ## Step 5 — Install DeerFlow with the Tenki extra
 
@@ -120,7 +120,7 @@ sandbox:
   api_key: $TENKI_API_KEY
   cpu_cores: 2
   memory_mb: 2048
-  replicas: 3          # active + warm microVM cap per gateway process
+  replicas: 3          # active + warm sandbox cap per gateway process
   idle_timeout: 600    # seconds before an idle sandbox is evicted
   max_duration: 14400  # hard server-side lifetime cap
   sticky: false
@@ -140,10 +140,10 @@ The provider's keys (see [`config.example.yaml`](https://github.com/bytedance/de
 | `base_url` | SDK default | Tenki API endpoint |
 | `image` | Tenki account default base image | Base image for every sandbox |
 | `cpu_cores`, `memory_mb` | not sent | Per-sandbox vCPUs and memory |
-| `replicas` | `3` | Soft cap on active plus warm microVMs per gateway process |
+| `replicas` | `3` | Soft cap on active plus warm sandboxes per gateway process |
 | `idle_timeout` | `600` | Seconds before the provider terminates an unused warm sandbox; `0` disables |
 | `max_duration` | `14400` (4 hours) | Server-side lifetime cap in seconds; `0` uses the Tenki account default |
-| `sticky` | `false` | Pins the microVM to its host, which only matters with pause/resume. Accepts an env reference such as `$TENKI_STICKY` and the strings `true`/`1`/`on`/`yes` or `false`/`0`/`off`/`no` |
+| `sticky` | `false` | Pins the sandbox to its host, which only matters with pause/resume. Accepts an env reference such as `$TENKI_STICKY` and the strings `true`/`1`/`on`/`yes` or `false`/`0`/`off`/`no` |
 | `home_dir` | `/home/tenki` | Writable directory that backs `/mnt/user-data` |
 | `environment` | none | Map injected into every command and into the sandbox at create time. Keys must be valid POSIX variable names; the provider rejects others when it loads its config |
 
@@ -161,11 +161,11 @@ UV_EXTRAS=tenki make dev
 
 **Setting `UV_EXTRAS` turns off DeerFlow's detection from `config.yaml`.** If you use other extras, list them all, for example `UV_EXTRAS=postgres,tenki`.
 
-DeerFlow serves at http://localhost:2026. Under `make dev`, the gateway's output goes to `logs/gateway.log` at the DeerFlow repo root, not to your terminal. When an agent thread first gets its sandbox, the provider creates a microVM named `deer-flow-tenki-<id>` and logs `Created Tenki sandbox <id> (name=deer-flow-tenki-<id>)` there at INFO level. After the turn it logs `Released Tenki sandbox <id> to warm pool (microVM still running)`.
+DeerFlow serves at http://localhost:2026. Under `make dev`, the gateway's output goes to `logs/gateway.log` at the DeerFlow repo root, not to your terminal. When an agent thread first gets its sandbox, the provider creates a sandbox named `deer-flow-tenki-<id>` and logs `Created Tenki sandbox <id> (name=deer-flow-tenki-<id>)` there at INFO level. After the turn it logs `Released Tenki sandbox <id> to warm pool (sandbox still running)`.
 
 ## What the provider does
 
-- The full DeerFlow `Sandbox` contract: `execute_command`, `read_file`, `write_file` (including append), `update_file`, `download_file`, `list_dir`, `glob` and `grep`, mapped onto one Tenki microVM per user and thread.
+- The full DeerFlow `Sandbox` contract: `execute_command`, `read_file`, `write_file` (including append), `update_file`, `download_file`, `list_dir`, `glob` and `grep`, mapped onto one Tenki sandbox per user and thread.
 - Virtual path mapping: Tenki sandboxes run as the unprivileged `tenki` user and `/mnt` is root-owned, so DeerFlow's `/mnt/user-data` namespace translates to `home_dir` on the way in and back to `/mnt/user-data` on the way out. At create time the provider also tries to symlink `/mnt/user-data` to `home_dir` with `sudo`, so shell commands that use the literal path work too. Without `sudo`, the file tools still work through the remap.
 - Native file transport: reads, writes and downloads use Tenki's `sandbox.fs` streaming API rather than shell pipes, so binary and Unicode content survive untouched. `download_file` serves only paths under `/mnt/user-data` and stops at 100 MB, counted on the bytes actually received.
 - Shell semantics: each command is a fresh `sh -lc` exec, so no shell state, such as a `cd` or an exported variable, carries over to the next command. `list_dir`, `glob` and `grep` delegate to busybox-portable `find` and `grep` inside the VM.
@@ -198,7 +198,7 @@ When sandboxes must survive a gateway restart: the warm pool lives in the gatewa
 **Does a sandbox keep running between agent turns?**
 Yes. A released sandbox stays running in the warm pool until the same thread reclaims it, `idle_timeout` passes, the `replicas` cap evicts it, the gateway shuts down, or it reaches `max_duration`. With `idle_timeout: 0`, nothing reaps it for being idle.
 
-**Do threads share a microVM?**
+**Do threads share a sandbox?**
 No. The provider derives each sandbox's ID from the user and thread, and only that user's thread reclaims it from the warm pool.
 
 ## Related

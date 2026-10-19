@@ -1,6 +1,6 @@
 # How to run code in a disposable Tenki sandbox from Node.js
 
-**Audience:** Node.js developers who want to run a command in a throwaway microVM with the `@tenkicloud/sandbox` SDK.
+**Audience:** Node.js developers who want to run a command in a throwaway sandbox with the `@tenkicloud/sandbox` SDK.
 **Time:** ~5 minutes, most of it creating an API key. The script boots, runs, and disposes of a sandbox in a few seconds.
 **Outcome:** `python3` runs inside a live Tenki sandbox, its exit code and output print on your machine as `exit 0 -> 42`, and the sandbox is terminated when the script ends.
 
@@ -8,7 +8,7 @@
 
 ## Why bother
 
-This is the core Tenki loop: boot a disposable microVM, run code in it, get the output, throw it away. With the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK it takes about 15 lines, and the code runs in the sandbox, not on your machine.
+This is the core Tenki loop: boot a disposable sandbox, run code in it, get the output, throw it away. With the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK it takes about 15 lines, and the code runs in the sandbox, not on your machine.
 
 ## Install
 

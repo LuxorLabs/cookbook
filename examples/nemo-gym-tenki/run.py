@@ -1,4 +1,4 @@
-"""Run one NeMo Gym-style rollout step in a Tenki microVM.
+"""Run one NeMo Gym-style rollout step in a Tenki sandbox.
 
     uv sync && uv run python run.py
 """
@@ -32,7 +32,7 @@ async def main() -> None:
         print(f"exit {r.return_code}: {(r.stdout or r.stderr or '').strip()}")
         print(f"reward {reward}")
     finally:
-        await provider.close(handle)  # terminates the microVM
+        await provider.close(handle)  # terminates the sandbox
         await provider.aclose()
 
 

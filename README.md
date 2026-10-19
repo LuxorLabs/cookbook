@@ -2,7 +2,7 @@
 
 **Audience:** JavaScript and Python developers who want tested, working code for [Tenki Sandbox](https://tenki.cloud/products/sandbox): disposable Linux VMs for running code and AI agents in isolation.
 **Time:** ~10 minutes once you have an API key. That covers cloning, installing one JavaScript example (and optionally one Python example), a run, and a check.
-**Outcome:** you've run code in a Tenki microVM from this repo, confirmed an example works against the live API, and know which example to open next.
+**Outcome:** you've run code in a Tenki sandbox from this repo, confirmed an example works against the live API, and know which example to open next.
 
 > **Honesty note:** every example ships a verify script, but CI doesn't run all of them. It skips `composio-tenki`, which needs a Composio API key, and `covalent-tenki`, until `covalent-tenki-plugin` 0.1.1 is on PyPI.
 
@@ -72,7 +72,7 @@ Open the example closest to what you're building and follow its README, which co
 
 | Example | What it covers |
 | --- | --- |
-| [Run code in a sandbox](examples/run-code-in-a-sandbox/) | Create a microVM, run a command, dispose it |
+| [Run code in a sandbox](examples/run-code-in-a-sandbox/) | Create a sandbox, run a command, dispose it |
 | [Work with files](examples/files-in-a-sandbox/) | Read, write, and list files with the TypeScript SDK |
 | [Expose a port](examples/expose-a-port/) | Serve a web app on a public preview URL |
 | [Pause, snapshot, and resume](examples/snapshots-pause-resume/) | Preserve a sandbox and pick up where it left off |
@@ -94,7 +94,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [LlamaIndex](examples/llamaindex/) | Sandboxed execution as a `FunctionTool` |
 | [Hugging Face smolagents](examples/smolagents/) | Remote Python executor for a `CodeAgent` |
 | [AG2](examples/ag2-tenki/) | Native sandbox backend for shell + code tools |
-| [PraisonAI](examples/praisonai-tenki/) | One shared microVM for a whole agent team |
+| [PraisonAI](examples/praisonai-tenki/) | One shared sandbox for a whole agent team |
 | [Pi Durable](examples/pi-durable-tenki/) | Remote execution env — every tool call in a disposable VM |
 
 ### Developer tools
@@ -107,7 +107,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [Codex](examples/codex-sandbox/) | OpenAI's coding agent, headless, on a real repo checkout |
 | [OpenCode](examples/opencode-sandbox/) | Headless OpenCode server on a public preview URL |
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
-| [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
+| [Covalent](examples/covalent-tenki/) | Each workflow task in its own sandbox |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Tenki VMs |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
 | [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
@@ -129,15 +129,15 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | Example | Platform |
 | --- | --- |
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
-| [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent microVMs for an agent fleet |
-| [RAGFlow](examples/ragflow-tenki/) | Ephemeral microVMs for the RAG engine's code components |
+| [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent sandboxes for an agent fleet |
+| [RAGFlow](examples/ragflow-tenki/) | Ephemeral sandboxes for the RAG engine's code components |
 | [Open WebUI](examples/open-webui-tenki/) | Sandboxed code interpreter for the self-hosted chat platform |
 | [OpenClaw](examples/openclaw-tenki/) | Sandbox backend for the personal AI assistant |
 | [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
 | [Hermes Agent](examples/hermes-tenki/) | Hermes' terminal backend on Tenki, with snapshot-and-restore sessions (from a fork; not in a Hermes release yet) |
 | [NeMo Gym](examples/nemo-gym-tenki/) | A `tenki` sandbox provider for NVIDIA's RL environment library; each rollout in its own VM (provider installs from git; not on PyPI yet) |
 | [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
-| [orca](examples/orca-tenki/) | One microVM per parallel coding agent, via its ephemeral-VM recipe hook |
+| [orca](examples/orca-tenki/) | One sandbox per parallel coding agent, via its ephemeral-VM recipe hook |
 
 ### Migrating from another provider
 
@@ -186,11 +186,11 @@ First-party packages you can install directly in your own project:
 | Integration | Install | What it does |
 | --- | --- | --- |
 | [Composio tools](https://github.com/LuxorLabs/tenki-composio-tools) | `npm install @tenkicloud/composio-tools` | Create, execute, snapshot, and terminate tools for Composio agents |
-| [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki microVMs |
+| [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki sandboxes |
 | [Composio tools](https://github.com/TenkiCloud/composio-tools) | `npm install @tenkicloud/composio-tools` | Create, execute, snapshot, and terminate tools for Composio agents |
 | [Convex component](https://github.com/LuxorLabs/tenki-convex) | `npm install @tenkicloud/convex` | Creates and drives sandboxes from Convex actions, with each one's state in a Convex table |
-| [Covalent executor](https://github.com/TenkiCloud/covalent-tenki-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki microVMs |
-| [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki microVMs |
+| [Covalent executor](https://github.com/TenkiCloud/covalent-tenki-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki sandboxes |
+| [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki sandboxes |
 | [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
 | [Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) | `go get github.com/LuxorLabs/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
 | [Go SDK](https://github.com/TenkiCloud/tenki-sdk-go) | `go get github.com/TenkiCloud/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |

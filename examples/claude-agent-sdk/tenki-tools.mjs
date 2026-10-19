@@ -1,7 +1,7 @@
 // Claude Agent SDK tools backed by a Tenki sandbox.
 //
 // The SDK's built-in Bash/Read/Write run on whatever host called query(). These
-// three route the same capabilities into a disposable microVM instead, so the
+// three route the same capabilities into a disposable sandbox instead, so the
 // agent's execution surface is a machine you delete rather than your laptop.
 import { tool } from "@anthropic-ai/claude-agent-sdk";
 import { stdoutText, stderrText } from "@tenkicloud/sandbox";

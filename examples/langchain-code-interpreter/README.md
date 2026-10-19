@@ -2,13 +2,13 @@
 
 **Audience:** JavaScript developers building agents with [LangChain.js](https://github.com/langchain-ai/langchainjs) and [LangGraph.js](https://github.com/langchain-ai/langgraphjs) who want the Python their agent writes to run somewhere other than their own machine.
 **Time:** ~5 minutes.
-**Outcome:** a LangGraph ReAct agent that answers a question by calling a `run_python` tool, which runs its code in a disposable [Tenki](https://tenki.cloud) microVM, plus a passing check of that tool that needs no model key.
+**Outcome:** a LangGraph ReAct agent that answers a question by calling a `run_python` tool, which runs its code in a disposable [Tenki](https://tenki.cloud) sandbox, plus a passing check of that tool that needs no model key.
 
 > **Honesty note:** CI runs only `verify.mjs`, which calls the `run_python` tool directly, with no model. Nothing in CI runs `agent.mjs`, which needs an OpenAI key and, with today's `@langchain/openai` releases, Node 22 or newer.
 
 ## Why bother
 
-This is the "code interpreter" pattern with Tenki as the execution backend. The agent writes Python, and the `run_python` tool runs it in an isolated microVM instead of on your machine, then hands the output back to the agent. One sandbox serves the whole agent session and is reused across every tool call, which is cheaper than a sandbox per call. It's disposed when the agent finishes. The tool is one short file, `tenki-tool.mjs`, that you can copy into your own agent. It's built on LangChain.js v1 and the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
+This is the "code interpreter" pattern with Tenki as the execution backend. The agent writes Python, and the `run_python` tool runs it in an isolated sandbox instead of on your machine, then hands the output back to the agent. One sandbox serves the whole agent session and is reused across every tool call, which is cheaper than a sandbox per call. It's disposed when the agent finishes. The tool is one short file, `tenki-tool.mjs`, that you can copy into your own agent. It's built on LangChain.js v1 and the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
 
 ## Install
 

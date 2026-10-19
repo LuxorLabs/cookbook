@@ -1,14 +1,14 @@
-# How to run RAGFlow code components in Tenki microVMs
+# How to run RAGFlow code components in Tenki sandboxes
 
 **Audience:** people who run [RAGFlow](https://github.com/infiniflow/ragflow), the open-source RAG engine, build agent workflows with code components (Python or JavaScript snippets), and want those snippets to run in a cloud sandbox instead of one they operate themselves.
 **Time:** ~10 minutes, assuming RAGFlow is already running. The check in Step 5 caps its own run at 5 minutes. Its first run also downloads Go modules, and a Go toolchain if yours is older than 1.25.3.
-**Outcome:** RAGFlow's built-in `tenki` sandbox provider is active, so each code execution runs in a fresh [Tenki](https://tenki.cloud) microVM that is destroyed afterwards. You also have a passing check, run from this directory, of the Tenki calls the provider is built on.
+**Outcome:** RAGFlow's built-in `tenki` sandbox provider is active, so each code execution runs in a fresh [Tenki](https://tenki.cloud) sandbox that is destroyed afterwards. You also have a passing check, run from this directory, of the Tenki calls the provider is built on.
 
 > **Honesty note:** the provider creates every sandbox with outbound network off unless you set `allow_outbound`. That's the reverse of the Tenki SDK's own default, and it means a `pip install` inside a code component fails until you turn it on. Also, this directory doesn't contain the provider. The provider ships inside RAGFlow, and the check here exercises the same Tenki calls without running RAGFlow.
 
 ## Why bother
 
-RAGFlow's code components run through pluggable sandbox providers. The default, `self_managed`, runs code in Docker-managed sandbox containers behind an executor-manager service that you deploy. Since [ragflow#17305](https://github.com/infiniflow/ragflow/pull/17305), `tenki` is one of the providers. Because it's cloud-hosted, there's nothing to operate locally: no gVisor, no Docker base images, no executor-manager service, only an API key. Each execution gets its own microVM, and nothing persists from one execution to the next.
+RAGFlow's code components run through pluggable sandbox providers. The default, `self_managed`, runs code in Docker-managed sandbox containers behind an executor-manager service that you deploy. Since [ragflow#17305](https://github.com/infiniflow/ragflow/pull/17305), `tenki` is one of the providers. Because it's cloud-hosted, there's nothing to operate locally: no gVisor, no Docker base images, no executor-manager service, only an API key. Each execution gets its own sandbox, and nothing persists from one execution to the next.
 
 ## Prerequisites
 

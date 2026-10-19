@@ -2,13 +2,13 @@
 
 **Audience:** Python developers building agents with [LlamaIndex](https://github.com/run-llama/llama_index) who want the code the model writes to run somewhere other than their own machine.
 **Time:** ~5 minutes.
-**Outcome:** a LlamaIndex `FunctionAgent` with a `run_python` tool that executes the model's Python in a disposable [Tenki](https://tenki.cloud) microVM, and a verify script that prints `✓` after running the tool against a live sandbox.
+**Outcome:** a LlamaIndex `FunctionAgent` with a `run_python` tool that executes the model's Python in a disposable [Tenki](https://tenki.cloud) sandbox, and a verify script that prints `✓` after running the tool against a live sandbox.
 
 > **Honesty note:** `run_python` runs whatever Python the model writes, and outbound network is on by default (`allow_outbound=True`), so that code can reach the internet and `pip install` packages. Pass `allow_outbound=False` to `Sandbox.create` to lock the sandbox down.
 
 ## Why bother
 
-A code-interpreter tool runs code nobody has reviewed. This example sends that code to an isolated Tenki sandbox instead of your own process: the agent writes Python, `run_python` executes it in the microVM, and the output goes back to the model as the tool result. The tool is an ordinary LlamaIndex `FunctionTool`, so it attaches to an agent like any other tool.
+A code-interpreter tool runs code nobody has reviewed. This example sends that code to an isolated Tenki sandbox instead of your own process: the agent writes Python, `run_python` executes it in the sandbox, and the output goes back to the model as the tool result. The tool is an ordinary LlamaIndex `FunctionTool`, so it attaches to an agent like any other tool.
 
 ## Install
 

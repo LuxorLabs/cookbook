@@ -8,7 +8,7 @@ Smoke-verify the PraisonAI Tenki compute provider, end to end:
      path ``PraisonAIAgents(..., tools_run_on="tenki")`` and
      ``Workflow(..., tools_run_on="tenki")`` take, so this proves the string wiring
      without an LLM call.
-  2. live — provision a real Tenki microVM through the provider, run a
+  2. live — provision a real Tenki sandbox through the provider, run a
      command, round-trip a file byte-for-byte, and shut it down.
 
 No LLM key needed: this drives the provider directly, not an agent run.
@@ -59,7 +59,7 @@ provider = resolve_compute("tenki")
 assert isinstance(provider, TenkiCompute), f"resolve_compute gave {type(provider)}"
 assert provider.provider_name == "tenki"
 
-# 2. Live: the same provider class against a real microVM.
+# 2. Live: the same provider class against a real sandbox.
 compute = TenkiCompute(api_key=resolve_token())
 config = ComputeConfig(cpu=1, memory_mb=1024, idle_timeout_s=120)
 

@@ -1,6 +1,6 @@
 # NeMo Gym rollouts on Tenki
 
-Run [NVIDIA NeMo Gym](https://github.com/NVIDIA-NeMo/Gym) sandboxes in Tenki microVMs. Each rollout's code runs in its own disposable VM, and NeMo Gym picks Tenki the same way it picks Docker or E2B: by the provider name in its config.
+Run [NVIDIA NeMo Gym](https://github.com/NVIDIA-NeMo/Gym) sandboxes in Tenki sandboxes. Each rollout's code runs in its own disposable VM, and NeMo Gym picks Tenki the same way it picks Docker or E2B: by the provider name in its config.
 
 NeMo Gym loads sandbox providers from the `nemo_gym.sandbox_providers` entry point. Installing [`nemo-gym-tenki`](https://github.com/opencolin/nemo-gym-tenki) registers a `tenki` provider there, so it works with the NeMo Gym release on PyPI and needs no change to NeMo Gym.
 
@@ -39,7 +39,7 @@ try:
     r = await provider.exec(handle, "python3 solution.py", cwd="/home/tenki/task")
     reward = 1.0 if r.return_code == 0 else 0.0
 finally:
-    await provider.close(handle)  # terminates the microVM
+    await provider.close(handle)  # terminates the sandbox
     await provider.aclose()
 ```
 
@@ -60,7 +60,7 @@ sandbox_provider:
 - **Spec mapping.** `SandboxSpec.resources` maps to `cpu_cores`, `memory_mb` and `disk_size_gb`; `spec.image` to a Tenki image; `spec.env` and `spec.metadata` pass through; `spec.ttl_s` becomes the VM's hard `max_duration`; `spec.files` are written into `spec.workdir` after the VM boots.
 - **Network.** Outbound access is on by default, so rollouts can `pip install` or `git clone`. Set `create.allow_outbound: false` to lock a rollout down.
 - **Reconnect across processes.** The provider implements NeMo Gym's optional `ConnectableProvider`: a handle can be serialized and reopened by sandbox ID in another process, which helps distributed rollout collection.
-- **CPU only.** Tenki runs CPU microVMs. A spec that asks for `resources.gpu` is rejected; use a GPU provider for those environments.
+- **CPU only.** Tenki sandboxes are CPU-only. A spec that asks for `resources.gpu` is rejected; use a GPU provider for those environments.
 
 ## Check it works
 

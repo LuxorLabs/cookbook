@@ -1,4 +1,4 @@
-"""Run Hermes' shell tool in a Tenki microVM, end the session, then pick it up again.
+"""Run Hermes' shell tool in a Tenki sandbox, end the session, then pick it up again.
 
     ./setup.sh && pip install -r requirements.txt && python run.py
 """

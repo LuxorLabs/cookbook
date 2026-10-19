@@ -54,7 +54,7 @@ For comparison, Modal authenticates implicitly from `~/.modal.toml` (written by 
 .venv/bin/python run.py                    # 42 · exit 0
 ```
 
-`run.py` creates a sandbox with 1 CPU core and 1024 MB of memory. `create()` boots the microVM and waits until it is running (about 2 seconds, per the script's comment). The script then runs `python3 -c "print(6 * 7)"`, prints the output and exit code, and disposes the sandbox when the `with` block ends.
+`run.py` creates a sandbox with 1 CPU core and 1024 MB of memory. `create()` boots the sandbox and waits until it is running (about 2 seconds, per the script's comment). The script then runs `python3 -c "print(6 * 7)"`, prints the output and exit code, and disposes the sandbox when the `with` block ends.
 
 ## Port your Modal script
 
@@ -85,7 +85,7 @@ if workspace_id:
 
 # Modal: `Sandbox.create(app=app)` — everything hangs off an App. Tenki: no App
 # object — a sandbox is placed by workspace_id. `create(...)` boots
-# the microVM and waits until it's RUNNING (~2s); the `with` block disposes it.
+# the sandbox and waits until it's RUNNING (~2s); the `with` block disposes it.
 with Sandbox.create(**opts) as sandbox:
     # Modal's exec() returns a *live* process — you drain `p.stdout.read()` and call
     # `p.wait()` for the exit code. Tenki's exec() blocks until the command finishes
@@ -157,7 +157,7 @@ Shell commands run with `exec` can still write anywhere in the sandbox.
 
 ### Disposal and lifetime
 
-`sb.terminate()` maps 1:1 to Modal's `sb.terminate()`. `Sandbox` is also a context manager, so `with Sandbox.create(...) as sb:` disposes it for you when the block ends. Either way, the sandbox is a microVM billed per second, and it terminates itself when it reaches its lifetime cap. Set the cap with `max_duration`.
+`sb.terminate()` maps 1:1 to Modal's `sb.terminate()`. `Sandbox` is also a context manager, so `with Sandbox.create(...) as sb:` disposes it for you when the block ends. Either way, the sandbox is billed per second, and it terminates itself when it reaches its lifetime cap. Set the cap with `max_duration`.
 
 Don't map Modal's `idle_timeout` to Tenki's `idle_timeout_minutes`: the SDK accepts it but ignores it, and Tenki sandboxes don't auto-pause on idle. Use `max_duration`, or call `sb.pause()` yourself. Pausing is free, and a paused sandbox keeps its memory and disk.
 

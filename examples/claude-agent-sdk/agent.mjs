@@ -1,5 +1,5 @@
 // The Claude Agent SDK with Tenki as its execution backend: every command the
-// agent runs and every file it writes lands in a disposable microVM, not on this box.
+// agent runs and every file it writes lands in a disposable sandbox, not on this box.
 //
 // Needs a model key: export ANTHROPIC_API_KEY=...
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
@@ -25,7 +25,7 @@ for await (const message of query({
 		maxTurns: 12,
 	},
 })) {
-	// Every tool call printed here ran in the microVM. There is no local one to fall back to.
+	// Every tool call printed here ran in the sandbox. There is no local one to fall back to.
 	if (message.type === "assistant") {
 		for (const block of message.message.content) {
 			if (block.type === "tool_use") console.log(`→ ${block.name} ${JSON.stringify(block.input).slice(0, 70)}`);

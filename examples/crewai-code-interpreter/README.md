@@ -2,13 +2,13 @@
 
 **Audience:** Python developers building agents with [CrewAI](https://crewai.com) who want the code their agent writes to run somewhere other than their own machine.
 **Time:** ~10 minutes, most of it installing CrewAI's dependencies.
-**Outcome:** a CrewAI agent that answers a question by calling a `run_python` tool, which executes its code in a disposable [Tenki](https://tenki.cloud) microVM, plus a passing check of that tool that needs no model key.
+**Outcome:** a CrewAI agent that answers a question by calling a `run_python` tool, which executes its code in a disposable [Tenki](https://tenki.cloud) sandbox, plus a passing check of that tool that needs no model key.
 
 > **Honesty note:** `tenki login` is enough for `verify.py`, but not for `agent.py`. The agent script leaves the key to the `tenki` SDK, which reads only `TENKI_API_KEY` or `TENKI_AUTH_TOKEN` from the environment, so export one of them before you run the crew.
 
 ## Why bother
 
-CrewAI's own docs mark its built-in [`CodeInterpreterTool`](https://docs.crewai.com/en/tools/ai-ml/codeinterpretertool) as removed from `crewai-tools`, deprecate the `allow_code_execution` and `code_execution_mode` agent options, and point you to a dedicated sandbox service instead. Their tool catalog lists sandbox tools for E2B and Daytona. This example is the same pattern on Tenki microVMs: a CrewAI `BaseTool` that runs the agent's Python in a Tenki sandbox and hands the output back. It uses the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK, and the whole tool is one short file you can read and copy.
+CrewAI's own docs mark its built-in [`CodeInterpreterTool`](https://docs.crewai.com/en/tools/ai-ml/codeinterpretertool) as removed from `crewai-tools`, deprecate the `allow_code_execution` and `code_execution_mode` agent options, and point you to a dedicated sandbox service instead. Their tool catalog lists sandbox tools for E2B and Daytona. This example is the same pattern on Tenki sandboxes: a CrewAI `BaseTool` that runs the agent's Python in a Tenki sandbox and hands the output back. It uses the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK, and the whole tool is one short file you can read and copy.
 
 ## Install
 

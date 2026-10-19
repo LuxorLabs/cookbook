@@ -8,7 +8,7 @@
 
 ## Why bother
 
-A Tenki sandbox is a disposable microVM. Getting a file into one doesn't take `exec` or a shell: the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK has a built-in file API. This example writes a file into a sandbox, reads it back, and lists the directory, using three SDK calls.
+A Tenki sandbox is disposable. Getting a file into one doesn't take `exec` or a shell: the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK has a built-in file API. This example writes a file into a sandbox, reads it back, and lists the directory, using three SDK calls.
 
 ## Install
 

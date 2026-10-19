@@ -2,13 +2,13 @@
 
 **Audience:** Python developers building agents with [LangChain](https://www.langchain.com) and LangGraph who want the code their agent writes to run in an isolated sandbox, not on their own machine.
 **Time:** ~5 minutes.
-**Outcome:** a LangGraph ReAct agent that answers a question by calling a `run_python` tool, which executes its Python in a disposable [Tenki](https://tenki.cloud) microVM, plus a passing check of that tool that needs no model key.
+**Outcome:** a LangGraph ReAct agent that answers a question by calling a `run_python` tool, which executes its Python in a disposable [Tenki](https://tenki.cloud) sandbox, plus a passing check of that tool that needs no model key.
 
 > **Honesty note:** every `run_python` call starts a new `python3 -c` process. All the calls in a session share one sandbox, so a file one call writes is still there for the next, but Python variables are not.
 
 ## Why bother
 
-This example gives a LangChain Python agent a code interpreter, so it can answer questions that need real computation by running code. The agent calls a `run_python` tool, which executes the agent's Python in a disposable Tenki sandbox (an isolated microVM) and hands the output back. One sandbox serves the whole agent session and is reused across tool calls, which is cheaper than a sandbox per call.
+This example gives a LangChain Python agent a code interpreter, so it can answer questions that need real computation by running code. The agent calls a `run_python` tool, which executes the agent's Python in a disposable Tenki sandbox and hands the output back. One sandbox serves the whole agent session and is reused across tool calls, which is cheaper than a sandbox per call.
 
 It is the Python port of the JavaScript example [`langchain-code-interpreter`](../langchain-code-interpreter/), built on the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK. The tool is one short file you can copy into your own project.
 

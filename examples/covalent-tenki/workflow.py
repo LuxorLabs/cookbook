@@ -1,5 +1,5 @@
 """Run a Covalent workflow where each task executes in its own disposable Tenki
-microVM (fresh Linux VM with real root, created on demand, destroyed when the
+sandbox (fresh Linux VM with real root, created on demand, destroyed when the
 task finishes).
 
 Full run (needs a Covalent dispatcher):

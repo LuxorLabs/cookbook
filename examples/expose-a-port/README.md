@@ -8,7 +8,7 @@
 
 ## Why bother
 
-`sandbox.exposePort()` maps a port inside a disposable Tenki sandbox at the Tenki gateway and returns a public HTTPS preview URL. Anyone with that URL can reach the server inside the sandbox's microVM: your machine, a browser, or a webhook. The whole flow is one short script built on the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
+`sandbox.exposePort()` maps a port inside a disposable Tenki sandbox at the Tenki gateway and returns a public HTTPS preview URL. Anyone with that URL can reach the server inside the sandbox: your machine, a browser, or a webhook. The whole flow is one short script built on the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
 
 ## Install
 

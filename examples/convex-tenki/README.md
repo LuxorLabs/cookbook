@@ -2,7 +2,7 @@
 
 **Audience:** Developers building a [Convex](https://www.convex.dev) app (TypeScript actions on the server, `useQuery` in a React UI) who want each signed-in user to get their own isolated cloud machine.
 **Time:** ~10 minutes for the whole walkthrough, ~3 minutes if you only run the verify script.
-**Outcome:** A Convex dev deployment whose actions create, run commands in, pause, resume and destroy one [Tenki](https://tenki.cloud) microVM per signed-in user. Each sandbox's state lives in a Convex table that your UI can subscribe to.
+**Outcome:** A Convex dev deployment whose actions create, run commands in, pause, resume and destroy one [Tenki](https://tenki.cloud) sandbox per signed-in user. Each sandbox's state lives in a Convex table that your UI can subscribe to.
 
 > **Honesty note:** `maxDurationMs` limits each run, not the sandbox's total life. At the deadline Tenki pauses the sandbox, and the next `create` resumes it with a new lifetime of the same length. The sandbox's row in Convex keeps its last known phase until something re-reads it from Tenki, which is what the reconcile cron in Step 7 is for.
 

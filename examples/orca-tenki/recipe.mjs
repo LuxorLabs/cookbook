@@ -1,4 +1,4 @@
-// An orca ephemeral-VM recipe backed by Tenki microVMs: one disposable machine per agent,
+// An orca ephemeral-VM recipe backed by Tenki sandboxes: one disposable machine per agent,
 // instead of N git worktrees sharing your laptop.
 //
 // orca runs this once per lifecycle mode. `create` prints one JSON object describing an SSH

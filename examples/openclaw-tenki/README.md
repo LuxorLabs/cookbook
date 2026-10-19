@@ -1,14 +1,14 @@
-# How to run OpenClaw agent tools in Tenki microVMs
+# How to run OpenClaw agent tools in Tenki sandboxes
 
 **Audience:** People who run [OpenClaw](https://github.com/openclaw/openclaw), the open-source personal AI assistant, and want its agents' commands to run on a remote VM instead of on their own machine.
 **Time:** ~5 minutes to clone, install, and run the check (in CI, `npm install` plus `node verify.mjs` take about 7 seconds). Installing and onboarding an OpenClaw 2026.7.x host, then installing and configuring the plugin, comes on top.
-**Outcome:** With the [`@tenkicloud/openclaw`](https://www.npmjs.com/package/@tenkicloud/openclaw) plugin enabled, every agent tool execution in OpenClaw runs inside a [Tenki](https://tenki.cloud) Firecracker microVM, and `node verify.mjs` prints a `✓` line.
+**Outcome:** With the [`@tenkicloud/openclaw`](https://www.npmjs.com/package/@tenkicloud/openclaw) plugin enabled, every agent tool execution in OpenClaw runs inside a [Tenki](https://tenki.cloud) Firecracker sandbox, and `node verify.mjs` prints a `✓` line.
 
 > **Honesty note:** Plugin 0.2.0 loads only on OpenClaw 2026.7.x. On 2026.8.1 or later, which includes `latest`, the install (with `--accept-capabilities`) reports success and the plugin then fails to load. Step 2 has the details.
 
-OpenClaw distributes plugins and skills through [ClawHub](https://clawhub.ai). `@tenkicloud/openclaw` ([LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw)) is a sandbox backend: with `sandbox.mode: "all"`, every agent tool execution (shell commands, the filesystem bridge, interactive PTY sessions) runs inside a Tenki microVM instead of on your machine.
+OpenClaw distributes plugins and skills through [ClawHub](https://clawhub.ai). `@tenkicloud/openclaw` ([LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw)) is a sandbox backend: with `sandbox.mode: "all"`, every agent tool execution (shell commands, the filesystem bridge, interactive PTY sessions) runs inside a Tenki sandbox instead of on your machine.
 
-Each sandbox scope gets one Tenki session, the microVM its commands run in. The plugin finds that session by a runtime tag (`oc-tenki-<slug>-<hash>`; every session also carries `openclaw`) and creates it only if none exists, so an existing session is reused and a `PAUSED` one is resumed. On first use, the plugin uploads your local workspace into the session as a tarball; after that, tools read and write the session's copy, and nothing syncs back to your machine.
+Each sandbox scope gets one Tenki session, and that session is where its commands run. The plugin finds that session by a runtime tag (`oc-tenki-<slug>-<hash>`; every session also carries `openclaw`) and creates it only if none exists, so an existing session is reused and a `PAUSED` one is resumed. On first use, the plugin uploads your local workspace into the session as a tarball; after that, tools read and write the session's copy, and nothing syncs back to your machine.
 
 ## Prerequisites
 
@@ -135,7 +135,7 @@ node verify.mjs
   "name": "openclaw-tenki",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — OpenClaw agents with all tool execution in Tenki Firecracker microVMs via @tenkicloud/openclaw.",
+  "description": "Cookbook example — OpenClaw agents with all tool execution in Tenki Firecracker sandboxes via @tenkicloud/openclaw.",
   "dependencies": {
     "@tenkicloud/openclaw": "^0.2.0",
     "@tenkicloud/sandbox": ">=1.4.1"

@@ -2,7 +2,7 @@
 
 **Audience:** JavaScript developers using the [Vercel AI SDK](https://ai-sdk.dev) 7 who want the shell commands and file reads and writes their model's tools make to happen in a disposable Linux VM, not in their own process.
 **Time:** ~5 minutes once you have a Tenki API key and an OpenAI API key.
-**Outcome:** a `generateText()` call whose `runCommand` tool runs the model's commands in a [Tenki](https://tenki.cloud) microVM through the AI SDK's `experimental_sandbox` option, plus a passing check of the adapter that needs no model key.
+**Outcome:** a `generateText()` call whose `runCommand` tool runs the model's commands in a [Tenki](https://tenki.cloud) sandbox through the AI SDK's `experimental_sandbox` option, plus a passing check of the adapter that needs no model key.
 
 > **Honesty note:** `createTenkiSandbox()` in this example boots its sandbox with outbound network **off** (`allowOutbound: false`), even though the Tenki SDK's own default is on. `pip install` and downloads fail inside the sandbox until you pass `createTenkiSandbox({ allowOutbound: true })`.
 
@@ -10,7 +10,7 @@
 
 AI SDK 7 lets you hand `generateText` a sandbox through `experimental_sandbox`. Each tool then gets that sandbox in its `execute` options and runs commands and file I/O through it. The SDK expects an `Experimental_SandboxSession`: a `description`, `run` and `spawn`, three read methods, and three write methods.
 
-Tenki's official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK already has all of that on its `Session`, so this example is a thin adapter, not a new backend. Copy one file, `tenki-sandbox.mjs`, into your project, install `@tenkicloud/sandbox`, and any AI SDK tool that uses `experimental_sandbox` runs in a fresh Tenki microVM. The microVM boots in about 2 seconds, is billed per second, and is torn down when you call `dispose()`.
+Tenki's official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK already has all of that on its `Session`, so this example is a thin adapter, not a new backend. Copy one file, `tenki-sandbox.mjs`, into your project, install `@tenkicloud/sandbox`, and any AI SDK tool that uses `experimental_sandbox` runs in a fresh Tenki sandbox. The sandbox boots in about 2 seconds, is billed per second, and is torn down when you call `dispose()`.
 
 ## Install
 
@@ -83,7 +83,7 @@ import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { createTenkiSandbox } from "./tenki-sandbox.mjs";
 
-// Boot a disposable Tenki microVM and adapt it to the AI SDK sandbox interface.
+// Boot a disposable Tenki sandbox and adapt it to the AI SDK sandbox interface.
 const { sandbox, dispose } = await createTenkiSandbox();
 
 // The tool pulls the sandbox out of `experimental_sandbox` (the same object we
@@ -109,11 +109,11 @@ try {
   });
   console.log(text);
 } finally {
-  await dispose(); // tear the microVM down
+  await dispose(); // tear the sandbox down
 }
 ```
 
-The script boots one microVM with the adapter's defaults: 1 CPU core, 1024 MB of memory, and no outbound network. The `runCommand` tool takes the sandbox from the second argument of `execute`, runs the model's command with `run({ command })`, and returns stdout when the exit code is 0, or the exit code and stderr otherwise. `generateText` passes `sandbox` to every tool call, and `stopWhen: stepCountIs(5)` ends the loop after at most five steps. The script prints the model's final `text`, and the `finally` block disposes the microVM whether the run succeeds or throws.
+The script boots one sandbox with the adapter's defaults: 1 CPU core, 1024 MB of memory, and no outbound network. The `runCommand` tool takes the sandbox from the second argument of `execute`, runs the model's command with `run({ command })`, and returns stdout when the exit code is 0, or the exit code and stderr otherwise. `generateText` passes `sandbox` to every tool call, and `stopWhen: stepCountIs(5)` ends the loop after at most five steps. The script prints the model's final `text`, and the `finally` block disposes the sandbox whether the run succeeds or throws.
 
 To use the adapter in your own app:
 
@@ -134,7 +134,7 @@ To use the adapter in your own app:
 | `readFile` (stream) | `session.readFile(path)` → `ReadableStream` |
 | `writeTextFile` / `writeBinaryFile` / `writeFile` | `session.writeFile(path, data)`, after a `mkdir -p` of the parent directory |
 
-`createTenkiSandbox()` adds the lifecycle around `toSandboxSession()`: it boots a microVM and returns `{ sandbox, session, dispose }`.
+`createTenkiSandbox()` adds the lifecycle around `toSandboxSession()`: it boots a sandbox and returns `{ sandbox, session, dispose }`.
 
 ### Commands go through `sh -c`
 
@@ -223,7 +223,7 @@ On success it prints:
 ✓ vercel-ai-sdk: run (42) → file round-trip → missing→null → spawn, on live Tenki
 ```
 
-`verify.mjs` boots a sandbox through `createTenkiSandbox()` and calls the adapter's `Experimental_SandboxSession` methods directly, the way the AI SDK would. It checks that all nine required members exist, runs `python3 -c 'print(6 * 7)'` with `run` and expects exit code 0 and `42`, writes `work/note.txt` with `writeTextFile` and reads it back with `readTextFile` (the subdirectory also proves parent-directory creation), reads a missing file and expects `null`, and runs `printf 'hi from spawn'` with `spawn`, streaming its stdout and waiting for exit code 0. Then it disposes the microVM. It exits non-zero on any failure.
+`verify.mjs` boots a sandbox through `createTenkiSandbox()` and calls the adapter's `Experimental_SandboxSession` methods directly, the way the AI SDK would. It checks that all nine required members exist, runs `python3 -c 'print(6 * 7)'` with `run` and expects exit code 0 and `42`, writes `work/note.txt` with `writeTextFile` and reads it back with `readTextFile` (the subdirectory also proves parent-directory creation), reads a missing file and expects `null`, and runs `printf 'hi from spawn'` with `spawn`, streaming its stdout and waiting for exit code 0. Then it disposes the sandbox. It exits non-zero on any failure.
 
 This proves the adapter satisfies the AI SDK's sandbox surface against a live Tenki sandbox. It never loads `ai` or calls a model, so the `generateText` tool loop in `example.mjs` isn't exercised. This is what CI runs, on Node 20 with only `TENKI_API_KEY` set.
 
@@ -243,7 +243,7 @@ This proves the adapter satisfies the AI SDK's sandbox surface against a live Te
 
 ## FAQ
 
-**Do tool calls share one sandbox?** Yes. `createTenkiSandbox()` boots one microVM, and every tool call in the `generateText` run goes to it. A file one call writes is still there for the next. Each `run` or `spawn` starts a new `sh -c` process, so shell state such as a `cd` or an exported variable doesn't carry over.
+**Do tool calls share one sandbox?** Yes. `createTenkiSandbox()` boots one sandbox, and every tool call in the `generateText` run goes to it. A file one call writes is still there for the next. Each `run` or `spawn` starts a new `sh -c` process, so shell state such as a `cd` or an exported variable doesn't carry over.
 
 **Does it work with `streamText`?** AI SDK 7's `streamText` takes `experimental_sandbox` too and passes it to tool execution the same way. This example runs only `generateText`.
 

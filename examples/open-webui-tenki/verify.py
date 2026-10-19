@@ -4,7 +4,7 @@ Smoke-verify the Open WebUI example against the REAL distributable:
   2. load it standalone with only `tenki` + `pydantic` installed — proves the
      paste-into-Open-WebUI file has no hidden dependencies,
   3. assert the safe Valve defaults and per-user key precedence (offline),
-  4. live: run `tools.execute_code("print(6 * 7)")` in a real Tenki microVM.
+  4. live: run `tools.execute_code("print(6 * 7)")` in a real Tenki sandbox.
 
 Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
 """

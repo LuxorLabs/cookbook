@@ -1,12 +1,12 @@
-# How to run OpenHermit agents on Tenki microVMs
+# How to run OpenHermit agents on Tenki sandboxes
 
-**Audience:** operators who run an OpenHermit gateway, or are setting one up, and want each agent's shell and workspace in its own Tenki microVM instead of a Docker container managed by the gateway.
+**Audience:** operators who run an OpenHermit gateway, or are setting one up, and want each agent's shell and workspace in its own Tenki sandbox instead of a Docker container managed by the gateway.
 **Time:** ~5 minutes for the Tenki check in this folder. In CI, its `npm install` and live run take about 15 seconds. Running an agent through OpenHermit comes on top: a source checkout and its `npm install`, plus a PostgreSQL database for the setup wizard.
-**Outcome:** `node verify.mjs` prints a `✓` line from a live Tenki microVM, and an OpenHermit agent runs its shell commands, file tools and skill syncs in its own sticky Tenki microVM that survives gateway restarts.
+**Outcome:** `node verify.mjs` prints a `✓` line from a live Tenki sandbox, and an OpenHermit agent runs its shell commands, file tools and skill syncs in its own sticky Tenki sandbox that survives gateway restarts.
 
 > **Honesty note:** OpenHermit's latest npm release (`0.10.0`) does not include the Tenki backend, which merged after it. Since [openhermit#313](https://github.com/HCF-STUDIOS/openhermit/pull/313), the backend also needs `@tenkicloud/sandbox` 1.4 or newer. Until the next release ships, you run OpenHermit from a source checkout (Step 5). This folder doesn't contain OpenHermit: `verify.mjs` runs the Tenki SDK calls the backend is built on, so it tells you your key and the Tenki side work, not that your gateway does.
 
-[OpenHermit](https://github.com/HCF-STUDIOS/openhermit) deploys fleets of AI agents as production services. A gateway holds durable state in PostgreSQL, and each agent gets a **sandbox** for its shell and workspace files. Since [openhermit#239](https://github.com/HCF-STUDIOS/openhermit/pull/239), `tenki` is a first-class sandbox type alongside `host`, `docker`, `e2b` and `daytona`: each agent's workspace becomes one sticky [Tenki](https://tenki.cloud) microVM that survives gateway restarts.
+[OpenHermit](https://github.com/HCF-STUDIOS/openhermit) deploys fleets of AI agents as production services. A gateway holds durable state in PostgreSQL, and each agent gets a **sandbox** for its shell and workspace files. Since [openhermit#239](https://github.com/HCF-STUDIOS/openhermit/pull/239), `tenki` is a first-class sandbox type alongside `host`, `docker`, `e2b` and `daytona`: each agent's workspace becomes one sticky [Tenki](https://tenki.cloud) sandbox that survives gateway restarts.
 
 ## Prerequisites
 
@@ -151,7 +151,7 @@ Config keys (all optional; `--config` can be omitted entirely):
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `cpu_cores` / `memory_mb` / `disk_size_gb` | `2` / `4096` / `10` | microVM size |
+| `cpu_cores` / `memory_mb` / `disk_size_gb` | `2` / `4096` / `10` | sandbox size |
 | `agent_home` | `/home/tenki` | workspace mount point and default `cwd` |
 | `timeout_ms` | `300000` | guest-enforced per-command timeout; on expiry exit 137, partial stdout/stderr kept |
 | `workspace_id` | inferred from the key | explicit Tenki workspace |
@@ -180,15 +180,15 @@ OpenHermit's sandbox-model docs still show presets in `gateway.json`. The gatewa
 npm run dev:cli -- sandbox list --agent main
 ```
 
-You should see one sandbox with alias `default` and type `tenki`. Its status reads `pending` until the backend's first successful `ensure()`, which happens by the agent's first command at the latest, and `provisioned` after that. Commands the agent runs from then on execute in `agent_home` (`/home/tenki` by default) inside the microVM.
+You should see one sandbox with alias `default` and type `tenki`. Its status reads `pending` until the backend's first successful `ensure()`, which happens by the agent's first command at the latest, and `provisioned` after that. Commands the agent runs from then on execute in `agent_home` (`/home/tenki` by default) inside the sandbox.
 
 ## What the backend does with it
 
-- **One sticky microVM per agent.** The backend creates the session with `sticky: true` and the agent's ID in its metadata, persists the session id, and after a gateway restart reattaches with `client.get(id)`. It resumes a paused VM instead of recreating it, workspace intact.
-- **A new, empty microVM only when the old one is gone.** If `client.get` reports the session expired, not found or terminated, `ensure()` creates a new session. Any other error, a bad key for example, is rethrown, so it doesn't spawn a replacement.
+- **One sticky sandbox per agent.** The backend creates the session with `sticky: true` and the agent's ID in its metadata, persists the session id, and after a gateway restart reattaches with `client.get(id)`. It resumes a paused VM instead of recreating it, workspace intact.
+- **A new, empty sandbox only when the old one is gone.** If `client.get` reports the session expired, not found or terminated, `ensure()` creates a new session. Any other error, a bad key for example, is rethrown, so it doesn't spawn a replacement.
 - **Commands run as `sh -c`** in `agent_home`, with per-agent pass-through secrets injected as env vars on every exec.
 - **Skills sync as file uploads** over Tenki's data plane, staged and then swapped in. A sync requested while the sandbox is paused only sets a dirty flag; the next `ensure()` re-pushes the enabled skills from the database.
-- **Pause, not terminate.** When it shuts a microVM down, the backend pauses it rather than terminating it. Pausing is free on Tenki, and `ensure()` resumes the VM on the agent's next command. Tenki itself doesn't pause idle sandboxes, so OpenHermit pauses it in these cases:
+- **Pause, not terminate.** When it shuts a sandbox down, the backend pauses it rather than terminating it. Pausing is free on Tenki, and `ensure()` resumes the VM on the agent's next command. Tenki itself doesn't pause idle sandboxes, so OpenHermit pauses it in these cases:
   - 5 minutes after the agent's last shell command, by default. That's the agent config's `exec.lifecycle` block (`stop: "idle"`, `idle_timeout_minutes: 5`), and each command restarts the timer.
   - When the gateway evicts an idle runner, after 30 minutes by default, skipping one that a live WebSocket client or a long-running operation still holds. `OPENHERMIT_EVICTION_TTL_MINUTES` in the gateway's environment changes the threshold, and `0` turns eviction off.
   - When you disable the agent.
@@ -208,11 +208,11 @@ You should see one sandbox with alias `default` and type `tenki`. Its status rea
 
 **❌ `Missing API key for provider "openrouter".`** The agent's model provider has no key, either as an agent secret or in the gateway's environment. Run `npm run dev:cli -- config secrets set OPENROUTER_API_KEY sk-... --agent main`, or add `OPENROUTER_API_KEY` to `~/.openhermit/gateway/.env` and restart the gateway.
 
-**❌ A command exits 137 with `Command timed out after 300000ms`.** The command ran past `timeout_ms`. Its partial stdout and stderr are kept. OpenHermit has no command to change an existing sandbox's config, so set `timeout_ms` high enough when you first run `sandbox add`. Before you remove it, copy the sandbox's External ID from the admin UI's Sandboxes tab (see the FAQ's cleanup entry), because a removed sandbox no longer appears there. Then remove the sandbox and add it again with a new `--config`. This creates a new sandbox row. Once the agent's runner restarts, the agent gets a new, empty microVM, and the old one stays paused until you terminate it with that ID.
+**❌ A command exits 137 with `Command timed out after 300000ms`.** The command ran past `timeout_ms`. Its partial stdout and stderr are kept. OpenHermit has no command to change an existing sandbox's config, so set `timeout_ms` high enough when you first run `sandbox add`. Before you remove it, copy the sandbox's External ID from the admin UI's Sandboxes tab (see the FAQ's cleanup entry), because a removed sandbox no longer appears there. Then remove the sandbox and add it again with a new `--config`. This creates a new sandbox row. Once the agent's runner restarts, the agent gets a new, empty sandbox, and the old one stays paused until you terminate it with that ID.
 
 **❌ A command exits 137 with `… no response within 5000ms grace period`.** The command ran past `timeout_ms` and no result arrived within five more seconds, so the backend aborted the stream. No partial output is available in this case. The backend drops its session handle and reconnects on the next command.
 
-**❌ A command exits 1 with an SDK error in stderr.** A transport-level failure, such as a dropped connection. The backend drops its cached session handle, and the next command reconnects to the same microVM, or creates a new one if it's gone.
+**❌ A command exits 1 with an SDK error in stderr.** A transport-level failure, such as a dropped connection. The backend drops its cached session handle, and the next command reconnects to the same sandbox, or creates a new one if it's gone.
 
 **❌ `path "…" is outside the Tenki workdir "…"`.** An agent file tool targeted a path outside `agent_home`. The file tools work only under `agent_home`; shell commands can write anywhere in the VM.
 
@@ -222,8 +222,8 @@ You should see one sandbox with alias `default` and type `tenki`. Its status rea
 
 - **You need an npm-installed OpenHermit.** No release includes the backend yet.
 - **Agents must not reach the network.** Tenki sandboxes have outbound network on by default, and the backend has no config key to turn it off.
-- **A workspace must outlive its microVM.** If the session expires or is terminated, `ensure()` starts a new, empty one.
-- **You want sandboxes to clean up after themselves.** A sticky session has no lifetime cap (the SDK discards `maxDurationMs` for `sticky: true`), the backend pauses an agent's microVM but never terminates it, and `sandbox remove` only soft-deletes OpenHermit's sandbox row (its status flips to `deleted`), so the VM stays. To terminate it, copy its session id from the **External ID** column of the admin UI's Sandboxes tab before you remove the sandbox, then call `close()` on the session that `client.get(id)` from `@tenkicloud/sandbox` returns. In a source checkout, build the admin UI first with `npm run build:ui -w @openhermit/gateway`; by default the gateway serves it at http://127.0.0.1:4000/admin/.
+- **A workspace must outlive its sandbox.** If the session expires or is terminated, `ensure()` starts a new, empty one.
+- **You want sandboxes to clean up after themselves.** A sticky session has no lifetime cap (the SDK discards `maxDurationMs` for `sticky: true`), the backend pauses an agent's sandbox but never terminates it, and `sandbox remove` only soft-deletes OpenHermit's sandbox row (its status flips to `deleted`), so the VM stays. To terminate it, copy its session id from the **External ID** column of the admin UI's Sandboxes tab before you remove the sandbox, then call `close()` on the session that `client.get(id)` from `@tenkicloud/sandbox` returns. In a source checkout, build the admin UI first with `npm run build:ui -w @openhermit/gateway`; by default the gateway serves it at http://127.0.0.1:4000/admin/.
 
 **What happens when the gateway restarts?**
 The backend reads the session id it persisted, calls `client.get(id)`, resumes the VM if it's paused, waits for it to be running, and carries on with the same workspace. Step 4's reattach check exercises the same calls.

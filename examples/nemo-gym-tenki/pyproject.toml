@@ -1,7 +1,7 @@
 [project]
 name = "nemo-gym-tenki-example"
 version = "0.0.0"
-description = "Run NVIDIA NeMo Gym sandboxes on Tenki microVMs"
+description = "Run NVIDIA NeMo Gym sandboxes on Tenki sandboxes"
 # NeMo Gym 0.7.0 requires Python 3.13.14+. uv fetches a matching Python if you don't have one.
 requires-python = ">=3.13.14"
 dependencies = [

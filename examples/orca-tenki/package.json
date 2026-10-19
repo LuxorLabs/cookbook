@@ -2,7 +2,7 @@
   "name": "orca-tenki",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — Tenki microVMs as orca ephemeral-VM recipes.",
+  "description": "Cookbook example — Tenki sandboxes as orca ephemeral-VM recipes.",
   "dependencies": {
     "@tenkicloud/sandbox": ">=1.4.1"
   }

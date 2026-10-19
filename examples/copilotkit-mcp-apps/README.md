@@ -107,7 +107,7 @@ The agent gets two tools that come with a UI:
 | `run_code_in_sandbox` | A console: the program, its output, timings, and a live shell into the same sandbox |
 | `launch_web_app` | The app the agent wrote, served from the sandbox on a public URL, running in the chat |
 
-For the prompt above, the agent calls `run_code_in_sandbox`. Tenki boots a microVM with 2 vCPUs and 4 GB of memory, the server writes the program under `/home/tenki/app` and runs it, and a console appears in the chat with the code, the output, and the boot and run times. Type `ls -la` into the console's shell. That command goes from the app through the host's proxy to the MCP server and into the same sandbox, with no model in the loop.
+For the prompt above, the agent calls `run_code_in_sandbox`. Tenki boots a sandbox with 2 vCPUs and 4 GB of memory, the server writes the program under `/home/tenki/app` and runs it, and a console appears in the chat with the code, the output, and the boot and run times. Type `ls -la` into the console's shell. That command goes from the app through the host's proxy to the MCP server and into the same sandbox, with no model in the loop.
 
 Below the shell are two buttons. "Send output to Copilot" posts the last output to the chat as a user message. When the last command exited non-zero, it reads "Ask Copilot to fix it" instead, and asks the agent to fix the program and run it again in the same sandbox. "Destroy sandbox" terminates the machine.
 

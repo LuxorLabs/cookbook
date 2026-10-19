@@ -1,12 +1,12 @@
-# How to back orca's Cloud VM recipe with Tenki microVMs
+# How to back orca's Cloud VM recipe with Tenki sandboxes
 
 **Audience:** Developers who run coding agents in parallel with [orca](https://github.com/stablyai/orca) and want each workspace on its own disposable machine instead of in a git worktree on their laptop.
-**Time:** ~15 minutes, including a verify run that boots a microVM, clones a repo into it, pauses and resumes it, and destroys it.
-**Outcome:** An orca ephemeral-VM recipe that boots a [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM with your repo cloned, hands orca an SSH target for it, and pauses, resumes, and destroys it. `node verify.mjs` prints a `✓` line once the Tenki side works. orca itself can't adopt the VM yet; see the honesty note.
+**Time:** ~15 minutes, including a verify run that boots a sandbox, clones a repo into it, pauses and resumes it, and destroys it.
+**Outcome:** An orca ephemeral-VM recipe that boots a [Tenki Sandbox](https://tenki.cloud/products/sandbox) sandbox with your repo cloned, hands orca an SSH target for it, and pauses, resumes, and destroys it. `node verify.mjs` prints a `✓` line once the Tenki side works. orca itself can't adopt the VM yet; see the honesty note.
 
 > **Honesty note:** `verify.mjs` drives the recipe the way orca does, but it doesn't run orca, and the recipe doesn't yet meet two checks in orca's current release (v1.4.224). orca wants the cloned checkout on the workspace's own branch at the commit it asked for, and it wants `resume` to print a fresh recipe result. Until `recipe.mjs` handles both, expect orca to refuse the VM when it creates a workspace, and to mark a woken workspace `resume_failed`. [Troubleshooting](#troubleshooting) has the exact errors. The repo's CI also skips this example, because Tenki's gateway SSH host keys aren't yet stable across connections.
 
-orca normally isolates each agent in a git worktree on your machine. Its ephemeral-VM recipe hook (labeled **Cloud VM** in orca's settings) lets you put each workspace on its own machine instead: orca runs a command you supply for `create`, `suspend`, `resume`, and `destroy`, and `create` prints the SSH target orca dials. This folder is that command, backed by Tenki microVMs:
+orca normally isolates each agent in a git worktree on your machine. Its ephemeral-VM recipe hook (labeled **Cloud VM** in orca's settings) lets you put each workspace on its own machine instead: orca runs a command you supply for `create`, `suspend`, `resume`, and `destroy`, and `create` prints the SSH target orca dials. This folder is that command, backed by Tenki sandboxes:
 
 - [`recipe.mjs`](recipe.mjs) is the recipe. Pass it the lifecycle mode as its only argument.
 - [`ssh-proxy.mjs`](ssh-proxy.mjs) is the `ProxyCommand` that carries `ssh` to a sandbox.
@@ -42,7 +42,7 @@ The only dependency is the Tenki SDK:
   "name": "orca-tenki",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — Tenki microVMs as orca ephemeral-VM recipes.",
+  "description": "Cookbook example — Tenki sandboxes as orca ephemeral-VM recipes.",
   "dependencies": {
     "@tenkicloud/sandbox": ">=1.4.1"
   }
@@ -176,7 +176,7 @@ It prints `{"ok":true,"mode":"destroy"}`, and the `rm` then deletes `create.json
    ```yaml
    environmentRecipes:
      - id: tenki
-       name: Tenki microVM
+       name: Tenki sandbox
        checkoutMode: provisioned-root
        create: node /path/to/orca-tenki/recipe.mjs create
        suspend: node /path/to/orca-tenki/recipe.mjs suspend

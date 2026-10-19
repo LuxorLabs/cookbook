@@ -1,6 +1,6 @@
 # Hermes Agent on Tenki
 
-Run [Hermes Agent](https://github.com/NousResearch/hermes-agent)'s shell tool inside a Tenki microVM instead of on your machine.
+Run [Hermes Agent](https://github.com/NousResearch/hermes-agent)'s shell tool inside a Tenki sandbox instead of on your machine.
 
 Hermes runs every shell command through a pluggable *terminal backend* (local, Docker, Modal, Daytona, SSH and others). This example drives the Tenki backend, `tools/environments/tenki.py`, directly: `TenkiEnvironment.execute()` is the call Hermes' terminal tool makes when `terminal.backend` is `tenki`. You need a `TENKI_API_KEY` and no model key, because this exercises the backend, not the agent loop.
 
@@ -125,5 +125,5 @@ It takes about three minutes, mostly waiting for the snapshot to become durable,
 
 ## Related
 
-- [`../openhermit-tenki/`](../openhermit-tenki/): sticky per-agent microVMs for an agent fleet
+- [`../openhermit-tenki/`](../openhermit-tenki/): sticky per-agent sandboxes for an agent fleet
 - [`../snapshots-pause-resume/`](../snapshots-pause-resume/): snapshots and pause in the SDK directly

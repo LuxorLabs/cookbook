@@ -2,7 +2,7 @@
 
 **Audience:** Developers building or using an AI agent (Claude Code, another MCP client, or your own Node code) that has to start a web app, call its API, and show you the result somewhere other than your machine.
 **Time:** ~5 minutes.
-**Outcome:** A task-list app (a JSON API, an HTML frontend, and a SQLite database seeded with 5 tasks) running in one Tenki microVM, its endpoints exercised, and a public HTTPS URL you can open in a browser.
+**Outcome:** A task-list app (a JSON API, an HTML frontend, and a SQLite database seeded with 5 tasks) running in one Tenki sandbox, its endpoints exercised, and a public HTTPS URL you can open in a browser.
 
 > **Honesty note:** `run.mjs` leaves the sandbox running after it exits so you can open the URL. Sandboxes are billed per second, and this one runs until you terminate it or its 2-hour `maxDurationMs` cap ends it. `run.mjs` prints a command that terminates it sooner. `verify.mjs` always terminates its sandbox.
 
@@ -42,7 +42,7 @@ node run.mjs   # leaves the sandbox up so you can open the URL
 
 Run it from this directory: `run.mjs` reads `app/server.py` and `app/seed.py` by relative path.
 
-It prints `seeded 5 tasks into /home/tenki/app.db`, then one line for each API call it makes from inside the sandbox (`GET /api/health`, `GET /api/tasks`, `POST /api/tasks`, `PATCH /api/tasks/1`), then the public preview URL and `GET 200 · frontend served`. Open the URL and you'll see the task list, served from the microVM.
+It prints `seeded 5 tasks into /home/tenki/app.db`, then one line for each API call it makes from inside the sandbox (`GET /api/health`, `GET /api/tasks`, `POST /api/tasks`, `PATCH /api/tasks/1`), then the public preview URL and `GET 200 · frontend served`. Open the URL and you'll see the task list, served from the sandbox.
 
 The last line it prints is a `terminate now:` command with the sandbox ID filled in. Paste it from this directory, with your key still exported, to shut the sandbox down. If any step fails, `run.mjs` terminates the sandbox itself before exiting.
 

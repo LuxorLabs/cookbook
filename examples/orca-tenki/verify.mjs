@@ -1,7 +1,7 @@
 /**
  * Proves the Tenki-facing half of this example without a model key: drive the recipe
  * exactly as orca does — `create` prints an SSH target, suspend/resume/destroy get it
- * back on stdin — then SSH into the microVM using only what the recipe emitted.
+ * back on stdin — then SSH into the sandbox using only what the recipe emitted.
  * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  */
 import { execFileSync } from "node:child_process";

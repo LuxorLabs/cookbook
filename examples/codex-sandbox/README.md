@@ -2,13 +2,13 @@
 
 **Audience:** Node developers who want to hand a coding task to OpenAI [Codex](https://github.com/openai/codex) unattended, against a real Git checkout, without giving it their own machine.
 **Time:** ~15 minutes, most of it the agent turn, which `run.mjs` allows up to 10 minutes.
-**Outcome:** a unified diff in your terminal of the edit Codex made to a fresh checkout of [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue), produced inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM that is closed when the script exits.
+**Outcome:** a unified diff in your terminal of the edit Codex made to a fresh checkout of [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue), produced inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) sandbox that is closed when the script exits.
 
 > **Honesty note:** nothing pins the Codex version. The sandbox runs the copy that ships in Tenki's default image (codex-cli 0.154.0 as of October 2026), and it changes when Tenki rebuilds the image. `verify.mjs` checks the flags and the key variable `run.mjs` relies on, not how the agent behaves.
 
 ## Why bother
 
-An agent that edits code needs a machine it can change freely. Here that machine is a Tenki microVM that exists only for this run, so Codex can edit, install and run what it likes, and you keep one artifact: the diff against a real upstream checkout. The agent never runs on your machine, and the model key goes only to the one `codex` process, so it never lands in the repo or the image.
+An agent that edits code needs a machine it can change freely. Here that machine is a Tenki sandbox that exists only for this run, so Codex can edit, install and run what it likes, and you keep one artifact: the diff against a real upstream checkout. The agent never runs on your machine, and the model key goes only to the one `codex` process, so it never lands in the repo or the image.
 
 ## Install
 
@@ -68,7 +68,7 @@ await using sandbox = await tenki.createAndWait({
 // The default image ships the Codex CLI on PATH, so there is nothing to install.
 const decoder = new TextDecoder();
 const run = await sandbox.exec("codex", {
-  // Codex sandboxes itself with bubblewrap. Inside a microVM that layer is redundant, and
+  // Codex sandboxes itself with bubblewrap. Inside a sandbox that layer is redundant, and
   // bypassing it drops both the nesting and the "could not find bubblewrap" warning.
   args: ["exec", "--dangerously-bypass-approvals-and-sandbox", TASK],
   cwd: "repo", // relative paths resolve under the workdir, /home/tenki
@@ -95,7 +95,7 @@ The last line is the point: a unified diff against a real upstream checkout, pro
 
 ## Why Codex's own sandbox is turned off
 
-Codex brings its own sandbox, and nesting it inside a microVM buys you nothing.
+Codex brings its own sandbox, and nesting it inside a sandbox buys you nothing.
 
 - Without the bypass flag, Codex wraps its commands in bubblewrap. In this sandbox it warns `Codex could not find bubblewrap on PATH` and falls back to a bundled copy.
 - `--dangerously-bypass-approvals-and-sandbox` reports `sandbox: danger-full-access` and skips that layer. That is the right call *here* precisely because the blast radius is one disposable VM. On a machine you care about, it is not.

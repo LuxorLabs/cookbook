@@ -2,7 +2,7 @@
 
 Stdlib only (http.server + sqlite3) so it runs in a fresh sandbox with no
 install step. The point isn't the framework — it's that an agent can stand this
-up, call the endpoints, change the data, and view the UI, all inside one microVM.
+up, call the endpoints, change the data, and view the UI, all inside one sandbox.
 
 Endpoints:
   GET    /            -> the frontend (HTML+JS, fetches /api/tasks)
@@ -26,7 +26,7 @@ INDEX = """<!doctype html>
  .s{font-size:12px;padding:2px 8px;border-radius:99px;background:#1e2a4a}
  .done{background:#14532d} .doing{background:#78350f}
 </style>
-<h1>Tasks <small style="color:#7c8db5">— served from a Tenki microVM</small></h1>
+<h1>Tasks <small style="color:#7c8db5">— served from a Tenki sandbox</small></h1>
 <ul id="list">loading…</ul>
 <script>
 fetch('/api/tasks').then(r=>r.json()).then(tasks=>{

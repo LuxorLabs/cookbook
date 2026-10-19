@@ -2,7 +2,7 @@
 
 **Audience:** JavaScript developers with Node.js code on E2B's `e2b` SDK who want to run it on Tenki.
 **Time:** ~5 minutes, most of it creating an API key. In CI, `npm install` plus `node verify.mjs` takes about 5 seconds.
-**Outcome:** `node run.mjs` runs a command in a Tenki microVM and prints `hello from tenki · exit 0`, `node verify.mjs` prints a `✓` line, and you have an API map for porting the rest of your E2B code.
+**Outcome:** `node run.mjs` runs a command in a Tenki sandbox and prints `hello from tenki · exit 0`, `node verify.mjs` prints a `✓` line, and you have an API map for porting the rest of your E2B code.
 
 > **Honesty note:** Tenki's `exec` runs a binary with an argument array and no shell. E2B's `commands.run` passes your string to a shell. A ported command that uses pipes, globs, `&&` or `$VARS` has to be wrapped in `sh -c`, or it won't do what it did on E2B. See [The one gotcha](#the-one-gotcha-exec-doesnt-shell-split).
 
@@ -55,7 +55,7 @@ import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
 // E2B: auth is implicit via E2B_API_KEY. Tenki: pass the token explicitly.
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
-// E2B: Sandbox.create(). Tenki: createAndWait() boots the microVM and waits until it's ready.
+// E2B: Sandbox.create(). Tenki: createAndWait() boots the sandbox and waits until it's ready.
 const sandbox = await tenki.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
@@ -85,7 +85,7 @@ node run.mjs
 hello from tenki · exit 0
 ```
 
-`createAndWait()` boots a microVM with 1 CPU core and 1024 MB of memory and waits until it's ready. `exec` runs `echo` through `sh -c`, `stdoutText()` decodes the output bytes, and the `finally` block terminates the sandbox even if a step throws.
+`createAndWait()` boots a sandbox with 1 CPU core and 1024 MB of memory and waits until it's ready. `exec` runs `echo` through `sh -c`, `stdoutText()` decodes the output bytes, and the `finally` block terminates the sandbox even if a step throws.
 
 ## Port your own script
 
@@ -137,7 +137,7 @@ await sandbox.exec("python3", { args: ["-c", "print(6 * 7)"] });
 - **Auth is a `tk_` key.** E2B reads `E2B_API_KEY` implicitly. Tenki takes an `authToken` on the client and, when you leave it out, reads `TENKI_AUTH_TOKEN` or `TENKI_API_KEY`. SDK 1.x accepts only keys that start with `tk_`. `workspaceId` is optional.
 - **File methods are confined to `/home/tenki`**, the sandbox's working directory. Shell commands run with `exec` can write anywhere.
 - **Outbound network is on by default.** To isolate a sandbox, pass `createAndWait({ allowOutbound: false })`.
-- **Disposal.** `await sandbox.close()` terminates the sandbox and maps to E2B's `sandbox.kill()`. The `Session` object that `createAndWait()` returns is an `AsyncDisposable`, so you can also write `await using sandbox = await tenki.createAndWait(...)` and the sandbox is terminated when the scope exits. Top-level `await using` needs Node 24; Node 22 can't parse it. Either way, the sandbox is a microVM billed per second. If your process dies before it disposes of the sandbox, the sandbox keeps running, because Tenki doesn't pause idle sandboxes. `maxDurationMs` caps a sandbox's lifetime, and `run.mjs` doesn't set it. If your E2B code relied on `timeoutMs` to clean up, pass `createAndWait({ maxDurationMs })` with the same value, as in the API map's Sandbox timeout row.
+- **Disposal.** `await sandbox.close()` terminates the sandbox and maps to E2B's `sandbox.kill()`. The `Session` object that `createAndWait()` returns is an `AsyncDisposable`, so you can also write `await using sandbox = await tenki.createAndWait(...)` and the sandbox is terminated when the scope exits. Top-level `await using` needs Node 24; Node 22 can't parse it. Either way, the sandbox is billed per second. If your process dies before it disposes of the sandbox, the sandbox keeps running, because Tenki doesn't pause idle sandboxes. `maxDurationMs` caps a sandbox's lifetime, and `run.mjs` doesn't set it. If your E2B code relied on `timeoutMs` to clean up, pass `createAndWait({ maxDurationMs })` with the same value, as in the API map's Sandbox timeout row.
 
 ## Check it works
 
