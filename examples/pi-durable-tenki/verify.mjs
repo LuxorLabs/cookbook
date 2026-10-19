@@ -26,6 +26,16 @@ const assert = (cond, msg) => {
 	if (!cond) throw new Error(msg);
 };
 
+// pause()/resume() return as the transition starts; poll until it settles.
+const waitState = async (session, want) => {
+	for (let i = 0; i < 40; i++) {
+		await session.refresh();
+		if (session.state === want) return;
+		await new Promise((r) => setTimeout(r, 500));
+	}
+	throw new Error(`expected ${want}, got ${session.state}`);
+};
+
 let boot;
 try {
 	boot = await createTenkiEnv();
@@ -44,14 +54,12 @@ try {
 	assert(echo.trim() === marker, "file round-trip mismatch");
 
 	await session.pause();
-	await session.refresh();
-	assert(session.state === "PAUSED", `expected PAUSED, got ${session.state}`);
+	await waitState(session, "PAUSED");
 
 	// Same env object: this read resumes the sandbox and respawns the daemon.
 	const back = getOrThrow(await env.readTextFile("marker.txt", BACKGROUND_CONTEXT));
 	assert(back.trim() === marker, "marker lost across pause/resume");
-	await session.refresh();
-	assert(session.state === "RUNNING", `expected RUNNING after recovery, got ${session.state}`);
+	await waitState(session, "RUNNING");
 
 	console.log("✓ pi-durable-tenki: boot + daemon → hello → exec → file round-trip → pause → same env resumes, file intact");
 } catch (e) {
