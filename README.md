@@ -108,6 +108,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [OpenCode](examples/opencode-sandbox/) | Headless OpenCode server on a public preview URL |
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own sandbox |
+| [Prefect](examples/prefect-tenki/) | Each flow run in its own sandbox via a Prefect 3.x worker |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Tenki VMs |
 | [Crabbox](examples/crabbox-tenki/) | Run your tests on a warm sandbox against your uncommitted working tree |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
