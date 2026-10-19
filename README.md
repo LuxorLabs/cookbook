@@ -109,6 +109,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own sandbox |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Tenki VMs |
+| [Crabbox](examples/crabbox-tenki/) | Run your tests on a warm sandbox against your uncommitted working tree |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
 | [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
 | [Anchor Browser](examples/anchor-browser-tenki/) | A remote Anchor browser over CDP, driven from the `tenki/anchor` image |

@@ -1,0 +1,9 @@
+{
+  "name": "crabbox-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — Crabbox syncs your uncommitted working tree to a Tenki sandbox and runs your tests there.",
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1"
+  }
+}
