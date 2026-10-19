@@ -1,8 +1,8 @@
 # How to drive an Anchor Browser session from a Tenki sandbox
 
-**Audience:** JavaScript developers who want their agent code in a Tenki microVM and the browser it drives at [Anchor Browser](https://anchorbrowser.io/).
+**Audience:** JavaScript developers who want their agent code in a Tenki sandbox and the browser it drives at [Anchor Browser](https://anchorbrowser.io/).
 **Time:** ~5 minutes.
-**Outcome:** `node run.mjs` boots a Tenki microVM from the public `tenki/anchor:stable` image, opens an Anchor browser session from inside it, loads a page over the Chrome DevTools Protocol (CDP) and prints its URL and title. `node verify.mjs` prints a `✓` line.
+**Outcome:** `node run.mjs` boots a Tenki sandbox from the public `tenki/anchor:stable` image, opens an Anchor browser session from inside it, loads a page over the Chrome DevTools Protocol (CDP) and prints its URL and title. `node verify.mjs` prints a `✓` line.
 
 > **Tested on 2026-10-17 against live Tenki and Anchor.** `node verify.mjs` and `node run.mjs` (Node 24) both passed: the `tenki/anchor:stable` image boots, `anchor.mjs` opens an Anchor session from inside it, loads example.com over CDP and ends the session, and the Anchor key never reaches the session environment.
 
