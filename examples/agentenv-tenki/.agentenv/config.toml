@@ -1,0 +1,6 @@
+[sandbox]
+default       = "tenki"
+agent_default = "tenki"
+
+[sandbox.providers.tenki.config]
+api_key = "env:TENKI_API_KEY"
