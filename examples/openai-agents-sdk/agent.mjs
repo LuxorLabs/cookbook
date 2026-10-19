@@ -1,5 +1,5 @@
 // An OpenAI Agents SDK agent that runs code in a Tenki sandbox (the "code interpreter" pattern).
-// The agent writes Python; the run_python tool executes it in a disposable microVM.
+// The agent writes Python; the run_python tool executes it in a disposable sandbox.
 //
 // Needs a model key: export OPENAI_API_KEY=... Run: node agent.mjs
 import { Agent, run } from "@openai/agents";

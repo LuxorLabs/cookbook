@@ -117,7 +117,7 @@ node verify.mjs   # ✓ create → exec python3 + sh + fs round-trip → 42 → 
 
 - **No `App` object.** Modal ties every sandbox to a `modal.App` (`modal.App.lookup(...)` first). Tenki has no app concept — a sandbox is placed directly by `workspace_id`.
 - **`exec` blocks and returns a result.** Modal's `ContainerProcess` (drain `p.stdout.read()`, `p.wait()`) becomes Tenki's `CommandResult` (`r.stdout_text`, `r.exit_code`) — see the gotcha above.
-- **Disposal.** `sb.terminate()` maps 1:1 to Modal's `sandbox.terminate()`. Because `Sandbox` is a context manager, `with Sandbox.create(...) as sb:` disposes it for you at scope end. Either way the microVM is billed per second and self-reaps on its idle / lifetime caps.
+- **Disposal.** `sb.terminate()` maps 1:1 to Modal's `sandbox.terminate()`. Because `Sandbox` is a context manager, `with Sandbox.create(...) as sb:` disposes it for you at scope end. Either way the sandbox is billed per second and self-reaps on its idle / lifetime caps.
 - **Networking is on by default** in the Python SDK (`allow_outbound=True`), matching Modal's default. Pass `create(..., allow_outbound=False)` to lock a sandbox down.
 - Tenki confines file I/O to `/home/tenki` — write to relative paths.
 - Requires **Python 3.10+**; the rest of the cookbook is Node, so this example is verified via the `verify.mjs` → `verify.py` shim (the same pattern as [`run-code-python`](../run-code-python/) and [`crewai-code-interpreter`](../crewai-code-interpreter/)).

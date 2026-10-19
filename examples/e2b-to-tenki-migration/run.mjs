@@ -10,7 +10,7 @@ import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
 // E2B: auth is implicit via E2B_API_KEY. Tenki: pass the token explicitly.
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
-// E2B: Sandbox.create(). Tenki: createAndWait() boots the microVM and waits until it's ready.
+// E2B: Sandbox.create(). Tenki: createAndWait() boots the sandbox and waits until it's ready.
 const sandbox = await tenki.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,

@@ -1,6 +1,6 @@
 # Tenki as a ComputeSDK provider
 
-Run code on [Tenki](https://tenki.cloud) through [ComputeSDK](https://github.com/computesdk/computesdk) — one `compute.sandbox` interface, swappable backends. The official [`@computesdk/tenki`](https://www.npmjs.com/package/@computesdk/tenki) provider maps that interface onto Tenki microVMs: shell commands, a native filesystem API, and public preview URLs, with no code changes if you later switch providers.
+Run code on [Tenki](https://tenki.cloud) through [ComputeSDK](https://github.com/computesdk/computesdk) — one `compute.sandbox` interface, swappable backends. The official [`@computesdk/tenki`](https://www.npmjs.com/package/@computesdk/tenki) provider maps that interface onto Tenki sandboxes: shell commands, a native filesystem API, and public preview URLs, with no code changes if you later switch providers.
 
 ## The code (`run.mjs`)
 

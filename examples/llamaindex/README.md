@@ -1,6 +1,6 @@
 # LlamaIndex + Tenki (code interpreter)
 
-Give a [LlamaIndex](https://github.com/run-llama/llama_index) agent a **code-execution tool** that runs in a disposable [Tenki](https://tenki.cloud) microVM. The agent writes Python; the tool executes it in a real, isolated sandbox and returns the output.
+Give a [LlamaIndex](https://github.com/run-llama/llama_index) agent a **code-execution tool** that runs in a disposable [Tenki](https://tenki.cloud) sandbox. The agent writes Python; the tool executes it in a real, isolated sandbox and returns the output.
 
 ## The integration
 

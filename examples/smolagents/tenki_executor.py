@@ -3,7 +3,7 @@
 smolagents' `CodeAgent` writes Python *as its actions* and runs it through a
 `RemotePythonExecutor` — the same seam its E2B / Docker / Modal / Blaxel
 executors plug into (see `smolagents/remote_executors.py`). `TenkiExecutor`
-implements that seam against a disposable [Tenki](https://tenki.cloud) microVM.
+implements that seam against a disposable [Tenki](https://tenki.cloud) sandbox.
 
 The catch: `CodeAgent` needs a *stateful* namespace. It defines the tools once
 (`send_tools`), then every step's code shares variables with the previous step.
@@ -25,7 +25,7 @@ from smolagents.remote_executors import RemotePythonExecutor
 from smolagents.utils import AgentError
 from tenki import Sandbox
 
-_PORT = 47000  # sandbox-loopback only; never exposed outside the microVM
+_PORT = 47000  # sandbox-loopback only; never exposed outside the sandbox
 
 # --- kernel.py: runs INSIDE the sandbox, holds ONE persistent namespace -------
 _KERNEL = r'''
@@ -63,7 +63,7 @@ def _run(code):
     try:
         with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
             # exec/eval of agent-written code is the whole point of a CodeAgent
-            # executor; the disposable, network-isolated Tenki microVM is the
+            # executor; the disposable, network-isolated Tenki sandbox is the
             # security boundary (same model as smolagents' E2B/Docker executors).
             tree = ast.parse(code, mode="exec")
             # Jupyter/E2B semantics: a trailing expression is the cell's result.
@@ -142,7 +142,7 @@ class TenkiExecutor(RemotePythonExecutor):
 
     def __init__(self, additional_imports, logger, allow_pickle=False, **sandbox_kwargs):
         super().__init__(additional_imports, logger, allow_pickle)
-        # Boot the microVM and wait until it's RUNNING (~2s).
+        # Boot the sandbox and wait until it's RUNNING (~2s).
         self.sandbox = Sandbox.create(**sandbox_kwargs)
         # Drop the kernel + client into /home/tenki and start the kernel daemon.
         self._put("/home/tenki/kernel.py", _KERNEL)
@@ -206,7 +206,7 @@ class TenkiExecutor(RemotePythonExecutor):
         return CodeOutput(output=env.get("output"), logs=logs, is_final_answer=False)
 
     def install_packages(self, additional_imports):
-        """pip-install into the sandbox. Requires the microVM to have outbound
+        """pip-install into the sandbox. Requires the sandbox to have outbound
         network — create it with `allow_outbound=True`."""
         if not additional_imports:
             return []
@@ -221,7 +221,7 @@ class TenkiExecutor(RemotePythonExecutor):
         return list(additional_imports)
 
     def cleanup(self):
-        """Terminate the microVM (the `TerminateSession` control call)."""
+        """Terminate the sandbox (the `TerminateSession` control call)."""
         try:
             if getattr(self, "sandbox", None) is not None:
                 self.logger.log("Terminating Tenki sandbox…", level=LogLevel.INFO)
