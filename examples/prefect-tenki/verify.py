@@ -2,11 +2,11 @@
 Smoke-verify the Prefect example without a Prefect server:
   1. `prefect-tenki` imports and registers the "tenki" worker type, and
   2. `TenkiWorker.run()` drives the real per-flow-run infrastructure lifecycle
-     against live Tenki — create microVM → run command → teardown — exit 0.
+     against live Tenki — create sandbox → run command → teardown — exit 0.
 
 We deliberately do NOT execute a full flow run: the guest must reach the
 Prefect API, and a localhost `prefect server` is unreachable from inside the
-microVM. Driving run() directly is the upstream repo's own smoke pattern
+sandbox. Driving run() directly is the upstream repo's own smoke pattern
 (tests/live_worker_smoke.py) and exercises everything Tenki-specific.
 
 Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
@@ -80,7 +80,7 @@ async def main():
     result = await worker.run(object(), configuration)
     if result.status_code != 0:
         raise AssertionError(f"exit {result.status_code} (sandbox {result.identifier})")
-    print("✓ prefect-tenki: TenkiWorker.run() → live microVM → flow command exit 0 → teardown")
+    print("✓ prefect-tenki: TenkiWorker.run() → live sandbox → flow command exit 0 → teardown")
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")

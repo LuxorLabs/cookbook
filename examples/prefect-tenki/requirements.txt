@@ -1,1 +1,1 @@
-prefect-tenki @ git+https://github.com/luxorlabs/tenki-prefect.git@1778874be00ddd725137e4aa1fd23e5d8d744f76
+prefect-tenki @ git+https://github.com/opencolin/tenki-prefect.git@4517af56a0921e8b233ebb76c22f6dd733a908e8
