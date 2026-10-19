@@ -1,0 +1,2 @@
+agentenv-framework[tenki]>=0.9.1326
+tenki[async]>=1.4.1
