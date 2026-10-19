@@ -1,6 +1,6 @@
 # Composio agent on Tenki
 
-Give any [Composio](https://composio.dev) agent disposable Tenki microVMs. The official [`@tenkicloud/composio-tools`](https://github.com/TenkiCloud/composio-tools) package registers a **Tenki custom toolkit** — the agent gets `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX`, all running in-process against the Tenki SDK. No extra backend.
+Give any [Composio](https://composio.dev) agent disposable Tenki sandboxes. The official [`@tenkicloud/composio-tools`](https://github.com/TenkiCloud/composio-tools) package registers a **Tenki custom toolkit** — the agent gets `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX`, all running in-process against the Tenki SDK. No extra backend.
 
 ## The integration (the whole thing)
 

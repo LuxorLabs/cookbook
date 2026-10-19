@@ -1,6 +1,6 @@
 # Covalent workflows, each task in a Tenki sandbox
 
-Run a [Covalent](https://github.com/AgnostiqHQ/covalent) workflow where **every electron (task) executes in its own disposable [Tenki](https://tenki.cloud) microVM** — a fresh Linux VM with real root, created on demand and destroyed the moment the task finishes. One task's environment can never leak into another's, so it's ideal for untrusted or dependency-conflicting steps. Built on the official [`covalent-tenki-plugin`](https://github.com/TenkiCloud/covalent-tenki-plugin).
+Run a [Covalent](https://github.com/AgnostiqHQ/covalent) workflow where **every electron (task) executes in its own disposable [Tenki](https://tenki.cloud) sandbox** — a fresh Linux VM with real root, created on demand and destroyed the moment the task finishes. One task's environment can never leak into another's, so it's ideal for untrusted or dependency-conflicting steps. Built on the official [`covalent-tenki-plugin`](https://github.com/TenkiCloud/covalent-tenki-plugin).
 
 ## The executor
 
@@ -36,7 +36,7 @@ The plugin authenticates via the `tenki` SDK, which takes a `tk_` API key: set `
 
 ```bash
 covalent start          # the Covalent dispatcher
-python workflow.py      # dispatches; each task runs in a Tenki microVM
+python workflow.py      # dispatches; each task runs in a Tenki sandbox
 ```
 
 > **Cold start:** on the default Ubuntu image each task spends ~2–3 min bootstrapping a venv (`cloudpickle` + `covalent` + your `sandbox_requirements`). Point `TenkiExecutor(image=…)` at a prepared registry image to skip it, or batch small steps into fewer electrons. Also: your **local Python minor version must match the sandbox's** (3.12 on the default image) — tasks travel via `cloudpickle`.

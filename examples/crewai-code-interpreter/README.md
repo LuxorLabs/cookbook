@@ -1,6 +1,6 @@
 # CrewAI agent with a Tenki code interpreter
 
-Give a [CrewAI](https://crewai.com) agent a **code interpreter** — a tool that runs Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. The same pattern E2B and Daytona ship for CrewAI, on Tenki microVMs. Python, on the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK.
+Give a [CrewAI](https://crewai.com) agent a **code interpreter** — a tool that runs Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. The same pattern E2B and Daytona ship for CrewAI, on Tenki sandboxes. Python, on the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK.
 
 ## The tool (`tenki_tool.py`)
 
