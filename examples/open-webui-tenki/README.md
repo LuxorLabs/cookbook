@@ -171,7 +171,7 @@ On success it prints:
 ✓ open-webui-tenki: release asset loads standalone → valves ok → live execute_code → 42 → teardown
 ```
 
-The check drives the real release file, not a copy. It downloads the pinned v0.1.0 Tool from the GitHub release and saves it as `_release_tool.py` next to `verify.py` (the file is gitignored). Then it loads it with only `tenki` and `pydantic` installed and checks the defaults offline. From `verify.py`:
+The check drives the real release file, not a copy. It downloads the pinned v0.1.0 Tool from the GitHub release and saves it as `_release_tool.py` next to `verify.py` (the file is gitignored). It refuses to run the file unless its SHA-256 is `1bec42092db92be229b6f3085189770eeaf9889eedb3a258637b5b890ebc9ce3`, the digest GitHub lists for that asset, so you can check the file you paste the same way. Then it loads it with only `tenki` and `pydantic` installed and checks the defaults offline. From `verify.py`:
 
 ```python
     tools = mod.Tools()
