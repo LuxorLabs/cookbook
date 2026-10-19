@@ -2,7 +2,7 @@
   "name": "tinyfish-tenki",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — drive TinyFish's fetch, search, and remote browser APIs from a Tenki sandbox.",
+  "description": "Cookbook example — drive TinyFish's fetch, search, and remote browser APIs from the tenki/tinyfish image.",
   "dependencies": {
     "@tenkicloud/sandbox": ">=1.4.1"
   }

@@ -5,6 +5,31 @@ import { chromium } from "playwright-core";
 const client = new TinyFish(); // reads TINYFISH_API_KEY
 const url = process.argv[2] ?? "https://example.com";
 
+// The SDK has no close method, so end the session with TinyFish's DELETE endpoint. TinyFish says a
+// 409, 500, 503 or 504 means termination wasn't confirmed and to retry; on 429 or 503, wait for Retry-After.
+// A network error or a request with no response in 15 seconds is retried too.
+async function endSession(id) {
+	for (let attempt = 1; ; attempt++) {
+		let res, failure;
+		try {
+			res = await fetch(`https://api.browser.tinyfish.ai/${id}`, {
+				method: "DELETE",
+				headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
+				signal: AbortSignal.timeout(15_000),
+			});
+			if (res.ok) return;
+			failure = `HTTP ${res.status}`;
+		} catch (err) {
+			failure = err.cause?.message ?? err.message;
+		}
+		if ((res && ![409, 429, 500, 503, 504].includes(res.status)) || attempt === 3) {
+			throw new Error(`TinyFish browser session ${id} not confirmed ended: ${failure}`);
+		}
+		const wait = Math.min(Number(res?.headers.get("retry-after")) || attempt, 30);
+		await new Promise((resolve) => setTimeout(resolve, wait * 1000));
+	}
+}
+
 const fetched = await client.fetch.getContents({ urls: [url], format: "markdown" });
 console.log("fetch:", fetched.results[0]?.title);
 
@@ -21,12 +46,10 @@ try {
 	await page.goto(url);
 	console.log("browser:", await page.title());
 } finally {
-	// A rejected close() must not skip the DELETE below: that would leave a billed session running.
-	await browser?.close().catch(() => {});
-	// The SDK has no close method, and a session keeps running until it's deleted or its inactivity timeout fires.
-	const res = await fetch(`https://api.browser.tinyfish.ai/${session.session_id}`, {
-		method: "DELETE",
-		headers: { "X-API-Key": process.env.TINYFISH_API_KEY },
-	}).catch((e) => ({ ok: false, status: e.message }));
-	if (!res.ok) console.error(`TinyFish session ${session.session_id} may still be running: DELETE -> ${res.status}`);
+	// End the session even if closing the CDP connection throws.
+	try {
+		await browser?.close();
+	} finally {
+		await endSession(session.session_id);
+	}
 }
