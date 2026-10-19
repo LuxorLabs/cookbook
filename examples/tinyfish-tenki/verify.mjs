@@ -1,6 +1,7 @@
-// Proves the TinyFish stack runs in a live Tenki sandbox: boot, install @tiny-fish/sdk +
-// playwright-core, import both. With TINYFISH_API_KEY set, also runs tinyfish.mjs in the
-// VM (fetch, search, remote browser over CDP); without it, that leg is skipped.
+// Proves the TinyFish image runs in a live Tenki sandbox: boot tenki/tinyfish:stable, confirm
+// the tinyfish CLI, and import @tiny-fish/sdk + playwright-core. With TINYFISH_API_KEY set,
+// also runs tinyfish.mjs in the VM (fetch, search, remote browser over CDP); without it, that
+// leg is skipped.
 import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -31,15 +32,17 @@ const run = async (sandbox, cmd, args) => {
 let sandbox;
 try {
 	const tenki = new TenkiSandbox({ authToken });
+	// tenki/tinyfish:stable restores at 2 vCPU / 4096 MiB; a smaller size is rejected.
 	sandbox = await tenki.createAndWait({
+		image: "tenki/tinyfish:stable",
 		cpuCores: 2,
-		memoryMb: 2048,
+		memoryMb: 4096,
 		maxDurationMs: 10 * 60_000,
 		workspaceId,
 		...(tfKey ? { env: { TINYFISH_API_KEY: tfKey } } : {}),
 	});
 
-	await run(sandbox, "npm", ["install", "--no-audit", "--no-fund", "@tiny-fish/sdk@0.8.0", "playwright-core@1.64.1"]);
+	await run(sandbox, "tinyfish", ["--version"]);
 	const probe = await run(sandbox, "node", [
 		"--input-type=module",
 		"-e",
@@ -59,7 +62,7 @@ try {
 		leg = "fetch + search + remote browser over CDP (Example Domain)";
 	}
 
-	console.log(`✓ tinyfish-tenki: boot → npm install SDK + playwright-core → import → ${leg} → dispose`);
+	console.log(`✓ tinyfish-tenki: boot tenki/tinyfish:stable → tinyfish CLI → import → ${leg} → dispose`);
 } catch (e) {
 	console.error("✗ " + (e?.message ?? e));
 	process.exitCode = 1;

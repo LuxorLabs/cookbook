@@ -110,7 +110,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Tenki VMs |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
-| [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers driven from a microVM |
+| [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
 | [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), each trial in its own VM |
 | [Convex](examples/convex-tenki/) | A sandbox per user from Convex actions, with live state in a Convex table |
 

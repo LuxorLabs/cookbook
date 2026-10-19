@@ -2,7 +2,7 @@
 
 **Audience:** JavaScript developers who want to call TinyFish's fetch, search, remote browser, or agent API from code that runs in a Tenki microVM instead of on their own machine.
 **Time:** ~5 minutes.
-**Outcome:** `node run.mjs` boots a Tenki microVM, installs the TinyFish SDK and `playwright-core` in it, and prints one line each from TinyFish fetch, TinyFish search, and a page loaded in TinyFish's remote Chromium. `node verify.mjs` prints a `✓` line.
+**Outcome:** `node run.mjs` boots a Tenki microVM from `tenki/tinyfish:stable` and prints one line each from TinyFish fetch, TinyFish search, and a page loaded in TinyFish's remote Chromium. `node verify.mjs` prints a `✓` line.
 
 > **Honesty note:** The browser doesn't run in your sandbox. It runs at TinyFish, and the sandbox drives it over the public internet. It can't reach a dev server on `localhost` inside your VM, and every Playwright action is a round trip to TinyFish's browser.
 
@@ -10,7 +10,7 @@
 
 [TinyFish](https://docs.tinyfish.ai/) runs web automation for agents: a natural-language agent that browses a page and returns JSON, a remote Chromium browser you drive over the Chrome DevTools Protocol (CDP), fetch (up to 10 URLs per call as markdown, HTML, or JSON), and search.
 
-This example runs the TinyFish TypeScript SDK ([`@tiny-fish/sdk`](https://www.npmjs.com/package/@tiny-fish/sdk)) and `playwright-core` inside a [Tenki](https://tenki.cloud) microVM. Your code runs in the sandbox, and the browsers and agents run at TinyFish. `playwright-core` doesn't download a browser. It only connects to TinyFish's remote Chromium over CDP, so the install is small. Your TinyFish key goes into one sandbox session's environment, never into an image or template.
+This example starts a [Tenki](https://tenki.cloud) microVM from the public image `tenki/tinyfish:stable`. That image ships the TinyFish CLI, the TypeScript SDK ([`@tiny-fish/sdk`](https://www.npmjs.com/package/@tiny-fish/sdk)), and `playwright-core` under `/home/tenki/node_modules`. Your code runs in the sandbox, and the browsers and agents run at TinyFish. `playwright-core` doesn't download a browser. It only connects to TinyFish's remote Chromium over CDP. Your TinyFish key goes into one sandbox session's environment, never into an image or template. The image currently pins the CLI at 0.50.0 and the SDK at 0.8.0. The `stable` tag moves when Tenki publishes a new build.
 
 ## Install
 
@@ -22,7 +22,7 @@ npm install
 
 Every later command runs from this directory.
 
-`npm install` installs one direct dependency on your machine: `@tenkicloud/sandbox` (`>=1.4.1`). The TinyFish packages never install locally. `run.mjs` installs exact versions inside the VM, `@tiny-fish/sdk@0.8.0` and `playwright-core@1.64.1`, and `verify.mjs` installs the same two.
+`npm install` installs one direct dependency on your machine: `@tenkicloud/sandbox` (`>=1.4.1`). The TinyFish packages never install locally, and nothing is installed inside the VM. `tenki/tinyfish:stable` already has them. The image restores at 2 vCPU and 4096 MiB, and a smaller `cpuCores` or `memoryMb` is rejected, so both scripts request that size.
 
 `run.mjs` uses top-level `await using`, which needs Node.js 24. Node 22 can't parse it. `verify.mjs` uses `try`/`finally` instead, so it runs on Node 20.
 
@@ -58,10 +58,10 @@ So this example passes the key through `env`, which the browser step needs. Use 
 
 ## Use it
 
-`run.mjs` runs on your machine. It boots a sandbox, installs the two npm packages in it, uploads `tinyfish.mjs`, and runs it:
+`run.mjs` runs on your machine. It boots a sandbox from `tenki/tinyfish:stable`, uploads `tinyfish.mjs`, and runs it:
 
 ```js
-// Boot a Tenki sandbox, install the TinyFish SDK + playwright-core, run tinyfish.mjs inside it.
+// Boot a Tenki sandbox from tenki/tinyfish:stable and run tinyfish.mjs inside it.
 import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
 
@@ -70,19 +70,15 @@ if (!process.env.TINYFISH_API_KEY) throw new Error("Set TINYFISH_API_KEY");
 const tenki = new TenkiSandbox(); // reads TENKI_API_KEY
 
 // The key lives in this session's environment only, never in an image or template.
+// tenki/tinyfish:stable restores at 2 vCPU / 4096 MiB; a smaller size is rejected.
 // maxDurationMs is a hard cap: Tenki ends the sandbox after 10 minutes even if this script dies.
 await using sandbox = await tenki.createAndWait({
+  image: "tenki/tinyfish:stable",
   cpuCores: 2,
-  memoryMb: 2048,
+  memoryMb: 4096,
   maxDurationMs: 10 * 60_000,
   env: { TINYFISH_API_KEY: process.env.TINYFISH_API_KEY },
 });
-
-// No browser download: playwright-core only speaks CDP to TinyFish's remote Chromium.
-const install = await sandbox.exec("npm", {
-  args: ["install", "--no-audit", "--no-fund", "@tiny-fish/sdk@0.8.0", "playwright-core@1.64.1"],
-});
-if (install.exitCode !== 0) throw new Error(stderrText(install));
 
 await sandbox.writeFile("tinyfish.mjs", readFileSync(new URL("./tinyfish.mjs", import.meta.url)));
 const result = await sandbox.exec("node", { args: ["tinyfish.mjs", "https://example.com"] });
@@ -102,7 +98,7 @@ search: https://... https://... https://...
 browser: Example Domain
 ```
 
-`sandbox.exec` runs a binary with an argument list and no shell, which is why `npm` and `node` take `args`. Wrap a command in `sh -c` if you need shell syntax. `writeFile` puts `tinyfish.mjs` in the sandbox's working directory, `/home/tenki`, and the SDK's file methods can't write outside it. `await using` terminates the sandbox when the script's scope ends.
+`sandbox.exec` runs a binary with an argument list and no shell, which is why `node` takes `args`. Wrap a command in `sh -c` if you need shell syntax. `writeFile` puts `tinyfish.mjs` in the sandbox's working directory, `/home/tenki`, next to the image's `node_modules`, so `node tinyfish.mjs` imports `@tiny-fish/sdk` and `playwright-core` with no install. The SDK's file methods can't write outside that directory. `await using` terminates the sandbox when the script's scope ends.
 
 `tinyfish.mjs` runs inside the VM. It calls fetch and search, then opens a TinyFish browser session and loads the page through Playwright:
 
@@ -196,18 +192,18 @@ node verify.mjs
 With `TINYFISH_API_KEY` set, it prints:
 
 ```text
-✓ tinyfish-tenki: boot → npm install SDK + playwright-core → import → fetch + search + remote browser over CDP (Example Domain) → dispose
+✓ tinyfish-tenki: boot tenki/tinyfish:stable → tinyfish CLI → import → fetch + search + remote browser over CDP (Example Domain) → dispose
 ```
 
 Without it:
 
 ```text
-✓ tinyfish-tenki: boot → npm install SDK + playwright-core → import → TINYFISH_API_KEY unset, live TinyFish leg skipped → dispose
+✓ tinyfish-tenki: boot tenki/tinyfish:stable → tinyfish CLI → import → TINYFISH_API_KEY unset, live TinyFish leg skipped → dispose
 ```
 
-[`verify.mjs`](verify.mjs) boots a sandbox, installs the same pinned `@tiny-fish/sdk` and `playwright-core`, and checks that both import and expose the methods this example uses: `browser.sessions.create`, `fetch.getContents`, `search.query`, `agent.run`, and `chromium.connectOverCDP`. That part needs only Tenki credentials. The probe builds the client with a placeholder key and makes no TinyFish call. With `TINYFISH_API_KEY` set, it also runs `tinyfish.mjs` in the VM and asserts the `fetch: Example Domain`, `search: https://…`, and `browser: Example Domain` lines. Without the key, it skips that step and says so in the `✓` line. On any failure it prints a `✗` line and exits non-zero.
+[`verify.mjs`](verify.mjs) boots a sandbox from `tenki/tinyfish:stable`, runs `tinyfish --version`, and checks that `@tiny-fish/sdk` and `playwright-core` import and expose the methods this example uses: `browser.sessions.create`, `fetch.getContents`, `search.query`, `agent.run`, and `chromium.connectOverCDP`. That part needs only Tenki credentials. The probe builds the client with a placeholder key and makes no TinyFish call. With `TINYFISH_API_KEY` set, it also runs `tinyfish.mjs` in the VM and asserts the `fetch: Example Domain`, `search: https://…`, and `browser: Example Domain` lines. Without the key, it skips that step and says so in the `✓` line. On any failure it prints a `✗` line and exits non-zero.
 
-It reads the Tenki key from `TENKI_API_KEY`, then `TENKI_AUTH_TOKEN`, then the `auth_token` that `tenki login --api-key <key>` writes to `~/.config/tenki/config.yaml`. CI runs it on Node 20 with only `TENKI_API_KEY`, so CI covers the install and import check, not the live TinyFish calls.
+It reads the Tenki key from `TENKI_API_KEY`, then `TENKI_AUTH_TOKEN`, then the `auth_token` that `tenki login --api-key <key>` writes to `~/.config/tenki/config.yaml`. CI runs it on Node 20 with only `TENKI_API_KEY`, so CI covers the image boot, the CLI, and the import check, not the live TinyFish calls.
 
 A pass with both keys proves that fetch, search, and a remote-browser page load work from inside a Tenki sandbox with your keys. It doesn't run `run.mjs` itself, and it only checks that `agent.run` exists, not that an agent run succeeds.
 
@@ -218,27 +214,30 @@ A pass with both keys proves that fetch, search, and a remote-browser page load 
 - ❌ **`invalid auth token - API keys and service tokens must start with tk_`.** Tenki SDK 1.x accepts only `tk_` API keys. Create one at https://app.tenki.cloud.
 - ❌ **``No token. Set TENKI_API_KEY, or run `tenki login`.``** `verify.mjs` found no key in `TENKI_API_KEY`, `TENKI_AUTH_TOKEN`, or `~/.config/tenki/config.yaml`. Export a `tk_` key, or run `tenki login --api-key <key>`.
 - ❌ **`node run.mjs` fails with a `SyntaxError` at `await using`.** Your Node is older than 24 and can't parse top-level `await using`. Upgrade to Node 24, or run `node verify.mjs` with `TINYFISH_API_KEY` set, which runs `tinyfish.mjs` in a sandbox the same way and works on Node 20. `verify.mjs` prints only the `✓` line, not the three output lines.
-- ❌ **`✗ import probe: …`.** One of the five methods isn't a function in the installed packages. `verify.mjs` pins `@tiny-fish/sdk@0.8.0` and `playwright-core@1.64.1`. If you changed a pin, check that version's API against the calls in `tinyfish.mjs`.
+- ❌ **`snapshot restores with 2 vCPU / 4096 MiB`.** `tenki/tinyfish:stable` needs at least that size. Both scripts request 2 cores and 4096 MiB. A smaller `cpuCores` or `memoryMb` is rejected.
+- ❌ **`✗ tinyfish --version: …`.** The sandbox did not boot from `tenki/tinyfish:stable`, so the `tinyfish` command is missing. Check the `image` passed to `createAndWait`.
+- ❌ **`✗ import probe: …`.** One of the five methods isn't a function in the image's packages. The image currently pins `@tiny-fish/sdk` at 0.8.0. If this fails after Tenki republishes `stable`, check that build's SDK against the calls in `tinyfish.mjs`.
 - ❌ **`✗ node tinyfish.mjs: exit <code>, …`.** `tinyfish.mjs` threw inside the VM, and the message ends with the last 400 characters of its stderr. Run `node run.mjs` to see the full stderr.
 - ❌ **`✗ fetch leg: …`, `✗ search leg: …`, or `✗ browser leg: …`.** `tinyfish.mjs` ran, but a line didn't match what `verify.mjs` expects. The message includes the script's full output, so you can see which TinyFish call returned something else. Unset `TINYFISH_API_KEY` to check the Tenki half on its own.
 - ❌ **`TinyFish browser session <id> not confirmed ended: …`.** The `DELETE` that ends the browser session didn't succeed after three tries, or returned a status TinyFish doesn't document as retryable. The message ends with the last failure: `HTTP <status>`, a network error, or `The operation was aborted due to timeout`. The session still ends once it has had no CDP commands for `timeout_seconds` (120 here). Check the status code against TinyFish's [Browser API reference](https://docs.tinyfish.ai/browser-api/reference.md).
 
 ## FAQ
 
-**When shouldn't I use this?** When the browser has to reach something that exists only inside the VM, such as a dev server on `localhost`: TinyFish's browser runs at TinyFish, outside the sandbox. Also when you want Chromium running in the sandbox itself. This example installs `playwright-core`, which doesn't download a browser, so every Playwright action is a round trip to TinyFish.
+**When shouldn't I use this?** When the browser has to reach something that exists only inside the VM, such as a dev server on `localhost`: TinyFish's browser runs at TinyFish, outside the sandbox. Also when you want Chromium running in the sandbox itself. The image ships `playwright-core`, which doesn't download a browser, so every Playwright action is a round trip to TinyFish.
 
 **What happens if my script dies before cleanup?** The TinyFish browser session ends once it has had no CDP commands for `timeout_seconds` (120 here). The Tenki sandbox is different: `await using` doesn't run if the process is killed, and Tenki doesn't pause idle sandboxes, so it keeps running. Both scripts pass `maxDurationMs: 10 * 60_000` to `createAndWait`, so Tenki ends the sandbox after 10 minutes even if the script dies first. Raise it if your own script needs longer. To find and stop a leftover sandbox, run `tenki sandbox list` and then `tenki sandbox terminate <session-id>`.
 
 **Can I use Python?** The official TinyFish Python SDK is [`tinyfish`](https://pypi.org/project/tinyfish/) on PyPI (`pip install tinyfish`), with the same `client.browser.sessions.create(...)` shape. This example is JavaScript only. Tenki's Python SDK is `tenki` (`pip install tenki`).
 
-**Can an agent in the sandbox call TinyFish from a shell?** Yes. [`@tiny-fish/cli`](https://www.npmjs.com/package/@tiny-fish/cli) installs a `tinyfish` command that prints JSON to stdout by default, which suits an agent shelling out from the sandbox: `tinyfish agent run "<goal>" --url <url> --sync`, `tinyfish fetch content get <url> --format markdown`, `tinyfish search query "<terms>"`. The CLI requires Node.js 24 or newer. This example doesn't install it.
+**Can an agent in the sandbox call TinyFish from a shell?** Yes. The image puts [`tinyfish`](https://www.npmjs.com/package/@tiny-fish/cli) on `PATH`. It prints JSON to stdout by default: `tinyfish agent run "<goal>" --url <url> --sync`, `tinyfish fetch content get <url> --format markdown`, `tinyfish search query "<terms>"`. The image's Node is 24, which the CLI requires. `tinyfish-smoke https://example.com` is the image's own connectivity check: the SDK opens a browser session, Playwright loads the page, and the CLI closes it. The scripts in this example call the SDK directly.
 
-**Is there a prebuilt image?** Tenki has published `tenki/tinyfish:stable` as a public image (`tenki sandbox registry resolve tenki/tinyfish:stable` finds it), meant to ship the TinyFish CLI, SDK, and `playwright-core` preinstalled. This example hasn't switched to it. `run.mjs` and `verify.mjs` install the packages on the default image, and that's the only path the verify script tests.
+**Can I pin the image build?** `tenki/tinyfish:stable` moves to each newly published build. To stay on the build you tested, run `tenki sandbox registry resolve tenki/tinyfish:stable` and pass `image: "tenki/tinyfish@<snapshot-id>"` to `createAndWait`. A snapshot reference stays put after `stable` advances. This example uses the moving tag. `verify.mjs` checks that `tinyfish --version` runs and that the five methods the script calls are still functions.
 
 ## Related
 
 - [TinyFish docs](https://docs.tinyfish.ai/), and the [Browser API reference](https://docs.tinyfish.ai/browser-api/reference.md) for session creation, the `DELETE` endpoint, and the inactivity timeout
 - [`@tiny-fish/sdk` on npm](https://www.npmjs.com/package/@tiny-fish/sdk), [`tinyfish` on PyPI](https://pypi.org/project/tinyfish/), [`@tiny-fish/cli` on npm](https://www.npmjs.com/package/@tiny-fish/cli)
+- [Tenki's TinyFish image](https://tenki.cloud/docs/sandbox/tinyfish)
 - [Tenki docs](https://tenki.cloud/docs)
 - [`../run-code-in-a-sandbox/`](../run-code-in-a-sandbox/): the basic boot, run, and terminate loop with `@tenkicloud/sandbox`.
 - [`../files-in-a-sandbox/`](../files-in-a-sandbox/): the SDK's file API, which `run.mjs` uses to upload `tinyfish.mjs`.
