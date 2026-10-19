@@ -74,15 +74,15 @@ This step is optional. It shows what orca gets from each command.
 `create` makes an ed25519 keypair in its own directory under `~/.tenki-orca/`, then boots a 2 vCPU, 4096 MB sandbox with the repo cloned and the public key installed, and mints an SSH certificate for that key. From `recipe.mjs`:
 
 ```js
-  const sandbox = await tenki.createAndWait({
-    cpuCores: 2,
-    memoryMb: 4096,
-    cloneRepoUrl: repoUrl,
-    sshAuthorizedKeys: [publicKey],
-    workspaceId: process.env.TENKI_WORKSPACE_ID,
-  });
-  const cert = await tenki.issueSandboxSSHCert(sandbox.id, publicKey);
-  writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
+    sandbox = await tenki.createAndWait({
+      cpuCores: 2,
+      memoryMb: 4096,
+      cloneRepoUrl: repoUrl,
+      sshAuthorizedKeys: [publicKey],
+      workspaceId: process.env.TENKI_WORKSPACE_ID,
+    });
+    const cert = await tenki.issueSandboxSSHCert(sandbox.id, publicKey);
+    writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
 ```
 
 It clones `ORCA_REPO_URL` if that's set (orca sets it), and otherwise the `origin` remote of the directory it runs in. Run from this folder without `ORCA_REPO_URL`, it would clone the cookbook itself, so point it at the small public repo `verify.mjs` uses:
@@ -233,15 +233,17 @@ The repo's CI skips this example (see [Troubleshooting](#troubleshooting)), so r
 - When your repo is private. The recipe passes no Git credentials to the sandbox, and `verify.mjs` only clones a public repo, so private repos are untested here.
 - When the machine that runs orca has no OpenSSH client.
 
-**Why doesn't the recipe pin the sandbox's own SSH host key?** The host key `ssh` sees belongs to Tenki's gateway, not to the sandbox's own `sshd`. Reading `/etc/ssh/ssh_host_ed25519_key.pub` inside the guest and pinning that fails with `REMOTE HOST IDENTIFICATION HAS CHANGED`. `cert.caPub` doesn't help either: despite the name it signs user certificates, so a `@cert-authority` line in `known_hosts` is rejected as `name is not a listed principal`. Instead, `create` makes one throwaway connection with `StrictHostKeyChecking=accept-new` under a per-sandbox alias, so every later connection verifies the key normally instead of skipping the check. From `recipe.mjs`:
+**Why doesn't the recipe pin the sandbox's own SSH host key?** The host key `ssh` sees belongs to Tenki's gateway, not to the sandbox's own `sshd`. Reading `/etc/ssh/ssh_host_ed25519_key.pub` inside the guest and pinning that fails with `REMOTE HOST IDENTIFICATION HAS CHANGED`. `cert.caPub` signs the gateway's host certificates, but their principals are gateway hostnames such as `sandbox-edge-us-prod-1.us.sb.tenki.sh`, not the per-sandbox alias, so a `@cert-authority` line for the alias is rejected as `name is not a listed principal`. orca's SSH target has no `HostKeyAlias` field to map one onto the other. Instead, `create` makes one throwaway connection with `StrictHostKeyChecking=accept-new` under a per-sandbox alias, so every later connection verifies the key normally instead of skipping the check. From `recipe.mjs`:
 
 ```js
-  // The SSH host key belongs to Tenki's gateway, not to the sandbox's own sshd, and
-  // cert.caPub signs *user* certs so it cannot pin it. Learn it once here under a
-  // per-sandbox alias, so later connections verify normally instead of skipping the check.
+  // The SSH host key belongs to Tenki's gateway, not to the sandbox's own sshd. Its host
+  // certs are signed by cert.caPub, but their principals are gateway hostnames and orca's
+  // target has no HostKeyAlias, so a @cert-authority pin can't match. Learn the key once
+  // here under a per-sandbox alias, so later connections verify normally instead of
+  // skipping the check.
   // Session ids are UUIDv7: the front is a timestamp, so a prefix collides across
   // sandboxes created near each other — alias on the random tail instead.
-  const alias = `tenki-${sandbox.id.replaceAll("-", "").slice(-12)}`;
+  alias = `tenki-${sandbox.id.replaceAll("-", "").slice(-12)}`;
   mkdirSync(`${homedir()}/.ssh`, { recursive: true });
   if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
   execFileSync("ssh", ["-o", `ProxyCommand=node "${proxy}" ${sandbox.id}`, "-o", "StrictHostKeyChecking=accept-new",
