@@ -159,6 +159,14 @@ Each guide has side-by-side code and an API mapping.
 | [Modal to Tenki](examples/modal-to-tenki-migration/) |
 | [Daytona to Tenki](examples/daytona-to-tenki-migration/) |
 
+## Benchmarks
+
+Standard coding benchmarks, run on Tenki sandboxes and graded with each benchmark's official harness, so scores are comparable. They are heavier than the examples, and each one still ships a `verify.mjs` that CI can run without a model key. See [benchmarks/](benchmarks/).
+
+| Benchmark | What it measures |
+| --- | --- |
+| [swe-bench](benchmarks/swe-bench/) | Fix a real GitHub issue so the repo's hidden tests pass, using the official images and grader, with Docker inside the sandbox |
+
 ## Step 5 — Check any example works
 
 Every example ships a `verify.mjs` script that exercises it against the live API and exits non-zero on any failure, so you can check that it still works before you build on it. CI runs them on every push and pull request, apart from the two skips in the honesty note, and a red build blocks the merge.

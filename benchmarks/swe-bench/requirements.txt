@@ -1,0 +1,8 @@
+# verify.py / oracle + grading (this is all CI needs — no model key):
+swebench>=3.0
+datasets>=2.19
+tenki-sandbox>=0.4
+
+# A model run (harness.py --model ...) additionally needs an agent scaffold:
+#   pip install mini-swe-agent pyyaml
+# It's imported lazily, so CI (oracle only) doesn't require it.
