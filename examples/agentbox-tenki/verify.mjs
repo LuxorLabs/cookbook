@@ -25,7 +25,7 @@ let sandbox;
 try {
 	const provider = plugin.providerModule?.provider;
 	if (plugin.PROVIDER_NAME !== "tenki") throw new Error(`PROVIDER_NAME is ${JSON.stringify(plugin.PROVIDER_NAME)}`);
-	if (plugin.SDK_API_VERSION !== 2) throw new Error(`SDK_API_VERSION is ${plugin.SDK_API_VERSION}, AgentBox expects 2`);
+	if (plugin.SDK_API_VERSION !== 2) throw new Error(`SDK_API_VERSION is ${plugin.SDK_API_VERSION}, README pins AgentBox 0.29.2, which loads v1/v2`);
 	if (provider?.name !== "tenki") throw new Error(`providerModule.provider.name is ${JSON.stringify(provider?.name)}`);
 	const missing = REQUIRED.filter((k) => typeof provider?.[k] !== "function");
 	if (typeof provider?.checkpoint?.create !== "function") missing.push("checkpoint.create");
