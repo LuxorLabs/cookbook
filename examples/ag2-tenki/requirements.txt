@@ -1,0 +1,3 @@
+# ag2 1.1.2 is the first release whose Tenki extension targets the tenki 1.x SDK (ag2ai/ag2#3329).
+ag2>=1.1.2
+tenki>=1.4.1

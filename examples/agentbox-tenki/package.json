@@ -2,9 +2,9 @@
   "name": "agentbox-tenki",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — AgentBox coding-agent boxes on Tenki Firecracker microVMs via @tenkicloud/agentbox-provider.",
+  "description": "Cookbook example — AgentBox coding-agent boxes on Tenki VMs via @tenkicloud/agentbox-provider.",
   "dependencies": {
     "@tenkicloud/agentbox-provider": "^0.1.1",
-    "@tenkicloud/sandbox": "^1.4.1"
+    "@tenkicloud/sandbox": ">=1.4.1"
   }
 }

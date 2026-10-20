@@ -1,0 +1,84 @@
+"""
+Smoke-verify the Open WebUI example against the REAL distributable:
+  1. download the pinned v0.1.0 Tool asset from the GitHub release and check
+     its SHA-256 before running it,
+  2. load it standalone with only `tenki` + `pydantic` installed — proves the
+     paste-into-Open-WebUI file has no hidden dependencies,
+  3. assert the safe Valve defaults and per-user key precedence (offline),
+  4. live: run `tools.execute_code("print(6 * 7)")` in a real Tenki sandbox.
+
+Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+"""
+import asyncio
+import hashlib
+import importlib.util
+import os
+import sys
+import urllib.request
+
+ASSET = (
+    "https://github.com/LuxorLabs/tenki-open-webui/releases/download/"
+    "v0.1.0/tenki_code_execution.py"
+)
+# SHA-256 of that exact asset (matches the digest GitHub lists on the release).
+ASSET_SHA256 = "1bec42092db92be229b6f3085189770eeaf9889eedb3a258637b5b890ebc9ce3"
+PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_release_tool.py")
+
+
+def cfg(key):
+    try:
+        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
+            for line in f:
+                if line.startswith(key + ":"):
+                    return line.split(":", 1)[1].strip()
+    except Exception:
+        pass
+    return ""
+
+
+try:
+    urllib.request.urlretrieve(ASSET, PATH)  # the exact file users paste in
+    with open(PATH, "rb") as f:
+        digest = hashlib.sha256(f.read()).hexdigest()
+    if digest != ASSET_SHA256:
+        os.remove(PATH)
+        print(f"✗ Release asset checksum mismatch: expected {ASSET_SHA256}, got {digest}. Not running it.")
+        sys.exit(1)
+    spec = importlib.util.spec_from_file_location("tenki_owui_tool", PATH)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod  # dataclasses resolve annotations via sys.modules
+    spec.loader.exec_module(mod)  # imports with ONLY tenki + pydantic installed
+
+    tools = mod.Tools()
+    assert tools.valves.network_egress is False, "egress must default OFF"
+    assert tools.valves.timeout_seconds == 300
+    # A user's own key (UserValves) must beat the admin key — offline check.
+    tools.valves.tenki_api_key = "admin-key"
+    user = {"valves": mod.Tools.UserValves(tenki_api_key="user-key")}
+    assert mod.resolve_effective_key(tools.valves, user) == "user-key"
+
+    token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+    if not token:
+        print("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.")
+        sys.exit(1)
+    # tenki SDK 1.x accepts only `tk_` API keys.
+    if not token.startswith("tk_"):
+        print("Token must be a tk_ API key (tenki SDK 1.x). Run `tenki login --api-key tk_...` or set TENKI_AUTH_TOKEN.")
+        sys.exit(1)
+    tools.valves.tenki_api_key = token
+    ws = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+    if ws:
+        tools.valves.tenki_workspace_id = ws
+
+    events = []
+
+    async def emitter(event):  # stand-in for Open WebUI's __event_emitter__
+        events.append(event)
+
+    out = asyncio.run(tools.execute_code("print(6 * 7)", __event_emitter__=emitter))
+    assert "exit=0" in out and "42" in out, f"unexpected tool output: {out!r}"
+    assert any(e.get("type") == "status" for e in events), "no status events emitted"
+    print("✓ open-webui-tenki: release asset loads standalone → valves ok → live execute_code → 42 → teardown")
+except Exception as e:  # noqa
+    print(f"✗ {type(e).__name__}: {e}")
+    sys.exit(1)
