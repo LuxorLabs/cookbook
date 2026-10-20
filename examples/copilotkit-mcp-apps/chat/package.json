@@ -1,0 +1,28 @@
+{
+  "name": "copilotkit-mcp-apps-chat",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
+  "dependencies": {
+    "@ag-ui/client": "^1.0.2",
+    "@ag-ui/mcp-apps-middleware": "^0.1.2",
+    "@ai-sdk/openai": "^3.0.112",
+    "@copilotkit/react-core": "^1.79.0",
+    "@copilotkit/react-ui": "^1.79.0",
+    "@copilotkit/runtime": "^1.79.0",
+    "hono": "^4.12.10",
+    "next": "16.1.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "rxjs": "7.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}
