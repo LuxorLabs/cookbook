@@ -1,7 +1,7 @@
 # Tenki as the Vercel AI SDK's sandbox
 
 Give a [Vercel AI SDK](https://ai-sdk.dev) agent a real place to run code: wire its
-`experimental_sandbox` to a disposable [Tenki](https://tenki.cloud) microVM. When the
+`experimental_sandbox` to a disposable [Tenki](https://tenki.cloud) sandbox. When the
 model calls a code-execution tool, the command runs in a fresh Tenki **Sandbox** — boot
 ~2s, per-second billing, torn down when you're done.
 
@@ -22,7 +22,7 @@ of that on its `Session`, so this example is a **thin adapter**, not a new backe
 | `readFile` (stream)                | `session.readFile(path)` → `ReadableStream`  |
 | `writeTextFile` / `writeBinaryFile` / `writeFile` | `session.writeFile(path, data)` (parents `mkdir -p`'d) |
 
-`createTenkiSandbox()` wraps that with lifecycle — it boots a microVM and returns
+`createTenkiSandbox()` wraps that with lifecycle — it boots a sandbox and returns
 `{ sandbox, session, dispose }`.
 
 ## The minimal integration (`example.mjs`)
@@ -74,7 +74,7 @@ node verify.mjs        # or: TENKI_AUTH_TOKEN=... node verify.mjs
 
 `verify.mjs` drives the adapter's `Experimental_SandboxSession` surface directly against a live
 Tenki sandbox — **`run` (→ 42) → `writeTextFile`/`readTextFile` round-trip → missing file → `null`
-→ `spawn`** — then disposes the microVM. No model key required. This is what CI runs.
+→ `spawn`** — then disposes the sandbox. No model key required. This is what CI runs.
 
 ## Notes
 

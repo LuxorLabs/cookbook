@@ -58,7 +58,7 @@ node verify.mjs   # server -> exposePort -> host GET 200 -> "Hello from Tenki â€
 
 1. **`allowInbound: true`** on `createAndWait` tells Tenki to accept inbound traffic for this sandbox. Omit it and `exposePort` throws `InboundDisabledError`. *Outbound* isn't needed here â€” the **host** fetches the URL, the sandbox only listens.
 2. **`sandbox.exposePort(port, { ttlMs?, slug? })`** maps a guest port at the Tenki gateway and returns an [`ExposedPort`](https://www.npmjs.com/package/@tenkicloud/sandbox): `{ port, previewUrl, expiresAt?, previewUrlId?, slug? }`. The `previewUrl` is a real public HTTPS endpoint.
-3. Anyone (your host, a browser, a webhook) can now `GET` that URL and reach the server inside the microVM.
+3. Anyone (your host, a browser, a webhook) can now `GET` that URL and reach the server inside the sandbox.
 4. `sandbox.unexposePort(port)` tears the mapping down; `sandbox.listExposedPorts()` lists what's live.
 
 ## Notes

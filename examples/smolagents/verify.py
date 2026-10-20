@@ -42,7 +42,7 @@ try:
     # LogLevel.OFF keeps CI output to just the ✓/✗ line (step 4 raises on purpose).
     executor = TenkiExecutor(additional_imports=[], logger=AgentLogger(LogLevel.OFF), **opts)
 
-    # 1) Real execution in the microVM.
+    # 1) Real execution in the sandbox.
     out = executor.run_code_raise_errors("print(6 * 7)")
     if out.logs.strip() != "42":
         raise AssertionError(f"exec: expected logs '42', got {out.logs!r}")

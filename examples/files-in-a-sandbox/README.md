@@ -1,6 +1,6 @@
 # Files in a Tenki sandbox
 
-Write a file into a disposable microVM, read it back, and list the directory — all over the SDK's built-in file API, no `exec` or shell required. Uses the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
+Write a file into a disposable sandbox, read it back, and list the directory — all over the SDK's built-in file API, no `exec` or shell required. Uses the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
 
 ## The code (`run.mjs`)
 
