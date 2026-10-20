@@ -120,6 +120,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | --- | --- |
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
 | [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
+| [OpenClaw](examples/openclaw-tenki/) | Sandbox backend for the personal AI assistant |
 | [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent sandboxes for an agent fleet |
 | [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
 
