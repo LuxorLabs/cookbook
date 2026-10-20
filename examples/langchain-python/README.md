@@ -1,6 +1,6 @@
 # LangChain agent on Tenki — Python (code interpreter)
 
-Give a [LangChain](https://www.langchain.com) **Python** agent a **code interpreter** — a tool that runs Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. This is the Python port of [`langchain-code-interpreter`](../langchain-code-interpreter/) (the JS one), on the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK. One sandbox per agent session; a `run_python` tool the agent calls to execute code in an isolated microVM.
+Give a [LangChain](https://www.langchain.com) **Python** agent a **code interpreter** — a tool that runs Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. This is the Python port of [`langchain-code-interpreter`](../langchain-code-interpreter/) (the JS one), on the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK. One sandbox per agent session; a `run_python` tool the agent calls to execute code in an isolated sandbox.
 
 ## The tool (`tenki_tool.py`)
 

@@ -1,6 +1,6 @@
 # How to give a Composio agent Tenki sandboxes
 
-**Audience:** Node.js developers building agents on [Composio](https://composio.dev) who want the agent to run shell commands in disposable Linux microVMs.
+**Audience:** Node.js developers building agents on [Composio](https://composio.dev) who want the agent to run shell commands in disposable Linux sandboxes.
 **Time:** ~10 minutes.
 **Outcome:** a Composio session with six Tenki tools bound to it, a passing `node verify.mjs`, and, if you add an Anthropic key, Claude booting a sandbox, running a command in it, and terminating it on its own.
 

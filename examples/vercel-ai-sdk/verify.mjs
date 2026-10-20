@@ -1,9 +1,9 @@
 /**
  * Proves the adapter works against live Tenki — no LLM key needed.
- * Boots a Tenki microVM through the adapter, then drives the exact
+ * Boots a Tenki sandbox through the adapter, then drives the exact
  * Experimental_SandboxSession surface the AI SDK calls: run (assert stdout),
  * writeTextFile + readTextFile (assert round-trip), a missing file (assert null),
- * and spawn (assert streamed output + exit code). Cleans up the microVM.
+ * and spawn (assert streamed output + exit code). Cleans up the sandbox.
  * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  * Exits non-zero on any failure.
  */

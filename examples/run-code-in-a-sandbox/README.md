@@ -1,6 +1,6 @@
 # Run code in a Tenki sandbox
 
-Boot a disposable microVM, run code in it, get the output, throw it away — the core Tenki loop, in ~15 lines with the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
+Boot a disposable sandbox, run code in it, get the output, throw it away — the core Tenki loop, in ~15 lines with the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
 
 ## The code (`run.mjs`)
 

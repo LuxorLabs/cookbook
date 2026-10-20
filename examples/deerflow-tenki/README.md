@@ -1,6 +1,6 @@
 # DeerFlow's sandbox on Tenki
 
-[DeerFlow](https://github.com/bytedance/deer-flow) — ByteDance's open-source SuperAgent harness — runs the code its agents write inside pluggable sandboxes. Since [deer-flow#4382](https://github.com/bytedance/deer-flow/pull/4382), Tenki ships as a community-supported provider alongside E2B and AIO: teams already running agent infrastructure on [Tenki](https://tenki.cloud) microVMs point DeerFlow at the same workspace instead of provisioning a parallel sandbox vendor.
+[DeerFlow](https://github.com/bytedance/deer-flow) — ByteDance's open-source SuperAgent harness — runs the code its agents write inside pluggable sandboxes. Since [deer-flow#4382](https://github.com/bytedance/deer-flow/pull/4382), Tenki ships as a community-supported provider alongside E2B and AIO: teams already running agent infrastructure on [Tenki](https://tenki.cloud) sandboxes point DeerFlow at the same workspace instead of provisioning a parallel sandbox vendor.
 
 ## Enable it
 
@@ -21,7 +21,7 @@ sandbox:
   api_key: $TENKI_API_KEY
   cpu_cores: 2
   memory_mb: 2048
-  replicas: 3          # active + warm microVM cap per gateway process
+  replicas: 3          # active + warm sandbox cap per gateway process
   idle_timeout: 600    # seconds before an idle sandbox is evicted
   max_duration: 14400  # hard server-side lifetime cap
   sticky: false
@@ -33,10 +33,10 @@ Optional keys: `base_url`, `image`, `home_dir` (default `/home/tenki`), and an `
 
 ## What the provider does
 
-- **The full DeerFlow `Sandbox` contract** — `execute_command`, file read/write/append, upload/download, `list_dir`, `glob`, and `grep` — mapped onto one Tenki microVM per replica.
+- **The full DeerFlow `Sandbox` contract** — `execute_command`, file read/write/append, upload/download, `list_dir`, `glob`, and `grep` — mapped onto one Tenki sandbox per replica.
 - **Virtual path mapping**: DeerFlow's `/mnt/user-data` namespace translates to the sandbox home directory on the way in and back on the way out.
 - **Native file transport**: uploads and downloads ride Tenki's `sandbox.fs` streaming API rather than shell pipes, so binary and Unicode content survive untouched.
-- **Warm-pool lifecycle**: `replicas` caps active plus warm microVMs per gateway process, and idle warm sandboxes are evicted; terminal download transport failures evict the sandbox rather than poisoning the pool.
+- **Warm-pool lifecycle**: `replicas` caps active plus warm sandboxes per gateway process, and idle warm sandboxes are evicted; terminal download transport failures evict the sandbox rather than poisoning the pool.
 - **Shell semantics**: commands execute under `sh -lc`; `glob`/`grep` delegate to busybox-portable `find`/`grep` inside the VM.
 
 ## Verify

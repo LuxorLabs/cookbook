@@ -8,7 +8,7 @@ import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { createTenkiSandbox } from "./tenki-sandbox.mjs";
 
-// Boot a disposable Tenki microVM and adapt it to the AI SDK sandbox interface.
+// Boot a disposable Tenki sandbox and adapt it to the AI SDK sandbox interface.
 const { sandbox, dispose } = await createTenkiSandbox();
 
 // The tool pulls the sandbox out of `experimental_sandbox` (the same object we
@@ -34,5 +34,5 @@ try {
 	});
 	console.log(text);
 } finally {
-	await dispose(); // tear the microVM down
+	await dispose(); // tear the sandbox down
 }
