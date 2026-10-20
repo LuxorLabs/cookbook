@@ -186,18 +186,18 @@ In a Python example, `verify.mjs` is a shim. It runs `verify.py` with the exampl
 To check every example, from the repository root:
 
 ```bash
-npm run verify
+node verify.mjs
 ```
 
-It runs each `verify.mjs` and ends with `✓ all examples passed`, or with `✗ N example(s) failed` and a non-zero exit. It does not install dependencies. Install them first, as CI does in [`.github/workflows/verify.yml`](.github/workflows/verify.yml).
+It runs each example's `verify.mjs` and ends with `✓ all examples passed`, or with `✗ N example(s) failed` and a non-zero exit. It does not install dependencies. Install them first, as CI does in [`.github/workflows/verify.yml`](.github/workflows/verify.yml).
 
-CI runs the same checks on every push and pull request, and a failed check blocks the merge. Two examples are skipped in CI:
+CI runs the same checks on every push and pull request, and a failed check blocks the merge. Three examples are skipped in CI:
 
 - `composio-tenki`, which needs a Composio API key
 - `covalent-tenki`, until [`covalent-tenki-plugin` 0.1.1](https://github.com/LuxorLabs/tenki-covalent-plugin/pull/1) is on PyPI
 - `orca-tenki`, because the gateway SSH host keys are not stable across connections
 
-`npm run verify` on your machine runs those two as well. If they fail locally, see Troubleshooting.
+`node verify.mjs` on your machine runs those three as well. If they fail locally, see Troubleshooting.
 
 ## Official integrations
 
@@ -235,8 +235,8 @@ These projects ship a Tenki provider or backend:
 - **`No token. Set TENKI_AUTH_TOKEN, or run tenki login`.** A JavaScript `verify.mjs` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or `~/.config/tenki/config.yaml`. `composio-tenki` and `vercel-ai-sdk` print `No Tenki token. …`. `mcp-tenki-sandbox` prints `No token. Set TENKI_API_KEY, …`. Export one of the variables, or run `tenki login --api-key <key>`.
 - **`No API key. Set TENKI_API_KEY, or run tenki login --api-key <key>`.** A Python `verify.py` found no key in those same places. Export `TENKI_API_KEY`, or run `tenki login --api-key <key>`.
 - **`node run.mjs` fails with a `SyntaxError` at `await using`.** Top-level `await using` needs Node 24. Node 22 cannot parse it. `node verify.mjs` still runs on Node 20.
-- **`npm run verify` prints `FAILED: <example>` for an example you have not set up.** The script expects that example's dependencies to be installed already. Install them in the example folder, or run `node verify.mjs` in the one example you care about.
-- **`FAILED: composio-tenki`, `FAILED: covalent-tenki`, or `FAILED: orca-tenki` from a local `npm run verify`.** CI skips these three. `composio-tenki` also needs a `COMPOSIO_API_KEY` from [app.composio.dev](https://app.composio.dev). `covalent-tenki` needs `covalent-tenki-plugin` 0.1.1 or later, because 0.1.0 depends on the renamed `tenki-sandbox` package and no longer installs. `orca-tenki` fails when the gateway presents a different SSH host key on the next connection. Until those are resolved, run `node verify.mjs` only in the examples you use.
+- **`node verify.mjs` at the repository root prints `FAILED: <example>` for an example you have not set up.** The root script expects that example's dependencies to be installed already. Install them in the example folder, or run that folder's own `node verify.mjs`.
+- **`FAILED: composio-tenki`, `FAILED: covalent-tenki`, or `FAILED: orca-tenki` from `node verify.mjs` at the repository root.** CI skips these three. `composio-tenki` also needs a `COMPOSIO_API_KEY` from [app.composio.dev](https://app.composio.dev). `covalent-tenki` needs `covalent-tenki-plugin` 0.1.1 or later, because 0.1.0 depends on the renamed `tenki-sandbox` package and no longer installs. `orca-tenki` fails when the gateway presents a different SSH host key on the next connection. Until those are resolved, run `node verify.mjs` inside the examples you use.
 - **`ModuleNotFoundError: No module named '<package>'` from a Python example's `verify.mjs`.** The shim runs `.venv/bin/python` when that file exists, and otherwise `$PYTHON` or `python3`. Create the venv in the example folder with `uv venv --python 3.12` and `uv pip install -r requirements.txt`. You can also set `PYTHON` to an interpreter that already has the packages.
 
 ## FAQ
