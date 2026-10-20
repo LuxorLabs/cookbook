@@ -3,12 +3,36 @@ sandbox (fresh Linux VM with real root, created on demand, destroyed when the
 task finishes).
 
 Full run (needs a Covalent dispatcher):
+    export TENKI_API_KEY=tk_...       # a tk_ API key (see README). Set it BEFORE
+                                      # `covalent start`: the executor runs inside
+                                      # the dispatcher process and reads its env.
     covalent start
-    export TENKI_API_KEY=tk_...       # a tk_ API key (see README)
     python workflow.py
 """
 import covalent as ct
-from covalent_tenki_plugin import TenkiExecutor
+
+# --------------------------------------------------------------------------
+# Upstream Covalent bug workaround. With covalent 0.240.0 and requests >= 2.34,
+# the Covalent SDK posts the dispatch manifest without a
+# `Content-Type: application/json` header, and the dispatcher rejects every
+# ct.dispatch() with 422 Unprocessable Entity, before any sandbox is created.
+# Remove this block once Covalent fixes it. Source: the plugin README's "Known
+# upstream issue" (https://github.com/LuxorLabs/tenki-covalent-plugin).
+from covalent._dispatcher_plugins import local as ldisp
+
+_orig_post = ldisp.APIClient.post
+
+
+def _patched_post(self, endpoint, **kw):
+    if "data" in kw:
+        kw.setdefault("headers", {})["Content-Type"] = "application/json"
+    return _orig_post(self, endpoint, **kw)
+
+
+ldisp.APIClient.post = _patched_post
+# --------------------------- end workaround -------------------------------
+
+from covalent_tenki_plugin import TenkiExecutor  # noqa: E402 (after the patch)
 
 # Each electron assigned this executor runs in a fresh Tenki sandbox.
 tenki = TenkiExecutor(cpu_cores=2, memory_mb=4096, sandbox_requirements="numpy")
