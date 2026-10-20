@@ -20,7 +20,7 @@ await using sandbox = await tenki.createAndWait({
 // The default image ships the Codex CLI on PATH, so there is nothing to install.
 const decoder = new TextDecoder();
 const run = await sandbox.exec("codex", {
-	// Codex sandboxes itself with bubblewrap. Inside a microVM that layer is redundant, and
+	// Codex sandboxes itself with bubblewrap. Inside a sandbox that layer is redundant, and
 	// bypassing it drops both the nesting and the "could not find bubblewrap" warning.
 	args: ["exec", "--dangerously-bypass-approvals-and-sandbox", TASK],
 	cwd: "repo", // relative paths resolve under the workdir, /home/tenki

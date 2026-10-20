@@ -1,14 +1,14 @@
-# How to run Claude Agent SDK tools in a Tenki microVM
+# How to run Claude Agent SDK tools in a Tenki sandbox
 
 **Audience:** Node developers building an agent with Anthropic's [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) who want its shell and file tools to run somewhere other than their own machine.
 **Time:** ~5 minutes.
-**Outcome:** an agent that writes `fib.py`, runs it, and answers `832040`, with every tool call executed inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM, followed by an `ls` run inside the sandbox showing the file is there.
+**Outcome:** an agent that writes `fib.py`, runs it, and answers `832040`, with every tool call executed inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) sandbox, followed by an `ls` run inside the sandbox showing the file is there.
 
-> **Honesty note:** Only tool execution moves into the microVM. `query()` and the model calls still run on the machine that starts `agent.mjs`, and the isolation holds only because `tools: []` turns off the SDK's built-in tools, which would otherwise run on that machine.
+> **Honesty note:** Only tool execution moves into the sandbox. `query()` and the model calls still run on the machine that starts `agent.mjs`, and the isolation holds only because `tools: []` turns off the SDK's built-in tools, which would otherwise run on that machine.
 
 ## Why bother
 
-The SDK's built-in Bash, Read, Write, and Edit tools run on whatever host called `query()`. This example switches all of them off and re-implements `bash`, `write_file`, and `read_file` against `sandbox.exec`, `sandbox.writeFile`, and `sandbox.readFile`. The agent's execution surface becomes a disposable microVM rather than your laptop, so it has no way to touch the host that started it. One sandbox serves the whole agent session and is reused across every tool call.
+The SDK's built-in Bash, Read, Write, and Edit tools run on whatever host called `query()`. This example switches all of them off and re-implements `bash`, `write_file`, and `read_file` against `sandbox.exec`, `sandbox.writeFile`, and `sandbox.readFile`. The agent's execution surface becomes a disposable sandbox rather than your laptop, so it has no way to touch the host that started it. One sandbox serves the whole agent session and is reused across every tool call.
 
 ## Install
 
@@ -58,7 +58,7 @@ This is the whole of `agent.mjs`:
 
 ```js
 // The Claude Agent SDK with Tenki as its execution backend: every command the
-// agent runs and every file it writes lands in a disposable microVM, not on this box.
+// agent runs and every file it writes lands in a disposable sandbox, not on this box.
 //
 // Needs a model key: export ANTHROPIC_API_KEY=...
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
@@ -84,7 +84,7 @@ for await (const message of query({
     maxTurns: 12,
   },
 })) {
-  // Every tool call printed here ran in the microVM. There is no local one to fall back to.
+  // Every tool call printed here ran in the sandbox. There is no local one to fall back to.
   if (message.type === "assistant") {
     for (const block of message.message.content) {
       if (block.type === "tool_use") console.log(`→ ${block.name} ${JSON.stringify(block.input).slice(0, 70)}`);
@@ -119,7 +119,7 @@ All three tools live in `tenki-tools.mjs`:
 // Claude Agent SDK tools backed by a Tenki sandbox.
 //
 // The SDK's built-in Bash/Read/Write run on whatever host called query(). These
-// three route the same capabilities into a disposable microVM instead, so the
+// three route the same capabilities into a disposable sandbox instead, so the
 // agent's execution surface is a machine you delete rather than your laptop.
 import { tool } from "@anthropic-ai/claude-agent-sdk";
 import { stdoutText, stderrText } from "@tenkicloud/sandbox";
@@ -155,7 +155,7 @@ export function makeTenkiTools(sandbox) {
 }
 ```
 
-- **`tools: []` is the whole security argument.** Leave it out and the SDK keeps its built-in Bash, Read, Write, and Edit, which run on the machine that called `query()`. The sandbox tools would then be one option among several rather than the only way out. With it, the agent's entire execution surface is the microVM.
+- **`tools: []` is the whole security argument.** Leave it out and the SDK keeps its built-in Bash, Read, Write, and Edit, which run on the machine that called `query()`. The sandbox tools would then be one option among several rather than the only way out. With it, the agent's entire execution surface is the sandbox.
 - **`tool()` takes a raw Zod shape, not a schema object.** Pass `{ command: z.string() }`. Passing `z.object({ command: z.string() })` is the easy mistake.
 - Tools registered through `createSdkMcpServer` run in this process, but they're still named `mcp__<server>__<tool>`. List those full names in `allowedTools`, or the agent asks for permission on every call.
 - **A tool result carries no exit status.** `sandbox.exec` reports one, but the model only sees the text you return, so a command that failed after printing to stderr reads as success. `bash` prefixes `exit N` when the code is non-zero. It also gives each command 120 seconds, because `exec` is unbounded by default and one `sleep infinity` would stall the agent for the sandbox's whole lifetime. A spent budget resolves with status `TIMED_OUT` and exit code -1 rather than rejecting, so `bash` says `timed out after 120s` instead.
@@ -191,7 +191,7 @@ It prints:
 
 **When shouldn't I use this?**
 - When you want the SDK's built-in tools. This example turns off Bash, Read, Write, and Edit on purpose and gives the agent exactly three replacements. To run Claude Code itself inside a sandbox, see [`../claude-code-sandbox/`](../claude-code-sandbox/).
-- When the agent itself must not run on your machine. Only tool execution moves into the microVM.
+- When the agent itself must not run on your machine. Only tool execution moves into the sandbox.
 - When the agent works with binary files. `write_file` takes a string, and `read_file` decodes the file's bytes as text.
 - When files must outlive the run. `await using` terminates the sandbox when `agent.mjs` ends.
 

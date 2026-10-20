@@ -8,7 +8,7 @@
 
 ## Why bother
 
-`--dangerously-skip-permissions` lets Claude Code work without stopping to ask, which is reckless on your laptop. Here the agent runs inside a disposable [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM, so the blast radius is one VM that is deleted when the script finishes. What comes back is the agent's work as a patch: apply it to your checkout, open a PR from it, or run many of these in parallel and keep the good ones.
+`--dangerously-skip-permissions` lets Claude Code work without stopping to ask, which is reckless on your laptop. Here the agent runs inside a disposable [Tenki Sandbox](https://tenki.cloud/products/sandbox) sandbox, so the blast radius is one VM that is deleted when the script finishes. What comes back is the agent's work as a patch: apply it to your checkout, open a PR from it, or run many of these in parallel and keep the good ones.
 
 ## Install
 
@@ -107,7 +107,7 @@ if (run.exitCode !== 0) throw new Error(`claude exited ${run.exitCode}`);
 
 - `exec(command, { args })` runs a bare binary and its args with no shell splitting, so the whole task prompt goes through as a single argument.
 - `ExecOptions.env` is scoped to that one process, so `run.mjs` never writes the model key into the repo or the image.
-- `--dangerously-skip-permissions` refuses to run as root. The sandbox user is `tenki`, so it works as written. It is the right flag here because the blast radius is one microVM.
+- `--dangerously-skip-permissions` refuses to run as root. The sandbox user is `tenki`, so it works as written. It is the right flag here because the blast radius is one sandbox.
 
 ### Take the diff out before the VM goes away
 

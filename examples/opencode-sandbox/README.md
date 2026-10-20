@@ -2,13 +2,13 @@
 
 **Audience:** developers who use the [OpenCode](https://opencode.ai) coding agent, or want to try it, and would rather point a browser at it on a throwaway machine than run it on their own. You need Node and a terminal.
 **Time:** ~5 minutes. In CI, `npm install` takes under a second and `node verify.mjs` about 70 seconds. `run.mjs` boots the same way, then stays up until you press Ctrl-C.
-**Outcome:** a password-protected public HTTPS URL that serves OpenCode's web UI and JSON API, working on a checkout of [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) microVM. The sandbox and the URL end when you press Ctrl-C, or after two hours at the latest.
+**Outcome:** a password-protected public HTTPS URL that serves OpenCode's web UI and JSON API, working on a checkout of [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) sandbox. The sandbox and the URL end when you press Ctrl-C, or after two hours at the latest.
 
 > **Honesty note:** neither script sends OpenCode a prompt, and CI runs only `verify.mjs`, with no model key. The server, the URL, the password, and OpenCode picking up `OPENAI_API_KEY` are tested. The agent reaching a model with your key is not.
 
 ## Why bother
 
-`opencode serve` gives whoever reaches it an agent with a shell. Here that shell is in a Tenki microVM that exists only for this run, with the repo already cloned. There is no install step: `enableOpenCode` bakes the CLI into the guest. The script starts the headless server and exposes it on a public HTTPS URL, and that one URL serves both OpenCode's own UI at `/app` and its JSON API, so a person or a script can drive the agent.
+`opencode serve` gives whoever reaches it an agent with a shell. Here that shell is in a Tenki sandbox that exists only for this run, with the repo already cloned. There is no install step: `enableOpenCode` bakes the CLI into the guest. The script starts the headless server and exposes it on a public HTTPS URL, and that one URL serves both OpenCode's own UI at `/app` and its JSON API, so a person or a script can drive the agent.
 
 ## Install
 
@@ -48,7 +48,7 @@ user: opencode, password: <48 hex characters>
 Ctrl-C to terminate the sandbox.
 ```
 
-Open the `/app` URL in a browser and you are looking at OpenCode's own UI, driving the repo inside the microVM. The browser asks for a username and password: enter the printed username, **`opencode`**, and the printed password. OpenCode checks both. The username must match `OPENCODE_SERVER_USERNAME`, which defaults to `opencode`, and neither script sets it. The password is new on every run.
+Open the `/app` URL in a browser and you are looking at OpenCode's own UI, driving the repo inside the sandbox. The browser asks for a username and password: enter the printed username, **`opencode`**, and the printed password. OpenCode checks both. The username must match `OPENCODE_SERVER_USERNAME`, which defaults to `opencode`, and neither script sets it. The password is new on every run.
 
 Press Ctrl-C to terminate the sandbox, and the URL with it.
 
