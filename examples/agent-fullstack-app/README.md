@@ -2,7 +2,7 @@
 
 **Audience:** Developers building or using an AI agent (Claude Code, another MCP client, or your own Node code) that has to start a web app, call its API, and show you the result somewhere other than your machine.
 **Time:** ~5 minutes.
-**Outcome:** A task-list app (a JSON API, an HTML frontend, and a SQLite database seeded with 5 tasks) running in one Tenki microVM, its endpoints exercised, and a public HTTPS URL you can open in a browser.
+**Outcome:** A task-list app (a JSON API, an HTML frontend, and a SQLite database seeded with 5 tasks) running in one Tenki sandbox, its endpoints exercised, and a public HTTPS URL you can open in a browser.
 
 > **Honesty note:** `run.mjs` leaves the sandbox running after it exits so you can open the URL. Sandboxes are billed per second, and this one runs until you terminate it or its 2-hour `maxDurationMs` cap ends it. `run.mjs` prints a command that terminates it sooner. `verify.mjs` always terminates its sandbox.
 
@@ -42,7 +42,7 @@ node run.mjs   # leaves the sandbox up so you can open the URL
 
 Run it from this directory: `run.mjs` reads `app/server.py` and `app/seed.py` by relative path.
 
-It prints `seeded 5 tasks into /home/tenki/app.db`, then one line for each API call it makes from inside the sandbox (`GET /api/health`, `GET /api/tasks`, `POST /api/tasks`, `PATCH /api/tasks/1`), then the public preview URL and `GET 200 · frontend served`. Open the URL and you'll see the task list, served from the microVM.
+It prints `seeded 5 tasks into /home/tenki/app.db`, then one line for each API call it makes from inside the sandbox (`GET /api/health`, `GET /api/tasks`, `POST /api/tasks`, `PATCH /api/tasks/1`), then the public preview URL and `GET 200 · frontend served`. Open the URL and you'll see the task list, served from the sandbox.
 
 The last line it prints is a `terminate now:` command with the sandbox ID filled in. Paste it from this directory, with your key still exported, to shut the sandbox down. If any step fails, `run.mjs` terminates the sandbox itself before exiting.
 
@@ -69,8 +69,8 @@ Then it ships the app in, seeds it, and starts the server:
 
 ```js
   // 1. Ship the app into the sandbox (agent: tenki_write_file).
-  await sandbox.writeFile("server.py", readFileSync("app/server.py", "utf8"));
-  await sandbox.writeFile("seed.py", readFileSync("app/seed.py", "utf8"));
+  await sandbox.writeFile("server.py", readFileSync(new URL("app/server.py", import.meta.url), "utf8"));
+  await sandbox.writeFile("seed.py", readFileSync(new URL("app/seed.py", import.meta.url), "utf8"));
 
   // 2. Seed the data that powers the backend (agent: tenki_exec).
   const seeded = await sandbox.exec("python3", { args: ["/home/tenki/seed.py"] });
@@ -104,6 +104,8 @@ Stdlib-only Python (`http.server` + `sqlite3`), so it boots with no install step
 - `POST /api/tasks` — create a task: `{"title": "...", "status": "todo"}`
 - `PATCH /api/tasks/<id>` — update its status: `{"status": "done"}`
 - `GET /api/health` — `{"ok": true, "tasks": N}`
+
+`POST` and `PATCH` are accepted only from inside the sandbox, where the agent's calls come from `127.0.0.1`. Traffic through the preview URL arrives from Tenki's gateway at a non-loopback address, so a write sent there gets `403`, and a body that isn't a JSON object gets `400`. The frontend renders task titles as text, not HTML.
 
 `app/seed.py` creates `/home/tenki/app.db` with 5 tasks, the data behind the backend.
 
@@ -139,10 +141,10 @@ node verify.mjs
 ```
 
 ```
-✓ agent-fullstack-app: seed 5 → serve → health ok → POST → PATCH → 6 tasks → frontend 200 at <preview-host>
+✓ agent-fullstack-app: seed 5 → serve → health ok → POST → PATCH → 6 tasks → bad body 400 → frontend 200 → public POST 403 at <preview-host>
 ```
 
-`<preview-host>` is the host of that run's preview URL. The check runs the same SDK steps as `run.mjs` and asserts each one: the seed reports 5 tasks, health is ok, `POST` creates a task, `PATCH` marks it done, the list has 6 tasks, and the preview URL returns 200 with a `<title>` when fetched from the public internet. It then terminates the sandbox, pass or fail. It calls the SDK directly and needs no model key, so the MCP path and the agent itself aren't exercised, and the page is fetched but not rendered in a browser. CI runs it on Node 20 with only `TENKI_API_KEY` set.
+`<preview-host>` is the host of that run's preview URL. The check runs the same SDK steps as `run.mjs` and asserts each one: the seed reports 5 tasks, health is ok, `POST` creates a task, `PATCH` marks it done, the list has 6 tasks, a non-object body gets 400, the preview URL returns 200 with a `<title>` when fetched from the public internet, and a `POST` through the preview URL gets 403. It then terminates the sandbox, pass or fail. It calls the SDK directly and needs no model key, so the MCP path and the agent itself aren't exercised, and the page is fetched but not rendered in a browser. CI runs it on Node 20 with only `TENKI_API_KEY` set.
 
 ## Troubleshooting
 
@@ -161,7 +163,7 @@ node verify.mjs
 ## FAQ
 
 **When shouldn't I use this?**
-When the app has to outlive a sandbox or face real users as is. The app has no auth, and `exposePort(8000)` publishes the whole server, so anyone with the URL can call `POST` and `PATCH` as well as view the page. The frontend also inserts task titles into the page without escaping them. The data is a SQLite file inside a disposable sandbox, and it's gone when the sandbox terminates unless you snapshot it first.
+When the app has to outlive a sandbox or face real users as is. The app has no auth: `exposePort(8000)` publishes the whole server, so anyone with the URL can read every task, and writes are limited by source address, not by user. The data is a SQLite file inside a disposable sandbox, and it's gone when the sandbox terminates unless you snapshot it first.
 
 **How do I stop the sandbox `run.mjs` left running?**
 Paste the `terminate now:` command it printed, from this directory with your key exported. Otherwise the 2-hour `maxDurationMs` cap terminates it.
