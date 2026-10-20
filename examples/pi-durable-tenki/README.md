@@ -1,8 +1,8 @@
-# How to run Pi Durable's agent tools in a Tenki microVM
+# How to run Pi Durable's agent tools in a Tenki sandbox
 
 **Audience:** Developers building agents on Pi's Durable harness (`@earendil-works/pi-durable`) who want the agent's tool calls to run on a disposable machine instead of the worker's host.
 **Time:** ~3 minutes. `npm install` takes seconds; `run.mjs` and `verify.mjs` each spend about a minute on the sandbox pause.
-**Outcome:** A Pi `ExecutionEnv` backed by a Tenki microVM that survives a pause: the sandbox is paused mid-session, and the next file read on the same env resumes it and finds the file intact.
+**Outcome:** A Pi `ExecutionEnv` backed by a Tenki sandbox that survives a pause: the sandbox is paused mid-session, and the next file read on the same env resumes it and finds the file intact.
 
 > **Honesty note:** Nothing on this page runs a model. `run.mjs` and `verify.mjs` drive the execution env directly and need only a Tenki API key. Running an agent turn through the Durable harness also needs a model provider and key (see [Pi Durable's quick start](https://github.com/earendil-works/pi/tree/main/packages/durable#quick-start)).
 
@@ -10,7 +10,7 @@
 
 [Pi](https://github.com/earendil-works/pi) is an AI agent toolkit. Its Durable harness commits every conversation, model turn, and tool call to storage before anything is shown: kill the worker mid-turn, reopen the storage, and it picks up where it stopped. Its `@earendil-works/pi-env` package runs an agent's tools on another machine through a small daemon, which it normally reaches over SSH.
 
-This example points that daemon at a disposable [Tenki](https://tenki.cloud) microVM, without SSH. That gives you two layers of durability: Pi checkpoints the agent's state, and Tenki pauses and snapshots the machine's.
+This example points that daemon at a disposable [Tenki](https://tenki.cloud) sandbox, without SSH. That gives you two layers of durability: Pi checkpoints the agent's state, and Tenki pauses and snapshots the machine's.
 
 ## Install
 
@@ -44,10 +44,10 @@ export TENKI_API_KEY=tk_...
 node run.mjs
 ```
 
-[`run.mjs`](run.mjs) boots a microVM, runs a command and writes a file through Pi's `ExecutionEnv` surface, pauses the sandbox, then reads the file back through the same env object:
+[`run.mjs`](run.mjs) boots a sandbox, runs a command and writes a file through Pi's `ExecutionEnv` surface, pauses the sandbox, then reads the file back through the same env object:
 
 ```js
-// Drive Pi Durable's ExecutionEnv surface on a Tenki microVM, pause the
+// Drive Pi Durable's ExecutionEnv surface on a Tenki sandbox, pause the
 // sandbox mid-session, and watch the same env recover on the next call.
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { getOrThrow } from "@earendil-works/pi-durable/env";
@@ -100,7 +100,7 @@ const tenkiEnv = await createTenkiEnv();
 const harness = await Harness.open(storage, {
   models,
   registry,
-  env: tenkiEnv.harnessEnv, // every tool call now runs in the microVM
+  env: tenkiEnv.harnessEnv, // every tool call now runs in the sandbox
 }, context);
 // at shutdown: await tenkiEnv.dispose();
 ```
@@ -140,7 +140,7 @@ try {
 }
 ```
 
-[`tenki-env.mjs`](tenki-env.mjs) does the rest. It boots a microVM, uploads the static linux-x64 daemon that the pi-env package ships in `bin/` (2.4 MB, about 0.5 s), and returns a `RemoteExecutionEnv` wired through the bridge. The sandbox is resumed lazily, in the `Connection`'s `command` option: an async function that pi-env re-runs on every (re)connect. If it finds the sandbox `PAUSED`, it resumes it before returning the bridge argv, so the next call recovers on its own. From `tenki-env.mjs`:
+[`tenki-env.mjs`](tenki-env.mjs) does the rest. It boots a sandbox, uploads the static linux-x64 daemon that the pi-env package ships in `bin/` (2.4 MB, about 0.5 s), and returns a `RemoteExecutionEnv` wired through the bridge. The sandbox is resumed lazily, in the `Connection`'s `command` option: an async function that pi-env re-runs on every (re)connect. If it finds the sandbox `PAUSED`, it resumes it before returning the bridge argv, so the next call recovers on its own. From `tenki-env.mjs`:
 
 ```js
   // The pi-env package ships a static linux-x64 daemon that runs on Tenki's stock image.

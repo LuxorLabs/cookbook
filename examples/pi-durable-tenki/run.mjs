@@ -1,4 +1,4 @@
-// Drive Pi Durable's ExecutionEnv surface on a Tenki microVM, pause the
+// Drive Pi Durable's ExecutionEnv surface on a Tenki sandbox, pause the
 // sandbox mid-session, and watch the same env recover on the next call.
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { getOrThrow } from "@earendil-works/pi-durable/env";

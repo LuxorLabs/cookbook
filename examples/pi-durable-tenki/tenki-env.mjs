@@ -1,4 +1,4 @@
-// Boot a Tenki microVM and wire Pi Durable's ExecutionEnv surface to it via pi-env.
+// Boot a Tenki sandbox and wire Pi Durable's ExecutionEnv surface to it via pi-env.
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";

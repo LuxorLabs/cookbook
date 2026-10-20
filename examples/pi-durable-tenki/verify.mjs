@@ -1,5 +1,5 @@
 /**
- * Proves the integration: boot a Tenki microVM, drive Pi Durable's ExecutionEnv
+ * Proves the integration: boot a Tenki sandbox, drive Pi Durable's ExecutionEnv
  * surface through the pi-env daemon, pause the sandbox, recover on the same env.
  * Token from env (CI) or ~/.config/tenki/config.yaml. Exits non-zero on failure.
  */
