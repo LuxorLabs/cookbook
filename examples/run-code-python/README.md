@@ -1,10 +1,10 @@
 # How to run code in a Tenki sandbox from Python
 
-**Audience:** Python developers (3.10+) who want to run code in a throwaway VM from a script, for example before handing model-generated code to one.
-**Time:** ~5 minutes.
-**Outcome:** a script that boots a [Tenki](https://tenki.cloud) sandbox, runs `python3 -c "print(6 * 7)"` inside it, prints `exit 0 -> 42`, and terminates the sandbox.
+A script boots a [Tenki](https://tenki.cloud) sandbox, runs `python3 -c "print(6 * 7)"` inside it, prints `exit 0 -> 42`, and terminates the sandbox.
 
-> **Honesty note:** each run boots a real sandbox in your Tenki workspace, and sandboxes are billed per second. The `with` block in `run.py` terminates it when the script finishes.
+About 5 minutes.
+
+Each run boots a real sandbox in your Tenki workspace, and sandboxes are billed per second. The `with` block in `run.py` terminates it when the script finishes.
 
 ## Why bother
 

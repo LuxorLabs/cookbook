@@ -1,10 +1,10 @@
 # How to give Claude or Cursor a Tenki sandbox over MCP
 
-**Audience:** Developers who use an MCP client (Claude Desktop, Cursor, or Claude Code) and want their agent to run code in a disposable sandbox without writing any SDK code.
-**Time:** ~5 minutes.
-**Outcome:** Your MCP client lists the `tenki_*` tools, your agent runs a snippet in a fresh Tenki sandbox, and `node verify.mjs` drives a real sandbox through MCP tool calls against live Tenki.
+Your MCP client lists the `tenki_*` tools, your agent runs a snippet in a fresh Tenki sandbox, and `node verify.mjs` drives a real sandbox through MCP tool calls against live Tenki.
 
-> **Honesty note:** Creating, reading, and terminating sandboxes goes through Tenki's public control plane. Running code, reading `tenki_exec` output, and the file tools also go through each sandbox's own data-plane endpoint, and that endpoint may not be reachable from every network. `verify.mjs` reports `tenki_run_code` as skipped, not failed, when it can't reach the data plane. A passing run proves code execution only if you see the `tenki_run_code` `✓` line.
+About 5 minutes.
+
+Creating, reading, and terminating sandboxes goes through Tenki's public control plane. Running code, reading `tenki_exec` output, and the file tools also go through each sandbox's own data-plane endpoint, and that endpoint may not be reachable from every network. `verify.mjs` reports `tenki_run_code` as skipped when it cannot reach the data plane. A passing run proves code execution when you see the `tenki_run_code` `✓` line.
 
 ## Why bother
 

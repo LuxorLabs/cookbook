@@ -1,10 +1,10 @@
 # How to run Pi Durable's agent tools in a Tenki sandbox
 
-**Audience:** Developers building agents on Pi's Durable harness (`@earendil-works/pi-durable`) who want the agent's tool calls to run on a disposable machine instead of the worker's host.
-**Time:** ~3 minutes. `npm install` takes seconds; `run.mjs` and `verify.mjs` each spend about a minute on the sandbox pause.
-**Outcome:** A Pi `ExecutionEnv` backed by a Tenki sandbox that survives a pause: the sandbox is paused mid-session, and the next file read on the same env resumes it and finds the file intact.
+A Pi `ExecutionEnv` backed by a Tenki sandbox survives a pause. The sandbox is paused mid-session, and the next file read on the same env resumes it and finds the file intact.
 
-> **Honesty note:** Nothing on this page runs a model. `run.mjs` and `verify.mjs` drive the execution env directly and need only a Tenki API key. Running an agent turn through the Durable harness also needs a model provider and key (see [Pi Durable's quick start](https://github.com/earendil-works/pi/tree/main/packages/durable#quick-start)).
+About 3 minutes. `npm install` takes seconds. `run.mjs` and `verify.mjs` each spend about a minute on the sandbox pause.
+
+`run.mjs` and `verify.mjs` drive the execution env directly and need only a Tenki API key. Running an agent turn through the Durable harness also needs a model provider and key. See [Pi Durable's quick start](https://github.com/earendil-works/pi/tree/main/packages/durable#quick-start).
 
 ## Why bother
 

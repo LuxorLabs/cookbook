@@ -1,10 +1,10 @@
 # How to run Harbor agent evals with each trial in its own Tenki VM
 
-**Audience:** Developers who evaluate coding agents or models with [Harbor](https://github.com/harbor-framework/harbor), or want to run Terminal-Bench 2.0, and want every trial on its own VM instead of local Docker.
-**Time:** ~5 minutes to install, run the no-model smoke test (under a minute), and run the verify script (about 45 s). A benchmark run with an agent takes longer.
-**Outcome:** `harbor run -e tenki_harbor:TenkiEnvironment` gives every trial its own Tenki VM, grades it with the task's own tests, writes the results to `jobs/`, and terminates the VM. `node verify.mjs` prints a `✓` line.
+`harbor run -e tenki_harbor:TenkiEnvironment` gives every trial its own Tenki sandbox, grades it with the task's own tests, writes the results to `jobs/`, and terminates the sandbox. `node verify.mjs` prints a `✓` line.
 
-> **Honesty note:** Harbor tasks are container images and a Tenki session is a full Linux VM, so each trial runs the task's container under Docker inside its VM. Tasks that ship a `docker-compose.yaml` or ask for a network allowlist are rejected with an error for now, and GPUs and Windows containers aren't supported.
+About 5 minutes to install, run the no-model smoke test (under a minute), and run the verify script (about 45 seconds). A benchmark run with an agent takes longer.
+
+Harbor tasks are container images, and a Tenki session is a full Linux machine, so each trial runs the task's container under Docker inside that machine. Tasks that ship a `docker-compose.yaml` or ask for a network allowlist are rejected for now. GPUs and Windows containers are not supported.
 
 Harbor is the open-source framework from the creators of [Terminal-Bench](https://www.tbench.ai) for evaluating coding agents and models. It runs an agent (Claude Code, Codex, OpenCode, Goose, mini-swe-agent, Terminus, …) against a benchmark's tasks, grades every attempt with the task's own tests, and records the full trajectory. [`tenki-harbor`](https://github.com/LuxorLabs/tenki-harbor) adds [Tenki Sandbox](https://tenki.cloud/docs/sandbox) as a Harbor environment, so every trial gets its own Tenki VM and trials run in parallel (the commands here run 16 at a time).
 

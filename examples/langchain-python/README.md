@@ -1,10 +1,10 @@
 # How to give a LangChain Python agent a code interpreter that runs in a Tenki sandbox
 
-**Audience:** Python developers building agents with [LangChain](https://www.langchain.com) and LangGraph who want the code their agent writes to run in an isolated sandbox, not on their own machine.
-**Time:** ~5 minutes.
-**Outcome:** a LangGraph ReAct agent that answers a question by calling a `run_python` tool, which executes its Python in a disposable [Tenki](https://tenki.cloud) sandbox, plus a passing check of that tool that needs no model key.
+A LangGraph ReAct agent answers a question by calling a `run_python` tool. The tool executes the agent's Python in a disposable [Tenki](https://tenki.cloud) sandbox. A check of the tool passes with no model key.
 
-> **Honesty note:** every `run_python` call starts a new `python3 -c` process. All the calls in a session share one sandbox, so a file one call writes is still there for the next, but Python variables are not.
+About 5 minutes.
+
+Every `run_python` call starts a new `python3 -c` process. All the calls in a session share one sandbox, so a file one call writes is still there for the next. Python variables are not.
 
 ## Why bother
 

@@ -1,10 +1,10 @@
 # How to run a smolagents CodeAgent's generated Python in a Tenki sandbox
 
-**Audience:** Python developers using the Hugging Face [smolagents](https://github.com/huggingface/smolagents) `CodeAgent` who want the code the model writes to run in a disposable sandbox instead of their own process.
-**Time:** ~10 minutes.
-**Outcome:** a `CodeAgent` whose every code step runs in one [Tenki](https://tenki.cloud) sandbox that is terminated when the agent finishes, plus a passing check of the executor that needs no model key.
+A `CodeAgent` runs every code step in one [Tenki](https://tenki.cloud) sandbox and terminates that sandbox when the agent finishes. A check of the executor passes with no model key.
 
-> **Honesty note:** `TenkiExecutor` is code in this example, not part of smolagents. You copy `tenki_executor.py` into your project and pass the executor in with `CodeAgent(executor=...)`. As of smolagents 1.26.0 there is no `executor_type="tenki"`. [smolagents PR #2563](https://github.com/huggingface/smolagents/pull/2563) proposes one and has not been merged.
+About 10 minutes.
+
+`TenkiExecutor` is code in this example. It is not part of smolagents. Copy `tenki_executor.py` into your project and pass it with `CodeAgent(executor=...)`. As of smolagents 1.26.0 there is no `executor_type="tenki"`. [smolagents PR #2563](https://github.com/huggingface/smolagents/pull/2563) proposes one and has not been merged.
 
 ## Why bother
 

@@ -1,10 +1,10 @@
 # How to run Vercel AI SDK tool calls in a Tenki sandbox
 
-**Audience:** JavaScript developers using the [Vercel AI SDK](https://ai-sdk.dev) 7 who want the shell commands and file reads and writes their model's tools make to happen in a disposable Linux VM, not in their own process.
-**Time:** ~5 minutes once you have a Tenki API key and an OpenAI API key.
-**Outcome:** a `generateText()` call whose `runCommand` tool runs the model's commands in a [Tenki](https://tenki.cloud) sandbox through the AI SDK's `experimental_sandbox` option, plus a passing check of the adapter that needs no model key.
+A `generateText()` call uses a `runCommand` tool that runs the model's commands in a [Tenki](https://tenki.cloud) sandbox through the AI SDK's `experimental_sandbox` option. A check of the adapter passes with no model key.
 
-> **Honesty note:** `createTenkiSandbox()` in this example boots its sandbox with outbound network **off** (`allowOutbound: false`), even though the Tenki SDK's own default is on. `pip install` and downloads fail inside the sandbox until you pass `createTenkiSandbox({ allowOutbound: true })`.
+About 5 minutes once you have a Tenki API key and an OpenAI API key.
+
+`createTenkiSandbox()` in this example boots its sandbox with outbound network off (`allowOutbound: false`). The Tenki SDK's own default is on. `pip install` and downloads fail inside the sandbox until you pass `createTenkiSandbox({ allowOutbound: true })`.
 
 ## Why bother
 

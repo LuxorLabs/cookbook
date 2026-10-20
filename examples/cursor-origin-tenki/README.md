@@ -1,10 +1,10 @@
 # How to review Cursor Origin pull requests with Tenki Code Reviewer
 
-**Audience:** Developers on a Cursor plan with Origin who want an AI reviewer on their Origin pull requests, and want to watch it catch a real bug before they install it on their own repos.
-**Time:** ~20 minutes if you already have Origin access, about 6 of it waiting on two reviews (the launch post puts a review at about 3 minutes).
-**Outcome:** An `invoices-api` repo on Origin with a pull request that Tenki flags for a missing team-membership check and approves once you fix it, plus a passing `node verify.mjs`.
+You finish with an `invoices-api` repo on Origin. Tenki flags its pull request for a missing team-membership check and approves the pull request once you fix it. `node verify.mjs` passes.
 
-> **Honesty note:** Origin is in early beta and isn't available on Cursor's Free or Plus plans. Tenki bills each review to your workspace balance, and this guide runs two reviews.
+About 20 minutes if you already have Origin access. About 6 of that is waiting on two reviews. The launch post puts a review at about 3 minutes.
+
+Origin is in early beta and is not on Cursor's Free or Plus plans. Tenki bills each review to your workspace balance, and this guide runs two reviews.
 
 [Origin](https://cursor.com/docs/origin) is Cursor's code hosting: repos, pull requests, and GitHub sync, with Cursor agents working directly on the code. [Tenki Code Reviewer](https://tenki.cloud/products/code-reviewer) is in the Origin App Marketplace ([launch post](https://tenki.cloud/blog/tenki-code-reviewer-cursor-origin)). Once installed, it reviews every pull request on the repos you select and posts a summary, inline findings, a verdict, and a **Tenki Code Review** check.
 

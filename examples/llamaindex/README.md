@@ -1,10 +1,10 @@
 # How to run a LlamaIndex agent's Python in a Tenki sandbox
 
-**Audience:** Python developers building agents with [LlamaIndex](https://github.com/run-llama/llama_index) who want the code the model writes to run somewhere other than their own machine.
-**Time:** ~5 minutes.
-**Outcome:** a LlamaIndex `FunctionAgent` with a `run_python` tool that executes the model's Python in a disposable [Tenki](https://tenki.cloud) sandbox, and a verify script that prints `✓` after running the tool against a live sandbox.
+A LlamaIndex `FunctionAgent` gets a `run_python` tool that executes the model's Python in a disposable [Tenki](https://tenki.cloud) sandbox. The verify script prints `✓` after running the tool against a live sandbox.
 
-> **Honesty note:** `run_python` runs whatever Python the model writes, and outbound network is on by default (`allow_outbound=True`), so that code can reach the internet and `pip install` packages. Pass `allow_outbound=False` to `Sandbox.create` to lock the sandbox down.
+About 5 minutes.
+
+`run_python` runs whatever Python the model writes. Outbound network is on by default (`allow_outbound=True`), so that code can reach the internet and `pip install` packages. Pass `allow_outbound=False` to `Sandbox.create` to lock the sandbox down.
 
 ## Why bother
 

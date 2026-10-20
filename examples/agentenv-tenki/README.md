@@ -1,10 +1,10 @@
 # How to run Scale AI's AgentEnv tasks on Tenki VMs
 
-**Audience:** Python developers who build RL environments or agent tasks with Scale AI's AgentEnv Framework and want each environment and each agent on its own cloud VM.
-**Time:** ~10 minutes, plus a few more if you build the optional Docker snapshot in Step 6.
-**Outcome:** `agent-env run hello --sandbox tenki` runs on a Tenki VM, and `node verify.mjs` prints its `✓` line.
+`agent-env run hello --sandbox tenki` runs on a Tenki sandbox, and `node verify.mjs` prints its `✓` line.
 
-> **Honesty note:** a VM booted from the Tenki base image installs Docker and Compose v2 the first time AgentEnv uses it, which takes a few minutes per new VM. `verify.mjs` skips that step and `agent-env run hello` doesn't. Step 6 snapshots a VM that already has Docker so later VMs skip the install.
+About 10 minutes, plus a few more if you build the optional Docker snapshot in Step 6.
+
+A machine booted from the Tenki base image installs Docker and Compose v2 the first time AgentEnv uses it, which takes a few minutes. `verify.mjs` skips that install. `agent-env run hello` does not. Step 6 snapshots a machine that already has Docker so later ones skip the install.
 
 [AgentEnv Framework](https://www.agentenvframework.com) is Scale AI's open-source (Apache-2.0) framework for building RL environments: apps exposed over MCP, seed data, a virtual clock, triggers and RBAC. Tasks are written as DAGs of steps that deploy an environment, bring in an agent and grade the result. Sandboxes are pluggable, and `tenki` has been a built-in backend since [agentenv-framework#187](https://github.com/scaleapi/agentenv-framework/pull/187), first released in `agentenv-framework` 0.9.1325. With it, each environment and each agent gets its own [Tenki](https://tenki.cloud) VM, with Docker inside and a public HTTPS URL for every exposed port.
 
