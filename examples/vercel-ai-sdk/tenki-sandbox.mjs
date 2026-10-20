@@ -4,9 +4,9 @@
 // the AI SDK's `Experimental_SandboxSession` interface (from `ai` /
 // `@ai-sdk/provider-utils`): description + read/write file methods + run/spawn.
 // Pass the result to `generateText({ experimental_sandbox })` and the model's
-// tools execute inside a disposable Tenki microVM.
+// tools execute inside a disposable Tenki sandbox.
 //
-// `createTenkiSandbox()` is a convenience that boots a microVM and hands back the
+// `createTenkiSandbox()` is a convenience that boots a sandbox and hands back the
 // adapter plus a `dispose()`.
 import { TenkiSandbox, stdoutText, stderrText, FileNotFoundError } from "@tenkicloud/sandbox";
 import { readFileSync } from "node:fs";
@@ -37,7 +37,7 @@ const ensureParent = async (session, path) => {
 };
 
 const DEFAULT_DESCRIPTION =
-	"A disposable Tenki Linux microVM. The working directory is /home/tenki; " +
+	"A disposable Tenki Linux sandbox. The working directory is /home/tenki; " +
 	"reference files with relative paths. Python 3 and standard Unix tools are available.";
 
 /**
@@ -133,7 +133,7 @@ const cfg = (key) => {
 };
 
 /**
- * Boot a fresh Tenki microVM and expose it as an AI SDK sandbox.
+ * Boot a fresh Tenki sandbox and expose it as an AI SDK sandbox.
  * Credentials resolve from options → env → ~/.config/tenki/config.yaml.
  * Returns `{ sandbox, session, dispose }`: pass `sandbox` to `generateText`,
  * and `await dispose()` (or `await using`) when finished.

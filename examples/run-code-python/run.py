@@ -32,7 +32,7 @@ workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id
 if workspace_id:
     opts["workspace_id"] = workspace_id
 
-# `Sandbox.create(...)` boots a microVM and waits until it's RUNNING (~2s).
+# `Sandbox.create(...)` boots a sandbox and waits until it's RUNNING (~2s).
 # The `with` block disposes it (terminates the VM) when the scope ends.
 with Sandbox.create(**opts) as sandbox:
     # exec(command, *args) runs a bare binary + its args — no shell splitting,

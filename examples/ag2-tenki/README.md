@@ -8,7 +8,7 @@
 
 ## Why bother
 
-AG2's `SandboxShellTool` and `SandboxCodeTool` run whatever the model writes inside a pluggable sandbox backend. AG2 has a native Tenki backend, `ag2.extensions.tenki`, merged in [ag2ai/ag2#3096](https://github.com/ag2ai/ag2/pull/3096) and maintained with Tenki. With it, every shell command and code snippet from an [AG2](https://github.com/ag2ai/ag2) agent executes in an isolated [Tenki](https://tenki.cloud) microVM instead of on your machine. One `TenkiEnvironment` serves both tools, files persist between tool calls, and the sandbox is terminated when the environment closes.
+AG2's `SandboxShellTool` and `SandboxCodeTool` run whatever the model writes inside a pluggable sandbox backend. AG2 has a native Tenki backend, `ag2.extensions.tenki`, merged in [ag2ai/ag2#3096](https://github.com/ag2ai/ag2/pull/3096) and maintained with Tenki. With it, every shell command and code snippet from an [AG2](https://github.com/ag2ai/ag2) agent executes in an isolated [Tenki](https://tenki.cloud) sandbox instead of on your machine. One `TenkiEnvironment` serves both tools, files persist between tool calls, and the sandbox is terminated when the environment closes.
 
 This is for AG2 1.x. As of AG2 1.0, `pip install ag2` ships the `Agent` API (`from ag2 import Agent`). The older AutoGen-derived API (`import autogen`, `ConversableAgent`) is now [AG2 Classic](https://github.com/ag2ai/ag2-classic), in its own repo.
 
