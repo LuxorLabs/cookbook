@@ -81,7 +81,7 @@ try {
 	// Bonus: run code (needs the data plane). Soft-skip if unreachable.
 	try {
 		const rc = await call("tenki_run_code", { language: "python", code: "print(6 * 7)" });
-		if (rc.ok && String(rc.stdout).trim() === "42") console.log(`✓ tenki_run_code (python) → "42" in a live microVM`);
+		if (rc.ok && String(rc.stdout).trim() === "42") console.log(`✓ tenki_run_code (python) → "42" in a live sandbox`);
 		else console.log(`… tenki_run_code ran but gave ${JSON.stringify(rc.stdout)} (continuing)`);
 	} catch (e) {
 		const m = e?.message ?? String(e);
