@@ -1,5 +1,5 @@
 // Pause a Tenki sandbox and resume it later — its filesystem survives the round-trip.
-// pause() snapshots memory + disk and frees the microVM; resume() brings it back.
+// pause() snapshots memory + disk and stops the running machine; resume() brings it back.
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });

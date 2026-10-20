@@ -49,7 +49,7 @@ def build_model():
     return InferenceClientModel(model_id=os.environ.get("TENKI_DEMO_MODEL", "Qwen/Qwen2.5-Coder-32B-Instruct"))
 
 
-# The executor boots one microVM and reuses it for every step of the agent's
+# The executor boots one sandbox and reuses it for every step of the agent's
 # reasoning; `CodeAgent(executor=...)` swaps it in for the default local one.
 executor = TenkiExecutor(additional_imports=[], logger=AgentLogger(LogLevel.INFO), **opts)
 try:
@@ -57,4 +57,4 @@ try:
     answer = agent.run("What is the 20th Fibonacci number? Compute it in Python.")
     print(answer)
 finally:
-    executor.cleanup()  # terminate the microVM
+    executor.cleanup()  # terminate the sandbox

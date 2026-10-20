@@ -1,6 +1,6 @@
 """
 A LangChain agent that runs code in a Tenki sandbox (the "code interpreter" pattern).
-The agent writes Python; the run_python tool executes it in a disposable microVM.
+The agent writes Python; the run_python tool executes it in a disposable sandbox.
 
 Needs Python 3.10+, the deps in requirements.txt, and a model key:
 export OPENAI_API_KEY=...  (or swap ChatOpenAI for your provider). Run: python agent.py
