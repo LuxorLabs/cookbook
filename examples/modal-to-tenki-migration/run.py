@@ -42,7 +42,7 @@ if workspace_id:
 
 # Modal: `Sandbox.create(app=app)` — everything hangs off an App. Tenki: no App
 # object — a sandbox is placed by workspace_id. `create(...)` boots
-# the microVM and waits until it's RUNNING (~2s); the `with` block disposes it.
+# the sandbox and waits until it's RUNNING (~2s); the `with` block disposes it.
 with Sandbox.create(**opts) as sandbox:
     # Modal's exec() returns a *live* process — you drain `p.stdout.read()` and call
     # `p.wait()` for the exit code. Tenki's exec() blocks until the command finishes
