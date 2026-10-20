@@ -77,6 +77,7 @@ Open the example closest to what you're building and follow its README, which co
 | [Expose a port](examples/expose-a-port/) | Serve a web app on a public preview URL |
 | [Pause, snapshot, and resume](examples/snapshots-pause-resume/) | Preserve a sandbox and pick up where it left off |
 | [Run code with Python](examples/run-code-python/) | The official `tenki` Python SDK |
+| [Run a full-stack app](examples/agent-fullstack-app/) | Serve an API, frontend, and seeded database from one sandbox |
 
 ### Agent frameworks
 
