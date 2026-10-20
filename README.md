@@ -91,7 +91,9 @@ Give an agent a sandboxed place to run the code it writes.
 | [OpenAI Agents SDK](examples/openai-agents-sdk/) | Sandboxed execution as an agent tool |
 | [LlamaIndex](examples/llamaindex/) | Sandboxed execution as a `FunctionTool` |
 | [Hugging Face smolagents](examples/smolagents/) | Remote Python executor for a `CodeAgent` |
+| [Pi Durable](examples/pi-durable-tenki/) | Remote execution env — every tool call in a disposable VM |
 | [AG2](examples/ag2-tenki/) | Native sandbox backend for shell + code tools |
+| [PraisonAI](examples/praisonai-tenki/) | One shared sandbox for a whole agent team |
 
 ### Developer tools
 
@@ -102,7 +104,9 @@ Give an agent a sandboxed place to run the code it writes.
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own sandbox |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Tenki VMs |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
+| [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
 | [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), each trial in its own VM |
+| [Convex](examples/convex-tenki/) | A sandbox per user from Convex actions, with live state in a Convex table |
 
 ### Tenki Code Reviewer
 
@@ -120,6 +124,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | --- | --- |
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
 | [RAGFlow](examples/ragflow-tenki/) | Ephemeral sandboxes for the RAG engine's code components |
+| [Open WebUI](examples/open-webui-tenki/) | Sandboxed code interpreter for the self-hosted chat platform |
 | [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
 | [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent sandboxes for an agent fleet |
 | [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
@@ -174,6 +179,7 @@ First-party packages you can install directly in your own project:
 | [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki sandboxes |
 | [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
 | [Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) | `go get github.com/LuxorLabs/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
+| [Convex component](https://github.com/LuxorLabs/tenki-convex) | `npm install @tenkicloud/convex` | Creates and drives sandboxes from Convex actions, with each one's state in a Convex table |
 
 **Covalent note:** `covalent-tenki-plugin` 0.1.0, the only release on PyPI, depends on the renamed `tenki-sandbox` package and doesn't install. Wait for 0.1.1.
 
