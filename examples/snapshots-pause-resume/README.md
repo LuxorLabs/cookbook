@@ -8,7 +8,7 @@
 
 ## Why bother
 
-`pause()` saves a running Tenki sandbox's memory and disk as a pause snapshot and releases the microVM. A paused sandbox keeps no live VM, so it drops out of your concurrency quota, and pausing is free. `resume()` boots the same sandbox, with the same id, back from that snapshot. That's the "suspend now, resume where you left off" loop, with the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK. The same snapshot machinery lets you fork a sandbox into a new one.
+`pause()` saves a running Tenki sandbox's memory and disk as a pause snapshot and releases the sandbox. A paused sandbox keeps no live VM, so it drops out of your concurrency quota, and pausing is free. `resume()` boots the same sandbox, with the same id, back from that snapshot. That's the "suspend now, resume where you left off" loop, with the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK. The same snapshot machinery lets you fork a sandbox into a new one.
 
 ## Install
 
@@ -48,7 +48,7 @@ This is all of `run.mjs`:
 
 ```js
 // Pause a Tenki sandbox and resume it later — its filesystem survives the round-trip.
-// pause() snapshots memory + disk and frees the microVM; resume() brings it back.
+// pause() snapshots memory + disk and stops the running machine; resume() brings it back.
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });

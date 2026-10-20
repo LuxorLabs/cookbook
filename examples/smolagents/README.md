@@ -1,8 +1,8 @@
 # How to run a smolagents CodeAgent's generated Python in a Tenki sandbox
 
-**Audience:** Python developers using the Hugging Face [smolagents](https://github.com/huggingface/smolagents) `CodeAgent` who want the code the model writes to run in a disposable microVM instead of their own process.
+**Audience:** Python developers using the Hugging Face [smolagents](https://github.com/huggingface/smolagents) `CodeAgent` who want the code the model writes to run in a disposable sandbox instead of their own process.
 **Time:** ~10 minutes.
-**Outcome:** a `CodeAgent` whose every code step runs in one [Tenki](https://tenki.cloud) microVM that is terminated when the agent finishes, plus a passing check of the executor that needs no model key.
+**Outcome:** a `CodeAgent` whose every code step runs in one [Tenki](https://tenki.cloud) sandbox that is terminated when the agent finishes, plus a passing check of the executor that needs no model key.
 
 > **Honesty note:** `TenkiExecutor` is code in this example, not part of smolagents. You copy `tenki_executor.py` into your project and pass the executor in with `CodeAgent(executor=...)`. As of smolagents 1.26.0 there is no `executor_type="tenki"`. [smolagents PR #2563](https://github.com/huggingface/smolagents/pull/2563) proposes one and has not been merged.
 
@@ -10,7 +10,7 @@
 
 `CodeAgent` writes Python as its actions and runs it. By default it runs that code with smolagents' `LocalPythonExecutor`, inside your own Python process, and smolagents' docs warn that "no local python sandbox can ever be completely secure". Their answer is a remote executor. The E2B, Docker, Modal and Blaxel executors all subclass `RemotePythonExecutor` in [`smolagents/remote_executors.py`](https://github.com/huggingface/smolagents/blob/main/src/smolagents/remote_executors.py), and `TenkiExecutor` subclasses it too:
 
-- One microVM per agent session, reused across every step and terminated by `executor.cleanup()`.
+- One sandbox per agent session, reused across every step and terminated by `executor.cleanup()`.
 - The model's code runs in the sandbox, along with your tools and `agent.state`, which smolagents sends at the start of each run (`send_tools`, `send_variables`). The agent loop, the model calls and your model key stay in your process.
 - Swapping it in is one argument: `CodeAgent(..., executor=TenkiExecutor(...))`.
 
@@ -95,10 +95,10 @@ export OPENAI_API_KEY=sk-...   # OpenAIServerModel (pip install 'smolagents[open
 .venv/bin/python agent.py
 ```
 
-The agent is asked for the 20th Fibonacci number. Each piece of Python the model writes runs in the sandbox, `agent.py` prints the answer, and the `finally` block terminates the microVM. The end of `agent.py`:
+The agent is asked for the 20th Fibonacci number. Each piece of Python the model writes runs in the sandbox, `agent.py` prints the answer, and the `finally` block terminates the sandbox. The end of `agent.py`:
 
 ```python
-# The executor boots one microVM and reuses it for every step of the agent's
+# The executor boots one sandbox and reuses it for every step of the agent's
 # reasoning; `CodeAgent(executor=...)` swaps it in for the default local one.
 executor = TenkiExecutor(additional_imports=[], logger=AgentLogger(LogLevel.INFO), **opts)
 try:
@@ -106,7 +106,7 @@ try:
     answer = agent.run("What is the 20th Fibonacci number? Compute it in Python.")
     print(answer)
 finally:
-    executor.cleanup()  # terminate the microVM
+    executor.cleanup()  # terminate the sandbox
 ```
 
 No model key yet? [Check it works](#check-it-works) exercises the executor without one.
@@ -133,7 +133,7 @@ A few things to know when you do:
 - A live run needs outbound network, as the comment above explains. Outbound network is on by default in the Tenki SDK, and `agent.py` also sets `allow_outbound=True` explicitly.
 - Extra packages go to the executor. List them in `TenkiExecutor(additional_imports=[...])`, and it pip-installs them into the sandbox when it starts. smolagents forwards `CodeAgent(additional_authorized_imports=...)` only to executors it builds itself, not to one you pass in with `executor=`.
 - Tools you pass to `CodeAgent(tools=[...])` run inside the sandbox too. At the start of each run, smolagents' `send_tools` pip-installs each tool's requirements there, sends the tool's class source, class attributes included, and instantiates the class there with no arguments. A tool's `forward()` sees the sandbox's files and environment variables, not your machine's.
-- `executor.cleanup()` terminates the microVM with a real `TerminateSession` call to Tenki. `agent.run()` doesn't call it. smolagents does call it when a `CodeAgent` used as a context manager leaves its `with` block, or when you call `agent.cleanup()`. `TenkiExecutor.__del__` calls it as a last resort.
+- `executor.cleanup()` terminates the sandbox with a real `TerminateSession` call to Tenki. `agent.run()` doesn't call it. smolagents does call it when a `CodeAgent` used as a context manager leaves its `with` block, or when you call `agent.cleanup()`. `TenkiExecutor.__del__` calls it as a last resort.
 - The SDK's file methods only reach `/home/tenki`. This example doesn't use them: it writes its two helper files with a `python3` one-liner over `exec`, and starts the kernel in `/home/tenki`, so relative paths in the agent's code land there.
 
 ## How the executor works: a persistent kernel inside the sandbox
@@ -143,7 +143,7 @@ A few things to know when you do:
 ```python
     def __init__(self, additional_imports, logger, allow_pickle=False, **sandbox_kwargs):
         super().__init__(additional_imports, logger, allow_pickle)
-        # Boot the microVM and wait until it's RUNNING (~2s).
+        # Boot the sandbox and wait until it's RUNNING (~2s).
         self.sandbox = Sandbox.create(**sandbox_kwargs)
         # Drop the kernel + client into /home/tenki and start the kernel daemon.
         self._put("/home/tenki/kernel.py", _KERNEL)
@@ -162,7 +162,7 @@ A few things to know when you do:
 - `CodeAgent`'s `final_answer` tool is patched to raise `FinalAnswerException("safe:<json>")`. The kernel catches it by name, and the executor deserializes the value.
 - Errors come back as `AgentError`, which `CodeAgent` shows the model so it can retry.
 - `install_packages` runs `python3 -m pip install -q …` with `exec`. The base class's default sends `!pip install`, a Jupyter magic this plain kernel can't run.
-- The microVM is the security boundary. The kernel runs code as ordinary Python, with no import allowlist like the one `LocalPythonExecutor` enforces.
+- The sandbox is the security boundary. The kernel runs code as ordinary Python, with no import allowlist like the one `LocalPythonExecutor` enforces.
 
 `TenkiExecutor` implements three `RemotePythonExecutor` methods: `run_code_raise_errors`, `install_packages` and `cleanup`. The step itself, from `tenki_executor.py`:
 
@@ -197,7 +197,7 @@ It prints:
 ✓ smolagents: TenkiExecutor ran CodeAgent Python in a Tenki sandbox (42), kept state across steps (55), caught final_answer (42), surfaced errors
 ```
 
-`verify.py` builds the executor against a live sandbox and drives it the way `CodeAgent` does. It runs `print(6 * 7)` (`42`), sets a variable in one call and reads it in the next (`55`), raises the `FinalAnswerException("safe:<json>")` shape by hand and checks the executor returns `42` as a final answer, and checks that a `ValueError` surfaces as `AgentError`. Then it terminates the microVM. With no model key, it exercises `run_code_raise_errors` and `cleanup` against a live sandbox, but not a `CodeAgent` turn, smolagents' `send_tools`, or `install_packages` with any packages, all of which a live run triggers.
+`verify.py` builds the executor against a live sandbox and drives it the way `CodeAgent` does. It runs `print(6 * 7)` (`42`), sets a variable in one call and reads it in the next (`55`), raises the `FinalAnswerException("safe:<json>")` shape by hand and checks the executor returns `42` as a final answer, and checks that a `ValueError` surfaces as `AgentError`. Then it terminates the sandbox. With no model key, it exercises `run_code_raise_errors` and `cleanup` against a live sandbox, but not a `CodeAgent` turn, smolagents' `send_tools`, or `install_packages` with any packages, all of which a live run triggers.
 
 On failure it prints a `✗` line and exits non-zero. `verify.mjs` is a Node shim that runs `verify.py` with `.venv/bin/python` if it exists, otherwise `$PYTHON` or `python3`. CI runs this example through `node verify.mjs` (the same pattern as [`run-code-python`](../run-code-python/)), on Node 20 and Python 3.12, with only `TENKI_API_KEY` set.
 
@@ -211,7 +211,7 @@ On failure it prints a `✗` line and exits non-zero. `verify.mjs` is a Node shi
 
 ## FAQ
 
-**Does this run my whole agent on Tenki, or only the code?** The code the model writes, plus your tools and `agent.state`. At the start of each run, smolagents' `send_tools` sends each tool's source into the sandbox and pip-installs its requirements there, so a tool's `forward()` runs in the microVM, and `send_variables` sends `agent.state`. The `CodeAgent` loop and the model calls run in your Python process, and your model key stays there. The options in `opts` (the Tenki key, size, network and workspace) go to `Sandbox.create(...)`, which runs in your process.
+**Does this run my whole agent on Tenki, or only the code?** The code the model writes, plus your tools and `agent.state`. At the start of each run, smolagents' `send_tools` sends each tool's source into the sandbox and pip-installs its requirements there, so a tool's `forward()` runs in the sandbox, and `send_variables` sends `agent.state`. The `CodeAgent` loop and the model calls run in your Python process, and your model key stays there. The options in `opts` (the Tenki key, size, network and workspace) go to `Sandbox.create(...)`, which runs in your process.
 
 **How do I change the VM size or cap its lifetime?** `TenkiExecutor` passes its extra keyword arguments to `Sandbox.create(...)`. `cpu_cores` and `memory_mb` set the size (`agent.py` uses 1 core and 1024 MB). `max_duration`, in seconds or as a `timedelta`, caps the sandbox's lifetime.
 

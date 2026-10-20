@@ -4,11 +4,11 @@
 **Time:** ~5 minutes.
 **Outcome:** a script that boots a [Tenki](https://tenki.cloud) sandbox, runs `python3 -c "print(6 * 7)"` inside it, prints `exit 0 -> 42`, and terminates the sandbox.
 
-> **Honesty note:** each run boots a real microVM in your Tenki workspace, and sandboxes are billed per second. The `with` block in `run.py` terminates it when the script finishes.
+> **Honesty note:** each run boots a real sandbox in your Tenki workspace, and sandboxes are billed per second. The `with` block in `run.py` terminates it when the script finishes.
 
 ## Why bother
 
-This is the core Tenki loop: boot a disposable microVM, run code in it, read the output, throw the VM away. It uses the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK and nothing else, so it's the smallest working starting point before you wire a sandbox into an agent. It is the Python twin of [`run-code-in-a-sandbox`](../run-code-in-a-sandbox/) (Node).
+This is the core Tenki loop: boot a disposable sandbox, run code in it, read the output, throw the VM away. It uses the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK and nothing else, so it's the smallest working starting point before you wire a sandbox into an agent. It is the Python twin of [`run-code-in-a-sandbox`](../run-code-in-a-sandbox/) (Node).
 
 ## Install
 
@@ -60,7 +60,7 @@ if workspace_id:
 Run it with the venv's Python (or activate the venv first), since that's where `tenki` is installed. The work happens at the end of `run.py`:
 
 ```python
-# `Sandbox.create(...)` boots a microVM and waits until it's RUNNING (~2s).
+# `Sandbox.create(...)` boots a sandbox and waits until it's RUNNING (~2s).
 # The `with` block disposes it (terminates the VM) when the scope ends.
 with Sandbox.create(**opts) as sandbox:
     # exec(command, *args) runs a bare binary + its args — no shell splitting,
@@ -69,7 +69,7 @@ with Sandbox.create(**opts) as sandbox:
     print(f"exit {result.exit_code} -> {result.stdout_text.strip()}")  # exit 0 -> 42
 ```
 
-`Sandbox.create(...)` boots a 1-core, 1024 MB microVM and blocks until it's `RUNNING`, about 2 seconds. Leaving the `with` block terminates the VM, including when the code inside raises, so an error doesn't leave a sandbox running. Under the hood, `__exit__` calls `close()`, which is an alias for `terminate` and issues a real `TerminateSession`. If you don't use `with`, call `sandbox.terminate()` yourself.
+`Sandbox.create(...)` boots a 1-core, 1024 MB sandbox and blocks until it's `RUNNING`, about 2 seconds. Leaving the `with` block terminates the VM, including when the code inside raises, so an error doesn't leave a sandbox running. Under the hood, `__exit__` calls `close()`, which is an alias for `terminate` and issues a real `TerminateSession`. If you don't use `with`, call `sandbox.terminate()` yourself.
 
 ## Why `exec` takes arguments, not a command string
 

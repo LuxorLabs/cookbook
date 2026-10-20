@@ -2,13 +2,13 @@
 
 **Audience:** JavaScript developers on Node.js 20 or newer who run code in sandboxes and want to keep the sandbox provider swappable.
 **Time:** ~3 minutes.
-**Outcome:** `node run.mjs` boots a Tenki microVM through ComputeSDK, prints `Hello from Linux …` and `42`, and destroys the VM. `node verify.mjs` prints a `✓` line.
+**Outcome:** `node run.mjs` boots a Tenki sandbox through ComputeSDK, prints `Hello from Linux …` and `42`, and destroys the VM. `node verify.mjs` prints a `✓` line.
 
 > **Honesty note:** This example calls `compute.sandbox.create()`. ComputeSDK renamed `compute.sandbox` to `compute.instances` in `computesdk` 4.1.11 and kept the old name as a deprecated alias, so the example still runs (`verify.mjs` makes the same call and passes in CI). ComputeSDK's current docs show `compute.instances.create()`.
 
 ## Why bother
 
-[ComputeSDK](https://github.com/computesdk/computesdk) puts one `compute.sandbox` interface in front of many sandbox providers. Its repo has provider packages for E2B, Modal, Daytona, Vercel and many others. The official [`@computesdk/tenki`](https://www.npmjs.com/package/@computesdk/tenki) provider maps that interface onto [Tenki](https://tenki.cloud) microVMs: shell commands, a native filesystem API, and public preview URLs. Tenki is the `provider` you pass to `compute.setConfig`, and the sandbox code after that line doesn't change if you switch providers later.
+[ComputeSDK](https://github.com/computesdk/computesdk) puts one `compute.sandbox` interface in front of many sandbox providers. Its repo has provider packages for E2B, Modal, Daytona, Vercel and many others. The official [`@computesdk/tenki`](https://www.npmjs.com/package/@computesdk/tenki) provider maps that interface onto [Tenki](https://tenki.cloud) sandboxes: shell commands, a native filesystem API, and public preview URLs. Tenki is the `provider` you pass to `compute.setConfig`, and the sandbox code after that line doesn't change if you switch providers later.
 
 ## Install
 

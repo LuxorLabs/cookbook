@@ -1,6 +1,6 @@
 # How to give Claude or Cursor a Tenki sandbox over MCP
 
-**Audience:** Developers who use an MCP client (Claude Desktop, Cursor, or Claude Code) and want their agent to run code in a disposable microVM without writing any SDK code.
+**Audience:** Developers who use an MCP client (Claude Desktop, Cursor, or Claude Code) and want their agent to run code in a disposable sandbox without writing any SDK code.
 **Time:** ~5 minutes.
 **Outcome:** Your MCP client lists the `tenki_*` tools, your agent runs a snippet in a fresh Tenki sandbox, and `node verify.mjs` drives a real sandbox through MCP tool calls against live Tenki.
 
@@ -8,13 +8,13 @@
 
 ## Why bother
 
-[`tenki-mcp`](https://github.com/LuxorLabs/tenki-mcp) (published on npm as [`@tenkicloud/mcp`](https://www.npmjs.com/package/@tenkicloud/mcp)) is a [Model Context Protocol](https://modelcontextprotocol.io) server for Tenki. Point your MCP client at it and your agent gets disposable Tenki microVMs as native tools: it can create sandboxes, run code, read and write files, run git, expose preview URLs, and manage snapshots, volumes, and templates. Every public unary method in the Tenki API has a tool, and a CI parity audit enforces that. You don't write SDK code. You add one config entry.
+[`tenki-mcp`](https://github.com/LuxorLabs/tenki-mcp) (published on npm as [`@tenkicloud/mcp`](https://www.npmjs.com/package/@tenkicloud/mcp)) is a [Model Context Protocol](https://modelcontextprotocol.io) server for Tenki. Point your MCP client at it and your agent gets disposable Tenki sandboxes as native tools: it can create sandboxes, run code, read and write files, run git, expose preview URLs, and manage snapshots, volumes, and templates. Every public unary method in the Tenki API has a tool, and a CI parity audit enforces that. You don't write SDK code. You add one config entry.
 
 A few of the tools:
 
 | Tool | What it does |
 |---|---|
-| `tenki_run_code` | one-shot: boot a microVM, run a shell, Python, or JavaScript snippet, return stdout, stderr, and exit code, tear the sandbox down |
+| `tenki_run_code` | one-shot: boot a sandbox, run a shell, Python, or JavaScript snippet, return stdout, stderr, and exit code, tear the sandbox down |
 | `tenki_create_sandbox` / `tenki_exec` | a persistent sandbox, and commands run in it |
 | `tenki_read_file` / `tenki_write_file` | UTF-8 text file I/O, paths under `/home/tenki` |
 | `tenki_git` | `clone`, `checkout`, `diff`, and `log` only. Run other git commands (commit, push) through `tenki_exec` |
@@ -109,7 +109,7 @@ Ask your agent:
 
 > "Run this Python in a fresh Tenki sandbox and tell me what it prints: `print(sum(range(100)))`"
 
-It calls `tenki_run_code`, which boots a microVM, runs the snippet, returns the output, and tears the sandbox down. Sandboxes are billed per second and are gone when the run finishes. The agent can pass `timeout_seconds` to cap how long the snippet runs. The tool's description mentions a 30-second default, but the server sends no timeout when the argument is left out. The throwaway sandbox itself has a 10-minute lifetime cap.
+It calls `tenki_run_code`, which boots a sandbox, runs the snippet, returns the output, and tears the sandbox down. Sandboxes are billed per second and are gone when the run finishes. The agent can pass `timeout_seconds` to cap how long the snippet runs. The tool's description mentions a 30-second default, but the server sends no timeout when the argument is left out. The throwaway sandbox itself has a 10-minute lifetime cap.
 
 ## Step 6 — Check it works
 
@@ -139,7 +139,7 @@ The script checks that the server advertises `tenki_create_sandbox`, `tenki_get_
 ✓ connected — 85 tools advertised
 ✓ tenki_create_sandbox → <first 8 characters of the session id>
 ✓ tenki_get_sandbox → <state>
-✓ tenki_run_code (python) → "42" in a live microVM
+✓ tenki_run_code (python) → "42" in a live sandbox
 
 ✓ mcp-tenki-sandbox: an MCP client drove Tenki end-to-end (create → get → terminate).
 ✓ tenki_terminate_sandbox (cleaned up <first 8 characters of the session id>)
