@@ -67,6 +67,14 @@ Give an agent a sandboxed place to run the code it writes.
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
 | [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), each trial in its own VM |
 
+### Tenki Code Reviewer
+
+Review pull requests with [Tenki Code Reviewer](https://tenki.cloud/products/code-reviewer).
+
+| Example | What it covers |
+| --- | --- |
+| [Cursor Origin](examples/cursor-origin-tenki/) | Tenki Code Reviewer on Origin pull requests, with `AGENTS.md` review rules |
+
 ### Agent platforms
 
 Run a self-hosted agent platform's sandboxes on Tenki.
