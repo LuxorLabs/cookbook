@@ -2,13 +2,13 @@
 
 **Audience:** Python developers who run workflows with [Covalent](https://github.com/AgnostiqHQ/covalent), or are evaluating it, and want individual tasks to run in their own disposable VM.
 **Time:** ~10 minutes, including the task's VM bootstrap.
-**Outcome:** `python workflow.py` dispatches a Covalent workflow whose task runs in a fresh Tenki microVM and prints its result (about 70.36). `node verify.mjs` prints a `✓` line.
+**Outcome:** `python workflow.py` dispatches a Covalent workflow whose task runs in a fresh Tenki sandbox and prints its result (about 70.36). `node verify.mjs` prints a `✓` line.
 
 > **Honesty note:** `covalent-tenki-plugin` 0.1.1 isn't on PyPI yet ([tenki-covalent-plugin#1](https://github.com/LuxorLabs/tenki-covalent-plugin/pull/1)), and 0.1.0 can't install, so Step 2 fails until 0.1.1 ships. Once it does, expect each task on the default Ubuntu image to spend up to ~2–3 minutes bootstrapping a Python venv (`cloudpickle`, `covalent`, and your `sandbox_requirements`) before your function runs. That's fine for a few heavy tasks and costly for many short ones. [Step 7](#step-7--cut-the-cold-start-optional) covers the ways around it.
 
 <!-- When covalent-tenki-plugin 0.1.1 is on PyPI: delete the Honesty note's first sentence and start the next one with "Expect"; delete the last sentence of the Step 2 paragraph; delete the CI-skip paragraph at the end of Step 8; delete the Troubleshooting entry for "fails to resolve covalent-tenki-plugin>=0.1.1" and the trailing ", once 0.1.1 is on PyPI" in the tenki-sandbox entry; delete the first "When shouldn't I use this?" bullet; and unskip examples/covalent-tenki/ in .github/workflows/verify.yml. When tenki-covalent-plugin#1 merges, delete the Step 4 sentence saying the table on main predates 0.1.1. Keep the rest: the >=0.1.1 floor and its 0.1.0/tenki-sandbox reason in Step 2, the tenki-sandbox Troubleshooting entry, and the cold-start part of the Honesty note. -->
 
-Covalent runs a workflow (a lattice) as a graph of tasks (electrons), and each electron can name the executor that runs it. The official [`covalent-tenki-plugin`](https://github.com/LuxorLabs/tenki-covalent-plugin) adds `TenkiExecutor`: every electron you assign to it executes in its own disposable [Tenki](https://tenki.cloud) microVM, a fresh Linux VM with real root, created on demand and destroyed the moment the task finishes. One task's environment can never leak into another's, so this suits untrusted steps and steps whose dependencies conflict.
+Covalent runs a workflow (a lattice) as a graph of tasks (electrons), and each electron can name the executor that runs it. The official [`covalent-tenki-plugin`](https://github.com/LuxorLabs/tenki-covalent-plugin) adds `TenkiExecutor`: every electron you assign to it executes in its own disposable [Tenki](https://tenki.cloud) sandbox, a fresh Linux VM with real root, created on demand and destroyed the moment the task finishes. One task's environment can never leak into another's, so this suits untrusted steps and steps whose dependencies conflict.
 
 ## Prerequisites
 
@@ -122,7 +122,7 @@ In the terminal where you exported `TENKI_API_KEY`, with the venv active:
 
 ```bash
 covalent start          # the Covalent dispatcher
-python workflow.py      # dispatches; each task runs in a Tenki microVM
+python workflow.py      # dispatches; each task runs in a Tenki sandbox
 ```
 
 `workflow.py` prints `dispatched:` and the dispatch ID, then waits. The task's VM bootstraps first (the cold start in the Honesty note), and then the script prints `result:` followed by √4950, about 70.36.

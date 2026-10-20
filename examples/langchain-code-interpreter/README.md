@@ -1,6 +1,6 @@
 # LangChain agent on Tenki (code interpreter)
 
-A LangChain agent that writes Python and runs it in a disposable Tenki sandbox — the "code interpreter" pattern, with Tenki as the execution backend. One sandbox per agent session; a `run_python` tool the agent calls to execute code in an isolated microVM.
+A LangChain agent that writes Python and runs it in a disposable Tenki sandbox — the "code interpreter" pattern, with Tenki as the execution backend. One sandbox per agent session; a `run_python` tool the agent calls to execute code in an isolated sandbox.
 
 ## The tool (`tenki-tool.mjs`)
 

@@ -35,7 +35,7 @@ covered in the [Sandbox SDK guide](https://tenki.cloud/docs/sandbox/sdk).
 
 | Example | What it covers |
 | --- | --- |
-| [Run code in a sandbox](examples/run-code-in-a-sandbox/) | Create a microVM, run a command, dispose it |
+| [Run code in a sandbox](examples/run-code-in-a-sandbox/) | Create a sandbox, run a command, dispose it |
 | [Work with files](examples/files-in-a-sandbox/) | Read, write, and list files with the TypeScript SDK |
 | [Expose a port](examples/expose-a-port/) | Serve a web app on a public preview URL |
 | [Pause, snapshot, and resume](examples/snapshots-pause-resume/) | Preserve a sandbox and pick up where it left off |
@@ -54,6 +54,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [OpenAI Agents SDK](examples/openai-agents-sdk/) | Sandboxed execution as an agent tool |
 | [LlamaIndex](examples/llamaindex/) | Sandboxed execution as a `FunctionTool` |
 | [Hugging Face smolagents](examples/smolagents/) | Remote Python executor for a `CodeAgent` |
+| [AG2](examples/ag2-tenki/) | Native sandbox backend for shell + code tools |
 
 ### Developer tools
 
@@ -61,9 +62,10 @@ Give an agent a sandboxed place to run the code it writes.
 | --- | --- |
 | [MCP server](examples/mcp-tenki-sandbox/) | Sandbox tools for Claude, Cursor, or any MCP client |
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
-| [Covalent](examples/covalent-tenki/) | Each workflow task in its own microVM |
-| [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Firecracker microVMs |
+| [Covalent](examples/covalent-tenki/) | Each workflow task in its own sandbox |
+| [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Tenki VMs |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
+| [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), each trial in its own VM |
 
 ### Agent platforms
 
@@ -72,6 +74,9 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | Example | Platform |
 | --- | --- |
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
+| [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
+| [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent sandboxes for an agent fleet |
+| [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
 
 ### Migrating from another provider
 
@@ -104,7 +109,7 @@ First-party packages you can install directly in your own project:
 | Integration | Install | What it does |
 | --- | --- | --- |
 | [Composio tools](https://github.com/TenkiCloud/composio-tools) | `npm install @tenkicloud/composio-tools` | Create, execute, snapshot, and terminate tools for Composio agents |
-| [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki microVMs |
+| [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki sandboxes |
 | [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
 | [Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) | `go get github.com/LuxorLabs/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
 
@@ -118,7 +123,9 @@ These open-source projects ship a Tenki provider or backend out of the box:
 | [DeerFlow](https://github.com/bytedance/deer-flow) | Sandbox provider for ByteDance's SuperAgent harness — [example](examples/deerflow-tenki/) |
 | [AgentBox](https://github.com/madarco/agentbox) | Provider for running parallel agents in sandboxed VMs — [example](examples/agentbox-tenki/) |
 | [ComputeSDK](https://github.com/computesdk/computesdk) | Tenki provider for the multi-provider compute toolkit — [example](examples/computesdk-tenki/) |
-| [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) | Sandboxed exec backend for AI agent fleets |
+| [AgentEnv Framework](https://github.com/scaleapi/agentenv-framework) | Sandbox backend for Scale AI's RL environments — [example](examples/agentenv-tenki/) |
+| [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) | Sandboxed exec backend for AI agent fleets — [example](examples/openhermit-tenki/) |
+| [Omnara](https://github.com/omnara-ai/omnara) | Machine pool provider for the open-source managed agent platform — [example](examples/omnara-tenki/) |
 
 ## Contributing
 

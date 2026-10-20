@@ -1,6 +1,6 @@
 # Run code in a Tenki sandbox (Python)
 
-Boot a disposable microVM, run code in it, get the output, throw it away — the core [Tenki](https://tenki.cloud) loop, in ~15 lines with the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK. The Python twin of [`run-code-in-a-sandbox`](../run-code-in-a-sandbox/) (Node).
+Boot a disposable sandbox, run code in it, get the output, throw it away — the core [Tenki](https://tenki.cloud) loop, in ~15 lines with the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK. The Python twin of [`run-code-in-a-sandbox`](../run-code-in-a-sandbox/) (Node).
 
 ## The code (`run.py`)
 
@@ -19,7 +19,7 @@ with Sandbox.create(
     print(f"exit {result.exit_code} -> {result.stdout_text.strip()}")  # exit 0 -> 42
 ```
 
-`Sandbox.create(...)` boots the microVM and blocks until it's `RUNNING` (~2s). `exec(command, *args)` passes args straight through (no shell splitting), so multi-line, model-generated code goes across as one `-c` argument with no escaping surprises. Leaving the `with` block terminates the VM (`__exit__` → `close()`, aliased to `terminate` — a real `TerminateSession`), so you never leak a sandbox.
+`Sandbox.create(...)` boots the sandbox and blocks until it's `RUNNING` (~2s). `exec(command, *args)` passes args straight through (no shell splitting), so multi-line, model-generated code goes across as one `-c` argument with no escaping surprises. Leaving the `with` block terminates the VM (`__exit__` → `close()`, aliased to `terminate` — a real `TerminateSession`), so you never leak a sandbox.
 
 ## Setup (Python 3.10+)
 

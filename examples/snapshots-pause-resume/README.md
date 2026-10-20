@@ -1,6 +1,6 @@
 # Snapshots & pause/resume
 
-Save a Tenki sandbox's state, then bring it back later — the microVM's memory and disk survive. This is the "suspend now, resume where you left off" loop with the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK, and the same snapshot machinery that lets you fork a sandbox into a fresh one.
+Save a Tenki sandbox's state, then bring it back later — the sandbox's memory and disk survive. This is the "suspend now, resume where you left off" loop with the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK, and the same snapshot machinery that lets you fork a sandbox into a fresh one.
 
 ## The code (`run.mjs`)
 
@@ -26,7 +26,7 @@ const marker = new TextDecoder().decode(await sandbox.readFile("marker.txt"));
 console.log(`resumed -> ${marker}`); // resumed -> still here after the pause
 ```
 
-`pause()` captures the running microVM as a **pause snapshot** (memory + disk) and releases the compute; a paused sandbox keeps no live VM, so it drops out of your concurrency quota and you pay only for snapshot storage. `resume()` boots the *same* sandbox — same id — back from that snapshot.
+`pause()` captures the running sandbox as a **pause snapshot** (memory + disk) and releases the compute; a paused sandbox keeps no live VM, so it drops out of your concurrency quota and you pay only for snapshot storage. `resume()` boots the *same* sandbox — same id — back from that snapshot.
 
 ## Run it
 

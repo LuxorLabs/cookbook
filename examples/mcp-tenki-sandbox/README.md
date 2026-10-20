@@ -1,6 +1,6 @@
 # Give Claude or Cursor a Tenki sandbox (MCP)
 
-Point any [MCP](https://modelcontextprotocol.io) client — Claude Desktop, Cursor, Claude Code — at **[`tenki-mcp`](https://github.com/LuxorLabs/tenki-mcp)** and your agent gets a disposable Tenki microVM it can drive natively: create sandboxes, run code, read/write files, run git, expose preview URLs, manage snapshots/volumes/templates. **85 tools**, full parity with the Tenki API.
+Point any [MCP](https://modelcontextprotocol.io) client — Claude Desktop, Cursor, Claude Code — at **[`tenki-mcp`](https://github.com/LuxorLabs/tenki-mcp)** and your agent gets a disposable Tenki sandbox it can drive natively: create sandboxes, run code, read/write files, run git, expose preview URLs, manage snapshots/volumes/templates. **85 tools**, full parity with the Tenki API.
 
 No SDK code to write — it's a config entry.
 
@@ -28,7 +28,7 @@ Once connected, ask your agent:
 
 > "Run this Python in a fresh Tenki sandbox and tell me what it prints: `print(sum(range(100)))`"
 
-It calls `tenki_run_code`, which boots a microVM, runs the snippet, returns the output, and tears the sandbox down — per-second billed, gone when it's done.
+It calls `tenki_run_code`, which boots a sandbox, runs the snippet, returns the output, and tears the sandbox down — per-second billed, gone when it's done.
 
 ## A few of the 85 tools
 

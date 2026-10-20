@@ -1,6 +1,6 @@
 # OpenAI Agents SDK on Tenki (code interpreter)
 
-Give an [OpenAI Agents SDK](https://openai.github.io/openai-agents-js/) agent a **code interpreter** — a `run_python` tool that executes the model's Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. The agent reasons and writes code; [Tenki](https://tenki.cloud/docs/sandbox) is the execution backend — an isolated microVM, not your process. One sandbox per agent session, reused across every tool call.
+Give an [OpenAI Agents SDK](https://openai.github.io/openai-agents-js/) agent a **code interpreter** — a `run_python` tool that executes the model's Python in a disposable [Tenki](https://tenki.cloud) sandbox and hands the output back. The agent reasons and writes code; [Tenki](https://tenki.cloud/docs/sandbox) is the execution backend — an isolated sandbox, not your process. One sandbox per agent session, reused across every tool call.
 
 ## The tool (`tenki-tool.mjs`)
 

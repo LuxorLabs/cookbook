@@ -11,7 +11,7 @@ import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
 // Daytona: new Daytona({ apiKey }) (or implicit DAYTONA_API_KEY). Tenki: pass the token explicitly.
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
-// Daytona: daytona.create(). Tenki: createAndWait() boots the microVM and waits until it's ready.
+// Daytona: daytona.create(). Tenki: createAndWait() boots the sandbox and waits until it's ready.
 const sandbox = await tenki.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
