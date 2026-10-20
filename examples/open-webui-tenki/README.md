@@ -1,14 +1,14 @@
-# How to give Open WebUI a code interpreter that runs in Tenki microVMs
+# How to give Open WebUI a code interpreter that runs in Tenki sandboxes
 
 **Audience:** people who run a self-hosted [Open WebUI](https://github.com/open-webui/open-webui), the ChatGPT-style interface for Ollama and OpenAI-compatible APIs, and want models to run code somewhere other than the Open WebUI host.
 **Time:** ~10 minutes, assuming Open WebUI is already running.
-**Outcome:** an `execute_code` tool that models in Open WebUI call on their own, and optionally a **Run code** button under assistant messages. Every run executes in its own [Tenki](https://tenki.cloud) microVM that is torn down when the run ends. You also get a passing check, run from this directory, against the released plugin file.
+**Outcome:** an `execute_code` tool that models in Open WebUI call on their own, and optionally a **Run code** button under assistant messages. Every run executes in its own [Tenki](https://tenki.cloud) sandbox that is torn down when the run ends. You also get a passing check, run from this directory, against the released plugin file.
 
 > **Honesty note:** the plugin creates every sandbox with outbound network off. Its `network_egress` valve defaults to `false`, which is the reverse of the Tenki SDK's own default. The code can also use only the libraries the sandbox image already has, so a `pip install` inside a run fails until you turn egress on.
 
 ## Why bother
 
-A model that writes code needs somewhere to run it, and running model-generated code on the machine that hosts Open WebUI is a risk. With this plugin, each run gets a fresh Linux microVM with real root, created on demand and destroyed when the run finishes, so the code never touches your Open WebUI host. No state carries over between runs, and one run can't see another's files or memory.
+A model that writes code needs somewhere to run it, and running model-generated code on the machine that hosts Open WebUI is a risk. With this plugin, each run gets a fresh Linux sandbox with real root, created on demand and destroyed when the run finishes, so the code never touches your Open WebUI host. No state carries over between runs, and one run can't see another's files or memory.
 
 The plugin is built on [`LuxorLabs/tenki-open-webui`](https://github.com/LuxorLabs/tenki-open-webui). It ships as two single-file plugins built from the same execution core, and you install either or both from the [v0.1.0 release](https://github.com/LuxorLabs/tenki-open-webui/releases/tag/v0.1.0):
 
@@ -45,7 +45,7 @@ title: Tenki Sandbox
 author: LuxorLabs
 author_url: https://github.com/LuxorLabs/tenki-open-webui
 funding_url: https://github.com/LuxorLabs/tenki-open-webui
-description: Run Python and shell code in isolated, ephemeral Tenki microVM sandboxes. A secure code interpreter / code execution sandbox for Open WebUI (isolated, ephemeral, microVM).
+description: Run Python and shell code in isolated, ephemeral Tenki sandboxes. A secure code interpreter / code execution sandbox for Open WebUI (isolated, ephemeral, sandbox).
 version: 0.1.0
 license: MIT
 requirements: tenki[async]>=0.5.1
@@ -191,7 +191,7 @@ Then it calls the Tool against a live Tenki sandbox, with a stand-in for Open We
     assert any(e.get("type") == "status" for e in events), "no status events emitted"
 ```
 
-This proves that the file you paste has no hidden dependencies, that egress is off and per-user keys win by default, and that `execute_code` runs code in a real microVM and returns its output. It doesn't start Open WebUI, so the frontmatter install, a model calling the tool, the Action, and image capture aren't exercised. This is what CI runs, on Node 20 and Python 3.12 with only `TENKI_API_KEY` set.
+This proves that the file you paste has no hidden dependencies, that egress is off and per-user keys win by default, and that `execute_code` runs code in a real sandbox and returns its output. It doesn't start Open WebUI, so the frontmatter install, a model calling the tool, the Action, and image capture aren't exercised. This is what CI runs, on Node 20 and Python 3.12 with only `TENKI_API_KEY` set.
 
 To check the plugin inside Open WebUI, try these prompts with the Tool enabled:
 
