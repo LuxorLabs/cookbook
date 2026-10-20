@@ -92,6 +92,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [LlamaIndex](examples/llamaindex/) | Sandboxed execution as a `FunctionTool` |
 | [Hugging Face smolagents](examples/smolagents/) | Remote Python executor for a `CodeAgent` |
 | [AG2](examples/ag2-tenki/) | Native sandbox backend for shell + code tools |
+| [PraisonAI](examples/praisonai-tenki/) | One shared sandbox for a whole agent team |
 
 ### Developer tools
 
