@@ -2,13 +2,13 @@
 
 **Audience:** Python developers who build agent teams or workflows with PraisonAI and want the agents' shell and file tools to run in a disposable cloud VM instead of on their own machine.
 **Time:** ~5 minutes.
-**Outcome:** `node verify.mjs` prints its `✓` line after PraisonAI's Tenki provider boots a live microVM, runs a command in it, round-trips a file and shuts it down. You also have the snippet that puts a whole team on one sandbox.
+**Outcome:** `node verify.mjs` prints its `✓` line after PraisonAI's Tenki provider boots a live sandbox, runs a command in it, round-trips a file and shuts it down. You also have the snippet that puts a whole team on one sandbox.
 
 > **Honesty note:** Tenki's stock image has no `/workspace` directory, and PraisonAI's shared tools don't create it. If your agents write under `/workspace`, the first one has to create it with `sudo`, as the snippet in [Use it](#use-it) does.
 
 ## Why bother
 
-[PraisonAI](https://github.com/MervinPraison/PraisonAI) is a Python multi-agent framework. You describe agents, give them tools, and a team or workflow runs them in sequence, in parallel, or in a hierarchy. Its Tenki compute provider gives a whole team one shared [Tenki](https://tenki.cloud) microVM. `tools_run_on="tenki"` provisions a single Firecracker sandbox for the run, binds every agent's `execute_command`, `read_file`, `write_file` and `list_files` tools to it, and tears it down when the run ends. All agents share one filesystem, so a file one step writes is already there for the next. The model calls stay on your machine. Only those four tools move.
+[PraisonAI](https://github.com/MervinPraison/PraisonAI) is a Python multi-agent framework. You describe agents, give them tools, and a team or workflow runs them in sequence, in parallel, or in a hierarchy. Its Tenki compute provider gives a whole team one shared [Tenki](https://tenki.cloud) sandbox. `tools_run_on="tenki"` provisions a single Firecracker sandbox for the run, binds every agent's `execute_command`, `read_file`, `write_file` and `list_files` tools to it, and tears it down when the run ends. All agents share one filesystem, so a file one step writes is already there for the next. The model calls stay on your machine. Only those four tools move.
 
 Provisioning is lazy: a run that never calls one of those tools never creates a sandbox.
 
@@ -75,7 +75,7 @@ writer = Agent(instructions=(
 ))
 
 team = PraisonAIAgents(agents=[researcher, writer], tools_run_on="tenki")
-team.start()   # one Tenki microVM for the whole run, shut down at the end
+team.start()   # one Tenki sandbox for the whole run, shut down at the end
 ```
 
 `PraisonAIAgents` is the older name for `AgentTeam`, and both accept `tools_run_on=`. `Workflow(..., tools_run_on="tenki")` (`Workflow` is the older name for `AgentFlow`) works the same way. To set the key or workspace in code, pass a `TenkiCompute(api_key=..., workspace_id=...)` instance instead of the string.
@@ -87,7 +87,7 @@ The stock image runs commands as user `tenki`, which has passwordless sudo. It s
 When you call the provider yourself, as `verify.py` does, a `ComputeConfig` describes the VM. From `verify.py`:
 
 ```python
-# 2. Live: the same provider class against a real microVM.
+# 2. Live: the same provider class against a real sandbox.
 compute = TenkiCompute(api_key=resolve_token())
 config = ComputeConfig(cpu=1, memory_mb=1024, idle_timeout_s=120)
 
@@ -127,7 +127,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
 ✓ praisonai-tenki: tools_run_on="tenki" resolves → provision → execute 42 → file round-trip → shutdown
 ```
 
-[`verify.py`](verify.py) runs two checks, and neither needs an LLM key. The registration check confirms that `TenkiCompute` imports from both paths and that the core SDK's resolver (`praisonaiagents`) turns the string `"tenki"` into a `TenkiCompute`. That resolver is the lookup `tools_run_on="tenki"` goes through. The live check provisions a real microVM through the provider and runs `python3 -c 'print(6 * 7)'`. It creates `/workspace` with the same `sudo mkdir` a team run on the stock image needs, round-trips 256 random bytes byte-for-byte, and shuts the VM down:
+[`verify.py`](verify.py) runs two checks, and neither needs an LLM key. The registration check confirms that `TenkiCompute` imports from both paths and that the core SDK's resolver (`praisonaiagents`) turns the string `"tenki"` into a `TenkiCompute`. That resolver is the lookup `tools_run_on="tenki"` goes through. The live check provisions a real sandbox through the provider and runs `python3 -c 'print(6 * 7)'`. It creates `/workspace` with the same `sudo mkdir` a team run on the stock image needs, round-trips 256 random bytes byte-for-byte, and shuts the VM down:
 
 ```python
     # The stock image runs as user `tenki` and has no /workspace yet; create it
