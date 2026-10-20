@@ -1,10 +1,10 @@
 # How to port a Daytona sandbox script to Tenki
 
-**Audience:** Node.js developers with a script on Daytona's TypeScript SDK (`@daytonaio/sdk`, renamed `@daytona/sdk` upstream with the same API) who want to run it on Tenki.
-**Time:** ~5 minutes to install, authenticate, and run the Tenki port.
-**Outcome:** Daytona's create → run a command → capture output → dispose loop running on a live Tenki sandbox, plus a call-by-call map for porting the rest of your script.
+Daytona's create, run, capture, and dispose loop runs on a live Tenki sandbox, with a call-by-call map for porting the rest of a script.
 
-> **Honesty note:** Only the Tenki side runs here. Nothing in this example installs or calls Daytona: the Daytona code is reference, in `run.mjs`'s header comment and in the map below. The scripts run create, `exec`, and close. The file, env, working-directory, `get`, and `list` rows of the map aren't run by either script.
+About 5 minutes to install, authenticate, and run the Tenki port.
+
+This page runs the Tenki side. The Daytona code is reference, in `run.mjs`'s header comment and in the map below. The scripts run create, `exec`, and close. The file, env, working-directory, `get`, and `list` rows of the map are not run by either script.
 
 ## Why bother
 

@@ -1,10 +1,10 @@
 # How to run each Prefect flow run in its own Tenki sandbox
 
-**Audience:** Prefect 3.x users who want every flow run to execute in its own fresh VM.
-**Time:** ~15 minutes, including a smoke check that boots a sandbox. A real flow run also needs a Tenki image with Prefect in it, so add however long that takes you to build.
-**Outcome:** a Prefect work pool of type `tenki` whose worker creates one disposable [Tenki](https://tenki.cloud) sandbox per flow run, runs the flow there, and closes the sandbox when the run ends.
+A Prefect work pool of type `tenki` has a worker that creates one disposable [Tenki](https://tenki.cloud) sandbox per flow run, runs the flow there, and closes the sandbox when the run ends.
 
-> **Honesty note:** this repo can't run a real Prefect flow for you. A flow run needs a Tenki image or snapshot with Prefect and your flow's dependencies installed (the plugin doesn't ship a ready-made one yet), and a Prefect API the sandbox can reach. The smoke check in Step 10 tests the Tenki side of the worker without either.
+About 15 minutes, including a smoke check that boots a sandbox. A real flow run also needs a Tenki image with Prefect in it.
+
+A flow run needs a Tenki image or snapshot with Prefect and your flow's dependencies installed. The plugin does not ship a ready-made image yet, and the sandbox has to reach a Prefect API. The smoke check in Step 10 tests the Tenki side of the worker without either.
 
 In [Prefect 3.x](https://docs.prefect.io), a *worker* polls a *work pool* and provisions infrastructure for each flow run. [`prefect-tenki`](https://github.com/luxorlabs/tenki-prefect) adds a worker type `tenki` that makes that infrastructure a Tenki sandbox: a fresh Linux VM with real root, created when the worker picks up the run and destroyed when the run finishes.
 

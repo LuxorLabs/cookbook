@@ -1,10 +1,10 @@
 # How to run OpenClaw agent tools in Tenki sandboxes
 
-**Audience:** People who run [OpenClaw](https://github.com/openclaw/openclaw), the open-source personal AI assistant, and want its agents' commands to run on a remote VM instead of on their own machine.
-**Time:** ~5 minutes to clone, install, and run the check (in CI, `npm install` plus `node verify.mjs` take about 7 seconds). Installing and onboarding an OpenClaw 2026.7.x host, then installing and configuring the plugin, comes on top.
-**Outcome:** With the [`@tenkicloud/openclaw`](https://www.npmjs.com/package/@tenkicloud/openclaw) plugin enabled, every agent tool execution in OpenClaw runs inside a [Tenki](https://tenki.cloud) Firecracker sandbox, and `node verify.mjs` prints a `✓` line.
+With the [`@tenkicloud/openclaw`](https://www.npmjs.com/package/@tenkicloud/openclaw) plugin enabled, every agent tool execution in OpenClaw runs inside a [Tenki](https://tenki.cloud) sandbox, and `node verify.mjs` prints a `✓` line.
 
-> **Honesty note:** Plugin 0.2.0 loads only on OpenClaw 2026.7.x. On 2026.8.1 or later, which includes `latest`, the install (with `--accept-capabilities`) reports success and the plugin then fails to load. Step 2 has the details.
+About 5 minutes to clone, install, and run the check. In CI, `npm install` plus `node verify.mjs` take about 7 seconds. Installing and onboarding an OpenClaw 2026.7.x host, then installing and configuring the plugin, comes on top.
+
+Plugin 0.2.0 loads only on OpenClaw 2026.7.x. On 2026.8.1 or later, which includes `latest`, the install (with `--accept-capabilities`) reports success and the plugin then fails to load. Step 2 has the details.
 
 OpenClaw distributes plugins and skills through [ClawHub](https://clawhub.ai). `@tenkicloud/openclaw` ([LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw)) is a sandbox backend: with `sandbox.mode: "all"`, every agent tool execution (shell commands, the filesystem bridge, interactive PTY sessions) runs inside a Tenki sandbox instead of on your machine.
 

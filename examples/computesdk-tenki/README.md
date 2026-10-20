@@ -1,10 +1,10 @@
 # How to run code on Tenki through ComputeSDK
 
-**Audience:** JavaScript developers on Node.js 20 or newer who run code in sandboxes and want to keep the sandbox provider swappable.
-**Time:** ~3 minutes.
-**Outcome:** `node run.mjs` boots a Tenki sandbox through ComputeSDK, prints `Hello from Linux …` and `42`, and destroys the VM. `node verify.mjs` prints a `✓` line.
+`node run.mjs` boots a Tenki sandbox through ComputeSDK, prints `Hello from Linux …` and `42`, and destroys the sandbox. `node verify.mjs` prints a `✓` line.
 
-> **Honesty note:** This example calls `compute.sandbox.create()`. ComputeSDK renamed `compute.sandbox` to `compute.instances` in `computesdk` 4.1.11 and kept the old name as a deprecated alias, so the example still runs (`verify.mjs` makes the same call and passes in CI). ComputeSDK's current docs show `compute.instances.create()`.
+About 3 minutes.
+
+This example calls `compute.sandbox.create()`. ComputeSDK renamed `compute.sandbox` to `compute.instances` in `computesdk` 4.1.11 and kept the old name as a deprecated alias, so the example still runs. `verify.mjs` makes the same call and passes in CI. ComputeSDK's current docs show `compute.instances.create()`.
 
 ## Why bother
 

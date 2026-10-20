@@ -1,10 +1,10 @@
 # How to port a Modal sandbox script to Tenki
 
-**Audience:** Python developers who run sandboxes on [Modal](https://modal.com) with `modal.Sandbox` and want the same loop on [Tenki](https://tenki.cloud).
-**Time:** ~5 minutes to install, run and verify the example.
-**Outcome:** `run.py` prints `42 · exit 0` from a Tenki sandbox, `verify.py` passes, and you have a Modal-to-Tenki API map for porting the rest of your script.
+`run.py` prints `42 · exit 0` from a Tenki sandbox, `verify.py` passes, and the page has a Modal-to-Tenki API map for porting the rest of a script.
 
-> **Honesty note:** Nothing in this example calls Modal. The Modal code appears only as reference, in `run.py`'s docstring and in comments. `run.py` and `verify.py` exercise the Tenki side: create, `exec`, a file round-trip, and dispose. The other rows of the API map below come from the two SDKs' sources and are not run here.
+About 5 minutes to install, run, and verify the example.
+
+This example does not call Modal. The Modal code appears as reference, in `run.py`'s docstring and in comments. `run.py` and `verify.py` exercise the Tenki side: create, `exec`, a file round-trip, and dispose. The other rows of the API map come from the two SDKs' sources and are not run here.
 
 ## Why bother
 

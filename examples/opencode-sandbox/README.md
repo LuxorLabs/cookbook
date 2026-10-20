@@ -1,10 +1,10 @@
 # How to run OpenCode's web UI on a public URL from a disposable sandbox
 
-**Audience:** developers who use the [OpenCode](https://opencode.ai) coding agent, or want to try it, and would rather point a browser at it on a throwaway machine than run it on their own. You need Node and a terminal.
-**Time:** ~5 minutes. In CI, `npm install` takes under a second and `node verify.mjs` about 70 seconds. `run.mjs` boots the same way, then stays up until you press Ctrl-C.
-**Outcome:** a password-protected public HTTPS URL that serves OpenCode's web UI and JSON API, working on a checkout of [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) sandbox. The sandbox and the URL end when you press Ctrl-C, or after two hours at the latest.
+A password-protected public HTTPS URL serves OpenCode's web UI and JSON API, on a checkout of [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox). The sandbox and the URL end when you press Ctrl-C, or after two hours.
 
-> **Honesty note:** neither script sends OpenCode a prompt, and CI runs only `verify.mjs`, with no model key. The server, the URL, the password, and OpenCode picking up `OPENAI_API_KEY` are tested. The agent reaching a model with your key is not.
+About 5 minutes. In CI, `npm install` takes under a second and `node verify.mjs` about 70 seconds. `run.mjs` boots the same way, then stays up until you press Ctrl-C.
+
+Neither script sends OpenCode a prompt. CI runs `verify.mjs` with no model key. The server, the URL, the password, and OpenCode picking up `OPENAI_API_KEY` are tested. The agent reaching a model with your key is a separate step.
 
 ## Why bother
 
@@ -209,7 +209,7 @@ The version in the middle is whichever OpenCode `enableOpenCode` baked into the 
 
 ## FAQ
 
-**When shouldn't I use this?** When the server must not be reachable from the internet at all: the URL is public and only the password stands in front of it. When you need CI to prove the agent works with your model key: it proves the Tenki side only (see the honesty note). When you need a pinned OpenCode version: you get whichever version `enableOpenCode` bakes in, and `verify.mjs` only checks that `opencode --version` prints `x.y.z`. And when the session must run unattended or longer than two hours: the script has to stay in the foreground, and `maxDurationMs` ends the sandbox at two hours.
+**When shouldn't I use this?** When the server must not be reachable from the internet at all: the URL is public and only the password stands in front of it. When you need CI to prove the agent works with your model key: it proves the Tenki side only (see the opening of this page). When you need a pinned OpenCode version: you get whichever version `enableOpenCode` bakes in, and `verify.mjs` only checks that `opencode --version` prints `x.y.z`. And when the session must run unattended or longer than two hours: the script has to stay in the foreground, and `maxDurationMs` ends the sandbox at two hours.
 
 **Can a script drive the agent instead of a browser?** Yes. The URL serves OpenCode's JSON API, and every request needs the same `Authorization: Basic` header that `run.mjs` builds. OpenCode's [server docs](https://opencode.ai/docs/server) list the endpoints and say the server publishes its OpenAPI spec at `/doc`.
 

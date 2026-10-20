@@ -1,10 +1,10 @@
 # How to give a Composio agent Tenki sandboxes
 
-**Audience:** Node.js developers building agents on [Composio](https://composio.dev) who want the agent to run shell commands in disposable Linux sandboxes.
-**Time:** ~10 minutes.
-**Outcome:** a Composio session with six Tenki tools bound to it, a passing `node verify.mjs`, and, if you add an Anthropic key, Claude booting a sandbox, running a command in it, and terminating it on its own.
+A Composio session has six Tenki tools bound to it, and `node verify.mjs` passes. With an Anthropic key, Claude boots a sandbox, runs a command in it, and terminates it on its own.
 
-> **Honesty note:** this example uses `@tenkicloud/composio-tools` 0.1.0, the only version on npm. 0.1.0 still requires a `workspaceId` and a `projectId`, even though Tenki no longer has projects. The scripts look your workspace up from your key and pass `"default"` as the project. Upstream 0.2.0 drops both options, but it isn't on npm yet.
+About 10 minutes.
+
+This example uses `@tenkicloud/composio-tools` 0.1.0, the only version on npm. 0.1.0 still requires a `workspaceId` and a `projectId`, even though Tenki no longer has projects. The scripts look your workspace up from your key and pass `"default"` as the project. Upstream 0.2.0 drops both options, and it is not on npm yet.
 
 ## Why bother
 

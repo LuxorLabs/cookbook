@@ -1,10 +1,10 @@
 # How to back orca's Cloud VM recipe with Tenki sandboxes
 
-**Audience:** Developers who run coding agents in parallel with [orca](https://github.com/stablyai/orca) and want each workspace on its own disposable machine instead of in a git worktree on their laptop.
-**Time:** ~15 minutes, including a verify run that boots a sandbox, clones a repo into it, pauses and resumes it, and destroys it.
-**Outcome:** An orca ephemeral-VM recipe that boots a [Tenki Sandbox](https://tenki.cloud/products/sandbox) sandbox with your repo cloned, hands orca an SSH target for it, and pauses, resumes, and destroys it. `node verify.mjs` prints a `✓` line once the Tenki side works. orca itself can't adopt the VM yet; see the honesty note.
+An orca ephemeral-VM recipe boots a [Tenki Sandbox](https://tenki.cloud/products/sandbox) with your repo cloned, hands orca an SSH target for it, and pauses, resumes, and destroys it. `node verify.mjs` prints a `✓` line once the Tenki side works. orca itself cannot adopt the machine yet.
 
-> **Honesty note:** `verify.mjs` drives the recipe the way orca does, but it doesn't run orca, and the recipe doesn't yet meet two checks in orca's current release (v1.4.224). orca wants the cloned checkout on the workspace's own branch at the commit it asked for, and it wants `resume` to print a fresh recipe result. Until `recipe.mjs` handles both, expect orca to refuse the VM when it creates a workspace, and to mark a woken workspace `resume_failed`. [Troubleshooting](#troubleshooting) has the exact errors. The repo's CI also skips this example, because Tenki's gateway SSH host keys aren't yet stable across connections.
+About 15 minutes, including a verify run that boots a sandbox, clones a repo into it, pauses and resumes it, and destroys it.
+
+`verify.mjs` drives the recipe the way orca does, and it does not run orca. The recipe does not yet meet two checks in orca's current release (v1.4.224). orca wants the cloned checkout on the workspace's own branch at the commit it asked for, and it wants `resume` to print a fresh recipe result. Until `recipe.mjs` handles both, orca refuses the machine when it creates a workspace and marks a woken workspace `resume_failed`. [Troubleshooting](#troubleshooting) has the exact errors. The repo's CI also skips this example, because Tenki's gateway SSH host keys change between connections.
 
 orca normally isolates each agent in a git worktree on your machine. Its ephemeral-VM recipe hook (labeled **Cloud VM** in orca's settings) lets you put each workspace on its own machine instead: orca runs a command you supply for `create`, `suspend`, `resume`, and `destroy`, and `create` prints the SSH target orca dials. This folder is that command, backed by Tenki sandboxes:
 
@@ -187,7 +187,7 @@ It prints `{"ok":true,"mode":"destroy"}`, and the `rm` then deletes `create.json
    Keep `checkoutMode: provisioned-root`. The recipe returns `schemaVersion: 2` with `checkoutMode: "provisioned-root"`, and orca rejects a result whose mode doesn't match the recipe's.
 3. Make sure `TENKI_AUTH_TOKEN` (or `TENKI_API_KEY`) is set in the environment orca runs in. orca passes its own environment to recipe commands, and the `ssh` it starts runs `ssh-proxy.mjs`, which needs the key too.
 
-orca runs `create` with your checkout as the working directory and sets `ORCA_REPO_URL` to the remote it resolved the base branch against. The recipe clones that URL into `/home/tenki/repo`, or `origin` if the variable is empty. Read the honesty note at the top before you rely on this step: as written, the recipe doesn't check out the branch orca asks for.
+orca runs `create` with your checkout as the working directory and sets `ORCA_REPO_URL` to the remote it resolved the base branch against. The recipe clones that URL into `/home/tenki/repo`, or `origin` if the variable is empty. The opening of this page has the current limits. As written, the recipe does not check out the branch orca asks for.
 
 ## Step 6 — Check it works
 

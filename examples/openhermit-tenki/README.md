@@ -1,10 +1,10 @@
 # How to run OpenHermit agents on Tenki sandboxes
 
-**Audience:** operators who run an OpenHermit gateway, or are setting one up, and want each agent's shell and workspace in its own Tenki sandbox instead of a Docker container managed by the gateway.
-**Time:** ~5 minutes for the Tenki check in this folder. In CI, its `npm install` and live run take about 15 seconds. Running an agent through OpenHermit comes on top: a source checkout and its `npm install`, plus a PostgreSQL database for the setup wizard.
-**Outcome:** `node verify.mjs` prints a `✓` line from a live Tenki sandbox, and an OpenHermit agent runs its shell commands, file tools and skill syncs in its own sticky Tenki sandbox that survives gateway restarts.
+`node verify.mjs` prints a `✓` line from a live Tenki sandbox. An OpenHermit agent runs its shell commands, file tools, and skill syncs in its own sticky Tenki sandbox that survives gateway restarts.
 
-> **Honesty note:** OpenHermit's latest npm release (`0.10.0`) does not include the Tenki backend, which merged after it. Since [openhermit#313](https://github.com/HCF-STUDIOS/openhermit/pull/313), the backend also needs `@tenkicloud/sandbox` 1.4 or newer. Until the next release ships, you run OpenHermit from a source checkout (Step 5). This folder doesn't contain OpenHermit: `verify.mjs` runs the Tenki SDK calls the backend is built on, so it tells you your key and the Tenki side work, not that your gateway does.
+About 5 minutes for the Tenki check in this folder. In CI, its `npm install` and live run take about 15 seconds. Running an agent through OpenHermit comes on top: a source checkout and its `npm install`, plus a PostgreSQL database for the setup wizard.
+
+OpenHermit's latest npm release (`0.10.0`) does not include the Tenki backend, which merged after it. Since [openhermit#313](https://github.com/HCF-STUDIOS/openhermit/pull/313), the backend also needs `@tenkicloud/sandbox` 1.4 or newer. Until the next release ships, you run OpenHermit from a source checkout (Step 5). This folder does not contain OpenHermit. `verify.mjs` runs the Tenki SDK calls the backend is built on, so it tells you your key and the Tenki side work.
 
 [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) deploys fleets of AI agents as production services. A gateway holds durable state in PostgreSQL, and each agent gets a **sandbox** for its shell and workspace files. Since [openhermit#239](https://github.com/HCF-STUDIOS/openhermit/pull/239), `tenki` is a first-class sandbox type alongside `host`, `docker`, `e2b` and `daytona`: each agent's workspace becomes one sticky [Tenki](https://tenki.cloud) sandbox that survives gateway restarts.
 

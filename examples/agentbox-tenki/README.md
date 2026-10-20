@@ -1,10 +1,10 @@
 # How to run AgentBox coding agents in Tenki VMs
 
-**Audience:** Developers who use [AgentBox](https://github.com/madarco/agentbox), or want to, and want each agent box to be a cloud VM instead of something running on their own machine.
-**Time:** ~20 minutes. Most of it is the one-time `agentbox prepare` bake (roughly 8 to 12 minutes) and the first `agentbox create` (about 3 minutes).
-**Outcome:** A Tenki VM holding a clone of your project on its own branch, with Claude Code running inside it, and a passing `node verify.mjs`.
+A Tenki sandbox holds a clone of your project on its own branch, with Claude Code running inside it. `node verify.mjs` passes.
 
-> **Honesty note:** The published plugin (0.1.1) targets AgentBox's provider SDK v2, so you have to **pin the AgentBox CLI to 0.29.2**. AgentBox 0.27.1 (the plugin's documented minimum) through 0.29.2 loads it. 0.30.0 and later accept only v4 and refuse this plugin at `plugin add`. SDK v4 support is in progress upstream ([tenki-agentbox-provider#6](https://github.com/LuxorLabs/tenki-agentbox-provider/pull/6)) but hasn't been released yet.
+About 20 minutes. Most of that is the one-time `agentbox prepare` bake (roughly 8 to 12 minutes) and the first `agentbox create` (about 3 minutes).
+
+The published plugin (0.1.1) targets AgentBox's provider SDK v2, so pin the AgentBox CLI to **0.29.2**. AgentBox 0.27.1 (the plugin's documented minimum) through 0.29.2 loads it. 0.30.0 and later accept only v4 and refuse this plugin at `plugin add`. SDK v4 support is in progress upstream ([tenki-agentbox-provider#6](https://github.com/LuxorLabs/tenki-agentbox-provider/pull/6)) and has not been released yet.
 
 [AgentBox](https://github.com/madarco/agentbox) moves your project into a dedicated VM, local or cloud, and runs coding agents (`claude`, `codex`, `opencode`) inside it, in parallel, with your own settings. AgentBox calls each of those VMs a box. Tenki is a community AgentBox provider ([agentbox#296](https://github.com/madarco/agentbox/pull/296)). With the [`@tenkicloud/agentbox-provider`](https://www.npmjs.com/package/@tenkicloud/agentbox-provider) plugin installed, every box becomes a [Tenki](https://tenki.cloud) VM with its own kernel, Docker inside the box, public preview URLs, and free pause/resume. You don't need Docker on your machine.
 
@@ -32,7 +32,7 @@ agentbox plugin add @tenkicloud/agentbox-provider
 agentbox plugin list                 # -> tenki … (SDK v2)
 ```
 
-Keep both pins, and move them together. A newer CLI refuses the 0.1.1 plugin (see the honesty note above), and a plugin release that targets SDK v4 won't load in AgentBox 0.29.2, which accepts only v1 and v2.
+Keep both pins, and move them together. A newer CLI refuses the 0.1.1 plugin (see the version pin at the top of this page), and a plugin release that targets SDK v4 won't load in AgentBox 0.29.2, which accepts only v1 and v2.
 
 AgentBox runs a plugin in-process with the CLI, with full access to your host and credentials, so **`plugin add` is the trust boundary**: only add plugins you trust.
 

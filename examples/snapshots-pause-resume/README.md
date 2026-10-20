@@ -1,10 +1,10 @@
 # How to pause a Tenki sandbox and resume it with its memory and disk intact
 
-**Audience:** Node.js developers using the `@tenkicloud/sandbox` SDK who want to stop a sandbox's compute without losing its state, then bring it back.
-**Time:** ~5 minutes, most of it creating an API key and running `npm install`. The pause itself takes about 20 seconds in this example.
-**Outcome:** A sandbox paused and resumed, with a file written before the pause read back unchanged after it, and the sandbox terminated when the script ends.
+A sandbox is paused and resumed. A file written before the pause reads back unchanged after it, and the sandbox is terminated when the script ends.
 
-> **Honesty note:** `run.mjs` needs Node.js 24 or later, because it uses top-level `await using`, which Node 22 can't parse. `verify.mjs` uses `try`/`finally` instead, so it runs on older versions. CI runs it on Node 20.
+About 5 minutes, most of it creating an API key and running `npm install`. The pause itself takes about 20 seconds in this example.
+
+`run.mjs` needs Node.js 24 or later, because it uses top-level `await using`, which Node 22 cannot parse. `verify.mjs` uses `try`/`finally`, so it runs on older versions. CI runs it on Node 20.
 
 ## Why bother
 

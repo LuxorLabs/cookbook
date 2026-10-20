@@ -1,10 +1,10 @@
 # How to get a public preview URL for a server in a Tenki sandbox
 
-**Audience:** Node.js developers who want to show a server that runs inside a Tenki sandbox at a public HTTPS URL: a dev-server preview, a running app you want to share, or an agent showing its work.
-**Time:** ~2 minutes once you have an API key. In CI, `npm install` and `node verify.mjs` finish in about 6 seconds together.
-**Outcome:** `node run.mjs` boots a sandbox, starts a Python HTTP server in it, prints the server's `previewUrl`, fetches that URL from your machine, and prints `GET 200 -> Hello from a Tenki sandbox!`. `node verify.mjs` prints a `✓` line.
+`node run.mjs` boots a sandbox, starts a Python HTTP server in it, prints the server's `previewUrl`, fetches that URL from your machine, and prints `GET 200 -> Hello from a Tenki sandbox!`. `node verify.mjs` prints a `✓` line.
 
-> **Honesty note:** `run.mjs` uses top-level `await using`, which needs Node 24 or newer. Node 22 can't parse it. `verify.mjs` does the same work with `try`/`finally` and runs on Node 20, which is what CI uses.
+About 2 minutes once you have an API key. In CI, `npm install` and `node verify.mjs` finish in about 6 seconds together.
+
+`run.mjs` uses top-level `await using`, which needs Node 24 or newer. Node 22 cannot parse it. `verify.mjs` does the same work with `try`/`finally` and runs on Node 20, which is what CI uses.
 
 ## Why bother
 

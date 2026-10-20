@@ -1,10 +1,10 @@
 # How to stand up and drive a full-stack app in a Tenki sandbox
 
-**Audience:** Developers building or using an AI agent (Claude Code, another MCP client, or your own Node code) that has to start a web app, call its API, and show you the result somewhere other than your machine.
-**Time:** ~5 minutes.
-**Outcome:** A task-list app (a JSON API, an HTML frontend, and a SQLite database seeded with 5 tasks) running in one Tenki sandbox, its endpoints exercised, and a public HTTPS URL you can open in a browser.
+A task-list app runs in one Tenki sandbox: a JSON API, an HTML frontend, and a SQLite database seeded with 5 tasks. The example exercises the endpoints and prints a public HTTPS URL you can open.
 
-> **Honesty note:** `run.mjs` leaves the sandbox running after it exits so you can open the URL. Sandboxes are billed per second, and this one runs until you terminate it or its 2-hour `maxDurationMs` cap ends it. `run.mjs` prints a command that terminates it sooner. `verify.mjs` always terminates its sandbox.
+About 5 minutes.
+
+`run.mjs` leaves the sandbox running after it exits so you can open the URL. Sandboxes are billed per second, and this one runs until you terminate it or its 2-hour `maxDurationMs` cap ends it. `run.mjs` prints a command that terminates it sooner. `verify.mjs` always terminates its sandbox.
 
 ## Why bother
 

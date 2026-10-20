@@ -1,10 +1,10 @@
 # How to run an AG2 agent's shell and code tools in a Tenki sandbox
 
-**Audience:** Python developers building agents with AG2 1.x (`from ag2 import Agent`) who don't want model-written commands running on their own machine.
-**Time:** ~5 minutes.
-**Outcome:** `node verify.mjs` prints its `✓` line after opening a live Tenki sandbox through AG2's own Tenki backend, and you have the agent code that gives `SandboxShellTool` and `SandboxCodeTool` that sandbox.
+`node verify.mjs` prints its `✓` line after opening a live Tenki sandbox through AG2's own Tenki backend. The page includes the agent code that gives `SandboxShellTool` and `SandboxCodeTool` that sandbox.
 
-> **Honesty note:** this example ships a check, not an agent. `verify.py` drives AG2's Tenki classes against live Tenki and needs no model key. The agent code in [Use it](#use-it) is the snippet from AG2's Tenki docs, and running it needs an Anthropic API key.
+About 5 minutes.
+
+`verify.py` drives AG2's Tenki classes against live Tenki and needs no model key. The agent code in [Use it](#use-it) is the snippet from AG2's Tenki docs, and running it needs an Anthropic API key.
 
 ## Why bother
 

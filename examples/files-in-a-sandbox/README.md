@@ -1,10 +1,10 @@
 # How to write, read, and list files in a Tenki sandbox
 
-**Audience:** Node.js developers who want to move files in and out of a disposable Tenki sandbox with the `@tenkicloud/sandbox` SDK.
-**Time:** ~5 minutes, most of it creating an API key. Each script boots, uses, and disposes of a sandbox in a few seconds.
-**Outcome:** A text file written into a live Tenki sandbox, read back, and listed, with the sandbox terminated when the script ends.
+A text file is written into a live Tenki sandbox, read back, and listed. The sandbox is terminated when the script ends.
 
-> **Honesty note:** `run.mjs` needs Node.js 24 or later, because it uses top-level `await using`, which Node 22 can't parse. `verify.mjs` doesn't use `await using`, so it runs on older versions. CI runs it on Node 20.
+About 5 minutes, most of it creating an API key. Each script boots, uses, and disposes of a sandbox in a few seconds.
+
+`run.mjs` needs Node.js 24 or later, because it uses top-level `await using`, which Node 22 cannot parse. `verify.mjs` does not use `await using`, so it runs on older versions. CI runs it on Node 20.
 
 ## Why bother
 

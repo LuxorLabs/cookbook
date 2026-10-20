@@ -1,10 +1,10 @@
 # How to run OpenAI Codex headless on a real repo in a disposable sandbox
 
-**Audience:** Node developers who want to hand a coding task to OpenAI [Codex](https://github.com/openai/codex) unattended, against a real Git checkout, without giving it their own machine.
-**Time:** ~15 minutes, most of it the agent turn, which `run.mjs` allows up to 10 minutes.
-**Outcome:** a unified diff in your terminal of the edit Codex made to a fresh checkout of [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue), produced inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) sandbox that is closed when the script exits.
+The terminal prints a unified diff of the edit Codex made to a fresh checkout of [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue). The edit is produced inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) that is closed when the script exits.
 
-> **Honesty note:** nothing pins the Codex version. The sandbox runs the copy that ships in Tenki's default image (codex-cli 0.154.0 as of October 2026), and it changes when Tenki rebuilds the image. `verify.mjs` checks the flags and the key variable `run.mjs` relies on, not how the agent behaves.
+About 15 minutes, most of it the agent turn, which `run.mjs` allows up to 10 minutes.
+
+Nothing pins the Codex version. The sandbox runs the copy that ships in Tenki's default image (codex-cli 0.154.0 as of October 2026), and it changes when Tenki rebuilds the image. `verify.mjs` checks the flags and the key variable `run.mjs` relies on.
 
 ## Why bother
 

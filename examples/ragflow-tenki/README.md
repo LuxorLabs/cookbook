@@ -1,10 +1,10 @@
 # How to run RAGFlow code components in Tenki sandboxes
 
-**Audience:** people who run [RAGFlow](https://github.com/infiniflow/ragflow), the open-source RAG engine, build agent workflows with code components (Python or JavaScript snippets), and want those snippets to run in a cloud sandbox instead of one they operate themselves.
-**Time:** ~10 minutes, assuming RAGFlow is already running. The check in Step 5 caps its own run at 5 minutes. Its first run also downloads Go modules, and a Go toolchain if yours is older than 1.25.3.
-**Outcome:** RAGFlow's built-in `tenki` sandbox provider is active, so each code execution runs in a fresh [Tenki](https://tenki.cloud) sandbox that is destroyed afterwards. You also have a passing check, run from this directory, of the Tenki calls the provider is built on.
+RAGFlow's built-in `tenki` sandbox provider is active, so each code execution runs in a fresh [Tenki](https://tenki.cloud) sandbox that is destroyed afterwards. A check in this directory passes for the Tenki calls the provider is built on.
 
-> **Honesty note:** the provider creates every sandbox with outbound network off unless you set `allow_outbound`. That's the reverse of the Tenki SDK's own default, and it means a `pip install` inside a code component fails until you turn it on. Also, this directory doesn't contain the provider. The provider ships inside RAGFlow, and the check here exercises the same Tenki calls without running RAGFlow.
+About 10 minutes, if RAGFlow is already running. The check in Step 5 caps its own run at 5 minutes. Its first run also downloads Go modules, and a Go toolchain if yours is older than 1.25.3.
+
+The provider creates every sandbox with outbound network off unless you set `allow_outbound`. That is the reverse of the Tenki SDK's own default, so a `pip install` inside a code component fails until you turn it on. This directory does not contain the provider. The provider ships inside RAGFlow, and the check here exercises the same Tenki calls without running RAGFlow.
 
 ## Why bother
 

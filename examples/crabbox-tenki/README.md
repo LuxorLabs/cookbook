@@ -1,10 +1,10 @@
 # How to run your tests on a warm Tenki sandbox with Crabbox
 
-**Audience:** Developers who want to run their test suite against the code they have right now, uncommitted edits included, on a Linux VM instead of their laptop or a CI runner.
-**Time:** ~10 minutes, once the `tenki` CLI is signed in and Crabbox is installed.
-**Outcome:** A Tenki sandbox leased by `crabbox warmup` that runs the demo project's tests, fails them when you make an edit you haven't committed, never receives your `.env`, and has a maximum duration, plus a passing `node verify.mjs`.
+`crabbox warmup` leases a Tenki sandbox that runs the demo project's tests, fails them when you edit a file you have not committed, and never receives your `.env`. The sandbox has a maximum duration. `node verify.mjs` passes.
 
-> **Honesty note:** CI has no `crabbox` binary, so `verify.mjs` doesn't run Crabbox. It checks the Tenki side of the contract instead: it builds the sync manifest with the same Git command Crabbox uses, copies it into a sandbox under Crabbox's workspace layout, checks that the image has `rsync`, and runs the tests there. `run.mjs` is the end-to-end path, and it needs Crabbox and a signed-in `tenki` CLI on your machine.
+About 10 minutes, once the `tenki` CLI is signed in and Crabbox is installed.
+
+CI has no `crabbox` binary, so `verify.mjs` does not run Crabbox. It checks the Tenki side of the contract: it builds the sync manifest with the same Git command Crabbox uses, copies it into a sandbox under Crabbox's workspace layout, checks that the image has `rsync`, and runs the tests there. `run.mjs` is the end-to-end path, and it needs Crabbox and a signed-in `tenki` CLI on your machine.
 
 [Crabbox](https://crabbox.sh) is an open-source CLI from [OpenClaw](https://github.com/openclaw/crabbox). It takes the working tree in your Git checkout, syncs it to a remote Linux machine over SSH with rsync, runs a command there, streams the output back, and exits with the remote command's exit code. With `provider: tenki`, that machine is a [Tenki Sandbox](https://tenki.cloud/products/sandbox) session: Crabbox asks the `tenki` CLI to create, resume and terminate it, and connects through Tenki's SSH proxy with a per-session certificate. You don't manage SSH keys or guest IPs.
 
