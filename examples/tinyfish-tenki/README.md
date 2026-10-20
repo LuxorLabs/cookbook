@@ -1,8 +1,8 @@
 # How to run TinyFish web agents and remote browsers from a Tenki sandbox
 
-**Audience:** JavaScript developers who want to call TinyFish's fetch, search, remote browser, or agent API from code that runs in a Tenki microVM instead of on their own machine.
+**Audience:** JavaScript developers who want to call TinyFish's fetch, search, remote browser, or agent API from code that runs in a Tenki sandbox instead of on their own machine.
 **Time:** ~5 minutes.
-**Outcome:** `node run.mjs` boots a Tenki microVM from `tenki/tinyfish:stable` and prints one line each from TinyFish fetch, TinyFish search, and a page loaded in TinyFish's remote Chromium. `node verify.mjs` prints a `✓` line.
+**Outcome:** `node run.mjs` boots a Tenki sandbox from `tenki/tinyfish:stable` and prints one line each from TinyFish fetch, TinyFish search, and a page loaded in TinyFish's remote Chromium. `node verify.mjs` prints a `✓` line.
 
 > **Honesty note:** The browser doesn't run in your sandbox. It runs at TinyFish, and the sandbox drives it over the public internet. It can't reach a dev server on `localhost` inside your VM, and every Playwright action is a round trip to TinyFish's browser.
 
@@ -10,7 +10,7 @@
 
 [TinyFish](https://docs.tinyfish.ai/) runs web automation for agents: a natural-language agent that browses a page and returns JSON, a remote Chromium browser you drive over the Chrome DevTools Protocol (CDP), fetch (up to 10 URLs per call as markdown, HTML, or JSON), and search.
 
-This example starts a [Tenki](https://tenki.cloud) microVM from the public image `tenki/tinyfish:stable`. That image ships the TinyFish CLI, the TypeScript SDK ([`@tiny-fish/sdk`](https://www.npmjs.com/package/@tiny-fish/sdk)), and `playwright-core` under `/home/tenki/node_modules`. Your code runs in the sandbox, and the browsers and agents run at TinyFish. `playwright-core` doesn't download a browser. It only connects to TinyFish's remote Chromium over CDP. Your TinyFish key goes into one sandbox session's environment, never into an image or template. The image currently pins the CLI at 0.50.0 and the SDK at 0.8.0. The `stable` tag moves when Tenki publishes a new build.
+This example starts a [Tenki](https://tenki.cloud) sandbox from the public image `tenki/tinyfish:stable`. That image ships the TinyFish CLI, the TypeScript SDK ([`@tiny-fish/sdk`](https://www.npmjs.com/package/@tiny-fish/sdk)), and `playwright-core` under `/home/tenki/node_modules`. Your code runs in the sandbox, and the browsers and agents run at TinyFish. `playwright-core` doesn't download a browser. It only connects to TinyFish's remote Chromium over CDP. Your TinyFish key goes into one sandbox session's environment, never into an image or template. The image currently pins the CLI at 0.50.0 and the SDK at 0.8.0. The `stable` tag moves when Tenki publishes a new build.
 
 ## Install
 
