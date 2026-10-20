@@ -65,6 +65,7 @@ Give an agent a sandboxed place to run the code it writes.
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own sandbox |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes as Tenki VMs |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
+| [Prefect](examples/prefect-tenki/) | Each flow run in its own sandbox via a Prefect 3.x worker |
 | [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), each trial in its own VM |
 
 ### Agent platforms
