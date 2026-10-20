@@ -98,6 +98,8 @@ export async function exec(session, command, args = []) {
 
 export const shell = (session, script) => exec(session, "sh", ["-c", script]);
 
+const shQuote = (s) => `'${s.replaceAll("'", `'\\''`)}'`;
+
 /**
  * Serve `files` from the sandbox and return a public URL for them.
  *
@@ -118,9 +120,9 @@ export async function serveWebApp(session, { files, startCommand, port }) {
 			`if command -v systemd-run >/dev/null 2>&1 && sudo -n true 2>/dev/null; then`,
 			`  sudo -n systemctl stop ${unit} >/dev/null 2>&1 || true`,
 			`  sudo -n systemd-run --unit=${unit} --collect -p WorkingDirectory=${APP_DIR} -E PATH="$PATH" -E PORT=${port} ` +
-				`sh -c 'exec ${startCommand} >> ${log} 2>&1' >/dev/null`,
+				`sh -c ${shQuote(`exec ${startCommand} >> ${log} 2>&1`)} >/dev/null`,
 			`else`,
-			`  cd ${APP_DIR} && PORT=${port} setsid nohup sh -c '${startCommand}' >> ${log} 2>&1 < /dev/null &`,
+			`  cd ${APP_DIR} && PORT=${port} setsid nohup sh -c ${shQuote(startCommand)} >> ${log} 2>&1 < /dev/null &`,
 			`fi`,
 		].join("\n"),
 	);
