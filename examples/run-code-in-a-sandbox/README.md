@@ -1,10 +1,10 @@
 # How to run code in a disposable Tenki sandbox from Node.js
 
-**Audience:** Node.js developers who want to run a command in a throwaway sandbox with the `@tenkicloud/sandbox` SDK.
-**Time:** ~5 minutes, most of it creating an API key. The script boots, runs, and disposes of a sandbox in a few seconds.
-**Outcome:** `python3` runs inside a live Tenki sandbox, its exit code and output print on your machine as `exit 0 -> 42`, and the sandbox is terminated when the script ends.
+`python3` runs inside a live Tenki sandbox. Its exit code and output print on your machine as `exit 0 -> 42`, and the sandbox is terminated when the script ends.
 
-> **Honesty note:** `run.mjs` needs Node.js 24 or later, because it uses top-level `await using`, which Node 22 can't parse. `verify.mjs` uses `try`/`finally` instead, so it runs on older versions. CI runs it on Node 20.
+About 5 minutes, most of it creating an API key. The script boots, runs, and disposes of a sandbox in a few seconds.
+
+`run.mjs` needs Node.js 24 or later, because it uses top-level `await using`, which Node 22 cannot parse. `verify.mjs` uses `try`/`finally`, so it runs on older versions. CI runs it on Node 20.
 
 ## Why bother
 

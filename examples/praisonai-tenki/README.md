@@ -1,10 +1,10 @@
 # How to run a PraisonAI agent team on one shared Tenki sandbox
 
-**Audience:** Python developers who build agent teams or workflows with PraisonAI and want the agents' shell and file tools to run in a disposable cloud VM instead of on their own machine.
-**Time:** ~5 minutes.
-**Outcome:** `node verify.mjs` prints its `✓` line after PraisonAI's Tenki provider boots a live sandbox, runs a command in it, round-trips a file and shuts it down. You also have the snippet that puts a whole team on one sandbox.
+`node verify.mjs` prints its `✓` line after PraisonAI's Tenki provider boots a live sandbox, runs a command in it, round-trips a file, and shuts it down. The page includes the snippet that puts a whole team on one sandbox.
 
-> **Honesty note:** Tenki's stock image has no `/workspace` directory, and PraisonAI's shared tools don't create it. If your agents write under `/workspace`, the first one has to create it with `sudo`, as the snippet in [Use it](#use-it) does.
+About 5 minutes.
+
+Tenki's stock image has no `/workspace` directory, and PraisonAI's shared tools do not create it. If your agents write under `/workspace`, the first one has to create it with `sudo`, as the snippet in [Use it](#use-it) does.
 
 ## Why bother
 

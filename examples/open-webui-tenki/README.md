@@ -1,10 +1,10 @@
 # How to give Open WebUI a code interpreter that runs in Tenki sandboxes
 
-**Audience:** people who run a self-hosted [Open WebUI](https://github.com/open-webui/open-webui), the ChatGPT-style interface for Ollama and OpenAI-compatible APIs, and want models to run code somewhere other than the Open WebUI host.
-**Time:** ~10 minutes, assuming Open WebUI is already running.
-**Outcome:** an `execute_code` tool that models in Open WebUI call on their own, and optionally a **Run code** button under assistant messages. Every run executes in its own [Tenki](https://tenki.cloud) sandbox that is torn down when the run ends. You also get a passing check, run from this directory, against the released plugin file.
+Models in Open WebUI call an `execute_code` tool on their own, and you can add a **Run code** button under assistant messages. Every run executes in its own [Tenki](https://tenki.cloud) sandbox that is torn down when the run ends. A check in this directory passes against the released plugin file.
 
-> **Honesty note:** the plugin creates every sandbox with outbound network off. Its `network_egress` valve defaults to `false`, which is the reverse of the Tenki SDK's own default. The code can also use only the libraries the sandbox image already has, so a `pip install` inside a run fails until you turn egress on.
+About 10 minutes, if Open WebUI is already running.
+
+The plugin creates every sandbox with outbound network off. Its `network_egress` valve defaults to `false`, the reverse of the Tenki SDK's own default. A run can use only the libraries the sandbox image already has, so a `pip install` inside a run fails until you turn egress on.
 
 ## Why bother
 

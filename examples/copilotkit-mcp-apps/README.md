@@ -1,10 +1,10 @@
 # How to give an agent's MCP tools their own UI with CopilotKit and Tenki sandboxes
 
-**Audience:** Developers who build agents on MCP tools and want a tool's result to arrive in the chat as an interface the user can keep working in (an MCP App), with CopilotKit or another MCP Apps host.
-**Time:** ~10 minutes.
-**Outcome:** A CopilotKit chat on http://localhost:3000 whose agent runs code in a Tenki sandbox and opens a console with a live shell into that machine, or writes a web app and shows it running from the sandbox on a public URL.
+A CopilotKit chat on http://localhost:3000 runs code in a Tenki sandbox and opens a console with a live shell into that machine, or writes a web app and shows it running from the sandbox on a public URL.
 
-> **Honesty note:** Closing the chat doesn't stop the sandboxes it started. Each one runs until you press "Destroy sandbox" in its app or its 1-hour `maxDurationMs` cap ends it. A web app's preview URL is public, so anyone with the link can open it while the sandbox is up.
+About 10 minutes.
+
+Closing the chat does not stop the sandboxes it started. Each one runs until you press "Destroy sandbox" in its app or its 1-hour `maxDurationMs` cap ends it. A web app's preview URL is public, so anyone with the link can open it while the sandbox is up.
 
 ## Prerequisites
 

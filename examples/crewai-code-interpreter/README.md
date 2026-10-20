@@ -1,10 +1,10 @@
 # How to give a CrewAI agent a code interpreter that runs in a Tenki sandbox
 
-**Audience:** Python developers building agents with [CrewAI](https://crewai.com) who want the code their agent writes to run somewhere other than their own machine.
-**Time:** ~10 minutes, most of it installing CrewAI's dependencies.
-**Outcome:** a CrewAI agent that answers a question by calling a `run_python` tool, which executes its code in a disposable [Tenki](https://tenki.cloud) sandbox, plus a passing check of that tool that needs no model key.
+A CrewAI agent answers a question by calling a `run_python` tool. The tool executes that code in a disposable [Tenki](https://tenki.cloud) sandbox. A check of the tool passes with no model key.
 
-> **Honesty note:** `tenki login` is enough for `verify.py`, but not for `agent.py`. The agent script leaves the key to the `tenki` SDK, which reads only `TENKI_API_KEY` or `TENKI_AUTH_TOKEN` from the environment, so export one of them before you run the crew.
+About 10 minutes, most of it installing CrewAI's dependencies.
+
+`tenki login` is enough for `verify.py`. `agent.py` leaves the key to the `tenki` SDK, which reads only `TENKI_API_KEY` or `TENKI_AUTH_TOKEN` from the environment, so export one of them before you run the crew.
 
 ## Why bother
 

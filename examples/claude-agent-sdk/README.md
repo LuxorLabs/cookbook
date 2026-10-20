@@ -1,10 +1,10 @@
 # How to run Claude Agent SDK tools in a Tenki sandbox
 
-**Audience:** Node developers building an agent with Anthropic's [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) who want its shell and file tools to run somewhere other than their own machine.
-**Time:** ~5 minutes.
-**Outcome:** an agent that writes `fib.py`, runs it, and answers `832040`, with every tool call executed inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) sandbox, followed by an `ls` run inside the sandbox showing the file is there.
+An agent writes `fib.py`, runs it, and answers `832040`. Every tool call runs inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox). An `ls` inside the sandbox shows the file is there.
 
-> **Honesty note:** Only tool execution moves into the sandbox. `query()` and the model calls still run on the machine that starts `agent.mjs`, and the isolation holds only because `tools: []` turns off the SDK's built-in tools, which would otherwise run on that machine.
+About 5 minutes.
+
+Tool execution runs in the sandbox. `query()` and the model calls still run on the machine that starts `agent.mjs`. The isolation holds because `tools: []` turns off the SDK's built-in tools, which would otherwise run on that machine.
 
 ## Why bother
 

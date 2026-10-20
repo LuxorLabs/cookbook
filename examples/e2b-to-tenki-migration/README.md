@@ -1,10 +1,10 @@
 # How to migrate an E2B sandbox script to Tenki
 
-**Audience:** JavaScript developers with Node.js code on E2B's `e2b` SDK who want to run it on Tenki.
-**Time:** ~5 minutes, most of it creating an API key. In CI, `npm install` plus `node verify.mjs` takes about 5 seconds.
-**Outcome:** `node run.mjs` runs a command in a Tenki sandbox and prints `hello from tenki · exit 0`, `node verify.mjs` prints a `✓` line, and you have an API map for porting the rest of your E2B code.
+`node run.mjs` runs a command in a Tenki sandbox and prints `hello from tenki · exit 0`. `node verify.mjs` prints a `✓` line. The page includes an API map for porting the rest of an E2B script.
 
-> **Honesty note:** Tenki's `exec` runs a binary with an argument array and no shell. E2B's `commands.run` passes your string to a shell. A ported command that uses pipes, globs, `&&` or `$VARS` has to be wrapped in `sh -c`, or it won't do what it did on E2B. See [The one gotcha](#the-one-gotcha-exec-doesnt-shell-split).
+About 5 minutes, most of it creating an API key. In CI, `npm install` plus `node verify.mjs` takes about 5 seconds.
+
+Tenki's `exec` runs a binary with an argument array and no shell. E2B's `commands.run` passes your string to a shell. A ported command that uses pipes, globs, `&&`, or `$VARS` has to be wrapped in `sh -c`, or it will not do what it did on E2B. See [The one gotcha](#the-one-gotcha-exec-doesnt-shell-split).
 
 ## Why bother
 

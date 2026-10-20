@@ -1,10 +1,10 @@
 # How to run Claude Code unsupervised on a real repo, in a VM you throw away
 
-**Audience:** developers who use [Claude Code](https://www.npmjs.com/package/@anthropic-ai/claude-code) and want to hand it a coding task with no permission prompts, without giving it their own machine.
-**Time:** ~15 minutes. `npm install` takes seconds, `verify.mjs` about a minute, and `run.mjs` gives the agent's turn up to 10 minutes.
-**Outcome:** an `agent.patch` file on your machine with Claude Code's change to a cloned repo, ready for `git apply` or a PR. When the script finishes, it deletes the VM the agent ran in.
+`agent.patch` on your machine holds Claude Code's change to a cloned repo, ready for `git apply` or a pull request. When the script finishes, it deletes the sandbox the agent ran in.
 
-> **Honesty note:** nothing pins the Claude Code version. The sandbox runs the copy that ships in Tenki's default image (2.1.267 as of October 2026), and it changes when Tenki rebuilds the image. `verify.mjs` checks that the two flags `run.mjs` passes still exist in that release, not how the agent behaves.
+About 15 minutes. `npm install` takes seconds, `verify.mjs` about a minute, and `run.mjs` gives the agent's turn up to 10 minutes.
+
+Nothing pins the Claude Code version. The sandbox runs the copy that ships in Tenki's default image (2.1.267 as of October 2026), and it changes when Tenki rebuilds the image. `verify.mjs` checks that the two flags `run.mjs` passes still exist in that release.
 
 ## Why bother
 

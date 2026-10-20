@@ -1,10 +1,10 @@
 # How to give a LangChain.js agent a code interpreter that runs in a Tenki sandbox
 
-**Audience:** JavaScript developers building agents with [LangChain.js](https://github.com/langchain-ai/langchainjs) and [LangGraph.js](https://github.com/langchain-ai/langgraphjs) who want the Python their agent writes to run somewhere other than their own machine.
-**Time:** ~5 minutes.
-**Outcome:** a LangGraph ReAct agent that answers a question by calling a `run_python` tool, which runs its code in a disposable [Tenki](https://tenki.cloud) sandbox, plus a passing check of that tool that needs no model key.
+A LangGraph ReAct agent answers a question by calling a `run_python` tool. The tool runs that Python in a disposable [Tenki](https://tenki.cloud) sandbox. A check of the tool passes with no model key.
 
-> **Honesty note:** CI runs only `verify.mjs`, which calls the `run_python` tool directly, with no model. Nothing in CI runs `agent.mjs`, which needs an OpenAI key and, with today's `@langchain/openai` releases, Node 22 or newer.
+About 5 minutes.
+
+CI runs `verify.mjs`, which calls the `run_python` tool directly. `agent.mjs` needs an OpenAI key and, with today's `@langchain/openai` releases, Node 22 or newer. CI does not run `agent.mjs`.
 
 ## Why bother
 

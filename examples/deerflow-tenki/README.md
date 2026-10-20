@@ -1,10 +1,10 @@
 # How to run DeerFlow's sandboxes on Tenki
 
-**Audience:** teams that run ByteDance's DeerFlow, or are setting it up, and want the code its agents write to run in Tenki sandboxes instead of on the host, in Docker, or with another sandbox vendor.
-**Time:** ~5 minutes for the Tenki check in this folder, which itself runs in a few seconds. DeerFlow's own setup comes on top: its setup wizard takes about 2 minutes, plus its dependency install.
-**Outcome:** `node verify.mjs` prints a `✓` line from a live Tenki sandbox, and DeerFlow's `config.yaml` selects the Tenki provider, so each agent thread's commands and files run in its own Tenki sandbox.
+`node verify.mjs` prints a `✓` line from a live Tenki sandbox. With DeerFlow's `config.yaml` selecting the Tenki provider, each agent thread's commands and files run in its own Tenki sandbox.
 
-> **Honesty note:** this folder doesn't contain DeerFlow or any DeerFlow code. The Tenki provider ships inside DeerFlow. `verify.py` exercises the Tenki SDK surface the provider is built on, against a live sandbox, without installing DeerFlow. It tells you that your key and the Tenki side work, not that your DeerFlow deployment does.
+About 5 minutes for the Tenki check in this folder, which itself runs in a few seconds. DeerFlow's own setup comes on top: its setup wizard takes about 2 minutes, plus its dependency install.
+
+This folder does not contain DeerFlow. The Tenki provider ships inside DeerFlow. `verify.py` exercises the Tenki SDK surface the provider is built on, against a live sandbox, without installing DeerFlow. A passing check means your key and the Tenki side work.
 
 [DeerFlow](https://github.com/bytedance/deer-flow), ByteDance's open-source SuperAgent harness, runs the code its agents write inside pluggable sandboxes. Since [deer-flow#4382](https://github.com/bytedance/deer-flow/pull/4382), Tenki ships as a community-supported sandbox provider, `deerflow.community.tenki`, alongside providers such as E2B and AIO. If your team already runs agent infrastructure on [Tenki](https://tenki.cloud) sandboxes, you can point DeerFlow at that same Tenki workspace instead of provisioning a parallel sandbox vendor.
 

@@ -1,10 +1,10 @@
 # How to run TinyFish web agents and remote browsers from a Tenki sandbox
 
-**Audience:** JavaScript developers who want to call TinyFish's fetch, search, remote browser, or agent API from code that runs in a Tenki sandbox instead of on their own machine.
-**Time:** ~5 minutes.
-**Outcome:** `node run.mjs` boots a Tenki sandbox from `tenki/tinyfish:stable` and prints one line each from TinyFish fetch, TinyFish search, and a page loaded in TinyFish's remote Chromium. `node verify.mjs` prints a `✓` line.
+`node run.mjs` boots a Tenki sandbox from `tenki/tinyfish:stable` and prints one line each from TinyFish fetch, TinyFish search, and a page loaded in TinyFish's remote Chromium. `node verify.mjs` prints a `✓` line.
 
-> **Honesty note:** The browser doesn't run in your sandbox. It runs at TinyFish, and the sandbox drives it over the public internet. It can't reach a dev server on `localhost` inside your VM, and every Playwright action is a round trip to TinyFish's browser.
+About 5 minutes.
+
+The browser runs at TinyFish. The sandbox drives it over the public internet. It cannot reach a dev server on `localhost` inside the sandbox, and every Playwright action is a round trip to TinyFish's browser.
 
 ## Why bother
 

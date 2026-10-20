@@ -1,10 +1,10 @@
 # How to give an OpenAI Agents SDK agent a code interpreter that runs in a Tenki sandbox
 
-**Audience:** JavaScript developers building agents with the [OpenAI Agents SDK](https://openai.github.io/openai-agents-js/) who want the Python their agent writes to run somewhere other than their own process.
-**Time:** ~5 minutes once you have a Tenki API key and an OpenAI API key.
-**Outcome:** an Agents SDK agent that answers a question by calling a `run_python` tool, which runs its code in a disposable [Tenki](https://tenki.cloud) sandbox, plus a passing check of that tool that needs no model key.
+An Agents SDK agent answers a question by calling a `run_python` tool. The tool runs that Python in a disposable [Tenki](https://tenki.cloud) sandbox. A check of the tool passes with no model key.
 
-> **Honesty note:** CI runs only `verify.mjs`, which calls the `run_python` tool directly, with no model. Nothing in CI runs `agent.mjs`, which needs an OpenAI API key.
+About 5 minutes once you have a Tenki API key and an OpenAI API key.
+
+CI runs `verify.mjs`, which calls the `run_python` tool directly. `agent.mjs` needs an OpenAI API key, and CI does not run it.
 
 ## Why bother
 
