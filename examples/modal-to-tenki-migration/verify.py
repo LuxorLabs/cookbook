@@ -36,7 +36,7 @@ if workspace_id:
 
 try:
     # Modal: Sandbox.create(app=app) + terminate(). Tenki: no App object; the `with`
-    # block disposes the microVM at scope end.
+    # block disposes the sandbox at scope end.
     with Sandbox.create(**opts) as sb:
         if not sb.id:
             raise AssertionError("no sandbox id returned from create()")
