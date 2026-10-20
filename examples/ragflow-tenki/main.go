@@ -1,6 +1,6 @@
 // Proves the Tenki surface RAGFlow's `tenki` sandbox provider
 // (internal/agent/sandbox/tenki.go) is built on, without running RAGFlow,
-// using the same SDK module and version RAGFlow pins in its go.mod:
+// using the same SDK module RAGFlow depends on (at its latest release):
 // WhoAmI health check, a disposable sandbox with outbound network off
 // (RAGFlow's security default), a per-instance work dir with artifacts/,
 // `python3 -c` and `node -e` execution, the List/Stat/ReadFile artifact

@@ -174,7 +174,10 @@ function createServer() {
 // Stateless: a fresh server per request, which is what MCP Apps hosts expect —
 // they open a connection per tool call and per proxied call from the UI.
 
-const app = createMcpExpressApp({ host: "127.0.0.1" });
+// The tools spend the server's Tenki key with no auth, so listen on loopback only.
+// createMcpExpressApp's `host` only adds Host-header checks; listen() sets the bind address.
+const HOST = "127.0.0.1";
+const app = createMcpExpressApp({ host: HOST });
 
 app.all("/mcp", async (req, res) => {
 	const server = createServer();
@@ -194,7 +197,7 @@ app.all("/mcp", async (req, res) => {
 
 app.get("/healthz", (_req, res) => res.json({ ok: true, sandboxes: hasToken ? "live" : "no token" }));
 
-app.listen(PORT, (err) => {
+app.listen(PORT, HOST, (err) => {
 	if (err) {
 		console.error(err);
 		process.exit(1);
