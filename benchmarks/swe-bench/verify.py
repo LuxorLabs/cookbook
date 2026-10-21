@@ -8,7 +8,7 @@ the whole pipeline (VM -> docker-in-VM -> official grading) works on Tenki.
 A model run (harness.py --model ...) is the same pipeline with an agent in place
 of the gold patch; that needs a model key and time, so it stays out of CI.
 
-Needs: swebench, datasets, tenki (requirements.txt). Token/project from
+Needs: swebench, datasets, tenki (requirements.txt). Token/workspace from
 env (CI: TENKI_API_KEY) or ~/.config/tenki/config.yaml (local `tenki login`).
 """
 import sys
