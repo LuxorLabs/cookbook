@@ -1,118 +1,36 @@
-# How to run DeerFlow's sandboxes on Tenki
+# DeerFlow
 
-`node verify.mjs` prints a `✓` line from a live Tenki sandbox. With DeerFlow's `config.yaml` selecting the Tenki provider, each agent thread's commands and files run in its own Tenki sandbox.
+Run [DeerFlow](https://github.com/bytedance/deer-flow)'s agent sandboxes on Tenki. DeerFlow, ByteDance's open-source SuperAgent harness, ships a Tenki sandbox provider, `deerflow.community.tenki`, so each agent thread's commands and files run in its own Tenki sandbox. This folder holds a check of the Tenki side, not DeerFlow itself.
 
-About 5 minutes for the Tenki check in this folder, which itself runs in a few seconds. DeerFlow's own setup comes on top: its setup wizard takes about 2 minutes, plus its dependency install.
+## Quick start
 
-This folder does not contain DeerFlow. The Tenki provider ships inside DeerFlow. `verify.py` exercises the Tenki SDK surface the provider is built on, against a live sandbox, without installing DeerFlow. A passing check means your key and the Tenki side work.
+You need:
 
-[DeerFlow](https://github.com/bytedance/deer-flow), ByteDance's open-source SuperAgent harness, runs the code its agents write inside pluggable sandboxes. Since [deer-flow#4382](https://github.com/bytedance/deer-flow/pull/4382), Tenki ships as a community-supported sandbox provider, `deerflow.community.tenki`, alongside providers such as E2B and AIO. If your team already runs agent infrastructure on [Tenki](https://tenki.cloud) sandboxes, you can point DeerFlow at that same Tenki workspace instead of provisioning a parallel sandbox vendor.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- [uv](https://docs.astral.sh/uv/).
+- For DeerFlow: Python 3.12 or later, Node.js 22 or later, pnpm, nginx, and an LLM provider key. DeerFlow's `make check` confirms these.
 
-## Prerequisites
-
-- A Tenki `tk_` API key. Create one at https://app.tenki.cloud.
-- `uv`, and Python 3.10 or newer for the check (the `tenki` package requires it).
-- Node, only to run the verify shim (`node verify.mjs`). You can run `verify.py` with Python instead.
-- For DeerFlow itself: its backend needs Python 3.12 or newer, its `make check` verifies Node.js 22+, pnpm, uv and nginx, and it needs an LLM provider, which its `make setup` wizard configures.
-
-## Step 1 — Get the example
+### 1. Install DeerFlow with the Tenki extra
 
 ```bash
-git clone https://github.com/LuxorLabs/cookbook.git
-cd cookbook/examples/deerflow-tenki
+git clone https://github.com/bytedance/deer-flow && cd deer-flow
+make setup
+cd backend && uv sync --all-packages --extra tenki && cd ..
 ```
 
-Steps 2 to 4 run from this directory. Step 5 leaves it to clone DeerFlow next to the cookbook, and Steps 5 to 7 run in that DeerFlow checkout.
+`make setup` is DeerFlow's wizard: it has you pick an LLM provider and writes `config.yaml` and `.env` at the repo root. The `tenki` extra lives on the `deerflow-harness` workspace package, so `--all-packages` is required. If you run `make install`, run the `uv sync` line again afterwards, because `make install` removes the extra.
 
-## Step 2 — Install the check's dependencies
+### 2. Set your API key
 
-```bash
-uv venv && uv pip install -r requirements.txt
-```
-
-`requirements.txt` is one line, the Tenki Python SDK:
-
-```
-tenki>=1.4.1
-```
-
-## Step 3 — Authenticate
+Add it to DeerFlow's repo-root `.env`, which `make dev` loads, or export it:
 
 ```bash
 export TENKI_API_KEY=tk_...
 ```
 
-Or store the key once with `tenki login --api-key <key>`, which writes it to `~/.config/tenki/config.yaml`. `verify.py` uses the first key it finds in `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then that file.
+### 3. Point DeerFlow's sandbox at Tenki
 
-You don't need a workspace ID: Tenki infers the workspace from a workspace API key. Set `TENKI_WORKSPACE_ID` only to pin the check to one workspace. DeerFlow's provider gets its key and workspace separately, in Step 6.
-
-## Step 4 — Check it works
-
-```bash
-node verify.mjs        # or: .venv/bin/python verify.py
-```
-
-`verify.mjs` is a shim for the cookbook's Node harness. It runs `verify.py` with `.venv/bin/python` if that exists, else `$PYTHON` or `python3`. On success it prints:
-
-```
-✓ deerflow-tenki: create+wait_ready → sh -lc (deer 42) → fs streaming round-trip → find/grep → terminate
-```
-
-From [`verify.py`](verify.py):
-
-```python
-opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024, "wait": False}
-workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
-if workspace_id:
-    opts["workspace_id"] = workspace_id
-
-sb = None
-error = None
-try:
-    sb = Sandbox.create(**opts)
-    sb.wait_ready()
-
-    r = sb.exec("sh", "-lc", 'echo "deer $(python3 -c \'print(6*7)\')"')
-    out = r.stdout_text.strip()
-    if not (r.ok and out == "deer 42"):
-        raise AssertionError(f"exec: ok={r.ok}, stdout={out!r}, stderr={r.stderr_text!r}")
-
-    sb.fs.mkdir("/home/tenki/reports")
-    sb.fs.write_stream("/home/tenki/reports/note.md", iter([b"# from deerflow\n"]))
-    if sb.fs.read_text("/home/tenki/reports/note.md") != "# from deerflow\n":
-        raise AssertionError("fs round-trip mismatch")
-    if sb.fs.stat("/home/tenki/reports/note.md").size == 0:
-        raise AssertionError("fs.stat reports empty file")
-
-    r = sb.exec("sh", "-lc", "find /home/tenki/reports -name '*.md' | xargs grep -l deerflow")
-    if "note.md" not in r.stdout_text:
-        raise AssertionError(f"find/grep: {r.stdout_text!r}")
-```
-
-Each step matches how the provider uses Tenki. It creates with `wait=False` and then calls `wait_ready()`, which is how the provider boots every sandbox, so a sandbox that never becomes ready is still in hand to terminate. It runs a command under `sh -lc`, as the provider runs every command. It round-trips a file through Tenki's native `sandbox.fs` streaming API (`mkdir`, `write_stream`, `read_text`, `stat`), which the provider uses for file transport. It runs busybox-portable `find` and `grep`, which the provider uses for `glob` and `grep`. A `finally` block then terminates the sandbox, even when a check fails.
-
-It doesn't test anything on the DeerFlow side: it never imports DeerFlow, needs no model key, and doesn't exercise path mapping, the warm pool or eviction. The provider's upstream test suite, [`backend/tests/test_tenki_provider.py`](https://github.com/bytedance/deer-flow/blob/main/backend/tests/test_tenki_provider.py), covers those, and its `test_integration_real_sandbox` runs against a live sandbox when `TENKI_API_KEY` is set.
-
-## Step 5 — Install DeerFlow with the Tenki extra
-
-```bash
-cd ../../..
-git clone https://github.com/bytedance/deer-flow && cd deer-flow
-make setup
-cd backend && uv sync --all-packages --extra tenki
-```
-
-`cd ../../..` leaves the cookbook checkout, so DeerFlow isn't cloned inside it. `make setup` is DeerFlow's interactive setup wizard: it has you choose an LLM provider and writes `config.yaml` and `.env` at the DeerFlow repo root, in about 2 minutes per DeerFlow's [README](https://github.com/bytedance/deer-flow#readme). `make dev` won't start without a `config.yaml`; it exits with `✗ No DeerFlow config file found.`
-
-If you already have a DeerFlow checkout with a `config.yaml`, run only the `uv sync` line, in its `backend/` directory.
-
-The provider's Tenki SDK dependency is an optional extra (`tenki>=1.4.0`). It isn't installed by default, and the provider imports it lazily, only when `sandbox.use` selects it, so DeerFlow behaves as before until you do. `--all-packages` matters: the `tenki` extra lives on the `deerflow-harness` workspace package, so a bare `uv sync --extra tenki` fails with an unknown-extra error.
-
-**DeerFlow's own scripts can remove the extra.** `make install` runs `uv sync --locked` in `backend/`, which uninstalls it, so run the sync above after `make install`, not before. `make dev` re-syncs on every start, and Step 7 covers that.
-
-## Step 6 — Point DeerFlow's sandbox at Tenki
-
-Open the `config.yaml` that `make setup` wrote at the DeerFlow repo root, which is where DeerFlow reads it. Set its `sandbox:` block to the Tenki provider:
+Set the `sandbox:` block in `config.yaml`:
 
 ```yaml
 sandbox:
@@ -126,11 +44,36 @@ sandbox:
   sticky: false
 ```
 
-`$TENKI_API_KEY` resolves from the environment DeerFlow runs in, so export it, or put it in the repo-root `.env`, which `make dev` loads. If you leave `api_key` out, the SDK falls back to the `TENKI_API_KEY` or `TENKI_AUTH_TOKEN` environment variable.
+If your key sees more than one workspace, also set `workspace_id`. The provider lists the IDs when it can't pick one.
 
-**Workspace:** with no `workspace_id` set, the provider looks up the workspaces your key can see and uses the only one. If it finds more than one, it raises when it creates its first sandbox and lists the choices. In that case, set `workspace_id` in the `sandbox:` block to one of the listed IDs.
+### 4. Run
 
-The provider's keys (see [`config.example.yaml`](https://github.com/bytedance/deer-flow/blob/main/config.example.yaml) upstream for the full template):
+```bash
+UV_EXTRAS=tenki make dev
+```
+
+`make dev` re-syncs the backend on every start and doesn't detect the Tenki extra, so `UV_EXTRAS=tenki` keeps the SDK installed. You can put it in `.env` instead. Setting `UV_EXTRAS` turns off DeerFlow's extra detection, so list all the extras you use, for example `UV_EXTRAS=postgres,tenki`.
+
+Open http://localhost:2026 and start a thread that runs code. `logs/gateway.log` shows `Created Tenki sandbox <id> (name=deer-flow-tenki-<id>)`, and after the turn, `Released Tenki sandbox <id> to warm pool (sandbox still running)`.
+
+### 5. Verify the Tenki side
+
+This folder's check exercises the SDK calls the provider makes, against a live sandbox, without DeerFlow or a model key:
+
+```bash
+git clone https://github.com/LuxorLabs/cookbook.git
+cd cookbook/examples/deerflow-tenki
+uv venv && uv pip install -r requirements.txt   # tenki>=1.4.1
+node verify.mjs        # or: .venv/bin/python verify.py
+```
+
+```
+✓ deerflow-tenki: create+wait_ready → sh -lc (deer 42) → fs streaming round-trip → find/grep → terminate
+```
+
+`verify.py` creates a sandbox with `wait=False` then `wait_ready()`, runs a command under `sh -lc`, round-trips a file through the `sandbox.fs` streaming API, runs `find` and `grep`, and terminates the sandbox in a `finally` block. It reads `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or a `tenki login` key. The provider's own tests, including path mapping and the warm pool, are upstream in [`test_tenki_provider.py`](https://github.com/bytedance/deer-flow/blob/main/backend/tests/test_tenki_provider.py).
+
+## Provider settings
 
 | Key | Default | What it does |
 | --- | --- | --- |
@@ -147,65 +90,32 @@ The provider's keys (see [`config.example.yaml`](https://github.com/bytedance/de
 | `home_dir` | `/home/tenki` | Writable directory that backs `/mnt/user-data` |
 | `environment` | none | Map injected into every command and into the sandbox at create time. Keys must be valid POSIX variable names; the provider rejects others when it loads its config |
 
-`sandbox.bash_command_timeout` (default 600 seconds) also applies: it's the per-command deadline the provider passes to Tenki.
+`sandbox.bash_command_timeout` (default 600 seconds) is the per-command deadline. The full template is DeerFlow's [`config.example.yaml`](https://github.com/bytedance/deer-flow/blob/main/config.example.yaml).
 
-## Step 7 — Start DeerFlow
+## How the provider works
 
-From the DeerFlow repo root (`cd ..` if you're still in `backend/` from Step 5):
-
-```bash
-UV_EXTRAS=tenki make dev
-```
-
-`make dev` re-syncs the backend on every start with only the extras named in `UV_EXTRAS` or detected from `config.yaml`, and the detector doesn't map the Tenki provider to its extra. Without `UV_EXTRAS=tenki`, a start removes the SDK again. You can put `UV_EXTRAS=tenki` in the repo-root `.env` instead.
-
-**Setting `UV_EXTRAS` turns off DeerFlow's detection from `config.yaml`.** If you use other extras, list them all, for example `UV_EXTRAS=postgres,tenki`.
-
-DeerFlow serves at http://localhost:2026. Under `make dev`, the gateway's output goes to `logs/gateway.log` at the DeerFlow repo root, not to your terminal. When an agent thread first gets its sandbox, the provider creates a sandbox named `deer-flow-tenki-<id>` and logs `Created Tenki sandbox <id> (name=deer-flow-tenki-<id>)` there at INFO level. After the turn it logs `Released Tenki sandbox <id> to warm pool (sandbox still running)`.
-
-## What the provider does
-
-- The full DeerFlow `Sandbox` contract: `execute_command`, `read_file`, `write_file` (including append), `update_file`, `download_file`, `list_dir`, `glob` and `grep`, mapped onto one Tenki sandbox per user and thread.
-- Virtual path mapping: Tenki sandboxes run as the unprivileged `tenki` user and `/mnt` is root-owned, so DeerFlow's `/mnt/user-data` namespace translates to `home_dir` on the way in and back to `/mnt/user-data` on the way out. At create time the provider also tries to symlink `/mnt/user-data` to `home_dir` with `sudo`, so shell commands that use the literal path work too. Without `sudo`, the file tools still work through the remap.
-- Native file transport: reads, writes and downloads use Tenki's `sandbox.fs` streaming API rather than shell pipes, so binary and Unicode content survive untouched. `download_file` serves only paths under `/mnt/user-data` and stops at 100 MB, counted on the bytes actually received.
-- Shell semantics: each command is a fresh `sh -lc` exec, so no shell state, such as a `cd` or an exported variable, carries over to the next command. `list_dir`, `glob` and `grep` delegate to busybox-portable `find` and `grep` inside the VM.
-- No automatic retries: a command isn't re-run after a transport error, because it may already have run and re-running could double its side effects.
-- Warm-pool lifecycle: after each agent turn the sandbox goes into an in-process warm pool, still running. The same user and thread reclaim it on the next turn after an `echo ok` health check, and a failed check replaces it. When active plus warm sandboxes reach `replicas`, the oldest warm one is evicted; active ones never are. `idle_timeout` is enforced by the provider's own reaper thread in the gateway, not by Tenki. A terminal session error or a dropped connection evicts the sandbox rather than poisoning the pool, including during a download, and the next acquire builds a new one.
-- Lifetime cap: every sandbox carries `max_duration` server-side, so a long research thread doesn't lose its sandbox to a shorter default lifetime, and a sandbox left behind by a crashed gateway still stops at the cap.
-- Stable surface only: sandbox create and terminate, exec and the filesystem API. Volumes, snapshots and template builds aren't used, so any stock base image works.
+- It implements DeerFlow's full `Sandbox` contract (`execute_command`, `read_file`, `write_file`, `update_file`, `download_file`, `list_dir`, `glob`, `grep`) on one Tenki sandbox per user and thread. Threads never share a sandbox.
+- Sandboxes run as the unprivileged `tenki` user, so `/mnt/user-data` maps to `home_dir`. The provider also tries to symlink the path with `sudo` so shell commands that use it work.
+- File reads, writes, and downloads use the `sandbox.fs` streaming API, so binary and Unicode content survive. `download_file` serves only `/mnt/user-data` and stops at 100 MB.
+- Each command is a fresh `sh -lc`, so a `cd` or exported variable doesn't carry over. Commands aren't retried after a transport error.
+- After each turn the sandbox stays running in an in-process warm pool. The same thread reclaims it after an `echo ok` health check. At the `replicas` cap the oldest warm sandbox is evicted, and the gateway's reaper terminates sandboxes idle past `idle_timeout`.
+- Every sandbox carries `max_duration` server-side, so one left behind by a crashed gateway still stops. The pool doesn't survive a gateway restart.
+- It uses only create, terminate, exec, and the filesystem API, so any base image works. There are no preview URLs, snapshots, or volumes yet.
 
 ## Troubleshooting
 
-**❌ ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.``** `verify.py` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY` or `~/.config/tenki/config.yaml`. Create a `tk_` key at https://app.tenki.cloud and export it, or store it with `tenki login --api-key <key>`.
-
-**❌ `ModuleNotFoundError: No module named 'tenki'` from `node verify.mjs`.** There's no `.venv` in `examples/deerflow-tenki` (Step 2 was skipped or ran elsewhere), so `verify.mjs` fell back to `$PYTHON` or `python3`, which doesn't have the SDK. Run Step 2 in that folder.
-
-**❌ `uv sync --extra tenki` fails with an unknown-extra error.** The `tenki` extra lives on the `deerflow-harness` workspace package, not on the backend's root project. Add `--all-packages`.
-
-**❌ `ImportError: TenkiSandboxProvider requires the optional 'tenki' dependency …`.** DeerFlow's backend environment doesn't have the Tenki SDK, usually because `make install` or a `make dev` start without `UV_EXTRAS=tenki` re-synced it away. Run `uv sync --all-packages --extra tenki` in `backend/` again, and start DeerFlow as in Step 7.
-
-**❌ `ValueError: Could not auto-select a Tenki workspace; set sandbox.workspace_id in config.yaml. Found: [...]`.** No `workspace_id` is set, and your key doesn't see exactly one workspace. The message lists each workspace's ID and name. Set `workspace_id` in the `sandbox:` block to one of them.
-
-**❌ Warning: `sandbox.project_id is ignored: Tenki 1.x removed projects.`** Your `config.yaml` still has a `project_id` key. Tenki scopes sandboxes by workspace alone. Delete the key, and set `workspace_id` if your key sees more than one workspace.
-
-**❌ A tool result ends with `Error: command timed out` and `Exit Code: 124`.** The command ran past `sandbox.bash_command_timeout` (default 600 seconds). Its output up to that point is kept, it isn't retried, and the sandbox stays usable. Raise `bash_command_timeout`, or start long-running processes in the background with their output redirected.
-
-## FAQ
-
-**When shouldn't I use this?**
-When sandboxes must survive a gateway restart: the warm pool lives in the gateway process, and the provider doesn't adopt sandboxes a previous process left behind (upstream lists cross-process orphan reconciliation as a follow-up), so those keep running until `max_duration`. When your agents need preview URLs for servers they start, since the provider has no preview-URL surface yet. When you want DeerFlow to use Tenki snapshots, volumes or template builds, which the provider deliberately leaves out. When an agent depends on shell state persisting between commands. And when downloads can exceed 100 MB.
-
-**Does a sandbox keep running between agent turns?**
-Yes. A released sandbox stays running in the warm pool until the same thread reclaims it, `idle_timeout` passes, the `replicas` cap evicts it, the gateway shuts down, or it reaches `max_duration`. With `idle_timeout: 0`, nothing reaps it for being idle.
-
-**Do threads share a sandbox?**
-No. The provider derives each sandbox's ID from the user and thread, and only that user's thread reclaims it from the warm pool.
+| Problem | Fix |
+| --- | --- |
+| ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.`` | `verify.py` found no key. Export one or run `tenki login`. |
+| `ModuleNotFoundError: No module named 'tenki'` from `node verify.mjs` | Create the `.venv` in this folder and install `requirements.txt`. |
+| `uv sync --extra tenki` fails with an unknown extra | Add `--all-packages`. |
+| `ImportError: TenkiSandboxProvider requires the optional 'tenki' dependency …` | A re-sync removed it. Run `uv sync --all-packages --extra tenki` in `backend/` and start with `UV_EXTRAS=tenki make dev`. |
+| `ValueError: Could not auto-select a Tenki workspace …` | Set `workspace_id` in the `sandbox:` block to one of the listed IDs. |
+| `sandbox.project_id is ignored: Tenki 1.x removed projects.` | Delete `project_id` from `config.yaml`. |
+| `Error: command timed out` with `Exit Code: 124` | Raise `bash_command_timeout`, or run long processes in the background. |
 
 ## Related
 
-- [DeerFlow](https://github.com/bytedance/deer-flow), and [deer-flow#4382](https://github.com/bytedance/deer-flow/pull/4382), the PR that added the provider
-- The provider's upstream [README](https://github.com/bytedance/deer-flow/blob/main/backend/packages/harness/deerflow/community/tenki/README.md)
-- DeerFlow's [`config.example.yaml`](https://github.com/bytedance/deer-flow/blob/main/config.example.yaml), with every sandbox key
+- [DeerFlow](https://github.com/bytedance/deer-flow), [deer-flow#4382](https://github.com/bytedance/deer-flow/pull/4382) (the PR that added the provider), and the provider's [README](https://github.com/bytedance/deer-flow/blob/main/backend/packages/harness/deerflow/community/tenki/README.md)
+- [Run code with Python](../run-code-python/): the same `tenki` SDK loop on its own
 - [Tenki docs](https://tenki.cloud/docs)
-- [`../run-code-python/`](../run-code-python/): the same `tenki` Python SDK loop on its own
-- [`../files-in-a-sandbox/`](../files-in-a-sandbox/): the SDK's file API, in Node

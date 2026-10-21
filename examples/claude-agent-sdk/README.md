@@ -1,18 +1,18 @@
-# How to run Claude Agent SDK tools in a Tenki sandbox
+# Claude Agent SDK
 
-An agent writes `fib.py`, runs it, and answers `832040`. Every tool call runs inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox). An `ls` inside the sandbox shows the file is there.
+Run every tool call from the [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) in a Tenki sandbox. The example turns off the SDK's built-in Bash, Read, Write, and Edit tools, which run on your machine, and replaces them with `bash`, `write_file`, and `read_file` tools backed by one sandbox per session. The agent writes `fib.py`, runs it, and answers `832040`.
 
-About 5 minutes.
+`query()` and the model calls still run locally. Only tool execution moves into the sandbox.
 
-Tool execution runs in the sandbox. `query()` and the model calls still run on the machine that starts `agent.mjs`. The isolation holds because `tools: []` turns off the SDK's built-in tools, which would otherwise run on that machine.
+## Quick start
 
-## Why bother
+You need:
 
-The SDK's built-in Bash, Read, Write, and Edit tools run on whatever host called `query()`. This example switches all of them off and re-implements `bash`, `write_file`, and `read_file` against `sandbox.exec`, `sandbox.writeFile`, and `sandbox.readFile`. The agent's execution surface becomes a disposable sandbox rather than your laptop, so it has no way to touch the host that started it. One sandbox serves the whole agent session and is reused across every tool call.
+- Node.js 24 or later for `agent.mjs`, which uses top-level `await using`. `verify.mjs` runs on Node 20.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- An Anthropic API key, for the agent run only.
 
-## Install
-
-You need Node 24 or newer to run `agent.mjs`, because it uses top-level `await using`. `verify.mjs` runs on Node 20.
+### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
@@ -20,41 +20,47 @@ cd cookbook/examples/claude-agent-sdk
 npm install
 ```
 
-Every later command runs from this directory.
+This installs `@anthropic-ai/claude-agent-sdk`, `@tenkicloud/sandbox`, and `zod`. The Agent SDK pulls a platform package of about 250 MB, so the first install takes a while.
 
-The dependencies, from `package.json`:
-
-```json
-  "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.3.233",
-    "@tenkicloud/sandbox": ">=1.4.1",
-    "zod": "^4.4.3"
-  }
-```
-
-`zod` is there because `tool()` takes its input schema as Zod fields, and the Agent SDK declares `zod ^4.0.0` as a peer dependency. `npm install` also pulls the Agent SDK's platform-specific package, which is about 250 MB unpacked, so the first install takes a while.
-
-## Authenticate
-
-`agent.mjs` reads everything from the environment:
+### 2. Set your keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # a Tenki API key from https://app.tenki.cloud
-export ANTHROPIC_API_KEY=...     # the agent turn
-export TENKI_WORKSPACE_ID=...    # optional
+export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export ANTHROPIC_API_KEY=...
 ```
 
-- `TENKI_API_KEY` works in place of `TENKI_AUTH_TOKEN`. When `TENKI_AUTH_TOKEN` is unset, the Tenki SDK falls back to `TENKI_API_KEY`. SDK 1.x accepts only `tk_` keys.
-- `TENKI_WORKSPACE_ID` is optional. Tenki infers the workspace from a workspace API key, and the SDK leaves the field out when the variable is empty.
-- If you stored your key with `tenki login --api-key <key>`, it's in `~/.config/tenki/config.yaml`. `verify.mjs` reads it from there (the `auth_token` line), but `agent.mjs` does not, so export it before running the agent.
+`agent.mjs` reads both from the environment only. `verify.mjs` also accepts a Tenki key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
-## Use it
+### 3. Run the agent
 
 ```bash
 node agent.mjs
 ```
 
-This is the whole of `agent.mjs`:
+```
+→ mcp__tenki__write_file {"path":"fib.py","content":"def fib(n):\n    a, b = 0, 1\n    for _ in
+→ mcp__tenki__bash {"command":"python3 fib.py"}
+The 30th Fibonacci number is **832040**.
+-rw-r--r-- 1 tenki tenki 136 … fib.py
+```
+
+It prints each tool call (first 70 characters of its input), the agent's answer, and an `ls` run inside the sandbox. The model writes its own code, so your output can differ.
+
+### 4. Verify
+
+```bash
+node verify.mjs
+```
+
+```
+✓ claude-agent-sdk: write_file → bash python3 fib.py → 832040 → read_file → dispose
+```
+
+`verify.mjs` calls the three tool handlers directly against a live sandbox: it writes `fib.py`, runs it, asserts `832040`, and reads the file back. It needs no Anthropic key, so it doesn't run `query()`.
+
+## The agent
+
+`agent.mjs`:
 
 ```js
 // The Claude Agent SDK with Tenki as its execution backend: every command the
@@ -98,22 +104,9 @@ const proof = await sandbox.exec("ls", { args: ["-l", "fib.py"] });
 console.log(proof.exitCode === 0 ? stdoutText(proof) : `fib.py is not in the sandbox: ${stderrText(proof).trim()}`);
 ```
 
-It creates one sandbox (1 CPU core, 1024 MB) for the session, registers the three tools through an in-process MCP server named `tenki`, disables every built-in tool, and caps the run at 12 turns. It prints each tool call the agent makes, the agent's final answer, and the output of an `ls` run inside the sandbox. `await using` terminates the sandbox when the script ends.
+## The tools
 
-A run prints something like this:
-
-```
-→ mcp__tenki__write_file {"path":"fib.py","content":"def fib(n):\n    a, b = 0, 1\n    for _ in
-→ mcp__tenki__bash {"command":"python3 fib.py"}
-The 30th Fibonacci number is **832040**.
--rw-r--r-- 1 tenki tenki 136 … fib.py
-```
-
-Each tool-call line shows the first 70 characters of the call's input. The model writes its own `fib.py` and its own answer, so your tool calls and file size can differ.
-
-## How the sandbox tools replace the built-ins
-
-All three tools live in `tenki-tools.mjs`:
+`tenki-tools.mjs`:
 
 ```js
 // Claude Agent SDK tools backed by a Tenki sandbox.
@@ -155,53 +148,31 @@ export function makeTenkiTools(sandbox) {
 }
 ```
 
-- **`tools: []` is the whole security argument.** Leave it out and the SDK keeps its built-in Bash, Read, Write, and Edit, which run on the machine that called `query()`. The sandbox tools would then be one option among several rather than the only way out. With it, the agent's entire execution surface is the sandbox.
-- **`tool()` takes a raw Zod shape, not a schema object.** Pass `{ command: z.string() }`. Passing `z.object({ command: z.string() })` is the easy mistake.
-- Tools registered through `createSdkMcpServer` run in this process, but they're still named `mcp__<server>__<tool>`. List those full names in `allowedTools`, or the agent asks for permission on every call.
-- **A tool result carries no exit status.** `sandbox.exec` reports one, but the model only sees the text you return, so a command that failed after printing to stderr reads as success. `bash` prefixes `exit N` when the code is non-zero. It also gives each command 120 seconds, because `exec` is unbounded by default and one `sleep infinity` would stall the agent for the sandbox's whole lifetime. A spent budget resolves with status `TIMED_OUT` and exit code -1 rather than rejecting, so `bash` says `timed out after 120s` instead.
-- A tool handler that throws is caught by the SDK and delivered as an `is_error` tool result. `read_file` on a missing path shows the agent the real `[not_found]` message, and it recovers on its own, so the tools need no `try`/`catch`.
-- `sandbox.readFile` resolves to a `Uint8Array`, not a string, so `read_file` decodes it before handing it back to the model. `exec(command, { args })` does no shell splitting, so `bash` wraps the command in `sh -c` to get shell behavior.
-- The SDK's file methods only work under `/home/tenki`, the sandbox's working directory. Relative paths resolve there. Commands run through `bash` can write anywhere.
+Things to know:
 
-## Check it works
-
-```bash
-node verify.mjs
-```
-
-It prints:
-
-```
-✓ claude-agent-sdk: write_file → bash python3 fib.py → 832040 → read_file → dispose
-```
-
-`verify.mjs` builds the tools against a live sandbox and calls their handlers directly, as the agent loop would: it writes `fib.py`, runs it with `bash` and asserts `832040`, reads the file back, and disposes of the sandbox. It needs no model key, so the agent turn itself (`query()`, `tools: []`, `allowedTools`) isn't exercised. This is what CI runs. It uses `try`/`finally` rather than `await using`, so it runs on Node 20, and it finds your key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or `~/.config/tenki/config.yaml`. Any failed check prints a `✗` line and exits non-zero.
+- **`tools: []` keeps execution off your machine.** Without it, the built-in tools stay available and run locally.
+- **`tool()` takes a raw Zod shape**, `{ command: z.string() }`, not `z.object(...)`.
+- **List the full tool names in `allowedTools`.** In-process MCP tools are still named `mcp__<server>__<tool>`. Otherwise the agent asks for permission on every call.
+- **Report the exit status.** The model only sees the text a tool returns, so `bash` prefixes `exit N` on failure. It also caps each command at 120 seconds, since `exec` is unbounded by default. A timeout resolves with status `TIMED_OUT` rather than throwing.
+- **Thrown errors reach the agent.** The SDK turns a throwing handler into an `is_error` result, so `read_file` on a missing path shows the agent `[not_found]` and it can recover.
+- **SDK file methods are confined to `/home/tenki`.** Commands run through `bash` can write anywhere. `write_file` and `read_file` handle text only.
+- **One sandbox per session.** Files persist between tool calls, and `await using` terminates the sandbox when the script ends. Outbound network is on; pass `allowOutbound: false` to `createAndWait` to isolate it.
 
 ## Troubleshooting
 
-- ❌ **``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.``** `verify.mjs` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or `~/.config/tenki/config.yaml`. Export a `tk_` key, or store one with `tenki login --api-key <key>`.
-- ❌ **`missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY or use authToken option`.** `agent.mjs` reads the Tenki key from the environment only, not from `~/.config/tenki/config.yaml`. Export `TENKI_AUTH_TOKEN` or `TENKI_API_KEY` before you run `node agent.mjs`.
-- ❌ **`invalid auth token - API keys and service tokens must start with tk_`.** The value you exported isn't a Tenki API key, and SDK 1.x accepts only `tk_` keys. Create one at https://app.tenki.cloud.
-- ❌ **`node agent.mjs` fails with a `SyntaxError` at the `await using` line.** Top-level `await using` needs Node 24, and Node 22 can't parse it. Upgrade to Node 24 or newer. `verify.mjs` still runs on Node 20.
-- ❌ **The agent asks for permission on every tool call.** `allowedTools` doesn't list the tools' full `mcp__<server>__<tool>` names. If you rename the `tenki` server or add a tool, update `allowedTools` to match.
-- ❌ **A `bash` result reads `timed out after 120s`.** The `bash` tool gives each command 120 seconds (`timeoutMs: 120_000` in `tenki-tools.mjs`). Raise that value if your commands need longer.
-- ❌ **`write_file` or `read_file` fails with `permission_denied … path outside workdir`.** The SDK's file methods are confined to `/home/tenki`. The agent sees the error as an `is_error` result and can retry with a relative path, or use `bash`, which can write anywhere.
-
-## FAQ
-
-**When shouldn't I use this?**
-- When you want the SDK's built-in tools. This example turns off Bash, Read, Write, and Edit on purpose and gives the agent exactly three replacements. To run Claude Code itself inside a sandbox, see [`../claude-code-sandbox/`](../claude-code-sandbox/).
-- When the agent itself must not run on your machine. Only tool execution moves into the sandbox.
-- When the agent works with binary files. `write_file` takes a string, and `read_file` decodes the file's bytes as text.
-- When files must outlive the run. `await using` terminates the sandbox when `agent.mjs` ends.
-
-**Why one sandbox per session instead of one per tool call?** It's cheaper than one per call, and files the agent writes are still there on the next call. That's how `bash` can run the `fib.py` that `write_file` wrote on an earlier call.
-
-**Can code the agent runs reach the internet?** Yes. Outbound network is on by default, and `agent.mjs` doesn't change it. To isolate the sandbox, pass `allowOutbound: false` in the `createAndWait` options.
+| Problem | Fix |
+| --- | --- |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
+| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `agent.mjs` reads only the environment. Export the key. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `SyntaxError` at `await using` | Use Node 24 or later. |
+| The agent asks for permission on every call | `allowedTools` must list the full `mcp__tenki__*` names. Update it if you rename the server or add tools. |
+| `timed out after 120s` | Raise `timeoutMs` in `tenki-tools.mjs`. |
+| `permission_denied … path outside workdir` | Use a path under `/home/tenki`, or write it with `bash`. |
 
 ## Related
 
+- [Claude Code](../claude-code-sandbox/): run Claude Code itself headless in a sandbox
+- [OpenAI Agents SDK](../openai-agents-sdk/): the same one-sandbox-per-session pattern
 - [`@anthropic-ai/claude-agent-sdk` on npm](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk)
 - [Tenki Sandbox](https://tenki.cloud/products/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
-- [`../openai-agents-sdk/`](../openai-agents-sdk/): the same one-sandbox-per-session pattern with the OpenAI Agents SDK and a `run_python` tool.
-- [`../claude-code-sandbox/`](../claude-code-sandbox/): runs Claude Code headless inside a Tenki sandbox and hands its work back as a patch.
