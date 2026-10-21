@@ -1,5 +1,5 @@
 # verify.py / oracle + grading (this is all CI needs — no model key):
-swebench>=3.0
+swebench>=3.0,<5   # 5.x moved harness.test_spec
 datasets>=2.19
 tenki>=1.4.1,<2   # provides the tenki_sandbox module
 
