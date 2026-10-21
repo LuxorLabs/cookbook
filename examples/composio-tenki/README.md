@@ -2,6 +2,19 @@
 
 Give a [Composio](https://composio.dev) agent Tenki sandboxes. [`@tenkicloud/composio-tools`](https://github.com/LuxorLabs/tenki-composio-tools) registers a Tenki custom toolkit on a Composio session with six tools: `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX` (exposed as `LOCAL_TENKI_*`). The tools run in your process against the Tenki SDK, so there's no backend to deploy. With an Anthropic key, `agent.mjs` has Claude boot a sandbox, run commands, and terminate it.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Composio" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/composio-tenki, and run npm install (Node.js 20 or later).
+2. It needs COMPOSIO_API_KEY (from https://app.composio.dev) and TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud), plus ANTHROPIC_API_KEY for agent.mjs. If any is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs and confirm the ✓ line, then node agent.mjs if I have an Anthropic key.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to bind tenkiToolkit() to a Composio session in my own app, passing workspaceId and projectId while the package is on 0.1.0.
+```
+
 ## Quick start
 
 You need:

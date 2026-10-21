@@ -2,6 +2,19 @@
 
 Run Scale AI's [AgentEnv Framework](https://www.agentenvframework.com) tasks on Tenki VMs. AgentEnv is an open-source (Apache-2.0) framework for building RL environments, where tasks are DAGs of steps that deploy an environment, bring in an agent, and grade the result. Its built-in `tenki` sandbox backend gives each environment and agent its own Tenki VM, with Docker inside and a public HTTPS URL for each exposed port.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Run Scale AI's AgentEnv tasks on Tenki VMs, following https://github.com/LuxorLabs/cookbook/tree/main/examples/agentenv-tenki.
+1. Clone https://github.com/LuxorLabs/cookbook and cd into examples/agentenv-tenki. Run every later command from there.
+2. Check that uv and Python 3.11.4+ are available, then run uv venv --python 3.12 and uv pip install -r requirements.txt.
+3. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+4. Run .venv/bin/agent-env -v run hello --sandbox tenki (the first run installs Docker in the VM and takes a few minutes), then node verify.mjs, and confirm the ✓ line.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+```
+
 ## Quick start
 
 You need:

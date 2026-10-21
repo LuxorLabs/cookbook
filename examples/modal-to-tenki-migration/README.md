@@ -4,6 +4,19 @@ Port a [Modal](https://modal.com) sandbox script to Tenki with the [`tenki`](htt
 
 The change that needs thought: Modal's `exec` returns a live process you drain and wait on. Tenki's `exec` blocks and returns a finished result. See [`exec` returns a result](#exec-returns-a-result-not-a-live-process).
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Help me move my Modal sandbox code to Tenki, using the guide at https://github.com/LuxorLabs/cookbook/tree/main/examples/modal-to-tenki-migration.
+1. Clone https://github.com/LuxorLabs/cookbook and cd into examples/modal-to-tenki-migration. Create a Python 3.10+ virtualenv and install requirements.txt.
+2. The scripts need a Tenki API key (starts with tk_) in TENKI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+3. Run .venv/bin/python run.py and confirm it prints "42 · exit 0", then run node verify.mjs.
+4. Read the API map and "Other differences" in that README.md. Then find every Modal sandbox call in my project and port it to the tenki SDK: drop modal.App, replace stdout.read()/wait() with the finished result's stdout_text/exit_code (or sb.start() where I stream output), switch file calls to relative paths with (path, data) order, and replace idle_timeout with max_duration.
+5. Show me the diff before you change anything you're unsure about.
+```
+
 ## Quick start
 
 You need:

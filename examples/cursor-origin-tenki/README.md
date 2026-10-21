@@ -10,6 +10,20 @@ This example is a small invoices API with one house rule: every `/teams/:team/..
 | [`pr/app.mjs`](pr/app.mjs) | The PR's `src/app.mjs`: adds `GET /teams/:team/invoice-totals` without `requireMember` |
 | [`verify.mjs`](verify.mjs) | Runs the repo at each stage (main, PR, fix) in a Tenki sandbox |
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Walk me through the Tenki Code Reviewer on Cursor Origin example at https://github.com/LuxorLabs/cookbook/tree/main/examples/cursor-origin-tenki, following its README.md step by step.
+1. Clone https://github.com/LuxorLabs/cookbook and cd into examples/cursor-origin-tenki.
+2. Check that git and Node.js 20+ are installed and that the Origin CLI is on my PATH. If it isn't, install it and run origin auth login, and tell me when I need to finish a browser sign-in.
+3. Stop and ask me to connect Tenki to my Origin namespace (README step 3) and to tell you my namespace. Don't guess it.
+4. Create invoices-api on Origin, push starter/ to it, then open the PR from pr/app.mjs and mark it ready, exactly as in steps 4 and 5.
+5. Watch for the Tenki review with origin pr checks --watch and summarize the findings. Then apply the requireMember fix, push, and comment @tenki-reviewer to get a re-review.
+Ask me before merging, deleting the repo, or changing any Tenki or Cursor settings.
+```
+
 ## Requirements
 
 - A Cursor plan that includes Origin ([who can access](https://cursor.com/docs/origin#who-can-access)) and a codebase name claimed at [cursor.com/codebase](https://cursor.com/codebase). The name can't be changed during the beta.

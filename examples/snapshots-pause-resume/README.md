@@ -2,6 +2,20 @@
 
 Write a file into a Tenki sandbox, pause it, resume it, and read the file back. `pause()` saves the sandbox's memory and disk and releases the VM, so a paused sandbox costs nothing and leaves your concurrency quota. `resume()` brings back the same sandbox, with the same id, from that snapshot.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Pause, snapshot, and resume" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo and cd into examples/snapshots-pause-resume.
+2. Check that Node.js is 24 or later, then run npm install.
+3. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+4. Run node run.mjs and confirm it prints "resumed -> still here after the pause" (the pause takes about 20 seconds), then run node verify.mjs.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to pause a sandbox in one process and resume it later from another, waiting for PAUSED first.
+```
+
 ## Quick start
 
 You need:

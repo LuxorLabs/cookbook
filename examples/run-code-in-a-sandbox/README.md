@@ -2,6 +2,20 @@
 
 Boot a disposable Tenki sandbox from Node.js, run `python3` in it, print the result, and terminate the sandbox. It is the core create, execute, and dispose loop in about 15 lines with the [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Run code in a sandbox" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo and cd into examples/run-code-in-a-sandbox.
+2. Check that Node.js is 24 or later, then run npm install.
+3. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+4. Run node run.mjs and confirm it prints "exit 0 -> 42", then run node verify.mjs.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+Then walk me through run.mjs and show me how to run my own command instead.
+```
+
 ## Quick start
 
 You need:

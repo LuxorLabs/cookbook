@@ -2,6 +2,18 @@
 
 Run [RAGFlow](https://github.com/infiniflow/ragflow)'s code components in Tenki sandboxes. RAGFlow ships a `tenki` sandbox provider: each code execution gets a fresh Tenki sandbox that is destroyed afterwards, with nothing to run locally (no executor-manager, gVisor, or Docker base images). This folder holds a check of the Tenki calls the provider makes, not RAGFlow itself.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Help me run RAGFlow's code components in Tenki sandboxes, following https://github.com/LuxorLabs/cookbook/tree/main/examples/ragflow-tenki.
+1. Check which RAGFlow version I run. On v1.0.0-rc1 or later the tenki provider is built in. On v0.27.x, install the tenki package into RAGFlow's Python environment.
+2. Walk me through selecting tenki in Admin > Sandbox Settings and setting api_key myself (a Tenki key starting with tk_, from https://app.tenki.cloud), then running the connection test. Never ask me to paste the key to you.
+3. To check the Tenki side outside RAGFlow: clone https://github.com/LuxorLabs/cookbook and cd into examples/ragflow-tenki. It needs TENKI_API_KEY exported; if it isn't set, stop and ask me to export it. Never print the key or write it to a file. Check Go 1.21+ is installed, run node verify.mjs, and confirm the ✓ line.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+```
+
 ## Quick start
 
 You need:

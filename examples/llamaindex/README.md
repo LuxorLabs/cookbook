@@ -2,6 +2,19 @@
 
 Give a [LlamaIndex](https://github.com/run-llama/llama_index) `FunctionAgent` a `run_python` tool that executes the model's Python in a Tenki sandbox. The tool is an ordinary `FunctionTool`, so it attaches like any other tool. One sandbox serves the whole agent session.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "LlamaIndex" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/llamaindex, create a .venv there on Python 3.10 or later (uv venv --python 3.12 .venv if uv is installed), and install requirements.txt.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call, expects 55), then .venv/bin/python agent.py.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then add tenki_tool.py to my own LlamaIndex agent: one sandbox per session in a with block, and make_code_tool(sandbox) in the agent's tools.
+```
+
 ## Quick start
 
 You need:

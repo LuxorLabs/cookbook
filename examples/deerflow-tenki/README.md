@@ -2,6 +2,20 @@
 
 Run [DeerFlow](https://github.com/bytedance/deer-flow)'s agent sandboxes on Tenki. DeerFlow, ByteDance's open-source SuperAgent harness, ships a Tenki sandbox provider, `deerflow.community.tenki`, so each agent thread's commands and files run in its own Tenki sandbox. This folder holds a check of the Tenki side, not DeerFlow itself.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up DeerFlow to run its agent sandboxes on Tenki, following https://github.com/LuxorLabs/cookbook/tree/main/examples/deerflow-tenki.
+1. Clone https://github.com/bytedance/deer-flow (or use my existing checkout) and run make check. Ask me to run make setup myself, since it is an interactive wizard that asks for an LLM provider.
+2. In backend/, run uv sync --all-packages --extra tenki.
+3. DeerFlow needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud). If it isn't in my environment or DeerFlow's .env, stop and ask me to add it. Never print the key or write it to a file yourself.
+4. Set the sandbox: block in config.yaml to the Tenki provider exactly as in the README, then start DeerFlow with UV_EXTRAS=tenki make dev.
+5. Tell me to open http://localhost:2026 and start a thread that runs code, then check logs/gateway.log for "Created Tenki sandbox".
+6. If a step fails, use the Troubleshooting table in the example's README.md.
+```
+
 ## Quick start
 
 You need:

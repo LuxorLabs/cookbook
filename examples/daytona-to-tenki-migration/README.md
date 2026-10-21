@@ -2,6 +2,19 @@
 
 Port a [Daytona](https://daytona.io) sandbox script to Tenki. Both run the same loop: create a sandbox, run a command, read the output, dispose. Most of the port is renaming calls. Two changes need thought: Tenki's `exec` doesn't use a shell, and its output comes back as bytes.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Help me move my Daytona sandbox code to Tenki, using the guide at https://github.com/LuxorLabs/cookbook/tree/main/examples/daytona-to-tenki-migration.
+1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/daytona-to-tenki-migration, and run npm install (Node.js 20 or later).
+2. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+3. Run node run.mjs and confirm it prints "hello from tenki · exit 0", then run node verify.mjs.
+4. Read the API map and "Other differences" in that README.md. Then find every Daytona SDK call in my project and port it to @tenkicloud/sandbox: wrap shell command strings in sh -c, replace codeRun with a direct interpreter exec, decode output with stdoutText/stderrText, and close every sandbox.
+5. Show me the diff before you change anything you're unsure about.
+```
+
 ## Quick start
 
 You need:

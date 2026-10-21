@@ -2,6 +2,20 @@
 
 Run [OpenCode](https://opencode.ai)'s headless server in a Tenki sandbox and expose it on a password-protected public HTTPS URL. The sandbox boots with OpenCode installed and [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) cloned. One URL serves OpenCode's web UI at `/app` and its JSON API, so a person or a script can drive the agent. The sandbox and URL end when you press Ctrl-C, or after two hours.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "OpenCode" example from https://github.com/LuxorLabs/cookbook, which serves OpenCode's web UI from a disposable Tenki sandbox on a password-protected URL.
+1. Clone the repo, cd into examples/opencode-sandbox, and run npm install (Node.js 20 or later).
+2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and OPENAI_API_KEY in the environment. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs and confirm the ✓ line.
+4. Start node run.mjs in the background (it stays running until Ctrl-C), then give me the /app URL, the username opencode, and the password it prints.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+Remind me the sandbox stops on Ctrl-C or after two hours, and stop it for me when I say I'm done.
+```
+
 ## Quick start
 
 You need:

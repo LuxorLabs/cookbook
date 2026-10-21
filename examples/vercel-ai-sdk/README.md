@@ -4,6 +4,19 @@ Use a Tenki sandbox as the [Vercel AI SDK](https://ai-sdk.dev)'s `experimental_s
 
 The adapter boots sandboxes with outbound network off. Pass `createTenkiSandbox({ allowOutbound: true })` if tools need `pip install` or downloads.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Vercel AI SDK" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/vercel-ai-sdk, check that Node.js is 22 or later, and run npm install.
+2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for example.mjs, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call), then node example.mjs.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then add tenki-sandbox.mjs to my own AI SDK project: pass createTenkiSandbox()'s sandbox as experimental_sandbox, read it in my tools' execute, and dispose it in a finally block. Ask me whether the sandbox needs outbound network.
+```
+
 ## Quick start
 
 You need:

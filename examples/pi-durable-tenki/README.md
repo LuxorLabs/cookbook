@@ -4,6 +4,19 @@ Run [Pi](https://github.com/earendil-works/pi) Durable's agent tools in a Tenki 
 
 pi-durable and pi-env are experimental upstream, and their APIs can change between releases. This example was built against 1.2.0.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Pi Durable" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/pi-durable-tenki, check that Node.js is 22.19 or later, and run npm install.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) in the environment. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run node run.mjs (the pause takes about a minute) and confirm the last line is "resumed -> state the agent built up", then run node verify.mjs.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to plug tenki-env.mjs and bridge.mjs into my Pi Durable worker through the harness env option.
+```
+
 ## Quick start
 
 You need:

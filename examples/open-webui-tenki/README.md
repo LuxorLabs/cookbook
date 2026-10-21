@@ -5,6 +5,18 @@ A code interpreter for [Open WebUI](https://github.com/open-webui/open-webui) th
 - **Tool, [`tenki_code_execution.py`](https://github.com/LuxorLabs/tenki-open-webui/releases/download/v0.1.0/tenki_code_execution.py):** gives the model an `execute_code(code, language)` tool. Python runs echo the last expression like a REPL, and matplotlib figures appear inline.
 - **Action, [`tenki_run_code.py`](https://github.com/LuxorLabs/tenki-open-webui/releases/download/v0.1.0/tenki_run_code.py):** adds a **Run code** button under assistant messages that runs the message's last fenced code block.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Help me add a Tenki code interpreter to my Open WebUI, following https://github.com/LuxorLabs/cookbook/tree/main/examples/open-webui-tenki.
+1. Download tenki_code_execution.py from https://github.com/LuxorLabs/tenki-open-webui/releases/tag/v0.1.0 and check its SHA-256 is 1bec42092db92be229b6f3085189770eeaf9889eedb3a258637b5b890ebc9ce3.
+2. Walk me through pasting it into Open WebUI under Workspace → Tools → + and setting the tenki_api_key valve myself (a Tenki key starting with tk_, from https://app.tenki.cloud). Never ask me to paste the key to you.
+3. To check it outside Open WebUI: clone https://github.com/LuxorLabs/cookbook, cd into examples/open-webui-tenki, create .venv with uv venv --python 3.12, and install requirements.txt. It needs TENKI_AUTH_TOKEN exported; if it isn't set, stop and ask me to export it. Never print the key or write it to a file. Then run node verify.mjs and confirm the ✓ line.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+```
+
 ## Quick start
 
 You need:

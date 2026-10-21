@@ -4,6 +4,19 @@ Run a [smolagents](https://github.com/huggingface/smolagents) `CodeAgent`'s gene
 
 `TenkiExecutor` lives in this example, not in smolagents. Copy `tenki_executor.py` into your project and pass it with `CodeAgent(executor=...)`. smolagents 1.26.0 has no `executor_type="tenki"`; [PR #2563](https://github.com/huggingface/smolagents/pull/2563) proposes one.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Hugging Face smolagents" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/smolagents, create a .venv there on Python 3.10 or later (uv venv --python 3.12 if uv is installed), and install requirements.txt. If I'm using OpenAI, also install 'smolagents[openai]'.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.py, either OPENAI_API_KEY or HF_TOKEN. If they're missing, stop and ask me to export them. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call), then .venv/bin/python agent.py.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then wire tenki_executor.py into my own CodeAgent with executor=TenkiExecutor(...), keep outbound network on, and make sure executor.cleanup() always runs.
+```
+
 ## Quick start
 
 You need:

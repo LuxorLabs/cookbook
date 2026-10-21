@@ -2,6 +2,19 @@
 
 Give a LangChain Python agent a `run_python` code-interpreter tool that runs in a Tenki sandbox. The agent writes Python, the tool runs it in one sandbox shared for the session, and the output goes back to the agent. The tool is one file, `tenki_tool.py`, built on the [`tenki`](https://pypi.org/project/tenki/) SDK. For Node, see [LangChain (JavaScript)](../langchain-code-interpreter/).
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "LangChain (Python)" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/langchain-python, create a .venv there on Python 3.10 or later (uv venv --python 3.12 if uv is installed), and install requirements.txt.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call, expects 55), then .venv/bin/python agent.py.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then add tenki_tool.py to my own LangChain agent: one sandbox per session in a with block, make_code_tool(sandbox) in the tools list, and a timeout on exec.
+```
+
 ## Quick start
 
 You need:

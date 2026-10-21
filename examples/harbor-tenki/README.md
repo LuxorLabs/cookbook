@@ -2,6 +2,19 @@
 
 Run [Harbor](https://github.com/harbor-framework/harbor) agent evals with each trial in its own Tenki VM. Harbor, from the creators of [Terminal-Bench](https://www.tbench.ai), runs a coding agent (Claude Code, Codex, OpenCode, Goose, mini-swe-agent, Terminus, and others) against a benchmark's tasks, grades every attempt with the task's own tests, and records the trajectory. [`tenki-harbor`](https://github.com/LuxorLabs/tenki-harbor) adds Tenki as a Harbor environment, so trials run in parallel, one VM each, with the task's container running under Docker inside.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up Harbor agent evals on Tenki, following https://github.com/LuxorLabs/cookbook/tree/main/examples/harbor-tenki.
+1. Check that Python 3.12+ and uv are installed. Install harbor with the Tenki environment using the uv tool install command in the README (ask me before installing a global tool).
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run the no-model smoke test: harbor run -t hello-world/hello-world -e tenki_harbor:TenkiEnvironment --agent oracle, and confirm a mean reward of 1.000.
+4. Ask me which agent, model, and benchmark I want to run and how many tasks, check that the model key is set, then run it and open the results with harbor view jobs.
+5. If a step fails, use the Troubleshooting table in the example's README.md. Ask me before running tenki-harbor cleanup, since it ends every Harbor session in the workspace.
+```
+
 ## Quick start
 
 You need:

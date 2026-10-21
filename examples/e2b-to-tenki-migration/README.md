@@ -4,6 +4,19 @@ Port an [E2B](https://e2b.dev) sandbox script to Tenki. The core loop is the sam
 
 The one change that breaks most ports: E2B's `commands.run` passes your string to a shell, and Tenki's `exec` runs a binary with an argument array and no shell. Wrap commands that use pipes, globs, `&&`, or `$VARS` in `sh -c`. See [`exec` doesn't use a shell](#exec-doesnt-use-a-shell).
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Help me move my E2B sandbox code to Tenki, using the guide at https://github.com/LuxorLabs/cookbook/tree/main/examples/e2b-to-tenki-migration.
+1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/e2b-to-tenki-migration, and run npm install (Node.js 20 or later).
+2. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+3. Run node run.mjs and confirm it prints "hello from tenki · exit 0", then run node verify.mjs.
+4. Read the API map and "Other differences" in that README.md. Then find every E2B call in my project and port it to @tenkicloud/sandbox. Wrap any command string that relies on a shell (pipes, &&, globs, $VARS) in sh -c, decode stdout/stderr with stdoutText/stderrText, check exitCode instead of catching CommandExitError, and make sure every sandbox is closed.
+5. Show me the diff before you change anything you're unsure about.
+```
+
 ## Quick start
 
 You need:

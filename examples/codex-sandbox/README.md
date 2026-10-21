@@ -2,6 +2,19 @@
 
 Run [OpenAI Codex](https://github.com/openai/codex) headless on a real repo inside a Tenki sandbox you throw away. The script clones [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) into the sandbox, runs one `codex exec` turn on a task, prints the diff, and closes the sandbox. Codex can edit, install, and run anything on that VM, and the diff is what you keep.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Codex" example from https://github.com/LuxorLabs/cookbook, which runs OpenAI Codex headless in a disposable Tenki sandbox and prints the diff.
+1. Clone the repo, cd into examples/codex-sandbox, check that Node.js is 24 or later, and run npm install.
+2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and CODEX_API_KEY (an OpenAI key; if only OPENAI_API_KEY is set, export CODEX_API_KEY=$OPENAI_API_KEY). If a key is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model turn), then node run.mjs, and show me the diff.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then ask me which repo and task I want instead, change REPO and TASK in run.mjs, and run it again.
+```
+
 ## Quick start
 
 You need:

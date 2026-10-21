@@ -2,6 +2,19 @@
 
 Give each signed-in user of a [Convex](https://www.convex.dev) app its own Tenki sandbox. The [`@tenkicloud/convex`](https://www.npmjs.com/package/@tenkicloud/convex) component creates, runs commands in, pauses, resumes, and destroys sandboxes from Convex actions, and keeps each sandbox's state in a Convex table your UI can subscribe to.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Add per-user Tenki sandboxes to a Convex app, following https://github.com/LuxorLabs/cookbook/tree/main/examples/convex-tenki.
+1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/convex-tenki, and run npm install. (If I want this in my own Convex app instead, install @tenkicloud/convex there and copy the files under convex/.)
+2. Run npx convex dev --once to provision a dev deployment. Then the deployment needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud). Ask me to run npx convex env set TENKI_API_KEY myself. Never print the key or write it to a file.
+3. Drive a sandbox with the npx convex run --identity commands in the README: start, run, pause, start, destroy. Confirm the run prints 42.
+4. Run node verify.mjs (it needs TENKI_API_KEY exported in my shell; if it isn't, ask me to export it) and confirm the ✓ line.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+```
+
 ## Quick start
 
 You need:
