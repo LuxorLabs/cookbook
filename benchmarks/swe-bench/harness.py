@@ -25,7 +25,7 @@ Usage:
   python harness.py --dataset lite --limit 20 \
     --model your-model --api-base https://api.openai.com/v1 --api-key-env OPENAI_API_KEY
 
-Requires: swebench, datasets, tenki-sandbox (see requirements.txt). A model run
+Requires: swebench, datasets, tenki (see requirements.txt). A model run
 also needs `mini-swe-agent` (imported lazily, only for --model).
 """
 from __future__ import annotations

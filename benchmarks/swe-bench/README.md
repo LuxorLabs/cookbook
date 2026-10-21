@@ -29,7 +29,7 @@ You need:
 git clone -b next https://github.com/LuxorLabs/cookbook.git
 cd cookbook/benchmarks/swe-bench
 uv venv
-uv pip install -r requirements.txt   # swebench, datasets, tenki-sandbox
+uv pip install -r requirements.txt   # swebench, datasets, tenki
 ```
 
 ### 2. Set your API key
