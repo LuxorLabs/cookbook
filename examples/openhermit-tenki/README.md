@@ -2,6 +2,20 @@
 
 Run [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) agents on Tenki sandboxes. OpenHermit deploys fleets of AI agents as services, with a gateway that keeps state in PostgreSQL. With its `tenki` sandbox type, each agent's shell commands, file tools, and skills run in one sticky Tenki sandbox that survives gateway restarts. This folder holds a check of the Tenki side, not OpenHermit itself.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up OpenHermit with its agents on Tenki sandboxes, following https://github.com/LuxorLabs/cookbook/tree/main/examples/openhermit-tenki.
+1. Clone https://github.com/HCF-STUDIOS/openhermit outside any other repo, check that Node.js is 20 or later, and run npm install.
+2. Ask me to run npm run dev:cli -- setup myself, since it is an interactive wizard that asks for a database.
+3. The gateway needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) in ~/.openhermit/gateway/.env, and the agent needs OPENROUTER_API_KEY. Ask me to add both myself. Never ask me to paste a key to you, print one, or write one to a file.
+4. Start the gateway, then create an agent on Tenki with the agents create main --no-sandbox and sandbox add --type tenki commands from the README.
+5. Run npm run dev:cli -- sandbox list --agent main and confirm a tenki sandbox with alias default.
+6. If a step fails, use the Troubleshooting table in the example's README.md.
+```
+
 ## Quick start
 
 You need:

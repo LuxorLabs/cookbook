@@ -2,6 +2,20 @@
 
 Start an HTTP server inside a Tenki sandbox, expose its port with `sandbox.exposePort()`, and fetch the public HTTPS preview URL from your machine. Anyone with the URL can reach the server while it is exposed: a browser, a webhook, or another service.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Expose a port" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo and cd into examples/expose-a-port.
+2. Check that Node.js is 24 or later, then run npm install.
+3. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+4. Run node run.mjs and confirm it prints a preview URL and "GET 200 -> Hello from a Tenki sandbox!", then run node verify.mjs.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to serve my own app from the sandbox on a preview URL.
+```
+
 ## Quick start
 
 You need:

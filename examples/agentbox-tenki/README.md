@@ -4,6 +4,20 @@ Run [AgentBox](https://github.com/madarco/agentbox) coding agents (`claude`, `co
 
 Pin the AgentBox CLI to **0.29.2**. Plugin 0.1.1 targets provider SDK v2, which AgentBox 0.27.1 through 0.29.2 load; 0.30.0 and later accept only v4. SDK v4 support is in progress in [tenki-agentbox-provider#6](https://github.com/LuxorLabs/tenki-agentbox-provider/pull/6).
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up AgentBox with Tenki VMs for my project, following https://github.com/LuxorLabs/cookbook/tree/main/examples/agentbox-tenki.
+1. Check that Node.js is 20.10 or later and that ssh and ssh-keygen are installed.
+2. Install exactly @madarco/agentbox@0.29.2 and @tenkicloud/agentbox-provider@0.1.1 globally, then run agentbox plugin add @tenkicloud/agentbox-provider and agentbox plugin list. Ask me before installing anything globally.
+3. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud). If it isn't set, stop and ask me to export it. Never print the key or write it to a file. Then run agentbox doctor.
+4. Tell me the base-image bake takes 8 to 12 minutes and is billable, and ask before running agentbox prepare --provider tenki.
+5. From my project root, run agentbox create --provider tenki and tell me how to attach with agentbox tenki claude.
+6. If a step fails, use the Troubleshooting table in the example's README.md.
+```
+
 ## Quick start
 
 You need:

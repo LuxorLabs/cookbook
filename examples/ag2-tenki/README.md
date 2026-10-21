@@ -4,6 +4,20 @@ Run an [AG2](https://github.com/ag2ai/ag2) agent's `SandboxShellTool` and `Sandb
 
 This is for AG2 1.x (`from ag2 import Agent`). The older `import autogen` API is now [AG2 Classic](https://github.com/ag2ai/ag2-classic) and doesn't include this backend.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "AG2" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/ag2-tenki, create a .venv there on Python 3.10 or later, and install requirements.txt.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) in the environment. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run node verify.mjs and confirm the ✓ line.
+4. If I want to run an agent: install "ag2[anthropic]>=1.1.2", check that ANTHROPIC_API_KEY is set (ask me if not), save the agent.py from the README, and run it.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to give my own AG2 agent SandboxShellTool and SandboxCodeTool backed by one TenkiEnvironment.
+```
+
 ## Quick start
 
 You need:

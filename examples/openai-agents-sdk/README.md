@@ -2,6 +2,19 @@
 
 Give an [OpenAI Agents SDK](https://openai.github.io/openai-agents-js/) agent a `run_python` code-interpreter tool that runs in a Tenki sandbox. The agent writes Python, the tool runs it in one sandbox shared for the session, and the output goes back to the agent. The tool is one file, `tenki-tool.mjs`, that you can copy into your own agent.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "OpenAI Agents SDK" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/openai-agents-sdk, check that Node.js is 22 or later, and run npm install.
+2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.mjs, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call, expects 55), then node agent.mjs.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then add tenki-tool.mjs to my own Agents SDK agent: one sandbox per session with a maxDurationMs cap, makeCodeTool(sandbox) in tools, and dispose in a finally block.
+```
+
 ## Quick start
 
 You need:

@@ -2,6 +2,19 @@
 
 A [CopilotKit](https://copilotkit.ai) chat whose sandbox tools come with their own UI. Ask it to run code and a console appears in the chat with the output and a live shell into the Tenki sandbox. Ask it for a web app and the page appears in the chat, served from a sandbox on a public URL. The tools are a plain MCP server using the [MCP Apps](https://github.com/modelcontextprotocol/ext-apps) extension, so any MCP Apps host can drive them.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Run the CopilotKit MCP Apps example on Tenki, following https://github.com/LuxorLabs/cookbook/tree/main/examples/copilotkit-mcp-apps.
+1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/copilotkit-mcp-apps, check that Node.js is 20.11 or later, and run npm install.
+2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run node verify.mjs and confirm it prints the ✓ line.
+4. Copy chat/.env.example to chat/.env and ask me to fill in LLM_API_KEY myself. Then start the server with npm start, and in a second terminal run npm install && npm run dev in chat/, and tell me to open http://localhost:3000.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+```
+
 ## Quick start
 
 You need:

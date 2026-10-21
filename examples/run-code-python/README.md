@@ -2,6 +2,20 @@
 
 Boot a Tenki sandbox from Python, run `python3 -c "print(6 * 7)"` in it, print `exit 0 -> 42`, and terminate the sandbox. It uses only the official [`tenki`](https://pypi.org/project/tenki/) SDK. For the Node version, see [Run code in a sandbox](../run-code-in-a-sandbox/).
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Run code with Python" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo and cd into examples/run-code-python.
+2. Create a virtualenv on Python 3.10 or later (uv venv --python 3.12 if uv is installed) and install requirements.txt into it.
+3. The script needs a Tenki API key (starts with tk_) in TENKI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+4. Run .venv/bin/python run.py and confirm it prints "exit 0 -> 42", then run node verify.mjs.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+Then walk me through run.py and show me how to run my own code instead.
+```
+
 ## Quick start
 
 You need:

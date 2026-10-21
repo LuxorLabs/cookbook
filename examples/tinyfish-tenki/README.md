@@ -2,6 +2,19 @@
 
 Run [TinyFish](https://docs.tinyfish.ai/) web automation from a Tenki sandbox: fetch, search, a natural-language web agent that returns JSON, and a remote Chromium browser you drive over CDP. The sandbox boots from `tenki/tinyfish:stable`, which ships the TinyFish CLI, [`@tiny-fish/sdk`](https://www.npmjs.com/package/@tiny-fish/sdk), and `playwright-core`, so nothing installs in the VM. Your code runs in the sandbox; browsers and agents run at TinyFish.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "TinyFish" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/tinyfish-tenki, check that Node.js is 24 or later, and run npm install.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) and TINYFISH_API_KEY (from https://agent.tinyfish.ai/api-keys). If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node run.mjs and confirm the fetch, search, and browser lines, then run node verify.mjs.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then ask me which site and data I want, and change tinyfish.mjs to get it with the TinyFish agent API or the remote browser.
+```
+
 ## Quick start
 
 You need:

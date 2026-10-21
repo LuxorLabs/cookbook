@@ -2,6 +2,19 @@
 
 Run [Omnara](https://github.com/omnara-ai/omnara) agents on Tenki sandboxes. Omnara is an open-source managed agent platform with an API for running agents on any model and machine. With a Tenki machine pool, each agent gets its own Linux VM with passwordless `sudo`, where it runs commands and installs what a task needs. The integration landed in [omnara#537](https://github.com/omnara-ai/omnara/pull/537).
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up an Omnara agent that runs on a Tenki sandbox, following https://github.com/LuxorLabs/cookbook/tree/main/examples/omnara-tenki.
+1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/omnara-tenki, check that Node.js is 22 or later, and run npm install. Ask me to run npx omnara login myself.
+2. It needs TENKI_API_KEY (a Tenki key from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Store the key as an org secret, create the tenki-pool machine pool, and share it with my project, using the commands in the README. Show me the pool limits before creating it.
+4. Launch the agent in agent.yaml with npx omnara agents launch, and tell me the agent ID so I can chat with it.
+5. Run node verify.mjs and confirm the ✓ line. Remind me to archive the agent when I'm done, which deletes its VM.
+```
+
 ## Quick start
 
 You need:

@@ -4,6 +4,19 @@ Run every tool call from the [Claude Agent SDK](https://www.npmjs.com/package/@a
 
 `query()` and the model calls still run locally. Only tool execution moves into the sandbox.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Claude Agent SDK" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/claude-agent-sdk, check that Node.js is 24 or later, and run npm install.
+2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and ANTHROPIC_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (it doesn't call the model), then node agent.mjs, and confirm the agent answers 832040 and the final ls shows fib.py in the sandbox.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to add tenki-tools.mjs to my own Agent SDK project with tools: [] so no tool runs on my machine.
+```
+
 ## Quick start
 
 You need:

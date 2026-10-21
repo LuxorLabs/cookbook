@@ -2,6 +2,20 @@
 
 Run a [PraisonAI](https://github.com/MervinPraison/PraisonAI) agent team on one shared Tenki sandbox. `tools_run_on="tenki"` provisions one sandbox for the run, binds every agent's `execute_command`, `read_file`, `write_file`, and `list_files` tools to it, and shuts it down when the run ends. All agents share one filesystem, so a file one step writes is there for the next. Model calls stay on your machine. The sandbox is created on the first tool call, so a run that never uses those tools never creates one.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "PraisonAI" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/praisonai-tenki, create a .venv there on Python 3.10 or later, and install requirements.txt. The install takes a couple of minutes.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) in the environment. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run node verify.mjs and confirm the ✓ line.
+4. If I want a team run: check that OPENAI_API_KEY (or another LLM key) is set, ask me if not, then save the team snippet from the README as team.py and run it with .venv/bin/python.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to put my own PraisonAI team on one Tenki sandbox with tools_run_on="tenki", creating /workspace first.
+```
+
 ## Quick start
 
 You need:

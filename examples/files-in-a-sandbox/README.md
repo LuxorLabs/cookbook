@@ -2,6 +2,20 @@
 
 Write a text file into a Tenki sandbox, read it back, and list the directory, using the file API in the [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK. No `exec` or shell needed. The sandbox is terminated when the script ends.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Work with files" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo and cd into examples/files-in-a-sandbox.
+2. Check that Node.js is 24 or later, then run npm install.
+3. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+4. Run node run.mjs and confirm it reads back "hello from tenki" and lists notes.txt, then run node verify.mjs.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to upload a local file into the sandbox and download a result back.
+```
+
 ## Quick start
 
 You need:

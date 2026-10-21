@@ -2,6 +2,19 @@
 
 Run code on Tenki through [ComputeSDK](https://github.com/computesdk/computesdk), which puts one interface in front of many sandbox providers (E2B, Modal, Daytona, Vercel, and others). The [`@computesdk/tenki`](https://www.npmjs.com/package/@computesdk/tenki) provider maps that interface onto Tenki sandboxes: shell commands, a native filesystem API, and public preview URLs. Pass Tenki as the provider, and the sandbox code after that doesn't change if you switch.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "ComputeSDK" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/computesdk-tenki, and run npm install (Node.js 20 or later).
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) in the environment. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run node run.mjs and confirm it prints "Hello from Linux ..." and 42, then run node verify.mjs.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to add Tenki as a ComputeSDK provider in my own project so I can switch providers without changing my sandbox code.
+```
+
 ## Quick start
 
 You need:

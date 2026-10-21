@@ -2,6 +2,19 @@
 
 Run Claude Code headless with `--dangerously-skip-permissions` on a real repo, inside a Tenki sandbox you throw away. The script clones a repo into the sandbox, runs one Claude Code turn on a task, saves the diff to `agent.patch` on your machine, and deletes the sandbox. The agent gets a free hand on one disposable VM, and the patch is what you keep.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Claude Code" example from https://github.com/LuxorLabs/cookbook, which runs Claude Code headless in a disposable Tenki sandbox and hands back a patch.
+1. Clone the repo, cd into examples/claude-code-sandbox, check that Node.js is 24 or later, and run npm install.
+2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and ANTHROPIC_API_KEY in the environment. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call), then node run.mjs, and show me agent.patch.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then ask me which repo and task I want instead, change REPO and TASK in run.mjs, and run it again. Don't apply any patch to my code without asking.
+```
+
 ## Quick start
 
 You need:

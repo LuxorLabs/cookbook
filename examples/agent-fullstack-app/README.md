@@ -2,6 +2,20 @@
 
 Run a task-list app in one Tenki sandbox: a JSON API, an HTML frontend, and a SQLite database seeded with 5 tasks. The script ships the code in, seeds the data, starts the server, calls the API, and exposes the frontend on a public HTTPS URL. Each step maps to a tool in the [Tenki MCP server](https://www.npmjs.com/package/@tenkicloud/mcp), so an agent such as Claude Code can run the same loop itself.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "Run a full-stack app" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/agent-fullstack-app, and run npm install (Node.js 20 or later).
+2. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+3. Run node run.mjs from that directory. Give me the preview URL it prints and the "terminate now:" command, and remind me the sandbox runs until I terminate it or for 2 hours.
+4. Run node verify.mjs and confirm the ✓ line.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to swap app/server.py for my own app and keep the same flow.
+```
+
 ## Quick start
 
 You need:

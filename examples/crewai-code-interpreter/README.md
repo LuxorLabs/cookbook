@@ -2,6 +2,19 @@
 
 Give a [CrewAI](https://crewai.com) agent a `run_python` code-interpreter tool that runs in a Tenki sandbox. CrewAI removed its built-in [`CodeInterpreterTool`](https://docs.crewai.com/en/tools/ai-ml/codeinterpretertool) and points users to a sandbox service. `tenki_tool.py` is that tool on Tenki: a CrewAI `BaseTool` that runs the agent's Python in one sandbox shared for the crew run.
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Tenki "CrewAI" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/crewai-code-interpreter, create a .venv there on Python 3.10 to 3.13 (uv venv --python 3.12 if uv is installed), and install requirements.txt. The install takes a few minutes.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call, expects 55), then .venv/bin/python agent.py.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then add tenki_tool.py to my own crew: one sandbox per run in a with block, and TenkiCodeInterpreter(sandbox=sandbox) in the agent's tools.
+```
+
 ## Quick start
 
 You need:

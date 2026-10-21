@@ -17,6 +17,18 @@ Some of the tools:
 
 See the [full tool list](https://github.com/LuxorLabs/tenki-mcp#tools).
 
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Add the Tenki MCP server to this coding agent so you can run code in Tenki sandboxes, following https://github.com/LuxorLabs/cookbook/tree/main/examples/mcp-tenki-sandbox.
+1. Check that Node.js is 22 or later.
+2. I need a Tenki API key (starts with tk_). If TENKI_API_KEY isn't set in my shell, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key.
+3. Register the server the way this client expects. For Claude Code: claude mcp add tenki --env TENKI_API_KEY="$TENKI_API_KEY" -- npx -y @tenkicloud/mcp. For Cursor or Claude Desktop, add the mcpServers block from the README, and tell me which file you edited, since it will contain my key.
+4. Tell me to restart the session, then call tenki_auth_status, then use tenki_run_code to run print(sum(range(100))) in Python and show me the output.
+```
+
 ## Quick start
 
 You need:
