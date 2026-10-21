@@ -1,18 +1,29 @@
-# How to give a LangChain.js agent a code interpreter that runs in a Tenki sandbox
+# LangChain (JavaScript)
 
-A LangGraph ReAct agent answers a question by calling a `run_python` tool. The tool runs that Python in a disposable [Tenki](https://tenki.cloud) sandbox. A check of the tool passes with no model key.
+Give a LangChain.js agent a `run_python` code-interpreter tool that runs in a Tenki sandbox. The agent writes Python, the tool runs it in one sandbox shared for the session, and the output goes back to the agent. The tool is one file, `tenki-tool.mjs`, that you can copy into your own agent. For Python agents, see [LangChain (Python)](../langchain-python/).
 
-About 5 minutes.
+## Set it up with a coding agent
 
-CI runs `verify.mjs`, which calls the `run_python` tool directly. `agent.mjs` needs an OpenAI key and, with today's `@langchain/openai` releases, Node 22 or newer. CI does not run `agent.mjs`.
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
-## Why bother
+```text
+Set up the Tenki "LangChain (JavaScript)" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/langchain-code-interpreter, check that Node.js is 22 or later, and run npm install.
+2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.mjs, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call, expects 55), then node agent.mjs.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then add tenki-tool.mjs to my own LangChain.js agent: create one sandbox per session, pass makeCodeTool(sandbox) in the tools list, and dispose the sandbox in a finally block.
+```
 
-This is the "code interpreter" pattern with Tenki as the execution backend. The agent writes Python, and the `run_python` tool runs it in an isolated sandbox instead of on your machine, then hands the output back to the agent. One sandbox serves the whole agent session and is reused across every tool call, which is cheaper than a sandbox per call. It's disposed when the agent finishes. The tool is one short file, `tenki-tool.mjs`, that you can copy into your own agent. It's built on LangChain.js v1 and the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
+## Quick start
 
-## Install
+You need:
 
-You need Node 20 or newer for `verify.mjs`, and Node 22 or newer for `agent.mjs`. The reason is below the dependency list.
+- Node.js 22 or later for `agent.mjs` (current `@langchain/openai` requires it). `verify.mjs` runs on Node 20.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- An OpenAI API key, for the agent run only.
+
+### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
@@ -20,56 +31,40 @@ cd cookbook/examples/langchain-code-interpreter
 npm install
 ```
 
-Every later command runs from this directory.
+This installs `@langchain/core`, `@langchain/langgraph`, `@langchain/openai`, `@tenkicloud/sandbox`, and `zod`. On Node 20, npm warns `EBADENGINE` for `@langchain/openai`; `verify.mjs` still runs.
 
-The dependencies, from `package.json`:
-
-```json
-  "dependencies": {
-    "@langchain/core": "^1.2.3",
-    "@langchain/langgraph": "^1.4.8",
-    "@langchain/openai": "^1.5.5",
-    "@tenkicloud/sandbox": ">=1.4.1",
-    "zod": "^4.4.3"
-  }
-```
-
-The example ships no lockfile, so `npm install` takes the newest release in each range. For `@langchain/openai`, that's a release that declares Node 22 or newer: 1.5.9 and later do, while 1.5.8 and earlier declare Node 20. `verify.mjs` doesn't import `@langchain/openai`, which is why it runs on Node 20, the version CI uses.
-
-## Authenticate
-
-Create a `tk_` API key at https://app.tenki.cloud and export it:
+### 2. Set your keys
 
 ```bash
 export TENKI_AUTH_TOKEN=tk_...
-```
-
-Both scripts check `TENKI_AUTH_TOKEN` first. Two alternatives also work:
-
-- `export TENKI_API_KEY=tk_...`, which is what CI sets.
-- `tenki login --api-key <key>`, which stores the key in `~/.config/tenki/config.yaml`. Both scripts read its `auth_token` line.
-
-The order differs between the scripts in one way. `verify.mjs` checks `TENKI_API_KEY` before the config file, but `agent.mjs` reads the config file first and leaves `TENKI_API_KEY` to the SDK as a fallback. So if the config file holds a key, `agent.mjs` uses it instead of an exported `TENKI_API_KEY`. `TENKI_AUTH_TOKEN` wins in both.
-
-Tenki infers your workspace from the key. If you want a specific one, set `TENKI_WORKSPACE_ID`. Both scripts pass it through when it's set, and they also pick up a `current_workspace_id:` line from `~/.config/tenki/config.yaml` if one is there.
-
-`agent.mjs` also needs a model key. It uses OpenAI's `gpt-4o-mini` through `ChatOpenAI`:
-
-```bash
 export OPENAI_API_KEY=sk-...
 ```
 
-To use a different provider, swap `ChatOpenAI` for your provider's LangChain chat model. `verify.mjs` needs no model key.
+`TENKI_API_KEY` and a key saved with `tenki login --api-key <key>` also work. `TENKI_AUTH_TOKEN` always wins. After that, `agent.mjs` prefers the `tenki login` key over `TENKI_API_KEY`, while `verify.mjs` prefers `TENKI_API_KEY`. `TENKI_WORKSPACE_ID` is optional.
 
-## Use it
-
-Run the agent:
+### 3. Run the agent
 
 ```bash
 node agent.mjs
 ```
 
-This is `agent.mjs` from the point where it creates the sandbox:
+A LangGraph ReAct agent on `gpt-4o-mini` computes the 20th Fibonacci number with `run_python` and prints its answer.
+
+### 4. Verify
+
+```bash
+node verify.mjs
+```
+
+```
+✓ langchain-code-interpreter: LangChain tool executed Python in a Tenki sandbox → 55
+```
+
+`verify.mjs` calls the tool directly with `print(sum(range(11)))` and checks for `55`. It needs no OpenAI key.
+
+## The agent
+
+`agent.mjs`, from where it creates the sandbox:
 
 ```js
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || cfg("auth_token") });
@@ -97,13 +92,11 @@ try {
 }
 ```
 
-The script creates one sandbox with 1 CPU core and 1024 MB of memory and waits for it to be ready. It builds a LangGraph ReAct agent with `gpt-4o-mini` and the `run_python` tool, asks for the 20th Fibonacci number, and prints the last message in the result, which is the model's final answer. The `finally` block disposes the sandbox whether the agent succeeds or throws.
+To use a different model provider, swap `ChatOpenAI` for its LangChain chat model. `createReactAgent` is marked deprecated in `@langchain/langgraph` 1.x in favor of `createAgent` from `langchain`. `makeCodeTool` returns an ordinary `@langchain/core` tool, so it works with either.
 
-To use the tool in your own agent, copy `tenki-tool.mjs`, create a sandbox, and pass `makeCodeTool(sandbox)` in the agent's `tools` list, as above.
+## The tool
 
-## How the tool runs code
-
-The tool, from `tenki-tool.mjs`:
+`tenki-tool.mjs`:
 
 ```js
 // A LangChain tool that runs Python in a Tenki sandbox.
@@ -136,74 +129,29 @@ export function makeCodeTool(sandbox) {
 }
 ```
 
-Three things to know:
+Things to know:
 
-- **No shell in between.** `exec("python3", { args: ["-c", code] })` runs `python3` directly and passes the code as a single argument, so multi-line, model-generated code goes through without escaping problems. If you need shell syntax, run it through `sh -c` with `exec`.
-- **The model sees one argument.** The zod schema exposes only `code`. The sandbox comes from the closure that `makeCodeTool(sandbox)` creates, so the model never sees or picks it.
-- **The agent always gets text back.** The tool returns stdout followed by stderr, so a Python traceback reaches the agent as text. The SDK's `stdoutText` and `stderrText` trim each stream, and the tool joins them with nothing in between. If the code printed nothing, the tool returns `(no output; exit code N)`.
-
-The sandbox has only Python's standard library by default. Outbound network is on by default in SDK 1.x, so the agent's code can `pip install` more packages. To cut the sandbox off from the network, add `allowOutbound: false` to the `createAndWait` options in `agent.mjs`.
-
-## Check it works
-
-```bash
-node verify.mjs
-```
-
-On success it prints:
-
-```
-✓ langchain-code-interpreter: LangChain tool executed Python in a Tenki sandbox → 55
-```
-
-The core of `verify.mjs`:
-
-```js
-  sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
-  const runPython = makeCodeTool(sandbox);
-
-  // Drive the LangChain tool exactly as an agent would.
-  const out = await runPython.invoke({ code: "print(sum(range(11)))" });
-  if (String(out).trim() !== "55") throw new Error(`tool returned ${JSON.stringify(out)}`);
-```
-
-This proves the Tenki-facing half of the example: the LangChain `run_python` tool runs code in a live sandbox and returns its output. The script calls the tool directly, with no model, so the LangGraph agent, `@langchain/openai`, and the model turn aren't exercised. This is what CI runs, on Node 20 with only `TENKI_API_KEY` set.
+- **No shell.** The code goes to `python3 -c` as one argument, so multi-line code needs no escaping. Use `sh -c` through `exec` if you need shell syntax.
+- **The model only sees `code`.** The sandbox comes from the closure.
+- **Errors come back as text.** The tool returns stdout then stderr, so tracebacks reach the agent. Code that prints nothing returns `(no output; exit code N)`, so the agent has to `print` its answer.
+- **No state between calls.** Each call is a new `python3` process. Files persist in the shared sandbox; variables don't.
+- **Standard library only by default.** Outbound network is on, so the code can `pip install`. Add `allowOutbound: false` to `createAndWait` to cut it off.
+- **Set a lifetime cap.** `agent.mjs` disposes of the sandbox in `finally` but sets no `maxDurationMs`. Set one in your agent in case the process dies first.
 
 ## Troubleshooting
 
-**❌ ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.``** `verify.mjs` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or the `auth_token` line of `~/.config/tenki/config.yaml`. Export `TENKI_AUTH_TOKEN=tk_...`, or run `tenki login --api-key <key>`.
-
-**❌ `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY or use authToken option` from `agent.mjs`.** The SDK found no key in the environment, and the config file has no `auth_token` line. It throws before any sandbox is created. Export `TENKI_AUTH_TOKEN=tk_...`, or run `tenki login --api-key <key>`.
-
-**❌ `invalid auth token - API keys and service tokens must start with tk_`.** The key the script found isn't a `tk_` API key, and SDK 1.x accepts nothing else. Both scripts stop here before creating a sandbox. Create a key at https://app.tenki.cloud and use that. If you exported a `tk_` key as `TENKI_API_KEY` and only `agent.mjs` fails, an older token in `~/.config/tenki/config.yaml` is winning: export the key as `TENKI_AUTH_TOKEN` instead, or rerun `tenki login --api-key <key>`.
-
-**❌ ``Missing credentials. Please pass an `apiKey`, …`` from `agent.mjs`.** `OPENAI_API_KEY` isn't set in the shell that runs the agent. `ChatOpenAI` reads it from the environment and fails on the first model call. Export it and run again. The sandbox already exists by then, and the `finally` block disposes it.
-
-**❌ `npm warn EBADENGINE Unsupported engine` for `@langchain/openai`.** You're on a Node version older than 22, and current `@langchain/openai` releases declare Node 22 or newer. npm only warns, so the install finishes and `verify.mjs` runs. To run `agent.mjs`, use Node 22 or newer, or install `@langchain/openai@1.5.8`, the last release that declares Node 20.
-
-**❌ `✗ tool returned "…"`.** The sandbox ran the check, but the tool returned something other than `55`. The quoted text is the sandbox's own stdout and stderr, or `(no output; exit code N)`, so read it for the actual error.
-
-## FAQ
-
-**Does the agent keep Python variables between tool calls?** No. Each call starts a new `python3 -c` process. The calls share one sandbox for the whole session, so a file one call writes is still there for the next, but variables are not. Relative paths land in `/home/tenki`, the sandbox's working directory.
-
-**Why did the tool return `(no output; exit code 0)`?** The code ran and printed nothing. The tool returns only what the code writes to stdout and stderr, so the agent's code has to `print` its answer.
-
-**Can the sandbox reach the internet?** Yes. Outbound network is on by default in SDK 1.x, and this example doesn't change it. Add `allowOutbound: false` to the `createAndWait` options if you want the agent's code cut off from the network.
-
-**Can I use a model other than OpenAI?** Yes. Swap `ChatOpenAI` in `agent.mjs` for your provider's LangChain chat model and install its package. `tenki-tool.mjs` and the sandbox code stay the same.
-
-**`createReactAgent` is marked deprecated. Does that matter here?** In `@langchain/langgraph` 1.x, `createReactAgent` carries a deprecation note that points to `createAgent` in the `langchain` package. It's still exported, and `agent.mjs` uses it. `makeCodeTool` returns an ordinary `@langchain/core` tool, so you pass it in the `tools` list of whichever agent you build.
-
-**How long does the sandbox live?** Until the `finally` block in `agent.mjs` disposes it. The script sets no `maxDurationMs`. In your own agent, set `maxDurationMs` in the `createAndWait` options to cap a sandbox's lifetime in case your process exits before it disposes the sandbox.
-
-**When shouldn't I use this?** When you need a notebook-style interpreter that keeps variables between calls, since every call here is a fresh process. When the tool has to hand back files or images, since it returns only text. When the model's code must not reach the network and you haven't set `allowOutbound: false`. When you can't run Node 22 for the agent and don't want to hold `@langchain/openai` at 1.5.8. And if your agent is written in Python, start from [`langchain-python`](../langchain-python/) instead.
+| Problem | Fix |
+| --- | --- |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
+| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | Export `TENKI_AUTH_TOKEN` or run `tenki login --api-key <key>`. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Use a `tk_` key. If only `agent.mjs` fails, an old key in `~/.config/tenki/config.yaml` is winning over `TENKI_API_KEY`; export `TENKI_AUTH_TOKEN` instead. |
+| ``Missing credentials. Please pass an `apiKey`, …`` | Export `OPENAI_API_KEY`. |
+| `npm warn EBADENGINE` for `@langchain/openai` | Use Node 22 for `agent.mjs`, or install `@langchain/openai@1.5.8`, the last release that supports Node 20. |
+| `✗ tool returned "…"` | The quoted text is the sandbox's output. Read it for the error. |
 
 ## Related
 
-- LangChain.js: https://github.com/langchain-ai/langchainjs
-- LangGraph.js: https://github.com/langchain-ai/langgraphjs
-- Tenki JavaScript SDK: [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox)
-- Tenki docs: https://tenki.cloud/docs
-- [`langchain-python`](../langchain-python/): the same `run_python` tool for a LangChain Python agent
-- [`run-code-in-a-sandbox`](../run-code-in-a-sandbox/): the bare Tenki SDK loop in Node, with no agent framework
+- [LangChain (Python)](../langchain-python/): the same tool for a Python agent
+- [Run code in a sandbox](../run-code-in-a-sandbox/): the bare SDK loop
+- [LangChain.js](https://github.com/langchain-ai/langchainjs) and [LangGraph.js](https://github.com/langchain-ai/langgraphjs)
+- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox) and the [Tenki docs](https://tenki.cloud/docs)

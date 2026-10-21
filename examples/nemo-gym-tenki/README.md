@@ -1,18 +1,49 @@
-# NeMo Gym rollouts on Tenki
+# NeMo Gym
 
-Run [NVIDIA NeMo Gym](https://github.com/NVIDIA-NeMo/Gym) sandboxes in Tenki sandboxes. Each rollout's code runs in its own disposable VM, and NeMo Gym picks Tenki the same way it picks Docker or E2B: by the provider name in its config.
+Run [NVIDIA NeMo Gym](https://github.com/NVIDIA-NeMo/Gym) rollouts in Tenki sandboxes, one disposable VM per rollout. Installing [`nemo-gym-tenki`](https://github.com/opencolin/nemo-gym-tenki) registers a `tenki` provider on NeMo Gym's `nemo_gym.sandbox_providers` entry point, so NeMo Gym picks Tenki by name, the same way it picks Docker or E2B, with no change to NeMo Gym itself.
 
-NeMo Gym loads sandbox providers from the `nemo_gym.sandbox_providers` entry point. Installing [`nemo-gym-tenki`](https://github.com/opencolin/nemo-gym-tenki) registers a `tenki` provider there, so it works with the NeMo Gym release on PyPI and needs no change to NeMo Gym.
+> **Status:** `nemo-gym-tenki` isn't on PyPI yet. This example installs it from git at commit `ec0ee66` ([opencolin/nemo-gym-tenki#1](https://github.com/opencolin/nemo-gym-tenki/pull/1)), which uses the `tenki` 1.x SDK. A built-in provider is proposed upstream in [NVIDIA-NeMo/Gym#2346](https://github.com/NVIDIA-NeMo/Gym/pull/2346).
 
-> **Status: `nemo-gym-tenki` isn't on PyPI yet.** This example installs it from git, pinned to commit `ec0ee66`, the head of [opencolin/nemo-gym-tenki#1](https://github.com/opencolin/nemo-gym-tenki/pull/1), which moves it to the `tenki` 1.x SDK. A built-in `tenki` provider is also proposed upstream in [NVIDIA-NeMo/Gym#2346](https://github.com/NVIDIA-NeMo/Gym/pull/2346), which is open.
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Run NeMo Gym rollouts in Tenki sandboxes, following https://github.com/LuxorLabs/cookbook/tree/main/examples/nemo-gym-tenki.
+1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/nemo-gym-tenki, and check that uv is installed (ask before installing it).
+2. Run uv sync. uv fetches Python 3.13.14+ if needed.
+3. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+4. Run uv run python run.py and confirm "reward 1.0", then node verify.mjs and confirm the ✓ line.
+5. To use it in my own NeMo Gym environment, add the sandbox_provider: tenki block from the README to its config.
+6. If a step fails, use the Troubleshooting table in the example's README.md.
+```
 
 ## Quick start
 
-NeMo Gym 0.7.0 needs Python 3.13.14 or later. [uv](https://docs.astral.sh/uv/) reads the version from `pyproject.toml` and fetches a matching Python if you don't have one.
+You need:
+
+- [uv](https://docs.astral.sh/uv/). NeMo Gym 0.7.0 needs Python 3.13.14 or later, which uv fetches if you don't have it.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+
+### 1. Install
 
 ```bash
-export TENKI_API_KEY=tk_...
-uv sync                 # NeMo Gym 0.7.0, nemo-gym-tenki and tenki, into ./.venv
+git clone https://github.com/LuxorLabs/cookbook.git
+cd cookbook/examples/nemo-gym-tenki
+uv sync                 # NeMo Gym 0.7.0, nemo-gym-tenki, and tenki, into ./.venv
+```
+
+### 2. Set your API key
+
+```bash
+export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
+```
+
+The provider uses the key's workspace. Set `connection.workspace_id` to pick another.
+
+### 3. Run
+
+```bash
 uv run python run.py
 ```
 
@@ -24,6 +55,18 @@ sandbox 01a1…
 exit 0: tests passed
 reward 1.0
 ```
+
+### 4. Verify
+
+```bash
+node verify.mjs      # or: uv run python verify.py
+```
+
+```
+✓ nemo-gym-tenki: `tenki` provider via entry point → create 01a1… with staged files → exec 42 → env → exit 3 → close (stopped)
+```
+
+`verify.py` checks that NeMo Gym lists the `tenki` provider, creates a sandbox with a file staged into `spec.workdir`, runs it, checks `spec.env` and a non-zero exit code, closes the sandbox, and confirms it stopped. `verify.mjs` runs `uv sync --locked` first, installing uv into the current Python if it isn't on your `PATH`.
 
 ## The code
 
@@ -56,32 +99,19 @@ sandbox_provider:
 
 ## How it works
 
-- **Auth.** The provider builds a Tenki SDK client, which reads `TENKI_API_KEY` (or the `TENKI_AUTH_TOKEN` alias) and uses the key's workspace. Set `connection.workspace_id` to pick a different one.
-- **Spec mapping.** `SandboxSpec.resources` maps to `cpu_cores`, `memory_mb` and `disk_size_gb`; `spec.image` to a Tenki image; `spec.env` and `spec.metadata` pass through; `spec.ttl_s` becomes the VM's hard `max_duration`; `spec.files` are written into `spec.workdir` after the VM boots.
-- **Network.** Outbound access is on by default, so rollouts can `pip install` or `git clone`. Set `create.allow_outbound: false` to lock a rollout down.
-- **Reconnect across processes.** The provider implements NeMo Gym's optional `ConnectableProvider`: a handle can be serialized and reopened by sandbox ID in another process, which helps distributed rollout collection.
-- **CPU only.** Tenki sandboxes are CPU-only. A spec that asks for `resources.gpu` is rejected; use a GPU provider for those environments.
-
-## Check it works
-
-```bash
-node verify.mjs      # or: uv run python verify.py
-```
-
-`verify.py` checks that NeMo Gym lists the `tenki` provider, then creates a sandbox through it with a file staged into `spec.workdir` (the path `run.py` uses), runs that file and expects `42`, checks that `spec.env` reached the VM and that a non-zero exit code comes back, closes the sandbox, and confirms its status is no longer running:
-
-```
-✓ nemo-gym-tenki: `tenki` provider via entry point → create 01a1… with staged files → exec 42 → env → exit 3 → close (stopped)
-```
-
-`verify.mjs` runs `uv sync --locked` first (it installs uv into the current Python if it isn't on your `PATH`), so the cookbook's CI gets the same locked environment you do, separate from the other Python examples.
+- **Spec mapping.** `SandboxSpec.resources` maps to `cpu_cores`, `memory_mb`, and `disk_size_gb`; `spec.image` to a Tenki image; `spec.env` and `spec.metadata` pass through; `spec.ttl_s` becomes the VM's `max_duration`; `spec.files` are written into `spec.workdir` after boot.
+- **Network.** Outbound access is on, so rollouts can `pip install` or `git clone`. Set `create.allow_outbound: false` to lock a rollout down.
+- **Reconnect across processes.** The provider implements `ConnectableProvider`, so a handle can be serialized and reopened by sandbox ID elsewhere, for distributed rollout collection.
+- **CPU only.** A spec that asks for `resources.gpu` is rejected.
 
 ## Troubleshooting
 
-- ❌ **`No interpreter found for Python >=3.13.14`.** Let uv fetch one (`uv python install 3.13`), or install Python 3.13.14+ yourself.
-- ❌ **`NeMo Gym doesn't list a tenki provider`.** `nemo-gym-tenki` isn't installed in the environment you ran. Use `uv run`, or `.venv/bin/python`.
-- ❌ **`unexpected keyword argument 'project_id'`.** Your config still sets `connection.project_id`. Tenki SDK 1.x uses workspaces: switch to `connection.workspace_id`, or drop it to use your key's workspace.
-- ❌ **`does not attach GPUs`.** The spec requests a GPU; Tenki sandboxes are CPU only.
+| Problem | Fix |
+| --- | --- |
+| `No interpreter found for Python >=3.13.14` | Run `uv python install 3.13`, or install Python 3.13.14+. |
+| `NeMo Gym doesn't list a tenki provider` | Run with `uv run` or `.venv/bin/python`. |
+| `unexpected keyword argument 'project_id'` | Replace `connection.project_id` with `connection.workspace_id`, or drop it. |
+| `does not attach GPUs` | Use a GPU provider for that environment. |
 
 ## Files
 
@@ -89,9 +119,9 @@ node verify.mjs      # or: uv run python verify.py
 |---|---|
 | `pyproject.toml`, `uv.lock` | NeMo Gym 0.7.0, the provider pinned to a commit, and `tenki`, locked |
 | `run.py` | Stage a solution, run its tests in a sandbox, score it |
-| `verify.py`, `verify.mjs` | The live check, and the shim the cookbook's CI runs |
+| `verify.py`, `verify.mjs` | The live check, and the shim CI runs |
 
 ## Related
 
-- [`../smolagents/`](../smolagents/): another framework that hands an agent's code to a Tenki executor
-- [`../agentenv-tenki/`](../agentenv-tenki/): agent environments on Tenki
+- [Hugging Face smolagents](../smolagents/): another framework that hands an agent's code to a Tenki executor
+- [AgentEnv](../agentenv-tenki/): RL environments on Tenki

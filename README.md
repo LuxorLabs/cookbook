@@ -2,7 +2,17 @@
 
 Runnable examples for [Tenki Sandbox](https://tenki.cloud/products/sandbox). Each folder under `examples/` is a short program you can run against the live API and copy into your own project.
 
-The first example takes about 10 minutes once you have an API key.
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Help me try Tenki Sandbox using the cookbook at https://github.com/LuxorLabs/cookbook.
+1. Clone the repo and cd into examples/run-code-in-a-sandbox. Check that Node.js is 24 or later, then run npm install.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run node run.mjs and confirm it prints "exit 0 -> 42", then run node verify.mjs and confirm the ✓ line.
+4. Then ask me what I'm building, pick the closest example from the tables in the root README.md, and follow that example's README.
+```
 
 ## Quick start
 

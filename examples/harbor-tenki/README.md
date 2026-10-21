@@ -1,34 +1,31 @@
-# How to run Harbor agent evals with each trial in its own Tenki VM
+# Harbor
 
-`harbor run -e tenki_harbor:TenkiEnvironment` gives every trial its own Tenki sandbox, grades it with the task's own tests, writes the results to `jobs/`, and terminates the sandbox. `node verify.mjs` prints a `✓` line.
+Run [Harbor](https://github.com/harbor-framework/harbor) agent evals with each trial in its own Tenki VM. Harbor, from the creators of [Terminal-Bench](https://www.tbench.ai), runs a coding agent (Claude Code, Codex, OpenCode, Goose, mini-swe-agent, Terminus, and others) against a benchmark's tasks, grades every attempt with the task's own tests, and records the trajectory. [`tenki-harbor`](https://github.com/LuxorLabs/tenki-harbor) adds Tenki as a Harbor environment, so trials run in parallel, one VM each, with the task's container running under Docker inside.
 
-About 5 minutes to install, run the no-model smoke test (under a minute), and run the verify script (about 45 seconds). A benchmark run with an agent takes longer.
+## Set it up with a coding agent
 
-Harbor tasks are container images, and a Tenki session is a full Linux machine, so each trial runs the task's container under Docker inside that machine. Tasks that ship a `docker-compose.yaml` or ask for a network allowlist are rejected for now. GPUs and Windows containers are not supported.
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
-Harbor is the open-source framework from the creators of [Terminal-Bench](https://www.tbench.ai) for evaluating coding agents and models. It runs an agent (Claude Code, Codex, OpenCode, Goose, mini-swe-agent, Terminus, …) against a benchmark's tasks, grades every attempt with the task's own tests, and records the full trajectory. [`tenki-harbor`](https://github.com/LuxorLabs/tenki-harbor) adds [Tenki Sandbox](https://tenki.cloud/docs/sandbox) as a Harbor environment, so every trial gets its own Tenki VM and trials run in parallel (the commands here run 16 at a time).
-
-Harbor owns the evaluation: tasks, agents, attempts, grading, and results on disk. Tenki owns the machine.
-
-## Prerequisites
-
-- Python 3.12 or later and [uv](https://docs.astral.sh/uv/). Both `harbor` and `tenki-harbor` require Python 3.12+.
-- A Tenki API key (`tk_…`). Create one at https://app.tenki.cloud.
-- Node.js, only if you run the check through the `node verify.mjs` shim. CI runs it on Node 20.
-- For Step 5 only: an API key for the model your agent uses. The example runs Claude Code, so an Anthropic key.
-
-## Step 1 — Get the example
-
-```bash
-git clone https://github.com/LuxorLabs/cookbook.git
-cd cookbook/examples/harbor-tenki
+```text
+Set up Harbor agent evals on Tenki, following https://github.com/LuxorLabs/cookbook/tree/main/examples/harbor-tenki.
+1. Check that Python 3.12+ and uv are installed. Install harbor with the Tenki environment using the uv tool install command in the README (ask me before installing a global tool).
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run the no-model smoke test: harbor run -t hello-world/hello-world -e tenki_harbor:TenkiEnvironment --agent oracle, and confirm a mean reward of 1.000.
+4. Ask me which agent, model, and benchmark I want to run and how many tasks, check that the model key is set, then run it and open the results with harbor view jobs.
+5. If a step fails, use the Troubleshooting table in the example's README.md. Ask me before running tenki-harbor cleanup, since it ends every Harbor session in the workspace.
 ```
 
-Every later command runs from this directory. It holds [`job.yaml`](job.yaml) (a benchmark run as a job config), [`verify.py`](verify.py) (the check), `verify.mjs` (a Node shim that runs `verify.py`), and `requirements.txt`. Harbor writes results to `jobs/` under the current directory.
+## Quick start
 
-## Step 2 — Install Harbor with the Tenki environment
+You need:
 
-`tenki-harbor` is not on PyPI yet, so install it from GitHub alongside the `harbor` CLI:
+- Python 3.12 or later and [uv](https://docs.astral.sh/uv/).
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A model API key for the agent you run (Anthropic for Claude Code), for step 4 only.
+
+### 1. Install Harbor with the Tenki environment
+
+`tenki-harbor` installs from GitHub:
 
 ```bash
 uv tool install harbor \
@@ -36,62 +33,46 @@ uv tool install harbor \
   --with-executables-from tenki-harbor
 ```
 
-This gives you `harbor` with the Tenki environment loaded, plus the `tenki-harbor` command for snapshots and cleanup. `tenki-harbor` pins `harbor>=0.23,<0.24`, so you get Harbor 0.23.x.
+This gives you `harbor` (0.23.x, which `tenki-harbor` pins) with the Tenki environment, plus the `tenki-harbor` command for snapshots and cleanup.
 
-To work from this folder instead, install its `requirements.txt` into a local venv:
+To work from this folder instead, with `tenki-harbor` pinned to a commit:
 
 ```bash
+git clone https://github.com/LuxorLabs/cookbook.git
+cd cookbook/examples/harbor-tenki
 uv venv --python 3.12 && uv pip install -r requirements.txt
+source .venv/bin/activate
 ```
 
-`requirements.txt`:
-
-```text
-harbor>=0.23.0,<0.24
-tenki-harbor @ git+https://github.com/LuxorLabs/tenki-harbor@b2d703898cc90918eb20ea134bd8619049d8d80d
-tenki[async]>=1.4.1
-```
-
-It pins `tenki-harbor` to a fixed commit, where the `uv tool install` line above tracks its `main` branch. With the venv, the `harbor` and `tenki-harbor` commands are in `.venv/bin/`. Run `source .venv/bin/activate` so the `harbor` and `tenki-harbor` commands in the later steps resolve. Step 8 uses this venv.
-
-## Step 3 — Authenticate
+### 2. Set your API key
 
 ```bash
-export TENKI_API_KEY=tk_...
+export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
 ```
 
-**`tenki-harbor` reads the key from the environment only**, as `TENKI_API_KEY` or `TENKI_AUTH_TOKEN`, and the Tenki SDK accepts only `tk_` API keys. Harbor runs a preflight check before any trial and exits if neither variable is set, so the key the Tenki CLI saved with `tenki login` (in `~/.config/tenki/config.yaml`) is not enough for `harbor run`. Export it yourself. `verify.py` is the exception: it reads that saved key and exports it for you.
+`harbor run` reads the key from the environment only and exits in preflight without it. A `tenki login` key isn't enough, except for `verify.py`.
 
-## Step 4 — Run one trial with no model
+### 3. Run one trial with no model
 
 ```bash
 harbor run -t hello-world/hello-world -e tenki_harbor:TenkiEnvironment --agent oracle
 ```
 
-`-e tenki_harbor:TenkiEnvironment` is how Harbor loads an environment from an installed package. The `oracle` agent runs the task's reference solution, so this needs no model key. It creates a VM, runs the task, grades it, prints a mean reward of `1.000`, and terminates the VM, in under a minute.
+The `oracle` agent runs the task's reference solution, so no model key is needed. It creates a VM, runs and grades the task, prints a mean reward of `1.000`, and terminates the VM in under a minute.
 
-For each trial, `tenki-harbor`:
-
-1. Creates a Tenki session sized to the task's CPU, memory and storage request. A task that sets no CPU or memory gets 2 vCPU and 4 GB.
-2. Installs and starts Docker in the VM (about 12 s on the Tenki base image).
-3. `docker pull`s the task's prebuilt image, or `docker build`s its Dockerfile in the VM.
-4. Routes Harbor's `exec` and file transfers into that container (`docker exec` / `docker cp`).
-5. Terminates the session when the trial ends, pass or fail.
-
-Every session is tagged `harbor` and carries the Harbor session id in its metadata.
-
-## Step 5 — Run a benchmark with an agent
+### 4. Run a benchmark with an agent
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
 harbor run -d terminal-bench@2.0 -e tenki_harbor:TenkiEnvironment \
   --agent claude-code --model anthropic/claude-opus-4-1 \
   --n-concurrent 16 -l 10
+harbor view jobs
 ```
 
-This runs Claude Code on the first 10 Terminal-Bench 2.0 tasks, one VM per task. `--n-concurrent` caps how many run at once, `-l` caps the task count (drop it for all 89), and `--ae KEY=value` passes extra variables to the agent.
+This runs Claude Code on the first 10 Terminal-Bench 2.0 tasks, 16 at a time. Drop `-l` to run all 89. `--ae KEY=value` passes extra variables to the agent. Results go to `jobs/`, and `harbor view` serves a local browser for the trajectories.
 
-The same run as a job config, in [`job.yaml`](job.yaml):
+The same run as a job config, [`job.yaml`](job.yaml), run with `harbor run -c job.yaml`:
 
 ```yaml
 # Claude Code on the first 10 Terminal-Bench 2.0 tasks, one Tenki VM per trial.
@@ -112,18 +93,31 @@ datasets:
     n_tasks: 10 # remove to run all 89 tasks
 ```
 
+With the `oracle` agent on all 89 Terminal-Bench 2.0 tasks, 79 pass on Tenki. The other 10 fail because of the tasks themselves; the [tenki-harbor README](https://github.com/LuxorLabs/tenki-harbor#terminal-bench-20-results) lists each reason.
+
+### 5. Verify
+
 ```bash
-harbor run -c job.yaml
-harbor view jobs          # every step of every trial
+node verify.mjs        # or: .venv/bin/python verify.py
 ```
 
-`harbor view` starts a local web server for browsing the trajectories under `jobs/`.
+```
+✓ harbor-tenki: TenkiEnvironment loads → harbor run hello-world (oracle) on a Tenki VM → reward 1.0 → session terminated
+```
 
-With Harbor's `oracle` agent on all 89 Terminal-Bench 2.0 tasks, 16 at a time, 79 pass on Tenki. The other 10 fail for reasons in the tasks themselves, not in Tenki. The [tenki-harbor README](https://github.com/LuxorLabs/tenki-harbor#terminal-bench-20-results) lists the reason for each.
+`verify.py` uses the folder's `.venv`. It checks that `TenkiEnvironment` loads, runs step 3, asserts a reward of `1.0`, and checks that the trial's session (tagged `harbor`) was terminated. The last word may read `terminating` if the VM is still shutting down. It takes about 45 seconds and reads `TENKI_API_KEY`, `TENKI_AUTH_TOKEN`, or a `tenki login` key.
+
+## How each trial runs
+
+1. Create a Tenki session sized to the task's CPU, memory, and storage (2 vCPU and 4 GB if unset), tagged `harbor` with the Harbor session id in its metadata.
+2. Install and start Docker (about 12 s on the base image).
+3. Pull the task's image, or build its Dockerfile in the VM.
+4. Route Harbor's `exec` and file transfers into the container with `docker exec` and `docker cp`.
+5. Terminate the session when the trial ends, pass or fail.
 
 ### Environment options
 
-Pass with `--ek key=value`, or under `environment.kwargs` in a job config.
+Pass with `--ek key=value` or under `environment.kwargs`.
 
 | Option | Default | |
 | --- | --- | --- |
@@ -132,79 +126,7 @@ Pass with `--ek key=value`, or under `environment.kwargs` in a job config.
 | `snapshot_id` / `image` | `TENKI_HARBOR_SNAPSHOT_ID`, else the Tenki base image | Start from a snapshot or a Tenki image (one or the other). |
 | `base_url` | `TENKI_API_ENDPOINT` or `https://api.tenki.cloud` | Tenki API endpoint. |
 
-## Step 6 — Start trials faster from a snapshot (optional)
-
-Each trial installs Docker in a fresh VM. Bake it into a Tenki [snapshot](https://tenki.cloud/docs/sandbox/snapshots) once per workspace instead:
-
-```bash
-tenki-harbor prepare
-export TENKI_HARBOR_SNAPSHOT_ID=<printed snapshot id>
-```
-
-`prepare` creates a small VM, installs Docker, saves it as a snapshot, waits until the snapshot can be restored on any host, terminates the VM, and prints the `export` line. With `TENKI_HARBOR_SNAPSHOT_ID` set, every trial starts from that snapshot unless you pass `image` or `snapshot_id` yourself. On Terminal-Bench this took median environment setup from 28 s to 19 s ([tenki-harbor README](https://github.com/LuxorLabs/tenki-harbor#faster-startup)).
-
-## Step 7 — Clean up after an interrupted run
-
-If Harbor is killed mid-run, its VMs still stop at `max_duration_sec` (2 hours by default). To end them sooner:
-
-```bash
-tenki-harbor sessions   # list active Harbor sessions
-tenki-harbor cleanup    # terminate them
-```
-
-**`cleanup` terminates every active session tagged `harbor` in the workspace**, including those of any other Harbor job running there. It also catches a VM left behind by an interrupted `tenki-harbor prepare`, which is tagged the same way.
-
-The same lifetime applies if you run with `harbor run --no-delete` or `delete: false` in a job config: `tenki-harbor` leaves each VM running and logs a warning that it terminates after `max_duration_sec`. [`job.yaml`](job.yaml) sets `delete: true`.
-
-## Step 8 — Check it works
-
-If you didn't create the venv in Step 2, create it now:
-
-```bash
-uv venv --python 3.12 && uv pip install -r requirements.txt
-```
-
-Then run the check:
-
-```bash
-node verify.mjs        # or: .venv/bin/python verify.py
-```
-
-`verify.mjs` runs `verify.py` with this folder's `.venv/bin/python` if it exists, otherwise with `$PYTHON` or `python3`. The script uses `TENKI_API_KEY` or `TENKI_AUTH_TOKEN`, falling back to the key `tenki login` saved. It takes about 45 s and prints:
-
-```
-✓ harbor-tenki: TenkiEnvironment loads → harbor run hello-world (oracle) on a Tenki VM → reward 1.0 → session terminated
-```
-
-The last word reads `terminating` if Tenki is still shutting the VM down.
-
-It runs the same smoke test as tenki-harbor's own CI: it checks that `TenkiEnvironment` imports as a Harbor environment, runs Step 4's `harbor run` against live Tenki, asserts the trial's reward is `1.0`, and checks that the trial's Tenki session (tagged `harbor`) ended up terminated. It needs no model key, so no agent or model runs, only the task's reference solution, and it runs one trial rather than a parallel benchmark.
-
-## Troubleshooting
-
-**❌ `Tenki requires TENKI_API_KEY (or TENKI_AUTH_TOKEN). Create a key at https://tenki.cloud/docs/account/api-keys.`** Harbor's preflight for the Tenki environment found neither variable, and it doesn't read the key `tenki login` saved. Run `export TENKI_API_KEY=tk_...` in the shell you run `harbor` from.
-
-**❌ `` No token. Set TENKI_API_KEY, or run `tenki login`. ``** `verify.py` found no key in the environment or in `~/.config/tenki/config.yaml`. Export `TENKI_API_KEY=tk_...`, or run `tenki login --api-key <key>`.
-
-**❌ `ModuleNotFoundError: No module named 'harbor'` from `node verify.mjs`.** There's no `.venv` in this folder, so the shim ran `python3` (or `$PYTHON`), which doesn't have the requirements installed. Run `uv venv --python 3.12 && uv pip install -r requirements.txt` here first, or set `PYTHON` to an interpreter that has them.
-
-**❌ `Tenki does not support docker-compose tasks yet; only Dockerfile and docker_image tasks.`** The task ships a `docker-compose.yaml`, which `tenki-harbor` doesn't run yet. Run that task with a different Harbor environment.
-
-**❌ `Task asks for N CPUs; Tenki VMs have at most 16.`** The same check rejects memory over 65536 MB (`Task asks for N MB of memory; …`) and disks over 100 GB (`Task needs a N GB disk; …`). `tenki-harbor` rejects tasks larger than one Tenki VM instead of shrinking them. If the task can run on less, lower its request with `--override-cpus <n>` or `--override-memory-mb <n>`; Harbor applies these to every trial in the run. For disk, the default is the task's storage request plus 30 GB for image layers, at least 50 GB; `--ek disk_size_gb=<n>` sets it directly, up to 100.
-
-**❌ `Pass at most one of image and snapshot_id.`** You passed both as environment options. Pass one. `TENKI_HARBOR_SNAPSHOT_ID` applies only when you pass neither.
-
-**❌ `Tenki session for <trial> is '<STATE>', expected terminated`** (or `is None`), from `verify.py`. The trial finished, but its VM is still active, or `verify.py` couldn't find a session tagged `harbor` for it. Run `tenki-harbor sessions` to check, and `tenki-harbor cleanup` to terminate it. Note that `cleanup` ends every active Harbor session in the workspace.
-
-## FAQ
-
-**Do I need a model API key?** Not for Step 4 or the verify script, because the `oracle` agent runs the task's reference solution. Running an agent needs that agent's key (`ANTHROPIC_API_KEY` for Claude Code here), and `--ae KEY=value` passes any other variables it needs.
-
-**Which Harbor version does this use?** 0.23.x. `tenki-harbor` 0.1.0 pins `harbor>=0.23,<0.24`, and this folder's `requirements.txt` pins the same range, so Harbor 0.24 and later won't install alongside it.
-
-**Can I compare agent harnesses on one model?** Yes. [`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals) builds on `tenki-harbor` to run one model, served from an OpenAI-compatible endpoint (plus an Anthropic Messages endpoint for Claude Code), through several agent harnesses (Terminus, mini-swe-agent, Goose, OpenCode, Qwen Code, Claude Code). For each harness it reports what passed, what failed the task, and what hit an API error from the endpoint.
-
-**When shouldn't I use this?** When your tasks need something `tenki-harbor` doesn't support:
+### What's supported
 
 | Feature | Status |
 | --- | --- |
@@ -215,13 +137,44 @@ It runs the same smoke test as tenki-harbor's own CI: it checks that `TenkiEnvir
 | GPUs, Windows containers | No |
 | Up to 16 vCPU, 64 GB memory, 100 GB disk per trial | Larger requests are rejected, not shrunk |
 
-Also skip it if you need a versioned release from PyPI, since `tenki-harbor` installs from GitHub for now. And if your tasks run fine in local Docker and you don't need a VM per trial, Harbor's default local Docker environment needs no Tenki key.
+## Start trials faster from a snapshot
+
+Bake Docker into a [snapshot](https://tenki.cloud/docs/sandbox/snapshots) once per workspace:
+
+```bash
+tenki-harbor prepare
+export TENKI_HARBOR_SNAPSHOT_ID=<printed snapshot id>
+```
+
+Trials then start from that snapshot unless you pass `image` or `snapshot_id`. On Terminal-Bench this cut median environment setup from 28 s to 19 s.
+
+## Clean up an interrupted run
+
+VMs stop at `max_duration_sec` (2 hours by default) even if Harbor is killed, or if you run with `--no-delete` / `delete: false`. To end them sooner:
+
+```bash
+tenki-harbor sessions   # list active Harbor sessions
+tenki-harbor cleanup    # terminate them
+```
+
+`cleanup` terminates every active session tagged `harbor` in the workspace, including other jobs' and leftover `prepare` VMs.
+
+## Troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| `Tenki requires TENKI_API_KEY (or TENKI_AUTH_TOKEN). …` | Export `TENKI_API_KEY` in the shell that runs `harbor`. |
+| ``No token. Set TENKI_API_KEY, or run `tenki login`.`` | `verify.py` found no key. Export one or run `tenki login --api-key <key>`. |
+| `ModuleNotFoundError: No module named 'harbor'` from `node verify.mjs` | Create the `.venv` here and install `requirements.txt`, or set `PYTHON`. |
+| `Tenki does not support docker-compose tasks yet …` | Use a different Harbor environment for that task. |
+| `Task asks for N CPUs; Tenki VMs have at most 16.` (or memory over 64 GB, disk over 100 GB) | Lower the request with `--override-cpus` / `--override-memory-mb`, or set `--ek disk_size_gb=<n>` (up to 100). |
+| `Pass at most one of image and snapshot_id.` | Pass one. |
+| `Tenki session for <trial> is '<STATE>', expected terminated` | Check with `tenki-harbor sessions`; end it with `tenki-harbor cleanup`. |
+
+To run one model through several harnesses and compare them, see [`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals). If your tasks run fine in local Docker and you don't need a VM per trial, Harbor's default environment needs no Tenki key.
 
 ## Related
 
-- [Harbor](https://github.com/harbor-framework/harbor), the evaluation framework.
-- [`tenki-harbor`](https://github.com/LuxorLabs/tenki-harbor), the Tenki environment for Harbor, with the full Terminal-Bench 2.0 results.
-- [`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals), one model across several agent harnesses.
-- [Harbor on Tenki](https://tenki.cloud/docs/sandbox/harbor), the full guide in the [Tenki docs](https://tenki.cloud/docs).
-- [`../snapshots-pause-resume/`](../snapshots-pause-resume/), Tenki snapshots on their own.
-- [`../run-code-python/`](../run-code-python/), the `tenki` Python SDK that `tenki-harbor` is built on.
+- [Harbor on Tenki](https://tenki.cloud/docs/sandbox/harbor) in the Tenki docs
+- [`tenki-harbor`](https://github.com/LuxorLabs/tenki-harbor) and [Harbor](https://github.com/harbor-framework/harbor)
+- [Pause, snapshot, and resume](../snapshots-pause-resume/) and [Run code with Python](../run-code-python/)

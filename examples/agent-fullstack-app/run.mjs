@@ -22,8 +22,8 @@ const sandbox = await tenki.createAndWait({
 
 try {
 	// 1. Ship the app into the sandbox (agent: tenki_write_file).
-	await sandbox.writeFile("server.py", readFileSync("app/server.py", "utf8"));
-	await sandbox.writeFile("seed.py", readFileSync("app/seed.py", "utf8"));
+	await sandbox.writeFile("server.py", readFileSync(new URL("app/server.py", import.meta.url), "utf8"));
+	await sandbox.writeFile("seed.py", readFileSync(new URL("app/seed.py", import.meta.url), "utf8"));
 
 	// 2. Seed the data that powers the backend (agent: tenki_exec).
 	const seeded = await sandbox.exec("python3", { args: ["/home/tenki/seed.py"] });

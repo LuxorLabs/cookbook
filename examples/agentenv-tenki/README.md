@@ -1,56 +1,46 @@
-# How to run Scale AI's AgentEnv tasks on Tenki VMs
+# AgentEnv
 
-`agent-env run hello --sandbox tenki` runs on a Tenki sandbox, and `node verify.mjs` prints its `✓` line.
+Run Scale AI's [AgentEnv Framework](https://www.agentenvframework.com) tasks on Tenki VMs. AgentEnv is an open-source (Apache-2.0) framework for building RL environments, where tasks are DAGs of steps that deploy an environment, bring in an agent, and grade the result. Its built-in `tenki` sandbox backend gives each environment and agent its own Tenki VM, with Docker inside and a public HTTPS URL for each exposed port.
 
-About 10 minutes, plus a few more if you build the optional Docker snapshot in Step 6.
+## Set it up with a coding agent
 
-A machine booted from the Tenki base image installs Docker and Compose v2 the first time AgentEnv uses it, which takes a few minutes. `verify.mjs` skips that install. `agent-env run hello` does not. Step 6 snapshots a machine that already has Docker so later ones skip the install.
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
-[AgentEnv Framework](https://www.agentenvframework.com) is Scale AI's open-source (Apache-2.0) framework for building RL environments: apps exposed over MCP, seed data, a virtual clock, triggers and RBAC. Tasks are written as DAGs of steps that deploy an environment, bring in an agent and grade the result. Sandboxes are pluggable, and `tenki` has been a built-in backend since [agentenv-framework#187](https://github.com/scaleapi/agentenv-framework/pull/187), first released in `agentenv-framework` 0.9.1325. With it, each environment and each agent gets its own [Tenki](https://tenki.cloud) VM, with Docker inside and a public HTTPS URL for every exposed port.
+```text
+Run Scale AI's AgentEnv tasks on Tenki VMs, following https://github.com/LuxorLabs/cookbook/tree/main/examples/agentenv-tenki.
+1. Clone https://github.com/LuxorLabs/cookbook and cd into examples/agentenv-tenki. Run every later command from there.
+2. Check that uv and Python 3.11.4+ are available, then run uv venv --python 3.12 and uv pip install -r requirements.txt.
+3. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+4. Run .venv/bin/agent-env -v run hello --sandbox tenki (the first run installs Docker in the VM and takes a few minutes), then node verify.mjs, and confirm the ✓ line.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+```
 
-## Prerequisites
+## Quick start
 
-- Python 3.11.4 or later (`agentenv-framework` requires it) and `uv`. The steps below create a Python 3.12 venv.
-- A Tenki `tk_` API key. Create one as described in [API keys](https://tenki.cloud/docs/account/api-keys).
-- Node, only to run the verify shim (`node verify.mjs`). You can run `verify.py` with Python instead.
-- The `tenki` CLI, only for the snapshot in Step 6.
+You need:
 
-## Step 1 — Get the example
+- Python 3.11.4 or later and [uv](https://docs.astral.sh/uv/).
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- The `tenki` CLI, only for the optional snapshot.
+
+### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
 cd cookbook/examples/agentenv-tenki
-```
-
-Every later command runs from this directory. That matters here: `agent-env` finds this folder's `.agentenv/config.toml` by walking up from the working directory.
-
-## Step 2 — Install
-
-The Tenki SDK is an optional extra of `agentenv-framework`:
-
-```bash
 uv venv --python 3.12
-uv pip install -r requirements.txt      # agentenv-framework[tenki]
+uv pip install -r requirements.txt   # agentenv-framework[tenki]>=0.9.1326, tenki[async]>=1.4.1
 ```
 
-`requirements.txt`:
+Run every command from this folder: `agent-env` finds `.agentenv/config.toml` by walking up from the working directory. To install the CLI as a tool instead, run `uv tool install 'agentenv-framework[tenki]'` and call `agent-env`.
 
-```
-agentenv-framework[tenki]>=0.9.1326
-tenki[async]>=1.4.1
-```
-
-The `[tenki]` extra pins the Tenki Python SDK as `tenki[async]~=1.4.1`. Without the extra, selecting `tenki` fails with a `ConfigError` that names it.
-
-If you'd rather have the CLI as a tool, run `uv tool install 'agentenv-framework[tenki]'` and call `agent-env` instead of `.venv/bin/agent-env`. `verify.py` imports `agent_env`, so the check in Step 5 still needs the venv.
-
-## Step 3 — Authenticate
+### 2. Set your API key
 
 ```bash
-export TENKI_API_KEY=tk_...             # https://tenki.cloud/docs/account/api-keys
+export TENKI_API_KEY=tk_...
 ```
 
-The provider authenticates with the `tenki` Python SDK (1.4), which takes only a `tk_` API key. The provider reads that key from AgentEnv's config, never from the process environment directly, so this folder ships [`.agentenv/config.toml`](.agentenv/config.toml), which points it at `TENKI_API_KEY`:
+The provider reads the key only through AgentEnv's config. This folder's [`.agentenv/config.toml`](.agentenv/config.toml) points it at the variable:
 
 ```toml
 [sandbox]
@@ -61,44 +51,29 @@ agent_default = "tenki"
 api_key = "env:TENKI_API_KEY"
 ```
 
-`default` covers environments and sandboxes, and `agent_default` covers agents. For a shared deployment, put the key in your secret store (for example as `tenki_api_key`) and set `api_key = "secret:tenki_api_key"`. Never put the key itself in `config.toml`.
+`default` covers environments and `agent_default` covers agents. A `tenki login` key isn't enough for `agent-env`. For a shared deployment, use `api_key = "secret:tenki_api_key"`, and never put the key itself in the file. `.venv/bin/agent-env config show` prints the config in effect with the key masked.
 
-Check what `agent-env` resolved. It prints the file in effect and masks the key:
+### 3. Run
 
-```bash
-.venv/bin/agent-env config show
-```
-
-**A key stored by `tenki login` isn't enough for `agent-env`.** `config.toml` resolves `env:TENKI_API_KEY`, so export the variable in the shell you run tasks from. `verify.py` is more lenient: it also reads `TENKI_AUTH_TOKEN` or the key in `~/.config/tenki/config.yaml`.
-
-To keep your local default and pick Tenki per run, add only the `[sandbox.providers.tenki.config]` table to your config and pass `--sandbox tenki`, or `--env-sandbox tenki` / `--agent-sandbox tenki` on `agent-env task run`.
-
-## Step 4 — Run a task on Tenki
-
-The bundled `hello` task deploys a sandbox, loads a file into it and grades it, with no model needed:
+The bundled `hello` task deploys a sandbox, loads a file into it, and grades it, with no model:
 
 ```bash
-.venv/bin/agent-env run hello --sandbox tenki
-.venv/bin/agent-env -v run hello --sandbox tenki   # also logs each VM: session_id, cpu, memory, disk, ports
+.venv/bin/agent-env -v run hello --sandbox tenki
 ```
 
-With `-v`, each VM logs a line as it starts: `Tenki VM started: session_id=… cpu=… memory=…MB disk=…GB ports=… attribution=…`.
+With `-v`, each VM logs `Tenki VM started: session_id=… cpu=… memory=…MB disk=…GB ports=…`. The first run on the base image installs Docker and Compose v2, which takes a few minutes. A [snapshot](#start-vms-faster-from-a-snapshot) skips that.
 
-From there, the [AgentEnv docs](https://www.agentenvframework.com/docs) cover environments, agents and verifiers. Every environment and agent in those tasks lands on its own Tenki VM.
-
-## Step 5 — Check it works
+### 4. Verify
 
 ```bash
 node verify.mjs        # or: .venv/bin/python verify.py
 ```
 
-`verify.mjs` is a shim for the cookbook's Node harness: it runs `verify.py` with `.venv/bin/python` if that exists, else `$PYTHON` or `python3`. On success it prints:
-
 ```
 ✓ agentenv-tenki: `tenki` provider from config.toml → create_vm + exposed port → root exec (42) → terminate
 ```
 
-[`verify.py`](verify.py) resolves the `tenki` backend through `agent-env`'s own registry from this folder's `config.toml`, then drives that provider against the live API:
+[`verify.py`](verify.py) resolves the `tenki` backend through `agent-env`'s registry from this folder's config and drives it against the live API:
 
 ```python
 async def main():
@@ -118,11 +93,25 @@ async def main():
         await sb.terminate()
 ```
 
-This proves that `agent-env` picks up this folder's config, and that the provider boots a live VM, exposes port 8080 on an `https://` URL, runs a command as root (`0`, then `42`) and terminates the VM. It doesn't prove the full task path: `setup_for_gateway=False` skips the Docker bootstrap that `agent-env run hello` does, which takes a few minutes on the base image, and no model or agent is involved. That's why CI runs this check and not `hello`. The provider's own unit and smoke tests live upstream in [scaleapi/agentenv-framework](https://github.com/scaleapi/agentenv-framework/tree/main/src/agent_env/providers/sandbox_providers/tenki).
+It skips the Docker install (`setup_for_gateway=False`) and involves no agent, so it's quicker than `hello`. The provider's own tests are [upstream](https://github.com/scaleapi/agentenv-framework/tree/main/src/agent_env/providers/sandbox_providers/tenki).
 
-## Step 6 — Optional: snapshot a VM that has Docker
+## Use Tenki for one run only
 
-To skip the Docker install on every new VM, build one VM that has Docker and Compose v2, and snapshot it once with the `tenki` CLI:
+Keep your local default, add only the `[sandbox.providers.tenki.config]` table to your config, and pass `--sandbox tenki`, or `--env-sandbox tenki` / `--agent-sandbox tenki` on `agent-env task run`.
+
+## Provider config
+
+Keys under `[sandbox.providers.tenki.config]` (unknown keys are refused):
+
+- `api_key`, required: an `env:` or `secret:` reference.
+- `base_url`: default `https://api.tenki.cloud`.
+- `snapshot_id`: boot every VM from this snapshot.
+- `image`: boot every VM from this Tenki registry image. Set at most one of `image` and `snapshot_id`.
+- `min_disk_gb`: smallest VM disk, default `20`.
+
+## Start VMs faster from a snapshot
+
+Build one VM with Docker and Compose v2 and snapshot it:
 
 ```bash
 tenki sandbox create --name agentenv-docker --cpu 2 --memory-mb 4096 --disk-size-gb 20 --max-duration 30m
@@ -132,61 +121,41 @@ tenki sandbox snapshot create agentenv-docker --name agentenv-docker --wait-dura
 tenki sandbox terminate agentenv-docker
 ```
 
-Then add `snapshot_id = "<id>"` under `[sandbox.providers.tenki.config]` (`tenki sandbox snapshot list` lists your snapshots). Every VM booted from it skips the install.
+Then set `snapshot_id = "<id>"` in the provider config (`tenki sandbox snapshot list` shows it). Keep the snapshot VM at 2 vCPU and 4 GiB, the smallest the provider starts, because a VM can be restored larger than its snapshot but not smaller. You can pull your registry images into it before snapshotting.
 
-**Keep the snapshot VM at 2 vCPU and 4 GiB.** A VM can be restored larger than its snapshot, not smaller, and 2 vCPU / 4 GiB is the smallest VM the provider starts. Images your environments and agents pull from a registry can be pulled into the same VM before you snapshot it, and VMs booted from it find them in place.
+## How the provider works
 
-All keys under `[sandbox.providers.tenki.config]` (unknown keys are refused):
+- **One VM per sandbox**, running the gateway's docker-compose, the agent's `docker run`, and artifact collection under Docker. Commands run as root.
+- **Ports:** each exposed port gets a public HTTPS URL under `sb.tenki.sh` (HTTP and WebSocket), with no authentication in front of it.
+- **Egress:** allow-all, or an allowlist of up to 256 hostnames and 64 IPv4 CIDRs, applied outside the VM. `*.sb.tenki.sh` and `*.us.sb.tenki.sh` are always allowed. A wildcard covers one label.
+- **Sizing:** whole vCPUs, at least 2 vCPU / 4 GiB. A request beyond Tenki's limits is refused, not shrunk.
+- **Lifetime:** the task's `timeout` is the VM's hard maximum lifetime and every command's time budget. A VM whose setup fails is terminated.
+- **Tags:** every VM is tagged `agentenv`, so `tenki sandbox list --tags agentenv` lists them.
 
-- `api_key`, required: an `env:` or `secret:` reference.
-- `base_url`: the Tenki API endpoint, default `https://api.tenki.cloud`.
-- `snapshot_id`: boot every VM from this snapshot.
-- `image`: boot every VM from this Tenki registry image instead. Set at most one of `image` and `snapshot_id`.
-- `min_disk_gb`: the smallest VM disk, default `20`. Docker keeps both compressed and extracted layers, so agent-env's 10 GB default is raised.
+## Things to know
 
-## What the provider does
-
-- **One VM per sandbox.** The gateway's docker-compose, an agent's `docker run`, image loading and artifact collection run under Docker inside the VM. Commands run as root, so the `sudo` agent-env prefixes is dropped.
-- **Ports:** each exposed port gets a public HTTPS URL under `sb.tenki.sh` (HTTP and WebSocket), with no platform authentication.
-- **Egress:** allow-all, or an allowlist of up to 256 hostnames and 64 IPv4 CIDRs, applied outside the VM so it covers `dockerd` and every container. Tenki's own preview domains (`*.sb.tenki.sh`, `*.us.sb.tenki.sh`) are always allowed, so a restricted agent can still reach its environments. A wildcard covers one label: `*.example.com` matches `files.example.com`, not `a.b.example.com`.
-- **Sizing:** whole vCPUs, with a floor of 2 vCPU / 4 GiB. A request beyond Tenki's limits is refused before anything is created, not shrunk.
-- **Lifetime:** the sandbox `timeout` is the VM's hard maximum lifetime, so a crashed run can't leave a VM running past it. It is also every command's time budget. A VM whose setup fails is terminated.
-- **Attribution:** every VM is tagged `agentenv`. `tenki sandbox list --tags agentenv` lists them, and `tenki sandbox get <session id> --json` shows a VM's metadata.
+- No GPUs.
+- `create_vm(image=...)` is refused. VMs boot the configured `image` or `snapshot_id`, and OCI images run under Docker inside them.
+- An agent's `LITELLM_API_KEY` is passed into its VM, as on other providers. Tasks with agents read the model from AgentEnv's `[model]` table.
+- No IPv6 egress rules.
 
 ## Troubleshooting
 
-**❌ ``✗ The `tenki` SDK (1.4) behind agent-env's provider takes only a `tk_` API key.``** `verify.py` found no `tk_` key in `TENKI_API_KEY`, `TENKI_AUTH_TOKEN` or `~/.config/tenki/config.yaml`. Create a key at https://tenki.cloud/docs/account/api-keys and `export TENKI_API_KEY=tk_...`.
-
-**❌ `Unresolved env:TENKI_API_KEY reference (no value and no default)`.** `config.toml` points the provider at `TENKI_API_KEY`, and it isn't set in this shell. `agent-env` doesn't read the key `tenki login` stores. Export the variable.
-
-**❌ `[sandbox.providers.tenki.config] requires a non-empty 'api_key'`.** `agent-env` didn't find a config with the Tenki table, usually because you ran it from outside this folder. Run from `examples/agentenv-tenki`, or add the table to your own config. `agent-env config show` prints which file is in effect.
-
-**❌ Selecting `tenki` fails with a `ConfigError` that names the `tenki` extra.** The Tenki SDK isn't installed. Run `uv pip install -r requirements.txt`, or install `'agentenv-framework[tenki]'`.
-
-**❌ `[sandbox.providers.tenki.config] has unknown key(s): [...]`.** The provider accepts only `api_key`, `base_url`, `image`, `snapshot_id` and `min_disk_gb`. Fix the key name.
-
-**❌ `[sandbox.providers.tenki.config] takes at most one of 'image' and 'snapshot_id'`.** Both are set. Keep one.
-
-**❌ `Tenki cannot size a VM for cpu=…, memory=…MB, disk=…GB`.** The request is beyond Tenki's limits (128 vCPU, 512 GiB memory, 100 GB disk). A workspace's own lower limit is enforced when the VM is created. Ask for less.
-
-**❌ `NetworkPolicyUnsupportedError`.** The run's egress policy has IPv6 or malformed entries, or more than 256 hostnames or 64 CIDRs. It is refused before anything is created, and a fallback chain skips to its next provider. Use IPv4 entries within those limits.
-
-**❌ A VM with an egress allowlist can't install Docker or pull images.** Tenki sets a VM's egress when it is created, and installing Docker on the base image, image pulls and builds all need their registries allowed. Boot allowlisted VMs from a snapshot that has Docker (Step 6), and allow the registries you pull from.
-
-**❌ Warning: `Tenki capped VM …'s lifetime to …s of the …s requested`.** Your workspace's maximum session duration is lower than the task's `timeout`, so Tenki granted less. The provider budgets commands by the lifetime granted. Request a `timeout` that fits, or expect the VM to stop at the granted lifetime.
-
-## FAQ
-
-**When shouldn't I use this?**
-When you need GPUs, which the provider doesn't support. When a step must boot a specific OCI image per call: `create_vm(image=...)` is refused, VMs boot the configured `image` or `snapshot_id`, and OCI images run under Docker inside them. When an exposed port must not be reachable from the internet, since port URLs are public with no platform authentication. When your agent's model key must stay out of the sandbox: an agent's `LITELLM_API_KEY` is passed into its sandbox, as on other providers. And when your egress rules need IPv6.
-
-**Do I need a model key?**
-Not for `hello` or `verify.py`. Tasks with agents read the model endpoint and key from AgentEnv's `[model]` table, and the agent's `LITELLM_API_KEY` is passed into its Tenki VM.
+| Problem | Fix |
+| --- | --- |
+| ``✗ The `tenki` SDK (1.4) behind agent-env's provider takes only a `tk_` API key.`` | `verify.py` found no key. Export `TENKI_API_KEY=tk_...`. |
+| `Unresolved env:TENKI_API_KEY reference (no value and no default)` | Export `TENKI_API_KEY` in this shell. |
+| `[sandbox.providers.tenki.config] requires a non-empty 'api_key'` | Run from `examples/agentenv-tenki`, or add the table to your config. |
+| `ConfigError` naming the `tenki` extra | Run `uv pip install -r requirements.txt`. |
+| `[sandbox.providers.tenki.config] has unknown key(s): [...]` | Use only the keys listed above. |
+| `… takes at most one of 'image' and 'snapshot_id'` | Keep one. |
+| `Tenki cannot size a VM for cpu=…, memory=…MB, disk=…GB` | Ask for at most 128 vCPU, 512 GiB memory, and 100 GB disk, or your workspace's lower limit. |
+| `NetworkPolicyUnsupportedError` | Use IPv4 entries within the 256 hostname and 64 CIDR limits. |
+| An allowlisted VM can't install Docker or pull images | Boot from a snapshot with Docker, and allow your registries. |
+| `Tenki capped VM …'s lifetime to …s of the …s requested` | Your workspace's maximum session duration is lower. Request a shorter `timeout`. |
 
 ## Related
 
-- [AgentEnv Framework](https://www.agentenvframework.com) and its [docs](https://www.agentenvframework.com/docs)
-- [agentenv-framework#187](https://github.com/scaleapi/agentenv-framework/pull/187), the PR that added the `tenki` provider
-- Provider reference: [tenki/README.md](https://github.com/scaleapi/agentenv-framework/blob/main/src/agent_env/providers/sandbox_providers/tenki/README.md) upstream
-- [Tenki docs](https://tenki.cloud/docs)
-- [`../snapshots-pause-resume/`](../snapshots-pause-resume/): Tenki snapshots from the SDK
+- [AgentEnv Framework](https://www.agentenvframework.com), its [docs](https://www.agentenvframework.com/docs), and [agentenv-framework#187](https://github.com/scaleapi/agentenv-framework/pull/187) (the `tenki` provider)
+- [Provider reference](https://github.com/scaleapi/agentenv-framework/blob/main/src/agent_env/providers/sandbox_providers/tenki/README.md) upstream
+- [Pause, snapshot, and resume](../snapshots-pause-resume/) and the [Tenki docs](https://tenki.cloud/docs)
