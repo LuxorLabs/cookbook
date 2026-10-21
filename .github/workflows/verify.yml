@@ -25,32 +25,46 @@ jobs:
       - name: Install + verify each example against Tenki
         env:
           TENKI_API_KEY: ${{ secrets.TENKI_API_KEY }}
+          # Third-party keys some examples need. Unset → that example is skipped,
+          # not failed (see .verify-requires below).
+          COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
         run: |
-          set -e
-          for d in examples/*/; do
-            if [ -f "${d}verify.mjs" ]; then
-              if [ "$d" = "examples/composio-tenki/" ]; then
-                # Needs a Composio account/key we don't have; verify locally instead.
-                echo "== ${d} == skipped (no COMPOSIO_API_KEY)"
-                continue
-              fi
-              if [ "$d" = "examples/orca-tenki/" ]; then
-                # Gateway SSH host keys are not stable across connections, so the
-                # pinned-alias verification can fail intermittently. Skipped until
-                # gateways present a verifiable stable identity; verify locally.
-                echo "== ${d} == skipped (gateway host keys not yet stable)"
-                continue
-              fi
-              if [ "$d" = "examples/covalent-tenki/" ]; then
-                # Pins covalent-tenki-plugin>=0.1.1, which is not on PyPI yet
-                # (LuxorLabs/tenki-covalent-plugin#1). Unskip when 0.1.1 ships.
-                echo "== ${d} == skipped (covalent-tenki-plugin 0.1.1 unreleased)"
-                continue
-              fi
-              echo "== ${d} =="
-              ( cd "$d"
-                [ -f package.json ] && npm install --no-audit --no-fund
-                [ -f requirements.txt ] && python -m pip install -r requirements.txt
-                node verify.mjs )
+          # One example must not abort the rest. Run every verify, skip an example
+          # when a key it declares in .verify-requires is unset, and fail the job
+          # only if a runnable example fails. benchmarks/ follow the same rule.
+          fails=""; skips=""
+          for d in examples/*/ benchmarks/*/; do
+            [ -f "${d}verify.mjs" ] || continue
+            if [ "$d" = "examples/covalent-tenki/" ]; then
+              # Pins covalent-tenki-plugin>=0.1.1, which is not on PyPI yet
+              # (LuxorLabs/tenki-covalent-plugin#1). Unskip when 0.1.1 ships.
+              echo "== ${d} == skipped (covalent-tenki-plugin 0.1.1 unreleased)"
+              skips="${skips} ${d}"
+              continue
             fi
+            if [ "$d" = "examples/orca-tenki/" ]; then
+              # Gateway SSH host keys are not stable across connections, so the
+              # pinned-alias verification can fail intermittently. Skipped until
+              # gateways present a verifiable stable identity; verify locally.
+              echo "== ${d} == skipped (gateway host keys not yet stable)"
+              skips="${skips} ${d}"
+              continue
+            fi
+            miss=""
+            if [ -f "${d}.verify-requires" ]; then
+              while IFS= read -r var || [ -n "$var" ]; do
+                [ -z "$var" ] && continue
+                [ -z "${!var}" ] && { miss="$var"; break; }
+              done < "${d}.verify-requires"
+            fi
+            if [ -n "$miss" ]; then
+              echo "== ${d} == SKIP (${miss} unset)"; skips="${skips} ${d}"; continue
+            fi
+            echo "== ${d} =="
+            if ( cd "$d"
+                 [ -f package.json ] && npm install --no-audit --no-fund
+                 [ -f requirements.txt ] && python -m pip install -r requirements.txt
+                 node verify.mjs ); then :; else fails="${fails} ${d}"; fi
           done
+          echo; echo "skipped:${skips:- none}"; echo "failed:${fails:- none}"
+          [ -z "$fails" ] || { echo "::error::runnable examples failed:${fails}"; exit 1; }

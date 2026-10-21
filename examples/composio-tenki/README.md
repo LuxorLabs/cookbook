@@ -53,7 +53,7 @@ node verify.mjs
 ✓ composio-tenki: a Composio session created a Tenki sandbox and ran code in it → 42
 ```
 
-`verify.mjs` binds the toolkit to a real Composio session and calls the tools directly: it creates a sandbox, runs `echo hello-from-composio && python3 -c 'print(6*7)'`, checks the output, and terminates the sandbox. It needs no model key. The cookbook's CI has no Composio key and skips this example, so run this check yourself.
+`verify.mjs` binds the toolkit to a real Composio session and calls the tools directly: it creates a sandbox, runs `echo hello-from-composio && python3 -c 'print(6*7)'`, checks the output, and terminates the sandbox. It needs no model key. The cookbook's CI runs it only when the `COMPOSIO_API_KEY` secret is set (listed in `.verify-requires`) and skips it otherwise.
 
 ### 4. Run the agent
 
