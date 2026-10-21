@@ -1,18 +1,29 @@
-# How to run Claude Code unsupervised on a real repo, in a VM you throw away
+# Claude Code
 
-`agent.patch` on your machine holds Claude Code's change to a cloned repo, ready for `git apply` or a pull request. When the script finishes, it deletes the sandbox the agent ran in.
+Run Claude Code headless with `--dangerously-skip-permissions` on a real repo, inside a Tenki sandbox you throw away. The script clones a repo into the sandbox, runs one Claude Code turn on a task, saves the diff to `agent.patch` on your machine, and deletes the sandbox. The agent gets a free hand on one disposable VM, and the patch is what you keep.
 
-About 15 minutes. `npm install` takes seconds, `verify.mjs` about a minute, and `run.mjs` gives the agent's turn up to 10 minutes.
+## Set it up with a coding agent
 
-Nothing pins the Claude Code version. The sandbox runs the copy that ships in Tenki's default image (2.1.267 as of October 2026), and it changes when Tenki rebuilds the image. `verify.mjs` checks that the two flags `run.mjs` passes still exist in that release.
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
-## Why bother
+```text
+Set up the Tenki "Claude Code" example from https://github.com/LuxorLabs/cookbook, which runs Claude Code headless in a disposable Tenki sandbox and hands back a patch.
+1. Clone the repo, cd into examples/claude-code-sandbox, check that Node.js is 24 or later, and run npm install.
+2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and ANTHROPIC_API_KEY in the environment. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call), then node run.mjs, and show me agent.patch.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then ask me which repo and task I want instead, change REPO and TASK in run.mjs, and run it again. Don't apply any patch to my code without asking.
+```
 
-`--dangerously-skip-permissions` lets Claude Code work without stopping to ask, which is reckless on your laptop. Here the agent runs inside a disposable [Tenki Sandbox](https://tenki.cloud/products/sandbox) sandbox, so the blast radius is one VM that is deleted when the script finishes. What comes back is the agent's work as a patch: apply it to your checkout, open a PR from it, or run many of these in parallel and keep the good ones.
+## Quick start
 
-## Install
+You need:
 
-You need Node 24 or newer for `run.mjs`, which uses top-level `await using`. `verify.mjs` runs on Node 20.
+- Node.js 24 or later for `run.mjs`, which uses top-level `await using`. `verify.mjs` runs on Node 20.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- An Anthropic API key. You don't need Claude Code installed locally; Tenki's default image has it.
+
+### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
@@ -20,37 +31,45 @@ cd cookbook/examples/claude-code-sandbox
 npm install
 ```
 
-Every later command runs from this directory. The only dependency is `@tenkicloud/sandbox` 1.4.1 or later. You don't need Claude Code on your machine: Tenki's default image already has it on PATH.
-
-## Authenticate
-
-You need a Tenki API key (it starts with `tk_`; create one at https://app.tenki.cloud) and an Anthropic API key.
+### 2. Set your keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY works too
-export ANTHROPIC_API_KEY=...     # ANTHROPIC_BASE_URL and ANTHROPIC_MODEL pass through too, if set
+export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export ANTHROPIC_API_KEY=...     # ANTHROPIC_BASE_URL and ANTHROPIC_MODEL pass through if set
 ```
 
-`TENKI_WORKSPACE_ID` is optional. Tenki infers the workspace from a workspace API key.
+`run.mjs` reads the Tenki key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
-`run.mjs` reads the Tenki key from the environment only. `verify.mjs` also reads the key that `tenki login --api-key <key>` stores in `~/.config/tenki/config.yaml`, so after `tenki login` you can run the check without exporting anything. To test the Tenki side before you spend model tokens, run [Check it works](#check-it-works) first. It needs no Anthropic key.
+### 3. Verify
 
-## Use it
+Check the Tenki side first; it needs no Anthropic key:
 
 ```bash
-node run.mjs   # streams the agent's turn, then saves the diff to agent.patch
+node verify.mjs
 ```
 
-The script boots a sandbox with [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) cloned into it, runs one headless Claude Code turn on the task below, streams the agent's output to your terminal, and prints the diff. It saves the diff as `agent.patch`, which this directory's `.gitignore` excludes. Everything the agent did inside the VM is deleted when the script finishes or fails; `agent.patch` is what you keep.
+```
+✓ claude-code-sandbox: create + clone → 2.1.267 (Claude Code) on PATH → edit → git diff → dispose
+```
 
-Apply it to your own clone of the repo:
+`verify.mjs` boots a sandbox with the repo cloned, checks that the image's `claude` still supports `-p` and `--dangerously-skip-permissions`, edits a file, and reads it back through `sandbox.git.diff`. It doesn't run Claude Code on a task.
+
+### 4. Run
+
+```bash
+node run.mjs
+```
+
+The agent's output streams to your terminal, then the diff prints and is saved as `agent.patch` (ignored by git). The agent's turn has up to 10 minutes. Apply the patch to your own clone:
 
 ```bash
 git clone https://github.com/sindresorhus/yocto-queue ~/yocto-queue
 git -C ~/yocto-queue apply "$PWD/agent.patch"
 ```
 
-The repo, the task, and the Tenki client are set up at the top of `run.mjs`:
+## Change the repo or task
+
+The top of `run.mjs`:
 
 ```js
 const REPO = "https://github.com/sindresorhus/yocto-queue";
@@ -60,15 +79,11 @@ const PASSTHROUGH = ["ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 ```
 
-Edit `TASK` to give the agent different work, or `REPO` to point it at another repository. The example clones a public repo and passes no Git credentials.
+Edit `TASK` or `REPO`. The example clones a public repo and passes no Git credentials.
 
-## Secrets in, diffs out
+## How it works
 
-The task and your model key go in, with the key scoped to a single process. The diff comes out. Nothing else from your shell crosses into the VM. Here is how `run.mjs` does each part.
-
-### Boot with the repo inside
-
-From `run.mjs`:
+Boot with the repo inside. The default image ships Claude Code, Node 24, npm 11, and git 2.43, so there's nothing to install:
 
 ```js
 // cloneRepoUrl checks the repo out to ./repo before createAndWait resolves.
@@ -82,11 +97,7 @@ await using sandbox = await tenki.createAndWait({
 // The default image ships the Claude Code CLI on PATH, so there is nothing to install.
 ```
 
-The default image also ships Node 24, npm 11, and git 2.43, so the example needs no custom image.
-
-### Run the agent with no permission prompts
-
-From `run.mjs`:
+Run the agent with no permission prompts:
 
 ```js
 const decoder = new TextDecoder();
@@ -105,13 +116,12 @@ const run = await sandbox.exec("claude", {
 if (run.exitCode !== 0) throw new Error(`claude exited ${run.exitCode}`);
 ```
 
-- `exec(command, { args })` runs a bare binary and its args with no shell splitting, so the whole task prompt goes through as a single argument.
-- `ExecOptions.env` is scoped to that one process, so `run.mjs` never writes the model key into the repo or the image.
-- `--dangerously-skip-permissions` refuses to run as root. The sandbox user is `tenki`, so it works as written. It is the right flag here because the blast radius is one sandbox.
+- `exec(command, { args })` doesn't split on spaces, so the whole task goes through as one argument.
+- `env` is scoped to the one `claude` process. The key isn't written into the repo or image, but the agent can read it, so review `agent.patch` before applying it.
+- Only variables that are set pass through. An unset value would arrive as an empty string, and an empty `ANTHROPIC_BASE_URL` breaks the CLI.
+- `--dangerously-skip-permissions` refuses to run as root. The sandbox user is `tenki`.
 
-### Take the diff out before the VM goes away
-
-From `run.mjs`:
+Take the diff out before the VM goes away:
 
 ```js
 // The diff is how the work leaves the VM: save it before the sandbox is torn down.
@@ -123,46 +133,27 @@ console.log(patch);
 console.log(`Saved agent.patch. Apply it to a clone of ${REPO} with \`git apply agent.patch\`, or open a PR from it.`);
 ```
 
-`createAndWait` returns a `Session`, which is an `AsyncDisposable`, so `await using` terminates the VM when the scope ends. That is why `run.mjs` needs Node 24. `verify.mjs` uses `try`/`finally` instead, so CI runs it on Node 20.
+`await using` terminates the sandbox when the script ends. Ctrl-C skips that, and `run.mjs` sets no `maxDurationMs`, so add one to `createAndWait` if you need a cap on interrupted runs.
 
-## Check it works
+## Claude Code version
 
-```bash
-node verify.mjs   # create + clone → check the CLI's version and flags → edit → git diff
-```
-
-A passing run prints one line. The version is whichever Claude Code the default image ships:
-
-```
-✓ claude-code-sandbox: create + clone → 2.1.267 (Claude Code) on PATH → edit → git diff → dispose
-```
-
-This proves the Tenki side of the example: the sandbox boots with the repo cloned, the image's CLI is on PATH and still lists `-p, --print` and `--dangerously-skip-permissions`, and a file edit in the checkout comes back through `sandbox.git.diff`. It needs no model key, so Claude Code never runs a task. The ✓ line prints before teardown, and `verify.mjs` ignores dispose errors, so a pass doesn't confirm the VM was terminated. It doesn't run `run.mjs` itself, and it accepts the key `tenki login` stored, which `run.mjs` doesn't read, so export `TENKI_AUTH_TOKEN` or `TENKI_API_KEY` before `node run.mjs` even if this check passes. This is what CI runs.
+The sandbox runs the Claude Code that ships in Tenki's default image (2.1.267 as of October 2026), which changes when the image is rebuilt. To use a newer one, `npm i -g @anthropic-ai/claude-code` in the sandbox and run it by full path from `npm prefix -g`/bin, since that directory isn't on `exec`'s PATH.
 
 ## Troubleshooting
 
-- ❌ **`missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY or use authToken option` from `node run.mjs`.** `run.mjs` reads the Tenki key from the environment only, so `tenki login` alone is not enough for it. Export `TENKI_AUTH_TOKEN` or `TENKI_API_KEY`.
-- ❌ **`invalid auth token - API keys and service tokens must start with tk_`.** The SDK accepts only `tk_` API keys. Create one at https://app.tenki.cloud.
-- ❌ **``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.``** `verify.mjs` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or `~/.config/tenki/config.yaml`. Export one of the variables, or run `tenki login --api-key <key>`.
-- ❌ **`node run.mjs` fails with a `SyntaxError` on Node 22 or older.** Top-level `await using` needs Node 24, and Node 22 can't parse it. Switch to Node 24 or newer. `verify.mjs` still runs on Node 20.
-- ❌ **`claude exited <n>`.** Claude Code failed inside the VM, for example on a bad model key. `run.mjs` streams the CLI's output, so the reason is printed above the error. Check `ANTHROPIC_API_KEY`, and `ANTHROPIC_BASE_URL` or `ANTHROPIC_MODEL` if you set them.
-- ❌ **`the agent finished without changing anything`.** Claude Code exited cleanly but left the checkout unchanged, so there is no patch to save. Read the agent's streamed reply to see why, and adjust `TASK`.
-- ❌ **`claude --help no longer lists -p, --print` (or `--dangerously-skip-permissions`).** Tenki rebuilt the default image with a Claude Code release that dropped or renamed a flag `run.mjs` passes. Update `args` in `run.mjs` and the flag list in `verify.mjs` to match what `claude --help` lists now.
-
-## FAQ
-
-**When shouldn't I use this?** When you need a fixed Claude Code version, because the sandbox runs whichever release the default image ships. When you want to approve the agent's actions as it goes, because it runs with no permission prompts and the patch is your only review point. When you need anything from the VM besides the diff, because everything else is deleted when the script finishes. And when the repo needs credentials to clone, because `run.mjs` passes none.
-
-**Can I run a newer Claude Code than the image ships?** Yes, but `npm i -g @anthropic-ai/claude-code` alone won't do it. Inside the sandbox, npm installs global packages under `npm prefix -g`, and that `bin` directory isn't on the PATH that `exec` uses, so `claude` still resolves to the image's copy in `/usr/local/bin`. After the install, run the new CLI by its full path.
-
-**Does my Anthropic key end up in the repo or the sandbox image?** Not from `run.mjs`. The key is passed through `ExecOptions.env`, which is scoped to the one `claude` process, so it isn't in the image or the repo's files when the agent starts. The agent itself can read it, so review `agent.patch` before you apply it.
-
-**What if I stop `node run.mjs` with Ctrl-C?** Node exits without running `await using`, so the script doesn't terminate the sandbox. `run.mjs` sets no `maxDurationMs`, and sandboxes don't auto-pause on idle, so nothing in the example bounds an interrupted run. To cap the sandbox's lifetime, add `maxDurationMs` to the `createAndWait` options.
-
-**Can I use a different API endpoint or model?** Yes. Set `ANTHROPIC_BASE_URL` or `ANTHROPIC_MODEL` before `node run.mjs`. The script passes each one through only if it is set: passing an unset variable would deliver an empty string, and an empty `ANTHROPIC_BASE_URL` is worse than none.
+| Problem | Fix |
+| --- | --- |
+| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
+| `SyntaxError` on Node 22 or older | Use Node 24 or later for `run.mjs`. |
+| `claude exited <n>` | The reason is in the streamed output above it. Check `ANTHROPIC_API_KEY`, and `ANTHROPIC_BASE_URL`/`ANTHROPIC_MODEL` if set. |
+| `the agent finished without changing anything` | Read the agent's reply and adjust `TASK`. |
+| `claude --help no longer lists …` | The image's Claude Code changed a flag. Update `args` in `run.mjs` and the flag list in `verify.mjs`. |
 
 ## Related
 
-- Claude Code on npm: [@anthropic-ai/claude-code](https://www.npmjs.com/package/@anthropic-ai/claude-code)
-- Tenki Sandbox: [tenki.cloud/products/sandbox](https://tenki.cloud/products/sandbox) · docs: [tenki.cloud/docs](https://tenki.cloud/docs) · SDK: [@tenkicloud/sandbox](https://www.npmjs.com/package/@tenkicloud/sandbox)
-- The repo the example works on: [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue)
+- [Codex](../codex-sandbox/) and [OpenCode](../opencode-sandbox/): the same pattern with other coding agents
+- [Claude Agent SDK](../claude-agent-sdk/): sandboxed tools for your own agent
+- [@anthropic-ai/claude-code](https://www.npmjs.com/package/@anthropic-ai/claude-code)
+- [Tenki Sandbox](https://tenki.cloud/products/sandbox) and the [Tenki docs](https://tenki.cloud/docs)

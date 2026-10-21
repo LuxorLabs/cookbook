@@ -1,74 +1,73 @@
-# How to give a CrewAI agent a code interpreter that runs in a Tenki sandbox
+# CrewAI
 
-A CrewAI agent answers a question by calling a `run_python` tool. The tool executes that code in a disposable [Tenki](https://tenki.cloud) sandbox. A check of the tool passes with no model key.
+Give a [CrewAI](https://crewai.com) agent a `run_python` code-interpreter tool that runs in a Tenki sandbox. CrewAI removed its built-in [`CodeInterpreterTool`](https://docs.crewai.com/en/tools/ai-ml/codeinterpretertool) and points users to a sandbox service. `tenki_tool.py` is that tool on Tenki: a CrewAI `BaseTool` that runs the agent's Python in one sandbox shared for the crew run.
 
-About 10 minutes, most of it installing CrewAI's dependencies.
+## Set it up with a coding agent
 
-`tenki login` is enough for `verify.py`. `agent.py` leaves the key to the `tenki` SDK, which reads only `TENKI_API_KEY` or `TENKI_AUTH_TOKEN` from the environment, so export one of them before you run the crew.
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
-## Why bother
+```text
+Set up the Tenki "CrewAI" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/crewai-code-interpreter, create a .venv there on Python 3.10 to 3.13 (uv venv --python 3.12 if uv is installed), and install requirements.txt. The install takes a few minutes.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call, expects 55), then .venv/bin/python agent.py.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then add tenki_tool.py to my own crew: one sandbox per run in a with block, and TenkiCodeInterpreter(sandbox=sandbox) in the agent's tools.
+```
 
-CrewAI's own docs mark its built-in [`CodeInterpreterTool`](https://docs.crewai.com/en/tools/ai-ml/codeinterpretertool) as removed from `crewai-tools`, deprecate the `allow_code_execution` and `code_execution_mode` agent options, and point you to a dedicated sandbox service instead. Their tool catalog lists sandbox tools for E2B and Daytona. This example is the same pattern on Tenki sandboxes: a CrewAI `BaseTool` that runs the agent's Python in a Tenki sandbox and hands the output back. It uses the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK, and the whole tool is one short file you can read and copy.
+## Quick start
 
-## Install
+You need:
 
-You need Python 3.10 to 3.13. The `tenki` SDK needs 3.10 or newer, and current CrewAI releases declare `>=3.10,<3.14`, so Python 3.14 can't install them. CI uses Python 3.12.
+- Python 3.10 to 3.13. CrewAI doesn't support 3.14. [uv](https://docs.astral.sh/uv/) is optional.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- An OpenAI API key (CrewAI's default model), for the crew run only.
+
+### 1. Install
+
+Create the venv in the example directory as `.venv`; `verify.mjs` looks for it there.
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
 cd cookbook/examples/crewai-code-interpreter
-```
-
-Every later command runs from this directory. Create the virtual environment here, as `.venv`, because `verify.mjs` looks for `.venv/bin/python`:
-
-```bash
 uv venv --python 3.12
-uv pip install -r requirements.txt
+uv pip install -r requirements.txt   # tenki, crewai
 ```
 
-Without `uv`:
+Without uv: `python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt`. CrewAI pulls in `chromadb` and `lancedb`, so the install takes a few minutes.
 
-```bash
-python3.12 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-```
-
-The dependencies, from `requirements.txt`:
-
-```
-tenki>=1.4.1
-crewai>=0.80
-```
-
-`tenki` is the Tenki Python SDK. CrewAI pulls in `chromadb` and `lancedb` among its own dependencies, which is why the install is the slow step.
-
-## Authenticate
-
-Create a `tk_` API key at https://app.tenki.cloud and export it:
+### 2. Set your keys
 
 ```bash
 export TENKI_API_KEY=tk_...
-```
-
-That works for both scripts. The alternative is `tenki login --api-key <key>`, which stores the key in `~/.config/tenki/config.yaml`. `verify.py` reads it from there. `agent.py` does not, so you still need the `export` for the agent.
-
-Tenki infers your workspace from the key. If you want a specific one, set `TENKI_WORKSPACE_ID`. Both scripts pass it through when it's set, and they also pick up a `current_workspace_id:` line from `~/.config/tenki/config.yaml` if one is there.
-
-`agent.py` also needs a model key. It uses CrewAI's default model, which is OpenAI:
-
-```bash
 export OPENAI_API_KEY=sk-...
 ```
 
-## Use it
+`agent.py` needs the Tenki key in the environment (`TENKI_API_KEY` or `TENKI_AUTH_TOKEN`). `verify.py` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
-Run the crew:
+### 3. Run the crew
 
 ```bash
 .venv/bin/python agent.py
 ```
 
-This is the part of `agent.py` that builds the sandbox and the crew:
+The agent computes the 20th Fibonacci number with `run_python`. `verbose=True` prints its steps, and the last line is the crew's answer.
+
+### 4. Verify
+
+```bash
+node verify.mjs      # or: .venv/bin/python verify.py
+```
+
+```
+✓ crewai-code-interpreter: CrewAI tool executed Python in a Tenki sandbox → 55
+```
+
+`verify.py` calls the tool directly with `print(sum(range(11)))` and checks for `55`. It needs no OpenAI key. `verify.mjs` is a CI shim that runs it with `.venv/bin/python`, `$PYTHON`, or `python3`.
+
+## The crew
+
+The part of `agent.py` that builds the sandbox and the crew:
 
 ```python
 opts = {"cpu_cores": 1, "memory_mb": 1024}
@@ -92,13 +91,11 @@ with Sandbox.create(**opts) as sandbox:
     print(Crew(agents=[analyst], tasks=[task]).kickoff())
 ```
 
-One sandbox, with 1 CPU core and 1024 MB of memory, serves the whole crew run. Every `run_python` call the agent makes goes to that same sandbox. `verbose=True` prints the agent's steps, and the last line prints the crew's answer. When the `with` block exits, the SDK terminates the sandbox.
+The `with` block terminates the sandbox when the crew finishes.
 
-To use the tool in your own crew, copy `tenki_tool.py`, create a sandbox, and pass `TenkiCodeInterpreter(sandbox=sandbox)` in the agent's `tools` list, as above.
+## The tool
 
-## How the tool runs code
-
-The tool, from `tenki_tool.py`:
+`tenki_tool.py`:
 
 ```python
 from typing import Type
@@ -132,67 +129,28 @@ class TenkiCodeInterpreter(BaseTool):
         return out or f"(no output; exit code {result.exit_code})"
 ```
 
-Three things to know:
+Things to know:
 
-- **No shell in between.** `exec(command, *args)` passes its arguments straight through, with no shell splitting, so multi-line, model-generated code goes across as one `-c` argument with no escaping surprises. If you need shell syntax, run it through a shell yourself, for example `exec("bash", "-c", command)`.
-- **The model sees one argument.** `args_schema` exposes only `code`. The sandbox is a private attribute that your code passes in when it builds the tool.
-- **The agent always gets text back.** The tool returns stdout followed by stderr, so a Python traceback reaches the agent as text. If the code printed nothing, it returns `(no output; exit code N)` instead of an empty string.
-
-The SDK's file methods are confined to `/home/tenki`, which is the sandbox's working directory. Code that this tool runs goes through `exec`, so it can write anywhere, but relative paths land in `/home/tenki`, where the SDK's file methods can read them back.
-
-## Check it works
-
-```bash
-node verify.mjs      # or: .venv/bin/python verify.py
-```
-
-`verify.mjs` is a shim so the cookbook's Node verify harness can run this Python example. It runs `verify.py` with `.venv/bin/python` if that exists, otherwise with `$PYTHON` or `python3`. On success it prints:
-
-```
-✓ crewai-code-interpreter: CrewAI tool executed Python in a Tenki sandbox → 55
-```
-
-The core of `verify.py`:
-
-```python
-    with Sandbox.create(**opts) as sb:
-        tool = TenkiCodeInterpreter(sandbox=sb)
-        # Drive the CrewAI tool exactly as an agent would.
-        out = tool._run(code="print(sum(range(11)))")
-        if str(out).strip() != "55":
-            raise AssertionError(f"tool returned {out!r}")
-```
-
-This proves the Tenki-facing half of the example: the tool runs code in a live sandbox and returns its output. It needs no model key, so the CrewAI agent and the model turn aren't exercised. This is what CI runs, on Node 20 and Python 3.12 with only `TENKI_API_KEY` set.
+- **The model only supplies `code`.** The sandbox is a private attribute you pass in.
+- **No shell.** `exec(command, *args)` passes the code as one `-c` argument. For shell syntax, use `exec("bash", "-c", command)`.
+- **Errors come back as text.** Tracebacks reach the agent. Code that prints nothing returns `(no output; exit code N)`, so the agent has to `print` its answer.
+- **No state between calls.** Each call is a new `python3` process. Files persist in the shared sandbox; variables don't. Relative paths land in `/home/tenki`.
+- **Outbound network is on.** Pass `allow_outbound=False` to `Sandbox.create` to cut the agent's code off.
 
 ## Troubleshooting
 
-**❌ ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.``** `verify.py` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or the `auth_token` line of `~/.config/tenki/config.yaml`. Export `TENKI_API_KEY`, or run `tenki login --api-key <key>`.
-
-**❌ `missing auth token: set TENKI_AUTH_TOKEN or TENKI_API_KEY` from `agent.py`.** `agent.py` doesn't read `~/.config/tenki/config.yaml` for the key, and the SDK reads only those two environment variables. Export `TENKI_API_KEY=tk_...` in the shell that runs `agent.py`, even if you've run `tenki login`.
-
-**❌ `invalid auth token: expected an API key or service token starting with tk_`.** The key isn't a `tk_` API key, and SDK 1.x accepts nothing else. In `verify.py` this shows up as `✗ InvalidAuthTokenError: …`. Create a key at https://app.tenki.cloud and use that.
-
-**❌ `ModuleNotFoundError: No module named 'tenki'` (or `'crewai'`) from `node verify.mjs`.** There's no `.venv` in the example directory, so the shim fell back to `$PYTHON` or `python3`, which doesn't have the dependencies. Create the venv in this directory as shown in [Install](#install), or set `PYTHON` to the interpreter you installed into.
-
-**❌ Installing `requirements.txt` can't resolve `crewai`.** Your Python is outside what CrewAI supports. Every CrewAI release since 0.80 requires Python 3.10 or newer and below 3.14. Recreate the venv with a supported version, for example `uv venv --python 3.12`.
-
-**❌ `✗ AssertionError: tool returned '…'`.** The sandbox ran the check, but the tool returned something other than `55`. The quoted text is the sandbox's own stdout and stderr, or `(no output; exit code N)`, so read it for the actual error.
-
-## FAQ
-
-**Does the agent keep Python variables between tool calls?** No. Each call starts a new `python3 -c` process. The calls share one sandbox for the length of the crew run, so a file one call writes is still there for the next, but variables are not.
-
-**Why did the tool return `(no output; exit code 0)`?** The code ran and printed nothing. The tool returns only what the code writes to stdout and stderr, so the agent's code has to `print` its answer.
-
-**Can the sandbox reach the internet?** Yes. Outbound network is on by default in SDK 1.x, and this example doesn't change it. `Sandbox.create` takes `allow_outbound=False` if you want the agent's code cut off from the network.
-
-**When shouldn't I use this?** When you need a notebook-style interpreter that keeps variables between calls, since every call here is a fresh process. When your project can't use Python 3.10 to 3.13, which CrewAI requires. When the model's code has to be isolated from the network and you haven't turned outbound access off. And if your agent is written in Node, start from a Node example such as [`langchain-code-interpreter`](../langchain-code-interpreter/) instead.
+| Problem | Fix |
+| --- | --- |
+| ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.`` | Export `TENKI_API_KEY` or run `tenki login --api-key <key>`. |
+| `missing auth token: set TENKI_AUTH_TOKEN or TENKI_API_KEY` from `agent.py` | `agent.py` doesn't read the `tenki login` key. Export `TENKI_API_KEY`. |
+| `invalid auth token: expected an API key or service token starting with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `ModuleNotFoundError: No module named 'tenki'` (or `'crewai'`) from `node verify.mjs` | There's no `.venv` here. Create it as in step 1, or set `PYTHON`. |
+| `crewai` won't resolve | Use Python 3.10 to 3.13, for example `uv venv --python 3.12`. |
+| `✗ AssertionError: tool returned '…'` | The quoted text is the sandbox's output. Read it for the error. |
 
 ## Related
 
-- CrewAI: https://crewai.com, docs at https://docs.crewai.com
-- Tenki Python SDK and full API: [tenki.cloud/docs/sandbox/sdk](https://tenki.cloud/docs/sandbox/sdk), [`tenki` on PyPI](https://pypi.org/project/tenki/), source at https://github.com/LuxorLabs/tenki-sdk-python
-- Tenki docs: https://tenki.cloud/docs
-- [`langchain-python`](../langchain-python/): the same `run_python` tool for a LangChain Python agent
-- [`run-code-python`](../run-code-python/): the bare Tenki Python SDK loop, with no agent framework
+- [LangChain (Python)](../langchain-python/): the same tool for a LangChain agent
+- [Run code with Python](../run-code-python/): the bare SDK loop
+- [CrewAI docs](https://docs.crewai.com)
+- [`tenki` SDK docs](https://tenki.cloud/docs/sandbox/sdk) and [LuxorLabs/tenki-sdk-python](https://github.com/LuxorLabs/tenki-sdk-python)

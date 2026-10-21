@@ -1,66 +1,72 @@
-# How to run an AG2 agent's shell and code tools in a Tenki sandbox
+# AG2
 
-`node verify.mjs` prints its `✓` line after opening a live Tenki sandbox through AG2's own Tenki backend. The page includes the agent code that gives `SandboxShellTool` and `SandboxCodeTool` that sandbox.
+Run an [AG2](https://github.com/ag2ai/ag2) agent's `SandboxShellTool` and `SandboxCodeTool` in a Tenki sandbox with AG2's native Tenki backend, `ag2.extensions.tenki` ([ag2ai/ag2#3096](https://github.com/ag2ai/ag2/pull/3096)). One `TenkiEnvironment` serves both tools, files persist between tool calls, and the sandbox is terminated when the environment closes.
 
-About 5 minutes.
+This is for AG2 1.x (`from ag2 import Agent`). The older `import autogen` API is now [AG2 Classic](https://github.com/ag2ai/ag2-classic) and doesn't include this backend.
 
-`verify.py` drives AG2's Tenki classes against live Tenki and needs no model key. The agent code in [Use it](#use-it) is the snippet from AG2's Tenki docs, and running it needs an Anthropic API key.
+## Set it up with a coding agent
 
-## Why bother
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
-AG2's `SandboxShellTool` and `SandboxCodeTool` run whatever the model writes inside a pluggable sandbox backend. AG2 has a native Tenki backend, `ag2.extensions.tenki`, merged in [ag2ai/ag2#3096](https://github.com/ag2ai/ag2/pull/3096) and maintained with Tenki. With it, every shell command and code snippet from an [AG2](https://github.com/ag2ai/ag2) agent executes in an isolated [Tenki](https://tenki.cloud) sandbox instead of on your machine. One `TenkiEnvironment` serves both tools, files persist between tool calls, and the sandbox is terminated when the environment closes.
+```text
+Set up the Tenki "AG2" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/ag2-tenki, create a .venv there on Python 3.10 or later, and install requirements.txt.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) in the environment. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run node verify.mjs and confirm the ✓ line.
+4. If I want to run an agent: install "ag2[anthropic]>=1.1.2", check that ANTHROPIC_API_KEY is set (ask me if not), save the agent.py from the README, and run it.
+5. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to give my own AG2 agent SandboxShellTool and SandboxCodeTool backed by one TenkiEnvironment.
+```
 
-This is for AG2 1.x. As of AG2 1.0, `pip install ag2` ships the `Agent` API (`from ag2 import Agent`). The older AutoGen-derived API (`import autogen`, `ConversableAgent`) is now [AG2 Classic](https://github.com/ag2ai/ag2-classic), in its own repo.
+## Quick start
 
-## Install
+You need:
 
-You need Python 3.10 or later. Get the example:
+- Python 3.10 or later. [uv](https://docs.astral.sh/uv/) is optional.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- An Anthropic API key, for the agent run only.
+
+### 1. Install
+
+Create the venv in the example directory as `.venv`; `verify.mjs` looks for it there.
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
 cd cookbook/examples/ag2-tenki
-```
-
-Every later command runs from this directory. Create a virtualenv here and install the pins:
-
-```bash
 uv venv
-uv pip install -r requirements.txt
+uv pip install -r requirements.txt   # ag2>=1.1.2, tenki>=1.4.1
 ```
 
-Without uv, run `python3.11 -m venv .venv` (any Python 3.10+ works) and then `.venv/bin/pip install -r requirements.txt`. Keep the name `.venv`, because `verify.mjs` looks for `.venv/bin/python`.
+Without uv: `python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt`. `ag2` 1.1.2 is the first release whose Tenki extension uses the 1.x `tenki` SDK. AG2 doesn't install `tenki` for you.
 
-The pins in `requirements.txt`:
-
-```
-ag2>=1.1.2
-tenki>=1.4.1
-```
-
-`ag2` 1.1.2 is the first release whose Tenki extension targets the 1.x `tenki` SDK ([ag2ai/ag2#3329](https://github.com/ag2ai/ag2/pull/3329)). Releases 1.0.2 through 1.1.1 shipped the extension against `tenki` 0.5.x. AG2 doesn't install the Tenki SDK for you, since its extensions aren't shipped as extras, so `tenki` is listed separately.
-
-## Authenticate
-
-Create a `tk_` API key at https://app.tenki.cloud and export it:
+### 2. Set your API key
 
 ```bash
 export TENKI_API_KEY=tk_...
 ```
 
-`verify.py` also accepts `TENKI_AUTH_TOKEN`, or a key stored with `tenki login --api-key <key>` in `~/.config/tenki/config.yaml`. Agent code doesn't read that file. `TenkiEnvironment()` leaves auth to the Tenki SDK, which reads `TENKI_AUTH_TOKEN` and then `TENKI_API_KEY`, so **export one of them before you run an agent**, even if `tenki login` already worked for the check.
+`TenkiEnvironment()` reads `TENKI_AUTH_TOKEN` or `TENKI_API_KEY` from the environment. `verify.py` also accepts a key saved with `tenki login --api-key <key>`, but agent code doesn't. If the key can see more than one workspace, set `TENKI_WORKSPACE_ID` (for `verify.py`) or pass `workspace_id=`.
 
-You don't need a workspace setting when the key can see one workspace, because `TenkiEnvironment` picks it. If the key can see several, set `TENKI_WORKSPACE_ID` (which `verify.py` reads) or pass `workspace_id=` in your own code.
+### 3. Verify
 
-## Use it
+```bash
+node verify.mjs      # or: .venv/bin/python verify.py
+```
 
-The agent needs AG2's Anthropic extra and an Anthropic API key. The check doesn't.
+```
+✓ ag2-tenki: TenkiEnvironment → live sandbox via the real integration → exec 42 → aclose teardown
+```
+
+`verify.py` opens a sandbox through AG2's real classes, runs `python3`, writes a file, and checks that a second `open()` returns the same cached sandbox with the file intact. It needs no model key. `verify.mjs` is a CI shim that runs it with `.venv/bin/python`, `$PYTHON`, or `python3`.
+
+### 4. Run an agent
 
 ```bash
 uv pip install "ag2[anthropic]>=1.1.2" "tenki>=1.4.1"
 export ANTHROPIC_API_KEY=...
 ```
 
-This is the agent from the [AG2 Tenki docs](https://github.com/ag2ai/ag2/blob/main/website/docs/user-guide/extensions/tenki.mdx). The example doesn't ship it as a file. Save it as `agent.py` and run `.venv/bin/python agent.py`:
+Save this as `agent.py` (from the [AG2 Tenki docs](https://github.com/ag2ai/ag2/blob/main/website/docs/user-guide/extensions/tenki.mdx)) and run `.venv/bin/python agent.py`:
 
 ```python
 import asyncio
@@ -85,11 +91,11 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-Pass the environment itself to `SandboxShellTool`, and `env.code_environment()` to `SandboxCodeTool`. Tenki's default image ships `python3` (not `python`), and the `CodeAdapter` that `code_environment()` returns maps the `python` runner to `python3`. It enables Python and bash. Pass `languages=` to restrict that.
+Pass the environment to `SandboxShellTool` and `env.code_environment()` to `SandboxCodeTool`. The code adapter maps the `python` runner to `python3` (Tenki's default image has no `python`) and enables Python and bash. Pass `languages=` to restrict that.
 
-### Configure the sandbox
+## Configure the sandbox
 
-Every parameter is optional. This block is from the AG2 Tenki docs:
+Every parameter is optional:
 
 ```python
 from ag2.extensions.tenki import TenkiEnvironment, TenkiResources
@@ -118,23 +124,16 @@ env = TenkiEnvironment(
 | `max_duration` | `900` s | Server-enforced sandbox lifetime backstop |
 | `workdir` | `/home/tenki` | Working directory for commands and files |
 
-The credential and selection parameters (`api_key`, `api_url`, `workspace_id`, `name`, `image`, `env_vars`) also accept AG2 `Variable`s, resolved per tool call from the conversation, so one environment can serve several tenants. See the [AG2 Tenki docs](https://github.com/ag2ai/ag2/blob/main/website/docs/user-guide/extensions/tenki.mdx).
+`api_key`, `api_url`, `workspace_id`, `name`, `image`, and `env_vars` also accept AG2 `Variable`s, resolved per tool call from the conversation, so one environment can serve several tenants.
 
-## One sandbox per environment
+## How it behaves
 
-- Both tools share one sandbox. `SandboxShellTool(env)` and `SandboxCodeTool(env.code_environment())` draw from the same `TenkiEnvironment`, so there is one sandbox and one cleanup path.
-- Files persist across tool calls. `TenkiEnvironment` caches sandboxes by their resolved parameters, so a file the agent writes in tool call 1 is still there in tool call 10. The sandbox lives until `aclose()` (the `async with env` exit), not per call.
-- Cleanup has three layers. Creation is failure-atomic: a sandbox that never becomes ready is terminated immediately. An `atexit` hook terminates the sandbox at interpreter shutdown if `aclose()` never ran. `max_duration` reclaims the VM server-side even if the client process dies. `max_duration` is the fail-safe, not the normal path, so close the environment with `async with` or `await env.aclose()`.
-- Networking is set by the extension. Sandboxes are created with inbound networking off and outbound on. `TenkiEnvironment` has no parameter for either.
-- Exit codes follow POSIX. A command that runs past `timeout` returns exit code 124 and keeps its partial output. A command whose binary isn't found returns 127, and one that isn't executable returns 126.
+- **One sandbox per environment.** Both tools share it. `TenkiEnvironment` caches sandboxes by their resolved parameters, so files persist across tool calls until `aclose()` (the `async with env` exit).
+- **Cleanup.** A sandbox that never becomes ready is terminated immediately. An `atexit` hook terminates it if `aclose()` never ran. `max_duration` (default 900 s) reclaims it server-side if the process dies.
+- **Networking.** Inbound is off and outbound is on. `TenkiEnvironment` has no setting for either.
+- **Exit codes follow POSIX.** A command past `timeout` returns 124 with its partial output. Not found is 127, not executable is 126.
 
-## Check it works
-
-```bash
-node verify.mjs      # or: .venv/bin/python verify.py
-```
-
-`verify.mjs` is a shim. It runs `verify.py` with `.venv/bin/python` if that exists, otherwise with `$PYTHON` or `python3`. The script imports `ag2.extensions.tenki`, builds `TenkiEnvironment`, `TenkiResources` and the `CodeAdapter`, and then does what `SandboxShellTool` does on each call. From `verify.py`:
+The core of `verify.py`:
 
 ```python
     async with env:  # the documented usage: tools share this factory for its whole scope
@@ -154,47 +153,22 @@ node verify.mjs      # or: .venv/bin/python verify.py
     # `async with env` exit -> aclose() terminated the sandbox and closed the client.
 ```
 
-On success it prints:
-
-```
-✓ ag2-tenki: TenkiEnvironment → live sandbox via the real integration → exec 42 → aclose teardown
-```
-
-On failure it prints `✗ <error type>: <message>` and exits with status 1.
-
-The check proves that the extension imports, opens a live Tenki sandbox through AG2's real classes, runs a command in it, and hands back the same cached sandbox on a second `open()` with the file intact. It needs no model key, so the agent loop itself isn't exercised, and it doesn't confirm afterwards that the sandbox is gone. AG2's own test suite covers the extension against a mocked Tenki SDK. CI runs this check with only `TENKI_API_KEY` set.
-
 ## Troubleshooting
 
-❌ **``No token. Set TENKI_API_KEY, or run `tenki login`.``** `verify.py` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY` or `~/.config/tenki/config.yaml`. Export `TENKI_API_KEY=tk_...`.
-
-❌ **`Token must be a tk_ API key (tenki SDK 1.x accepts only tk_ keys).`** The key it found doesn't start with `tk_`. In agent code the SDK raises `InvalidAuthTokenError` for the same reason. Create an API key at https://app.tenki.cloud and set `TENKI_API_KEY`, or run `tenki login --api-key <key>`.
-
-❌ **`MissingAuthTokenError` when the agent runs, after the check passed.** `verify.py` reads `~/.config/tenki/config.yaml` itself. The Tenki SDK that `TenkiEnvironment()` uses reads only `TENKI_AUTH_TOKEN` and `TENKI_API_KEY`. Export `TENKI_API_KEY` in the shell that runs the agent.
-
-❌ **``RuntimeError: The Tenki API key can access multiple workspaces. Pass `workspace_id` to TenkiEnvironment.``** Workspace auto-detection works only when the key sees exactly one workspace. Set `TENKI_WORKSPACE_ID` for `verify.py`, or pass `workspace_id=` in your own code. If the message instead says the key `has no visible workspace`, create a workspace first.
-
-❌ **`ImportError: TenkiEnvironment requires optional dependencies.`** (or `TenkiResources`). The `tenki` SDK isn't installed in the interpreter that ran the code. Run `uv pip install -r requirements.txt`, which installs `tenki>=1.4.1`.
-
-❌ **`ModuleNotFoundError` for `ag2` or `ag2.extensions.tenki`.** `verify.mjs` found no `.venv/bin/python` in this directory and fell back to `$PYTHON` or `python3`, or the interpreter has an `ag2` older than the pin. Create the venv in `examples/ag2-tenki` and install `requirements.txt`, or point `PYTHON` at the right interpreter.
-
-❌ **`Tenki execution timed out after 60s` in a tool result.** The command ran past `timeout`, which defaults to 60 seconds per command, and came back with exit code 124. Pass a larger `timeout=` to `TenkiEnvironment`.
-
-❌ **`RuntimeError: Tenki parameters given as Variable but no Context is available to resolve them.`** `Variable` parameters resolve only when a sandbox tool is invoked through an `Agent`. Calling `env.open()` yourself, as `verify.py` does, needs concrete values.
-
-## FAQ
-
-**Do I need a model key to run the check?** No. `verify.py` makes no agent or model call. It needs only a Tenki key.
-
-**How long does a sandbox live?** Until the environment closes, capped by `max_duration`, which defaults to 900 seconds (15 minutes). Pass a larger `max_duration` for longer sessions.
-
-**When shouldn't I use this?** When your code is on AG2 Classic (`import autogen`, `ConversableAgent`): this backend is part of `ag2` 1.x, which no longer ships the classic classes. Also when the agent's sandbox must accept inbound connections or must have no outbound network, because the extension sets inbound off and outbound on and doesn't expose either setting.
+| Problem | Fix |
+| --- | --- |
+| ``No token. Set TENKI_API_KEY, or run `tenki login`.`` | Export `TENKI_API_KEY`. |
+| `Token must be a tk_ API key …` or `InvalidAuthTokenError` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `MissingAuthTokenError` in the agent after the check passed | Agent code doesn't read the `tenki login` key. Export `TENKI_API_KEY`. |
+| ``The Tenki API key can access multiple workspaces. Pass `workspace_id` …`` | Set `TENKI_WORKSPACE_ID` or pass `workspace_id=`. If it says `has no visible workspace`, create one. |
+| `ImportError: TenkiEnvironment requires optional dependencies.` | Install `requirements.txt`, which includes `tenki`. |
+| `ModuleNotFoundError` for `ag2` or `ag2.extensions.tenki` | Create the `.venv` here and install `requirements.txt`, or set `PYTHON`. |
+| `Tenki execution timed out after 60s` | Pass a larger `timeout=` to `TenkiEnvironment`. |
+| `Tenki parameters given as Variable but no Context is available …` | `Variable`s resolve only inside an `Agent` tool call. Use concrete values with `env.open()`. |
 
 ## Related
 
+- [AG2 Tenki docs](https://github.com/ag2ai/ag2/blob/main/website/docs/user-guide/extensions/tenki.mdx) and [ag2ai/ag2#3329](https://github.com/ag2ai/ag2/pull/3329)
 - [AG2](https://github.com/ag2ai/ag2) and [`ag2` on PyPI](https://pypi.org/project/ag2/)
-- [AG2 Tenki docs](https://github.com/ag2ai/ag2/blob/main/website/docs/user-guide/extensions/tenki.mdx)
-- [ag2ai/ag2#3096](https://github.com/ag2ai/ag2/pull/3096), the integration PR, and [ag2ai/ag2#3329](https://github.com/ag2ai/ag2/pull/3329), its move to `tenki` 1.4
+- [smolagents](../smolagents/) and [CrewAI](../crewai-code-interpreter/)
 - [`tenki` on PyPI](https://pypi.org/project/tenki/) and the [Tenki docs](https://tenki.cloud/docs)
-- [smolagents](../smolagents/): a `TenkiExecutor` that runs a smolagents `CodeAgent`'s Python in a Tenki sandbox
-- [CrewAI code interpreter](../crewai-code-interpreter/): a code-interpreter tool that runs a CrewAI agent's Python in a Tenki sandbox
