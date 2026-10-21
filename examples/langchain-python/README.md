@@ -1,80 +1,73 @@
-# How to give a LangChain Python agent a code interpreter that runs in a Tenki sandbox
+# LangChain (Python)
 
-A LangGraph ReAct agent answers a question by calling a `run_python` tool. The tool executes the agent's Python in a disposable [Tenki](https://tenki.cloud) sandbox. A check of the tool passes with no model key.
+Give a LangChain Python agent a `run_python` code-interpreter tool that runs in a Tenki sandbox. The agent writes Python, the tool runs it in one sandbox shared for the session, and the output goes back to the agent. The tool is one file, `tenki_tool.py`, built on the [`tenki`](https://pypi.org/project/tenki/) SDK. For Node, see [LangChain (JavaScript)](../langchain-code-interpreter/).
 
-About 5 minutes.
+## Set it up with a coding agent
 
-Every `run_python` call starts a new `python3 -c` process. All the calls in a session share one sandbox, so a file one call writes is still there for the next. Python variables are not.
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
-## Why bother
+```text
+Set up the Tenki "LangChain (Python)" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/langchain-python, create a .venv there on Python 3.10 or later (uv venv --python 3.12 if uv is installed), and install requirements.txt.
+2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model call, expects 55), then .venv/bin/python agent.py.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then add tenki_tool.py to my own LangChain agent: one sandbox per session in a with block, make_code_tool(sandbox) in the tools list, and a timeout on exec.
+```
 
-This example gives a LangChain Python agent a code interpreter, so it can answer questions that need real computation by running code. The agent calls a `run_python` tool, which executes the agent's Python in a disposable Tenki sandbox and hands the output back. One sandbox serves the whole agent session and is reused across tool calls, which is cheaper than a sandbox per call.
+## Quick start
 
-It is the Python port of the JavaScript example [`langchain-code-interpreter`](../langchain-code-interpreter/), built on the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) SDK. The tool is one short file you can copy into your own project.
+You need:
 
-## Install
+- Python 3.10 or later. [uv](https://docs.astral.sh/uv/) is optional.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- An OpenAI API key, for the agent run only.
 
-You need Python 3.10 or newer. The `tenki` SDK, `langchain-core`, and `langgraph` all require it. CI uses Python 3.12.
+### 1. Install
+
+Create the venv in the example directory as `.venv`; `verify.mjs` looks for it there.
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
 cd cookbook/examples/langchain-python
-```
-
-Every later command runs from this directory. Create the virtual environment here, as `.venv`, because `verify.mjs` looks for `.venv/bin/python`:
-
-```bash
 uv venv --python 3.12
 uv pip install -r requirements.txt
 ```
 
-Without `uv`:
+Without uv: `python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt`. This installs `tenki`, `langchain-core`, `langgraph`, and `langchain-openai`.
 
-```bash
-python3.12 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-```
-
-The dependencies, from `requirements.txt`:
-
-```
-tenki>=1.4.1
-langchain-core>=1.0
-langgraph>=1.0
-langchain-openai>=1.0
-```
-
-`tenki` is the Tenki Python SDK, and `langchain-core` supplies the `@tool` decorator the tool is built with. Only `agent.py` uses the other two: `langgraph` for `create_react_agent`, and `langchain-openai` for `ChatOpenAI`.
-
-## Authenticate
-
-Create a `tk_` API key at https://app.tenki.cloud and export it:
+### 2. Set your keys
 
 ```bash
 export TENKI_API_KEY=tk_...
-```
-
-Or run `tenki login --api-key <key>`, which stores the key in `~/.config/tenki/config.yaml`. Both scripts look for the key in `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then the `auth_token:` line of that file, so either way works for both.
-
-Tenki infers your workspace from the key. If you want a specific one, set `TENKI_WORKSPACE_ID`. Both scripts pass it through when it's set, and they also pick up a `current_workspace_id:` line from `~/.config/tenki/config.yaml` if one is there.
-
-`agent.py` also needs a model key. It uses OpenAI's `gpt-4o-mini` through `ChatOpenAI`:
-
-```bash
 export OPENAI_API_KEY=sk-...
 ```
 
-To use another provider, swap `ChatOpenAI` for that provider's LangChain chat model, as the comment at the top of `agent.py` suggests. `verify.py` needs no model key.
+Both scripts check `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
-## Use it
-
-Run the agent:
+### 3. Run the agent
 
 ```bash
 .venv/bin/python agent.py
 ```
 
-This is the part of `agent.py` that builds the sandbox and the agent:
+A LangGraph ReAct agent on `gpt-4o-mini` computes the 20th Fibonacci number with `run_python` and prints its answer. LangGraph 1.0 prints a `LangGraphDeprecatedSinceV10` warning for `create_react_agent`; the agent still runs.
+
+### 4. Verify
+
+```bash
+node verify.mjs      # or: .venv/bin/python verify.py
+```
+
+```
+✓ langchain-python: LangChain tool executed Python in a Tenki sandbox → 55
+```
+
+`verify.py` calls the tool directly with `print(sum(range(11)))` and checks for `55`. It needs no OpenAI key. `verify.mjs` is a CI shim that runs it with `.venv/bin/python`, `$PYTHON`, or `python3`.
+
+## The agent
+
+The part of `agent.py` that builds the sandbox and the agent:
 
 ```python
 # A tk_ API key, from env or ~/.config/tenki/config.yaml (`tenki login --api-key`).
@@ -97,13 +90,11 @@ with Sandbox.create(**opts) as sandbox:
     print(result["messages"][-1].content)
 ```
 
-One sandbox, with 1 CPU core and 1024 MB of memory, serves the whole agent session, and every `run_python` call the agent makes goes to it. LangGraph's `create_react_agent` wires the model and the tool into a ReAct loop. The script asks for the 20th Fibonacci number and prints the agent's final message. When the `with` block exits, including on an exception, the SDK terminates the sandbox.
+The `with` block terminates the sandbox when the agent finishes or raises. To use another model provider, swap `ChatOpenAI` for its LangChain chat model.
 
-To use the tool in your own agent, copy `tenki_tool.py`, create a sandbox, and pass `make_code_tool(sandbox)` in the agent's `tools` list, as above.
+## The tool
 
-## How the tool runs code
-
-The tool, from `tenki_tool.py`:
+`tenki_tool.py`:
 
 ```python
 from langchain_core.tools import tool
@@ -126,70 +117,27 @@ def make_code_tool(sandbox: Sandbox):
     return run_python
 ```
 
-Three things to know:
+Things to know:
 
-- **It's an ordinary LangChain tool.** `@tool` turns `run_python` into a tool named after the function, with `code` as its one argument and the docstring as the description the model reads. `make_code_tool` closes over the live sandbox, so the model only ever supplies code.
-- **No shell in between.** `exec(command, *args)` passes its arguments straight through, with no shell splitting, so multi-line, model-generated code goes across as one `-c` argument with no escaping surprises. If you need shell syntax, run it through a shell yourself, for example `exec("bash", "-c", command)`.
-- **The agent always gets text back.** The tool returns stdout followed by stderr, so a Python traceback reaches the agent as text. If the code printed nothing, it returns `(no output; exit code N)` instead of an empty string.
-
-The SDK's file methods are confined to `/home/tenki`, which is the sandbox's working directory. Code this tool runs goes through `exec`, so it can write anywhere, but write to relative paths: they land in `/home/tenki`, where the SDK's file methods can read them back.
-
-## Check it works
-
-```bash
-node verify.mjs      # or: .venv/bin/python verify.py
-```
-
-`verify.mjs` is a shim so the cookbook's Node verify harness can run this Python example. It runs `verify.py` with `.venv/bin/python` if that exists, otherwise with `$PYTHON` or `python3`. On success it prints:
-
-```
-✓ langchain-python: LangChain tool executed Python in a Tenki sandbox → 55
-```
-
-The end of `verify.py`:
-
-```python
-try:
-    with Sandbox.create(**opts) as sb:
-        run_python = make_code_tool(sb)
-        # Drive the LangChain tool exactly as an agent would.
-        out = run_python.invoke({"code": "print(sum(range(11)))"})
-        if str(out).strip() != "55":
-            raise AssertionError(f"tool returned {out!r}")
-    print("✓ langchain-python: LangChain tool executed Python in a Tenki sandbox → 55")
-except Exception as e:  # noqa
-    print(f"✗ {type(e).__name__}: {e}")
-    sys.exit(1)
-```
-
-This proves the half of the example that talks to Tenki: the LangChain tool runs code in a live sandbox and returns its output. It calls the tool directly with no agent involved and needs no model key, so the LangGraph agent and the model's turn aren't exercised. This is what CI runs, on Node 20 and Python 3.12 with only `TENKI_API_KEY` set.
+- **It's an ordinary LangChain tool.** `@tool` names it after the function and uses the docstring as its description. The model only supplies `code`.
+- **No shell.** `exec(command, *args)` passes the code as one `-c` argument. For shell syntax, use `exec("bash", "-c", command)`.
+- **Errors come back as text.** Tracebacks reach the agent. Code that prints nothing returns `(no output; exit code N)`.
+- **No state between calls.** Each call is a new `python3` process. Files persist in the shared sandbox; variables don't. Write to relative paths, which land in `/home/tenki`.
+- **No time limit.** `exec` is unbounded by default. Pass `timeout` to `exec` to cap it; a timed-out run returns a normal result with `timed_out` set.
+- **Standard library only.** Outbound network is on, so the code can `pip install`. Add `allow_outbound=False` to the `Sandbox.create` options to cut it off.
 
 ## Troubleshooting
 
-**❌ ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.``** `verify.py` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or the `auth_token:` line of `~/.config/tenki/config.yaml`. Export `TENKI_API_KEY`, or run `tenki login --api-key <key>`.
-
-**❌ `missing auth token: set TENKI_AUTH_TOKEN or TENKI_API_KEY` from `agent.py`.** Same cause: `agent.py` looks in the same three places but doesn't check whether it found a key, so the SDK raises `MissingAuthTokenError` when `Sandbox.create` runs. Same fix.
-
-**❌ `invalid auth token: expected an API key or service token starting with tk_`.** The key isn't a `tk_` API key, and SDK 1.x accepts nothing else. In `verify.py` this shows up as `✗ InvalidAuthTokenError: …`. Create a key at https://app.tenki.cloud and use that.
-
-**❌ `ModuleNotFoundError: No module named 'tenki'` (or `'langchain_core'`) from `node verify.mjs`.** There's no `.venv` in the example directory, so the shim fell back to `$PYTHON` or `python3`, which doesn't have the dependencies. Create the venv in this directory as shown in [Install](#install), or set `PYTHON` to the interpreter you installed into.
-
-**❌ `✗ AssertionError: tool returned '…'`.** The sandbox ran the check, but the tool returned something other than `55`. The quoted text is the sandbox's own stdout and stderr, or `(no output; exit code N)`, so read it for the actual error.
-
-## FAQ
-
-**Why does `agent.py` print a `LangGraphDeprecatedSinceV10` warning?** LangGraph 1.0 deprecated `langgraph.prebuilt.create_react_agent`. The warning says it has moved to `langchain.agents` as `create_agent` and is due for removal in LangGraph 2.0. It's a warning, so the agent still runs. This example still uses `create_react_agent`, `requirements.txt` asks for `langgraph>=1.0` with no upper bound, and the `langchain` package that provides `langchain.agents` isn't among its dependencies.
-
-**Can the agent's code reach the internet or install packages?** The sandbox image ships a stdlib-only Python. Outbound network is on by default (`allow_outbound=True`), so the agent's code can `pip install` any other packages it needs. To lock the sandbox down, add `allow_outbound=False` to the options passed to `Sandbox.create`.
-
-**What happens if the agent's code never finishes?** The tool call waits. `run_python` passes no `timeout` to `exec`, and SDK commands are unbounded by default. `exec` accepts a `timeout`, which the sandbox's guest agent enforces. A run that hits it comes back as an ordinary result with `timed_out` set, not as an exception.
-
-**When shouldn't I use this?** When you need a notebook-style interpreter that keeps variables between calls, since every call here is a fresh process. When the model's code has to be cut off from the network and you haven't set `allow_outbound=False`. When you need a bound on how long the model's code can run, since the tool as written sets none. When your project can't use Python 3.10 or newer. And if your agent is written in Node, start from [`langchain-code-interpreter`](../langchain-code-interpreter/) instead.
+| Problem | Fix |
+| --- | --- |
+| ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.`` or `missing auth token` | Export `TENKI_API_KEY` or run `tenki login --api-key <key>`. |
+| `invalid auth token: expected an API key or service token starting with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `ModuleNotFoundError: No module named 'tenki'` from `node verify.mjs` | There's no `.venv` here. Create it as in step 1, or set `PYTHON`. |
+| `✗ AssertionError: tool returned '…'` | The quoted text is the sandbox's output. Read it for the error. |
 
 ## Related
 
-- LangChain: https://www.langchain.com. LangGraph: https://github.com/langchain-ai/langgraph
-- Tenki Python SDK and full API: [tenki.cloud/docs/sandbox/sdk](https://tenki.cloud/docs/sandbox/sdk), [`tenki` on PyPI](https://pypi.org/project/tenki/), source at https://github.com/LuxorLabs/tenki-sdk-python
-- Tenki docs: https://tenki.cloud/docs
-- [`langchain-code-interpreter`](../langchain-code-interpreter/): the JavaScript version, with the same tool-backed-by-a-sandbox pattern
-- [`run-code-python`](../run-code-python/): the bare Tenki Python SDK loop, with no agent framework
+- [LangChain (JavaScript)](../langchain-code-interpreter/)
+- [Run code with Python](../run-code-python/): the bare SDK loop
+- [LangChain](https://www.langchain.com) and [LangGraph](https://github.com/langchain-ai/langgraph)
+- [`tenki` SDK docs](https://tenki.cloud/docs/sandbox/sdk) and [LuxorLabs/tenki-sdk-python](https://github.com/LuxorLabs/tenki-sdk-python)

@@ -1,15 +1,9 @@
-# Benchmarks on Tenki
+# Benchmarks
 
-Standard coding benchmarks, run on disposable [Tenki](https://tenki.cloud) sandboxes and graded with each benchmark's **official** harness — so the scores are comparable to everyone else's, not a lookalike.
+Standard coding benchmarks run on Tenki sandboxes and graded with each benchmark's official harness, so scores compare with published ones. They are heavier than the [examples](../examples/): they pull real evaluation images and run real test suites.
 
-These are heavier than the [`examples/`](../examples/): a benchmark pulls real evaluation images and runs real test suites. But they obey the same **one rule** — each ships a `verify.mjs` that proves the Tenki-facing pipeline against the live API in CI, using a mode that needs **no model key** (apply the gold/reference solution and confirm the grader agrees).
+Each benchmark ships a `verify.mjs` that CI runs with no model key. It applies the benchmark's reference solution instead of running a model and checks that the grader marks it resolved, which shows the environment and grading work on Tenki. Swap the reference solution for an agent and it becomes a scored run.
 
-| Benchmark | What it measures | Verify (CI, no model) |
-|---|---|---|
-| [swe-bench](swe-bench/) | Fix a real GitHub issue so the repo's hidden tests pass (SWE-bench Lite / Verified / full) | Oracle one instance — gold patch must resolve |
-
-*(More landing here — the SWE-bench family via `--dataset` (Multilingual, SWE-Gym, R2E-Gym, SWE-rebench), then different shapes like Commit0's build-from-spec.)*
-
-## Why the "oracle" verify
-
-A benchmark's CI proof can't require a model key (per [CONTRIBUTING](../CONTRIBUTING.md)). Every one of these benchmarks has a **reference-solution mode**: apply the known-good patch instead of running a model, then grade. If the grader resolves the reference solution, the environment + grading pipeline is correct on Tenki — which is the part CI needs to guarantee. Swapping the reference solution for an agent turns it into a real scored run (bring your own model), which lives outside CI.
+| Benchmark | What it measures | CI check |
+| --- | --- | --- |
+| [SWE-bench](swe-bench/) | Fix a real GitHub issue so the repo's hidden tests pass (Lite, Verified, or full) | The gold patch for one instance must resolve |

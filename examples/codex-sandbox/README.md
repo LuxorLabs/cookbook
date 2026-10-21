@@ -1,18 +1,29 @@
-# How to run OpenAI Codex headless on a real repo in a disposable sandbox
+# Codex
 
-The terminal prints a unified diff of the edit Codex made to a fresh checkout of [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue). The edit is produced inside a [Tenki Sandbox](https://tenki.cloud/products/sandbox) that is closed when the script exits.
+Run [OpenAI Codex](https://github.com/openai/codex) headless on a real repo inside a Tenki sandbox you throw away. The script clones [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) into the sandbox, runs one `codex exec` turn on a task, prints the diff, and closes the sandbox. Codex can edit, install, and run anything on that VM, and the diff is what you keep.
 
-About 15 minutes, most of it the agent turn, which `run.mjs` allows up to 10 minutes.
+## Set it up with a coding agent
 
-Nothing pins the Codex version. The sandbox runs the copy that ships in Tenki's default image (codex-cli 0.154.0 as of October 2026), and it changes when Tenki rebuilds the image. `verify.mjs` checks the flags and the key variable `run.mjs` relies on.
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
-## Why bother
+```text
+Set up the Tenki "Codex" example from https://github.com/LuxorLabs/cookbook, which runs OpenAI Codex headless in a disposable Tenki sandbox and prints the diff.
+1. Clone the repo, cd into examples/codex-sandbox, check that Node.js is 24 or later, and run npm install.
+2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and CODEX_API_KEY (an OpenAI key; if only OPENAI_API_KEY is set, export CODEX_API_KEY=$OPENAI_API_KEY). If a key is missing, stop and ask me to export it. Never print the keys or write them to a file.
+3. Run node verify.mjs first (no model turn), then node run.mjs, and show me the diff.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then ask me which repo and task I want instead, change REPO and TASK in run.mjs, and run it again.
+```
 
-An agent that edits code needs a machine it can change freely. Here that machine is a Tenki sandbox that exists only for this run, so Codex can edit, install and run what it likes, and you keep one artifact: the diff against a real upstream checkout. The agent never runs on your machine, and the model key goes only to the one `codex` process, so it never lands in the repo or the image.
+## Quick start
 
-## Install
+You need:
 
-You need Node 24 or later for `run.mjs`, which uses top-level `await using`. The verify script runs on Node 20, which is what CI uses.
+- Node.js 24 or later for `run.mjs`, which uses top-level `await using`. `verify.mjs` runs on Node 20.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- An OpenAI API key. You don't need Codex installed locally; Tenki's default image has it.
+
+### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
@@ -20,30 +31,42 @@ cd cookbook/examples/codex-sandbox
 npm install
 ```
 
-Every later command runs from this directory. The only dependency is `@tenkicloud/sandbox` 1.4.1 or later. You don't need the Codex CLI on your machine: Tenki's default image already has it on PATH.
-
-## Authenticate
-
-You need a Tenki API key (it starts with `tk_`; create one at https://app.tenki.cloud) and an OpenAI API key.
+### 2. Set your keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # or TENKI_API_KEY, which is what CI sets
-export CODEX_API_KEY=sk-...      # an OpenAI API key; only run.mjs needs it
+export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export CODEX_API_KEY=sk-...      # an OpenAI API key
 ```
 
-`codex exec` reads its key from `CODEX_API_KEY` and ignores `OPENAI_API_KEY`, so if your key is already in `OPENAI_API_KEY`, run `export CODEX_API_KEY=$OPENAI_API_KEY`.
+`codex exec` reads `CODEX_API_KEY` and ignores `OPENAI_API_KEY`. If your key is in `OPENAI_API_KEY`, run `export CODEX_API_KEY=$OPENAI_API_KEY`.
 
-- `run.mjs` passes `TENKI_AUTH_TOKEN` to the SDK. If that's unset, the SDK falls back to `TENKI_API_KEY`. It does not read `~/.config/tenki/config.yaml`, so export one of the two even if you've run `tenki login`.
-- `verify.mjs` also accepts a key stored by `tenki login --api-key <key>` in `~/.config/tenki/config.yaml`.
-- `TENKI_WORKSPACE_ID` is optional. Tenki infers the workspace from a workspace API key; both scripts pass it through if you set it.
+`run.mjs` reads the Tenki key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
-## Use it
+### 3. Verify
+
+Check the Tenki side first; it needs no OpenAI key:
 
 ```bash
-node run.mjs   # streams the agent's turn, then prints the diff
+node verify.mjs
 ```
 
-This is the whole of `run.mjs`:
+```
+✓ codex-sandbox: create + clone → codex-cli 0.154.0 on PATH → reads CODEX_API_KEY → edit → git diff → dispose
+```
+
+`verify.mjs` boots a sandbox with the repo cloned, checks that `codex exec --help` still lists the flags `run.mjs` uses, confirms Codex sends `CODEX_API_KEY` to OpenAI (using a dummy key it expects to be rejected), and reads an edit back through `sandbox.git.diff`. It doesn't run a model turn.
+
+### 4. Run
+
+```bash
+node run.mjs
+```
+
+Codex's output streams to your terminal, then the diff prints. The turn has up to 10 minutes.
+
+## The script
+
+`run.mjs`:
 
 ```js
 // OpenAI Codex, headless, on a real repo in a disposable Tenki sandbox:
@@ -85,66 +108,37 @@ if (run.exitCode !== 0) throw new Error(`codex exited ${run.exitCode}`);
 console.log(await sandbox.git.diff({ directory: "repo" }));
 ```
 
-Three things the comments don't say:
+Change `REPO` and `TASK` to give Codex different work.
 
-- No custom image is needed. The default image ships the Codex CLI along with Node 24, npm 11 and git 2.43.
-- `exec(command, { args })` runs a bare binary with no shell splitting, so the whole task prompt reaches Codex as a single argument.
-- `await using` closes the sandbox when the script exits, including when it throws.
+- The default image ships Codex, Node 24, npm 11, and git 2.43, so no custom image is needed.
+- `exec(command, { args })` doesn't split on spaces, so the whole task reaches Codex as one argument.
+- `env` is scoped to the one `codex` process, so the key never lands in the repo or image.
 
-The last line is the point: a unified diff against a real upstream checkout, produced by an agent that had free run of a machine you are about to delete. To try a different task, change `REPO` and `TASK` at the top of the file.
+## Why Codex's own sandbox is off
 
-## Why Codex's own sandbox is turned off
+`--dangerously-bypass-approvals-and-sandbox` skips Codex's bubblewrap sandbox and approval prompts. Inside a disposable VM that layer is redundant, and without the flag Codex warns `Codex could not find bubblewrap on PATH`. Don't use this flag on a machine you care about.
 
-Codex brings its own sandbox, and nesting it inside a sandbox buys you nothing.
+With the bypass flag, `codex exec` also skips its Git-repo check, so `--skip-git-repo-check` isn't needed. To point Codex at a directory instead of setting `cwd`, pass `-C, --cd <DIR>`.
 
-- Without the bypass flag, Codex wraps its commands in bubblewrap. In this sandbox it warns `Codex could not find bubblewrap on PATH` and falls back to a bundled copy.
-- `--dangerously-bypass-approvals-and-sandbox` reports `sandbox: danger-full-access` and skips that layer. That is the right call *here* precisely because the blast radius is one disposable VM. On a machine you care about, it is not.
-- `--skip-git-repo-check` is not needed. Codex runs inside a Git checkout, and `codex exec` skips its Git-repo check when the bypass flag is set anyway. If you drop the bypass flag and run outside a repo, Codex exits with `Not inside a trusted directory and --skip-git-repo-check was not specified.`
-- If you'd rather point Codex at a directory than set `cwd`, pass `-C, --cd <DIR>`.
+## Codex version
 
-## Check it works
-
-`verify.mjs` checks everything except the agent's turn, without a model key. This is what CI runs.
-
-```bash
-node verify.mjs
-```
-
-It prints:
-
-```
-✓ codex-sandbox: create + clone → codex-cli 0.154.0 on PATH → reads CODEX_API_KEY → edit → git diff → dispose
-```
-
-The version is whichever Codex CLI the default image ships. The check proves that the sandbox boots with yocto-queue cloned into `./repo`, that the image's Codex CLI is on PATH, that `codex exec --help` still lists both `--dangerously-bypass-approvals-and-sandbox` and `-C, --cd`, and that an edit in the checkout comes back through `sandbox.git.diff`. It also runs `codex exec` once with a dummy `CODEX_API_KEY` and expects OpenAI to reject that key, which proves Codex still reads the variable `run.mjs` forwards. It stands in for the agent's edit with a one-line `printf`, so it doesn't prove that your key works or that the model makes a good change.
+The sandbox runs the Codex CLI in Tenki's default image (codex-cli 0.154.0 as of October 2026), which changes when the image is rebuilt. To use a newer one, `npm i -g @openai/codex` in the sandbox and run it by full path from `npm prefix -g`/bin, since that directory isn't on `exec`'s PATH.
 
 ## Troubleshooting
 
-**❌ ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.``** `verify.mjs` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY` or `~/.config/tenki/config.yaml`. Export `TENKI_AUTH_TOKEN`, or run `tenki login --api-key <key>`.
-
-**❌ `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY or use authToken option`.** `run.mjs` doesn't read `~/.config/tenki/config.yaml`, so a key stored by `tenki login` isn't enough for it. Export `TENKI_AUTH_TOKEN` or `TENKI_API_KEY`.
-
-**❌ `invalid auth token - API keys and service tokens must start with tk_`.** The SDK accepts only `tk_` keys. Create an API key at https://app.tenki.cloud and export that.
-
-**❌ `node run.mjs` fails with a `SyntaxError` before anything runs.** Your Node can't parse top-level `await using`; Node 22 can't. Use Node 24 or later. `node verify.mjs` still runs on Node 20.
-
-**❌ `codex exec --help no longer lists <flag>`.** Tenki rebuilt the default image with a Codex CLI that renamed or removed a flag `run.mjs` passes. Find the new flag in the [Codex releases](https://github.com/openai/codex/releases) and update `args` in `run.mjs`.
-
-**❌ `codex exec never sent CODEX_API_KEY to OpenAI; check which env var it reads now`.** The Codex CLI in the image no longer reads `CODEX_API_KEY`. Find the variable it reads now in the [Codex releases](https://github.com/openai/codex/releases) and update `PASSTHROUGH` in `run.mjs`.
-
-**❌ `codex exited <n>`.** Codex got no `CODEX_API_KEY`, or a bad key, and `run.mjs` stops rather than print an empty diff. Export `CODEX_API_KEY` (setting only `OPENAI_API_KEY` isn't enough), then read the streamed output above the error.
-
-## FAQ
-
-**When shouldn't I use this?** When you need the same Codex every time: the version comes with Tenki's default image, and `verify.mjs` only checks that two flags and the key variable still work. When you want Codex's own sandbox and approval prompts, since this example turns both off and that is only reasonable on a throwaway VM. And when you need CI to prove the agent turn end to end; it proves the Tenki side only.
-
-**Can I run a newer Codex than the image ships?** Yes, but `npm i -g @openai/codex` alone won't do it. Inside the sandbox, npm installs global packages under `npm prefix -g`, and that `bin` directory isn't on the PATH that `exec` uses, so `codex` still resolves to the image's copy in `/usr/local/bin`. After the install, run the new CLI by its full path.
-
-**Does my OpenAI key end up in the repo or the image?** No. It goes in `ExecOptions.env`, which is scoped to the one `codex` process.
+| Problem | Fix |
+| --- | --- |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
+| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `SyntaxError` before anything runs | Use Node 24 or later for `run.mjs`. |
+| `codex exec --help no longer lists <flag>` | The image's Codex renamed a flag. Check the [Codex releases](https://github.com/openai/codex/releases) and update `args`. |
+| `codex exec never sent CODEX_API_KEY to OpenAI …` | Codex reads a different variable now. Update `PASSTHROUGH` in `run.mjs`. |
+| `codex exited <n>` | `CODEX_API_KEY` is missing or invalid. Read the streamed output above the error. |
 
 ## Related
 
-- [OpenAI Codex](https://github.com/openai/codex) and [`@openai/codex` on npm](https://www.npmjs.com/package/@openai/codex)
+- [Claude Code](../claude-code-sandbox/) and [OpenCode](../opencode-sandbox/): the same pattern with other coding agents
+- [OpenAI Agents SDK](../openai-agents-sdk/)
+- [OpenAI Codex](https://github.com/openai/codex) and [`@openai/codex`](https://www.npmjs.com/package/@openai/codex)
 - [Tenki Sandbox](https://tenki.cloud/products/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
-- [claude-code-sandbox](../claude-code-sandbox/): the same shape with Anthropic's CLI
-- [openai-agents-sdk](../openai-agents-sdk/): the OpenAI Agents SDK with Tenki as a code-interpreter backend

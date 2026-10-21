@@ -1,7 +1,8 @@
 /**
  * Proves this example works: boot a sandbox, seed the DB, start the app, drive
  * every endpoint (GET/POST/PATCH), expose the frontend, fetch it from the public
- * internet, assert each step, then terminate the sandbox.
+ * internet, check that writes through the public URL are refused, assert each
+ * step, then terminate the sandbox.
  * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
  */
 import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
@@ -62,12 +63,27 @@ def go(m,p,b=None):
 	const count = Number(await call(`print(len(go("GET","/api/tasks")))`));
 	if (count !== 6) throw new Error(`expected 6 tasks after create, got ${count}`);
 
+	const malformed = await call(`import urllib.error
+try:
+    urllib.request.urlopen(urllib.request.Request("http://127.0.0.1:${PORT}/api/tasks", data=b"[1]", method="POST"), timeout=10)
+    print(200)
+except urllib.error.HTTPError as e:
+    print(e.code)`);
+	if (malformed !== "400") throw new Error(`non-object body: expected 400, got ${malformed}`);
+
 	const { previewUrl } = await sandbox.exposePort(PORT);
 	const res = await fetch(previewUrl);
 	const html = await res.text();
 	if (res.status !== 200 || !html.includes("<title>")) throw new Error(`frontend fetch failed: ${res.status}`);
 
-	console.log(`✓ agent-fullstack-app: seed 5 → serve → health ok → POST → PATCH → 6 tasks → frontend 200 at ${new URL(previewUrl).host}`);
+	const publicPost = await fetch(new URL("/api/tasks", previewUrl), {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ title: "from the internet" }),
+	});
+	if (publicPost.status !== 403) throw new Error(`public POST: expected 403, got ${publicPost.status}`);
+
+	console.log(`✓ agent-fullstack-app: seed 5 → serve → health ok → POST → PATCH → 6 tasks → bad body 400 → frontend 200 → public POST 403 at ${new URL(previewUrl).host}`);
 } catch (e) {
 	console.error(`✗ ${e?.message ?? e}`);
 	process.exitCode = 1;

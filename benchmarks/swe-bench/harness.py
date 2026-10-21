@@ -25,7 +25,7 @@ Usage:
   python harness.py --dataset lite --limit 20 \
     --model your-model --api-base https://api.openai.com/v1 --api-key-env OPENAI_API_KEY
 
-Requires: swebench, datasets, tenki-sandbox (see requirements.txt). A model run
+Requires: swebench, datasets, tenki (see requirements.txt). A model run
 also needs `mini-swe-agent` (imported lazily, only for --model).
 """
 from __future__ import annotations
@@ -71,7 +71,7 @@ def log(msg: str) -> None:
 
 
 # ---- Tenki auth ------------------------------------------------------------
-# Token/project from env (CI: TENKI_API_KEY) or ~/.config/tenki/config.yaml
+# Token/workspace from env (CI: TENKI_API_KEY) or ~/.config/tenki/config.yaml
 # (local `tenki login`).
 
 def _cfg(key: str) -> str:
@@ -85,7 +85,7 @@ def _cfg(key: str) -> str:
     return ""
 
 
-def tenki_client() -> tuple[Client, str]:
+def tenki_client() -> tuple[Client, str | None]:
     token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or _cfg("auth_token")
     if not token:
         raise SystemExit("No token. Set TENKI_AUTH_TOKEN / TENKI_API_KEY, or run `tenki login`.")
@@ -94,9 +94,9 @@ def tenki_client() -> tuple[Client, str]:
     if not token.startswith(("tk_", "ory_st_", "cookie:")):
         token = f"cookie:{token}"
     client = Client(auth_token=token)
-    pid = (os.environ.get("TENKI_PROJECT_ID") or _cfg("current_project_id")
-           or client.who_am_i().workspaces[0].projects[0].id)
-    return client, pid
+    # None lets the SDK pick the key's default workspace.
+    wid = os.environ.get("TENKI_WORKSPACE_ID") or _cfg("current_workspace_id") or None
+    return client, wid
 
 
 # ---- container plumbing ----------------------------------------------------
@@ -247,9 +247,9 @@ def run_one(instance: dict, *, oracle: bool = False, model_id: str | None = None
             api_base: str = "", api_key_env: str = "", keep: bool = False) -> dict:
     iid = instance["instance_id"]
     test_spec = make_test_spec(instance)
-    client, pid = tenki_client()
+    client, wid = tenki_client()
     t0 = time.time()
-    sb = client.create(name=f"swe-{iid[:32]}", project_id=pid, cpu_cores=2,
+    sb = client.create(name=f"swe-{iid[:32]}", workspace_id=wid, cpu_cores=2,
                        memory_mb=4096, max_duration=1800, disk_size_gb=DISK_GB)
     try:
         log(f"  [{iid}] provisioning (pull {image_name(iid).split('/')[-1]}) …")

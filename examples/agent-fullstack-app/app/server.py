@@ -10,6 +10,9 @@ Endpoints:
   POST   /api/tasks   -> create a task   {"title": "...", "status": "todo"}
   PATCH  /api/tasks/<id> -> update status {"status": "done"}
   GET    /api/health  -> {"ok": true, "tasks": N}
+
+POST and PATCH are accepted only from inside the sandbox (loopback); through the
+public preview URL they return 403.
 """
 import json
 import sqlite3
@@ -30,8 +33,15 @@ INDEX = """<!doctype html>
 <ul id="list">loading…</ul>
 <script>
 fetch('/api/tasks').then(r=>r.json()).then(tasks=>{
-  document.getElementById('list').innerHTML = tasks.map(t =>
-    `<li><span class="s ${t.status}">${t.status}</span><span>${t.title}</span></li>`).join('');
+  // textContent, not innerHTML: titles are user data.
+  document.getElementById('list').replaceChildren(...tasks.map(t => {
+    const li = document.createElement('li'), s = document.createElement('span'), title = document.createElement('span');
+    s.className = 's ' + t.status;
+    s.textContent = t.status;
+    title.textContent = t.title;
+    li.append(s, title);
+    return li;
+  }));
 });
 </script>
 """
@@ -60,8 +70,21 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _body(self):
-        n = int(self.headers.get("Content-Length") or 0)
-        return json.loads(self.rfile.read(n) or b"{}")
+        """The JSON object in the request body, or None if it isn't one."""
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(n) or b"{}")
+        except ValueError:
+            return None
+        return body if isinstance(body, dict) else None
+
+    def _writes_allowed(self):
+        # exposePort publishes this server, and the gateway's traffic arrives from a
+        # non-loopback address. Only code inside the sandbox (the agent) may write.
+        if self.client_address[0] in ("127.0.0.1", "::1"):
+            return True
+        self._send(403, {"error": "writes are only accepted from inside the sandbox"})
+        return False
 
     def do_GET(self):
         if self.path == "/":
@@ -75,9 +98,15 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path != "/api/tasks":
             return self._send(404, {"error": "not found"})
+        if not self._writes_allowed():
+            return
         b = self._body()
-        if not b.get("title"):
+        if b is None:
+            return self._send(400, {"error": "body must be a JSON object"})
+        if not isinstance(b.get("title"), str) or not b["title"]:
             return self._send(400, {"error": "title required"})
+        if not isinstance(b.get("status", "todo"), str):
+            return self._send(400, {"error": "status must be a string"})
         new_id = q("INSERT INTO tasks (title, status) VALUES (?, ?)",
                    (b["title"], b.get("status", "todo")), commit=True)
         return self._send(201, {"id": new_id, "title": b["title"], "status": b.get("status", "todo")})
@@ -85,9 +114,14 @@ class Handler(BaseHTTPRequestHandler):
     def do_PATCH(self):
         if not self.path.startswith("/api/tasks/"):
             return self._send(404, {"error": "not found"})
+        if not self._writes_allowed():
+            return
         task_id = self.path.rsplit("/", 1)[-1]
-        status = self._body().get("status")
-        if not status:
+        b = self._body()
+        if b is None:
+            return self._send(400, {"error": "body must be a JSON object"})
+        status = b.get("status")
+        if not isinstance(status, str) or not status:
             return self._send(400, {"error": "status required"})
         q("UPDATE tasks SET status = ? WHERE id = ?", (status, task_id), commit=True)
         rows = q("SELECT id, title, status FROM tasks WHERE id = ?", (task_id,))
