@@ -1,63 +1,58 @@
-# How to run code in a Tenki sandbox from Python
+# Run code with Python
 
-A script boots a [Tenki](https://tenki.cloud) sandbox, runs `python3 -c "print(6 * 7)"` inside it, prints `exit 0 -> 42`, and terminates the sandbox.
+Boot a Tenki sandbox from Python, run `python3 -c "print(6 * 7)"` in it, print `exit 0 -> 42`, and terminate the sandbox. It uses only the official [`tenki`](https://pypi.org/project/tenki/) SDK. For the Node version, see [Run code in a sandbox](../run-code-in-a-sandbox/).
 
-About 5 minutes.
+## Quick start
 
-Each run boots a real sandbox in your Tenki workspace, and sandboxes are billed per second. The `with` block in `run.py` terminates it when the script finishes.
+You need:
 
-## Why bother
+- Python 3.10 or later (the `tenki` package requires it). [uv](https://docs.astral.sh/uv/) is optional.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
 
-This is the core Tenki loop: boot a disposable sandbox, run code in it, read the output, throw the VM away. It uses the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK and nothing else, so it's the smallest working starting point before you wire a sandbox into an agent. It is the Python twin of [`run-code-in-a-sandbox`](../run-code-in-a-sandbox/) (Node).
-
-## Install
-
-You need Python 3.10 or newer (the `tenki` package requires it). Get the example from the repo:
+### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
 cd cookbook/examples/run-code-python
-```
-
-Every later command runs from this directory. Create a virtual environment and install the SDK. `requirements.txt` holds one line, `tenki>=1.4.1`.
-
-```bash
-uv venv --python 3.12                      # or: python3.11 -m venv .venv
-uv pip install -r requirements.txt         # the tenki SDK
+uv venv --python 3.12
+uv pip install -r requirements.txt   # tenki>=1.4.1
 ```
 
 Without uv: `python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt`.
 
-## Authenticate
-
-Create a `tk_` API key at https://app.tenki.cloud and export it. A `tk_` API key is the only credential the SDK accepts.
+### 2. Set your API key
 
 ```bash
 export TENKI_API_KEY=tk_...
 ```
 
-If you use the Tenki CLI, `tenki login --api-key <key>` stores the key in `~/.config/tenki/config.yaml`, and `run.py` reads it from there when no environment variable is set. Tenki infers the workspace from the key, so a workspace ID is optional. Set `TENKI_WORKSPACE_ID` only to pick one explicitly. This is how `run.py` resolves both:
+`run.py` checks `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then the key that `tenki login --api-key <key>` saves in `~/.config/tenki/config.yaml`. Tenki infers the workspace from the key. Set `TENKI_WORKSPACE_ID` only to pick one explicitly.
 
-```python
-# A tk_ API key — the only credential the SDK accepts — from env (CI) or the
-# CLI's config file (local).
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
-
-opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
-if workspace_id:
-    opts["workspace_id"] = workspace_id
-```
-
-`TENKI_AUTH_TOKEN` is checked first, then `TENKI_API_KEY`, then the config file.
-
-## Use it
+### 3. Run
 
 ```bash
-.venv/bin/python run.py                    # exit 0 -> 42
+.venv/bin/python run.py
 ```
 
-Run it with the venv's Python (or activate the venv first), since that's where `tenki` is installed. The work happens at the end of `run.py`:
+```
+exit 0 -> 42
+```
+
+### 4. Verify
+
+```bash
+node verify.mjs      # or: .venv/bin/python verify.py
+```
+
+```
+✓ run-code-python: create → exec python3 → 42 → dispose
+```
+
+`verify.py` makes the same calls as `run.py` and asserts exit code `0` and stdout `42`. The `✓` prints after the sandbox is terminated, so a failed terminate also fails the check. `verify.mjs` is a shim for CI: it runs `verify.py` with `.venv/bin/python` if it exists, otherwise `$PYTHON` or `python3`.
+
+## The code
+
+The end of `run.py` does the work:
 
 ```python
 # `Sandbox.create(...)` boots a sandbox and waits until it's RUNNING (~2s).
@@ -69,60 +64,28 @@ with Sandbox.create(**opts) as sandbox:
     print(f"exit {result.exit_code} -> {result.stdout_text.strip()}")  # exit 0 -> 42
 ```
 
-`Sandbox.create(...)` boots a 1-core, 1024 MB sandbox and blocks until it's `RUNNING`, about 2 seconds. Leaving the `with` block terminates the VM, including when the code inside raises, so an error doesn't leave a sandbox running. Under the hood, `__exit__` calls `close()`, which is an alias for `terminate` and issues a real `TerminateSession`. If you don't use `with`, call `sandbox.terminate()` yourself.
+`opts` is `{"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}`, plus `workspace_id` when one is set.
 
-## Why `exec` takes arguments, not a command string
+## Things to know
 
-`exec(command, *args)` runs a bare binary with its arguments and does no shell splitting. Each argument goes through as-is, so multi-line, model-generated code travels as a single `-c` argument with no quoting or escaping to get wrong.
-
-The flip side is that shell syntax such as `&&`, pipes and `$VAR` doesn't work unless you ask for a shell. For a shell one-liner, run `sh -c`: `sandbox.exec("sh", "-c", "echo hi && ls")`.
-
-## Check it works
-
-```bash
-node verify.mjs      # or: .venv/bin/python verify.py
-```
-
-On success it prints:
-
-```
-✓ run-code-python: create → exec python3 → 42 → dispose
-```
-
-`verify.py` boots a live sandbox with your key, runs `python3 -c "print(6 * 7)"`, asserts exit code `0` and stdout `42`, and disposes the sandbox. The `✓` line prints only after the `with` block exits, so a failed terminate also fails the check. No model key is needed, because this example has no model in it. The check runs `verify.py`, not `run.py`, though the two make the same calls.
-
-`verify.mjs` is a thin shim so the cookbook's CI, which runs `node verify.mjs` in every example, can run the Python. It picks the interpreter like this, then exits with `verify.py`'s status:
-
-```js
-const py = existsSync(".venv/bin/python") ? ".venv/bin/python" : process.env.PYTHON || "python3";
-```
-
-[`crewai-code-interpreter`](../crewai-code-interpreter/) uses the same pattern. CI runs it on Node 20 and Python 3.12, with only `TENKI_API_KEY` set.
+- **The `with` block terminates the sandbox**, even when the code inside raises. Without `with`, call `sandbox.terminate()` yourself. Sandboxes are billed per second.
+- **`exec` takes arguments, not a command string.** Each argument passes through unchanged, so multi-line code needs no quoting. For shell syntax (`&&`, pipes, `$VAR`), run a shell: `sandbox.exec("sh", "-c", "echo hi && ls")`.
+- **File methods are confined to `/home/tenki`.** Use relative paths. Commands run with `exec` can write anywhere.
 
 ## Troubleshooting
 
-**❌ ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.``** (from `verify.py`), or `missing auth token: set TENKI_AUTH_TOKEN or TENKI_API_KEY` (from `run.py`). No key in the environment or in `~/.config/tenki/config.yaml`. Export `TENKI_API_KEY`, or run `tenki login --api-key <key>`.
-
-**❌ `invalid auth token: expected an API key or service token starting with tk_`.** The key you set doesn't start with `tk_`. The SDK accepts only `tk_` keys. Create one at https://app.tenki.cloud.
-
-**❌ `ModuleNotFoundError: No module named 'tenki'`.** You ran the script with a Python outside the venv, where the SDK isn't installed. Use `.venv/bin/python run.py`, or activate `.venv` first.
-
-**❌ pip or uv can't find a version that satisfies `tenki>=1.4.1`.** Your Python is older than 3.10, which the `tenki` package requires. Recreate the venv with a newer Python, for example `uv venv --python 3.12`.
-
-**❌ `permission_denied … path outside workdir` when you add file reads or writes.** The SDK's file methods are confined to `/home/tenki`, the sandbox's working directory. Use relative paths. Shell commands run with `exec` can write anywhere.
-
-**❌ `✗ AssertionError: unexpected result: exit …, stdout …, stderr …`.** The sandbox booted, but `python3 -c "print(6 * 7)"` didn't exit `0` with `42`. The message includes the command's stdout and stderr; start there.
-
-## FAQ
-
-**When shouldn't I use this?** When you're on Python older than 3.10, which the SDK doesn't support. When your stack is Node: use [`run-code-in-a-sandbox`](../run-code-in-a-sandbox/) instead. And when you want an agent that writes and runs its own code: this example runs one hard-coded command with no model in the loop, so start from an agent example such as [`crewai-code-interpreter`](../crewai-code-interpreter/).
-
-**Do I need a workspace ID?** No. Tenki infers the workspace from your API key. `run.py` passes `workspace_id` only when `TENKI_WORKSPACE_ID` (or a `current_workspace_id` line in the config file) is set.
+| Error | Fix |
+| --- | --- |
+| ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.`` or `missing auth token` | Export `TENKI_API_KEY` or run `tenki login --api-key <key>`. |
+| `invalid auth token: expected an API key or service token starting with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `ModuleNotFoundError: No module named 'tenki'` | Run with `.venv/bin/python`, or activate `.venv`. |
+| pip or uv can't satisfy `tenki>=1.4.1` | Your Python is older than 3.10. Recreate the venv with `uv venv --python 3.12`. |
+| `permission_denied … path outside workdir` | Use a path under `/home/tenki` for SDK file calls. |
+| `✗ AssertionError: unexpected result: exit …` | The sandbox booted but the command failed. The message includes its stdout and stderr. |
 
 ## Related
 
-- [`tenki` on PyPI](https://pypi.org/project/tenki/) and its source, [LuxorLabs/tenki-sdk-python](https://github.com/LuxorLabs/tenki-sdk-python)
-- Official SDK and full API: [tenki.cloud/docs/sandbox/sdk](https://tenki.cloud/docs/sandbox/sdk)
-- Tenki docs: https://tenki.cloud/docs
-- [`run-code-in-a-sandbox`](../run-code-in-a-sandbox/): the same loop in Node
-- [`crewai-code-interpreter`](../crewai-code-interpreter/): a CrewAI code-interpreter tool that runs Python in a Tenki sandbox, verified through the same `verify.mjs` shim
+- [`tenki` on PyPI](https://pypi.org/project/tenki/) and [LuxorLabs/tenki-sdk-python](https://github.com/LuxorLabs/tenki-sdk-python)
+- [Sandbox SDK guide](https://tenki.cloud/docs/sandbox/sdk)
+- [Run code in a sandbox](../run-code-in-a-sandbox/): the same loop in Node
+- [CrewAI](../crewai-code-interpreter/): an agent that runs its own Python in a sandbox, verified with the same shim

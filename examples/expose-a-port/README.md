@@ -1,16 +1,15 @@
-# How to get a public preview URL for a server in a Tenki sandbox
+# Expose a port
 
-`node run.mjs` boots a sandbox, starts a Python HTTP server in it, prints the server's `previewUrl`, fetches that URL from your machine, and prints `GET 200 -> Hello from a Tenki sandbox!`. `node verify.mjs` prints a `✓` line.
+Start an HTTP server inside a Tenki sandbox, expose its port with `sandbox.exposePort()`, and fetch the public HTTPS preview URL from your machine. Anyone with the URL can reach the server while it is exposed: a browser, a webhook, or another service.
 
-About 2 minutes once you have an API key. In CI, `npm install` and `node verify.mjs` finish in about 6 seconds together.
+## Quick start
 
-`run.mjs` uses top-level `await using`, which needs Node 24 or newer. Node 22 cannot parse it. `verify.mjs` does the same work with `try`/`finally` and runs on Node 20, which is what CI uses.
+You need:
 
-## Why bother
+- Node.js 24 or later for `run.mjs`, which uses top-level `await using`. `verify.mjs` runs on Node 20.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
 
-`sandbox.exposePort()` maps a port inside a disposable Tenki sandbox at the Tenki gateway and returns a public HTTPS preview URL. Anyone with that URL can reach the server inside the sandbox's sandbox: your machine, a browser, or a webhook. The whole flow is one short script built on the official [`@tenkicloud/sandbox`](https://www.npmjs.com/package/@tenkicloud/sandbox) SDK.
-
-## Install
+### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
@@ -18,31 +17,43 @@ cd cookbook/examples/expose-a-port
 npm install
 ```
 
-Every later command runs from this directory.
-
-`package.json` installs one dependency, `@tenkicloud/sandbox` 1.4.1 or later. You need Node 24+ for `run.mjs` and Node 20+ for `verify.mjs`.
-
-## Authenticate
-
-The SDK needs a Tenki `tk_` API key. Create one at https://app.tenki.cloud, then export it:
+### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...
+export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
 ```
 
-`run.mjs` passes `process.env.TENKI_AUTH_TOKEN` to `new TenkiSandbox()`. If that's unset, the SDK falls back to `TENKI_API_KEY`, which is the only variable CI sets. `run.mjs` doesn't read the key that `tenki login --api-key <key>` stores in `~/.config/tenki/config.yaml`; `verify.mjs` does.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
-With a workspace API key you don't need `TENKI_WORKSPACE_ID`, because Tenki infers the workspace from the key. Both scripts pass `TENKI_WORKSPACE_ID` to `createAndWait` if you set it.
+### 3. Run
 
-## Use it
+```bash
+node run.mjs
+```
 
-This is the whole of `run.mjs`:
+```text
+preview URL: https://…
+GET 200 -> Hello from a Tenki sandbox!
+```
+
+The URL stops working when the script exits, because `await using` terminates the sandbox.
+
+### 4. Verify
+
+```bash
+node verify.mjs
+```
+
+```text
+  preview URL: https://…
+✓ expose-a-port: server → exposePort → host GET 200 → "Hello from Tenki 68n1b3"
+```
+
+`verify.mjs` writes a page with a random suffix, exposes port 8000, fetches the preview URL from your machine with retries, and checks for status `200` and that suffix. It terminates the sandbox either way.
+
+## The code
 
 ```js
-// Expose a port from a Tenki sandbox and get a public preview URL.
-// Start a tiny HTTP server in the sandbox, expose its port, fetch the URL from the host.
-import { TenkiSandbox } from "@tenkicloud/sandbox";
-
 const PORT = 8000;
 const BODY = "Hello from a Tenki sandbox!";
 
@@ -76,29 +87,12 @@ const res = await fetch(previewUrl);
 console.log(`GET ${res.status} -> ${(await res.text()).trim()}`); // 200 -> Hello from a Tenki sandbox!
 ```
 
-Run it:
+## How it works
 
-```bash
-node run.mjs
-```
-
-It prints two lines:
-
-```text
-preview URL: https://…
-GET 200 -> Hello from a Tenki sandbox!
-```
-
-The first line is the URL Tenki returned. The second is your machine fetching it. The URL stops working once `run.mjs` exits; the next section explains why.
-
-## How the preview URL is made
-
-1. The sandbox accepts inbound traffic. `allowInbound: true` lets the Tenki gateway route public traffic to the sandbox port. In SDK 1.4.1 inbound is on by default, so the option makes the default explicit. It's a create-time setting: a sandbox created with `allowInbound: false` rejects `exposePort` with `InboundDisabledError`, and you can't turn inbound on afterwards. Outbound access isn't used here: your machine does the fetching, and the sandbox only listens.
-2. The server outlives the `exec()` call. `exec()` blocks until its command exits, so a foreground `python3 -m http.server` would never return. The command backgrounds the server with `setsid … >/tmp/server.log 2>&1 </dev/null &` so it keeps running after `exec()` returns, and `sleep 1` gives it a second to start before the port is exposed.
-3. `sandbox.exposePort(port, { ttlMs?, slug? })` maps the sandbox port at the Tenki gateway and returns an [`ExposedPort`](https://www.npmjs.com/package/@tenkicloud/sandbox). Its fields are `port`, `previewUrl`, and the optional `expiresAt`, `previewUrlId`, `slug`, `wildcard`, `wildcardStatus` and `wildcardStatusReason`. `previewUrl` is a real public HTTPS endpoint. Use it as returned: Tenki's docs say the host pattern is not a stable contract, so don't build hostnames yourself.
-4. Your machine fetches the URL with a plain `fetch(previewUrl)`, the same way a browser would.
-
-The first requests may need a moment while the server and the gateway route warm up. `run.mjs` fetches once. `verify.mjs` retries up to 15 times, 2 seconds apart, and this is the loop to copy if your server takes a while to start:
+- **Inbound is a create-time setting.** `allowInbound` is on by default in SDK 1.4.1; `run.mjs` sets it explicitly. A sandbox created with `allowInbound: false` rejects `exposePort` with `InboundDisabledError`, and inbound cannot be turned on later.
+- **Background the server.** `exec()` waits for its command to exit, so start long-running servers with `setsid … >log 2>&1 </dev/null &`.
+- **Use `previewUrl` as returned.** `exposePort(port, { ttlMs?, slug? })` returns `{ port, previewUrl, expiresAt?, previewUrlId?, slug?, wildcard?, wildcardStatus?, wildcardStatusReason? }`. The hostname pattern is not a stable contract, so don't build URLs yourself.
+- **Retry the first fetch.** The server and gateway route can take a moment to warm up. `run.mjs` fetches once; `verify.mjs` retries up to 15 times, 2 seconds apart:
 
 ```js
   // Fetch from the host; retry while the server + gateway warm up.
@@ -114,54 +108,31 @@ The first requests may need a moment while the server and the gateway route warm
   }
 ```
 
-To manage the mapping:
+## Managing the URL
 
-- Pass `ttlMs` to make the mapping expire on its own. Without it, the SDK sends no expiry with the request.
-- Pass a `slug` (`exposePort(PORT, { slug: "my-app" })`) to ask for a named exposure instead of a generated hostname. See the FAQ for when that hostname stays the same across sessions.
-- `sandbox.unexposePort(port)` tears the mapping down, and `sandbox.listExposedPorts()` lists what's live.
-- `await using` disposes the sandbox, and its preview URL with it, when the scope ends: the `Session` that `createAndWait` returns is an `AsyncDisposable`, and disposing it terminates the sandbox. That's why the URL from `run.mjs` stops working once the script exits.
+- `ttlMs` makes the mapping expire on its own. Without it, no expiry is set.
+- `slug` (`exposePort(PORT, { slug: "my-app" })`) asks for a named exposure. Named exposures keep the same hostname across sessions when served under a preview slug reserved for your workspace (a Team-plan feature in workspace Settings). Starter workspaces get a generated hostname per session. If `wildcard` is `true`, wait for `wildcardStatus` to be `READY`, and read `wildcardStatusReason` if it is `FAILED`.
+- `sandbox.unexposePort(port)` removes a mapping, and `sandbox.listExposedPorts()` lists the live ones.
+- The URL stops serving when you unexpose it, when `ttlMs` runs out, while the sandbox is paused, and when the sandbox ends. Tenki doesn't pause idle sandboxes, so pass `maxDurationMs` to `createAndWait` if a killed script could leave one running.
 
-The site lives in `/home/tenki`, the sandbox's working directory. The SDK's own file methods (`writeFile`, `readFile`) are confined to it. Shell commands run with `exec` can write anywhere, which is why the server command can send its log to `/tmp/server.log`.
-
-## Check it works
-
-```bash
-node verify.mjs
-```
-
-When it passes, it prints the URL and a `✓` line. The last six characters of the body are random on each run:
-
-```text
-  preview URL: https://…
-✓ expose-a-port: server → exposePort → host GET 200 → "Hello from Tenki 68n1b3"
-```
-
-`verify.mjs` boots a sandbox with inbound enabled, starts the HTTP server, exposes port 8000, fetches the preview URL from your machine, and checks for status `200` and a body containing the random string it wrote in this run. On failure it prints a `✗` line with the reason and exits non-zero. It terminates the sandbox either way. It reads the key from `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then the `auth_token` in `~/.config/tenki/config.yaml`. It takes the workspace from `TENKI_WORKSPACE_ID`, or from `current_workspace_id` in that file if one is there. CI runs it on Node 20 with only `TENKI_API_KEY`.
-
-A pass proves your key can boot a sandbox with inbound enabled and that the gateway serves the exposed port at a public HTTPS URL your machine can reach. It doesn't run `run.mjs`, and it doesn't exercise `slug`, `ttlMs`, `unexposePort` or `listExposedPorts`.
+The server is public while exposed. This example adds no auth in front of it.
 
 ## Troubleshooting
 
-- ❌ **``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.``** `verify.mjs` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or `~/.config/tenki/config.yaml`. Export a `tk_` key, or run `tenki login --api-key <key>`.
-- ❌ **`missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY or use authToken option` from `node run.mjs`.** Neither variable is set in this shell, and `run.mjs` doesn't read `~/.config/tenki/config.yaml`, so `tenki login` alone isn't enough here. Export the key in the shell you run it from.
-- ❌ **`invalid auth token - API keys and service tokens must start with tk_`.** SDK 1.x accepts only `tk_` API keys. Create one at https://app.tenki.cloud.
-- ❌ **`node run.mjs` fails with a `SyntaxError` at `await using`.** Your Node is older than 24 and can't parse top-level `await using`. Upgrade to Node 24, or run `node verify.mjs`, which uses `try`/`finally`.
-- ❌ **`exposePort` throws `InboundDisabledError`.** The sandbox was created with `allowInbound: false`, and inbound can't be enabled on an existing sandbox. Create a new sandbox with `allowInbound: true` (the default), as `run.mjs` does.
-- ❌ **`exec()` doesn't return after you change the server command.** The server is running in the foreground, or still holds `exec`'s output open. Background it with `setsid … >log 2>&1 </dev/null &`, as `run.mjs` does.
-- ❌ **`run.mjs` prints a `GET` line with a status other than `200`, or `fetch` throws.** The request arrived before the server and the gateway route were ready, and `run.mjs` doesn't retry. Run it again, or add the retry loop from `verify.mjs` shown above.
-
-## FAQ
-
-**When shouldn't I use this?** When the server shouldn't be public: anyone with the URL can reach it while it's exposed, and this example doesn't add any auth in front of it. When you need a URL that outlives the sandbox. When you need the same hostname every session on a workspace without a reserved preview slug: by default each session gets a generated hostname (see the next question).
-
-**Can I get the same URL every time?** Pass a `slug` to ask for a named exposure. Per Tenki's docs, named exposures stay stable from one session to the next when they're served under a preview slug reserved for your workspace, which is a Team-plan feature you set up in your workspace Settings. Starter workspaces get generated per-session hostnames instead. If the returned `wildcard` is `true`, the URL doesn't serve traffic until `wildcardStatus` is `READY`; read `wildcardStatusReason` when it's `FAILED`.
-
-**How long does the URL stay up?** It stops working when you call `unexposePort`, when the `ttlMs` you passed runs out, or when the sandbox ends, and it serves no traffic while the sandbox is paused. Both scripts end the sandbox when they finish or throw. If the process is killed before that, the sandbox keeps running, because Tenki doesn't pause idle sandboxes. Pass `maxDurationMs` to `createAndWait` to cap the sandbox's lifetime.
+| Problem | Fix |
+| --- | --- |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
+| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key in this shell. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `SyntaxError` at `await using` | Use Node 24 or later, or run `verify.mjs`. |
+| `InboundDisabledError` from `exposePort` | Create the sandbox with `allowInbound: true`. |
+| `exec()` never returns after changing the server command | Background the server with `setsid … >log 2>&1 </dev/null &`. |
+| `run.mjs` gets a non-200 status or `fetch` throws | The route wasn't ready yet. Run it again, or add the retry loop above. |
 
 ## Related
 
-- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox), the SDK this example uses.
-- [Tenki docs: port exposure and networking](https://tenki.cloud/docs/sandbox/sessions#port-exposure-and-networking), including named exposures and the workspace preview slug.
-- [Tenki docs](https://tenki.cloud/docs). Built on [Tenki](https://tenki.cloud) sandboxes.
-- [`../mcp-tenki-sandbox/`](../mcp-tenki-sandbox/): give an MCP client such as Claude or Cursor a Tenki sandbox, including a `tenki_create_preview_url` tool for servers the agent starts.
-- [`../snapshots-pause-resume/`](../snapshots-pause-resume/): pause and resume a sandbox. A paused sandbox serves no preview traffic until it's `RUNNING` again.
+- [Tenki docs: port exposure and networking](https://tenki.cloud/docs/sandbox/sessions#port-exposure-and-networking)
+- [MCP server](../mcp-tenki-sandbox/): includes a `tenki_create_preview_url` tool for servers an agent starts
+- [Run a full-stack app](../agent-fullstack-app/): an API, frontend, and database behind one preview URL
+- [Pause, snapshot, and resume](../snapshots-pause-resume/)
+- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox)
