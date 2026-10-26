@@ -1,0 +1,9 @@
+{
+  "name": "anchor-browser-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — drive an Anchor Browser remote browser over CDP from Tenki's tenki/anchor sandbox image.",
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1"
+  }
+}
