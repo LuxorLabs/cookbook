@@ -80,6 +80,10 @@ npm install
 node verify.mjs
 ```
 
+```text
+✓ stickydisk-tenki: LuxorLabs/stickydisk@v1 accepts workflow.yml → no runner capability → source=fallback (job runs cold) → fail-on-error fails → post no-op
+```
+
 [`verify.mjs`](verify.mjs) needs no runner or credentials. It downloads `LuxorLabs/stickydisk@v1`, checks that every `with:` key and output in `workflow.yml` is declared in its `action.yml`, then runs the action's `dist/main.js` and `dist/post.js` with no sticky disk capability. It asserts the mount falls back (`mounted=false`, `source=fallback`), that `fail-on-error: true` fails the step, and that the post step does nothing when nothing was mounted. Set `STICKYDISK_REF=v1.0.5` to check a pinned tag. The mount itself only works on a Tenki runner.
 
 ## Inputs and outputs
