@@ -1,14 +1,14 @@
 /**
- * Runs every examples/<name>/verify.mjs and reports pass/fail.
- * Exit non-zero if any example fails — this is what CI gates on.
- * (Assumes each example's deps are installed; CI installs per-example first.)
+ * Run every examples/<name>/verify.mjs from the repository root.
+ * Install each example's dependencies first. Exits non-zero if any example fails.
+ * CI uses .github/workflows/verify.yml, which skips a few examples.
  */
 import { readdirSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = dirname(dirname(fileURLToPath(import.meta.url)));
+const root = dirname(fileURLToPath(import.meta.url));
 const examplesDir = join(root, "examples");
 
 const names = readdirSync(examplesDir, { withFileTypes: true })
