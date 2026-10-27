@@ -1,0 +1,5 @@
+# The Tenki SDK. It provides the tenki_sandbox module the Hermes backend imports.
+tenki>=1.4.1,<2
+# All the backend's import chain needs from Hermes' own dependencies.
+PyYAML>=6.0
+requests>=2.31

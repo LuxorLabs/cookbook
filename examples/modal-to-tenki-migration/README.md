@@ -1,66 +1,71 @@
-# How to port a Modal sandbox script to Tenki
+# Modal to Tenki
 
-`run.py` prints `42 · exit 0` from a Tenki sandbox, `verify.py` passes, and the page has a Modal-to-Tenki API map for porting the rest of a script.
+Port a [Modal](https://modal.com) sandbox script to Tenki with the [`tenki`](https://pypi.org/project/tenki/) Python SDK. Both run the same loop: create a sandbox, run a command, read the output, dispose. This folder has a runnable Tenki port, an API map, and the differences that matter.
 
-About 5 minutes to install, run, and verify the example.
+The change that needs thought: Modal's `exec` returns a live process you drain and wait on. Tenki's `exec` blocks and returns a finished result. See [`exec` returns a result](#exec-returns-a-result-not-a-live-process).
 
-This example does not call Modal. The Modal code appears as reference, in `run.py`'s docstring and in comments. `run.py` and `verify.py` exercise the Tenki side: create, `exec`, a file round-trip, and dispose. The other rows of the API map come from the two SDKs' sources and are not run here.
+## Set it up with a coding agent
 
-## Why bother
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
-Modal and Tenki both give you a disposable cloud sandbox with the same core loop: create → run a command → capture output → dispose. Moving that loop to Tenki is a small, mechanical change with the official [`tenki`](https://tenki.cloud/docs/sandbox/sdk) Python SDK. The one change that needs thought is `exec`: Modal hands you a live process, Tenki hands you a finished result.
+```text
+Help me move my Modal sandbox code to Tenki, using the guide at https://github.com/LuxorLabs/cookbook/tree/main/examples/modal-to-tenki-migration.
+1. Clone https://github.com/LuxorLabs/cookbook and cd into examples/modal-to-tenki-migration. Create a Python 3.10+ virtualenv and install requirements.txt.
+2. The scripts need a Tenki API key (starts with tk_) in TENKI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+3. Run .venv/bin/python run.py and confirm it prints "42 · exit 0", then run node verify.mjs.
+4. Read the API map and "Other differences" in that README.md. Then find every Modal sandbox call in my project and port it to the tenki SDK: drop modal.App, replace stdout.read()/wait() with the finished result's stdout_text/exit_code (or sb.start() where I stream output), switch file calls to relative paths with (path, data) order, and replace idle_timeout with max_duration.
+5. Show me the diff before you change anything you're unsure about.
+```
 
-## Install
+## Quick start
 
-You need Python 3.10 or newer. Get the example:
+You need:
+
+- Python 3.10 or later. [uv](https://docs.astral.sh/uv/) is optional.
+- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud). You don't need a Modal account or the `modal` package.
+
+### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
 cd cookbook/examples/modal-to-tenki-migration
-```
-
-Every later command runs from this directory. Create a virtual environment and install the SDK:
-
-```bash
 uv venv --python 3.12                      # or: python3.11 -m venv .venv
-uv pip install -r requirements.txt         # or: .venv/bin/pip install -r requirements.txt
+uv pip install -r requirements.txt         # tenki>=1.4.1
 ```
 
-`requirements.txt` has one line, `tenki>=1.4.1`. You don't need the `modal` package.
-
-## Authenticate
-
-Tenki takes a `tk_` API key. Create one at https://app.tenki.cloud, then either export it:
+### 2. Set your API key
 
 ```bash
 export TENKI_API_KEY=tk_...
 ```
 
-or store it with the Tenki CLI:
+Or run `tenki login --api-key <key>`. The SDK reads `TENKI_AUTH_TOKEN` and `TENKI_API_KEY` itself but not the CLI's `~/.config/tenki/config.yaml`; `run.py` and `verify.py` read that file with a small `cfg()` helper. Keep a helper like it in your port if you rely on `tenki login`.
+
+### 3. Run the port
 
 ```bash
-tenki login --api-key <key>
+.venv/bin/python run.py
 ```
 
-`tenki login` writes the key to `~/.config/tenki/config.yaml`. The SDK reads `TENKI_AUTH_TOKEN` or `TENKI_API_KEY` from the environment by itself, but it does not read that file: `run.py` and `verify.py` fall back to it with their own small `cfg()` helper. If you port your script and rely on `tenki login`, keep a helper like that or set the environment variable.
+```
+42 · exit 0
+```
 
-The workspace is inferred from the key, so you don't need a workspace ID. Set `TENKI_WORKSPACE_ID` only if you want to choose one explicitly.
-
-For comparison, Modal authenticates implicitly from `~/.modal.toml` (written by `modal token new`) or from `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`.
-
-## Use it
+### 4. Verify
 
 ```bash
-.venv/bin/python run.py                    # 42 · exit 0
+node verify.mjs      # or: .venv/bin/python verify.py
 ```
 
-`run.py` creates a sandbox with 1 CPU core and 1024 MB of memory. `create()` boots the sandbox and waits until it is running (about 2 seconds, per the script's comment). The script then runs `python3 -c "print(6 * 7)"`, prints the output and exit code, and disposes the sandbox when the `with` block ends.
+```
+✓ modal-to-tenki-migration: create (<id>…) → exec python3 + sh + fs round-trip → 42 → dispose
+```
 
-## Port your Modal script
+`verify.py` runs a bare binary, a shell one-liner, and a file round-trip in a live sandbox, asserts each result, and disposes of the sandbox. `verify.mjs` is a shim for CI that runs `verify.py` with `.venv/bin/python`, `$PYTHON`, or `python3`.
 
-### The loop, side by side
+## The loop, side by side
 
-Modal, from the docstring at the top of `run.py`:
+Modal, from the docstring in `run.py`:
 
 ```python
     import modal
@@ -94,39 +99,39 @@ with Sandbox.create(**opts) as sandbox:
     print(result.stdout_text.strip(), "· exit", result.exit_code)  # 42 · exit 0
 ```
 
-There is no `App` object on Tenki. Modal ties every sandbox to a `modal.App`, so `modal.App.lookup(...)` comes first. A Tenki sandbox goes straight into the workspace your key belongs to, or the one you pass as `workspace_id`.
+Tenki has no `App` object. A sandbox goes into the workspace your key belongs to, or the `workspace_id` you pass.
 
-### API map
+## API map
 
 | Concept | Modal (`modal`) | Tenki (`tenki`) |
 | --- | --- | --- |
 | Install | `pip install modal` | `pip install tenki` |
-| Import | `import modal` | `from tenki import Sandbox` |
-| Auth | `modal token new` (writes `~/.modal.toml`), or `MODAL_TOKEN_ID` + `MODAL_TOKEN_SECRET` | a `tk_` API key: `TENKI_API_KEY` or `TENKI_AUTH_TOKEN`, or `Sandbox.create(auth_token=…)` |
-| App handle | `app = modal.App.lookup("name", create_if_missing=True)` (required first) | none; the key's workspace holds the sandbox (`workspace_id=…` is optional) |
+| Import | `import modal` | `from tenki import Sandbox` (also `Client`) |
+| Auth | `modal token new` (`~/.modal.toml`), or `MODAL_TOKEN_ID` + `MODAL_TOKEN_SECRET` | `tk_` key in `TENKI_API_KEY` or `TENKI_AUTH_TOKEN`, or `Sandbox.create(auth_token=…)` |
+| App handle | `modal.App.lookup("name", create_if_missing=True)` | None. `workspace_id=…` is optional. |
 | Create | `modal.Sandbox.create(app=app)` | `Sandbox.create(auth_token=…, cpu_cores=1, memory_mb=1024)` |
-| Run a command | `p = sb.exec("python", "-c", "…")` → live process | `r = sb.exec("python3", "-c", "…")` → finished result |
-| stdout / stderr | `p.stdout.read()` / `p.stderr.read()` (drain streams) | `r.stdout_text` / `r.stderr_text` (already captured) |
-| Exit code | `p.wait()` returns it; `p.returncode` works only after `wait()` | `r.exit_code` |
+| Run a command | `p = sb.exec("python", "-c", "…")` (live process) | `r = sb.exec("python3", "-c", "…")` (finished result) |
+| stdout / stderr | `p.stdout.read()` / `p.stderr.read()` | `r.stdout_text` / `r.stderr_text` |
+| Exit code | `p.wait()`; `p.returncode` after `wait()` | `r.exit_code` |
 | CPU / memory | `create(app=app, cpu=1, memory=1024)` | `create(…, cpu_cores=1, memory_mb=1024)` |
 | Env vars | `sb.exec(cmd, env={…})` | `sb.exec(cmd, env={…})` |
-| Working dir | `sb.exec(cmd, workdir="…")` (must be absolute) | `sb.exec(cmd, cwd="…")` (relative paths resolve under `/home/tenki`) |
+| Working dir | `sb.exec(cmd, workdir="…")` (absolute) | `sb.exec(cmd, cwd="…")` (relative to `/home/tenki`) |
 | Write a file | `sb.filesystem.write_text(data, "/abs/path")` | `sb.fs.write_text(path, data)` |
 | Read a file | `sb.filesystem.read_text("/abs/path")` | `sb.fs.read_text(path)` |
 | Sandbox ID | `sb.object_id` | `sb.id` |
 | Reconnect | `modal.Sandbox.from_id(id)` | `Client(auth_token=…).get(id)` |
 | List sandboxes | `modal.Sandbox.list(app_id=…)` | `Client(auth_token=…).list()` |
-| Networking | on by default; `create(block_network=True)` to disable | on by default; `create(allow_outbound=False)` to disable |
-| Lifetime cap | `create(timeout=…)`, in seconds (default 300) | `create(max_duration=…)`, in seconds or a `timedelta` |
-| Dispose | `sb.terminate()` | `sb.terminate()`, or let `with` dispose it |
+| Networking | On; `create(block_network=True)` to disable | On; `create(allow_outbound=False)` to disable |
+| Lifetime cap | `create(timeout=…)` seconds (default 300) | `create(max_duration=…)` seconds or `timedelta` |
+| Dispose | `sb.terminate()` | `sb.terminate()`, or a `with` block |
 
-`Client` is also importable from `tenki`. The Modal file rows use `sb.filesystem`, added in Modal 1.4.0. Modal 1.6.0 (2026-09-28) removed `Sandbox.open()` and `modal.file_io.FileIO`, so if your Modal code still uses `with sb.open(path, "w") as f:`, it has to change on Modal too; see Modal's [filesystem migration guide](https://modal.com/docs/guide/migrate-sandbox-filesystem).
+The Modal file rows use `sb.filesystem`, added in Modal 1.4.0. Modal 1.6.0 removed `Sandbox.open()` and `modal.file_io.FileIO`; see Modal's [filesystem migration guide](https://modal.com/docs/guide/migrate-sandbox-filesystem) if your code still uses `sb.open(...)`.
 
-### `exec` returns a result, not a live process
+## `exec` returns a result, not a live process
 
-This is the change that bites most on a Modal port. Modal's `sb.exec(...)` returns a `ContainerProcess` that you drive yourself: drain `p.stdout.read()`, then call `p.wait()` for the exit code. Tenki's `sb.exec(...)` **blocks until the command finishes** and returns a `CommandResult` with `.stdout_text`, `.stderr_text` and `.exit_code` already set. The stream-then-wait steps collapse into reading attributes.
+Tenki's `sb.exec(...)` blocks until the command finishes and returns a `CommandResult` with `.stdout_text`, `.stderr_text`, and `.exit_code` set. Drop the drain-then-wait steps.
 
-What doesn't change: both run a bare binary and its arguments, with no shell. `sb.exec("echo", "$HOME")` prints a literal `$HOME` on either platform. For pipes, `&&`, globs or variables, ask for a shell explicitly, the same as on Modal. From `verify.py`:
+Both SDKs run a bare binary with no shell, so `sb.exec("echo", "$HOME")` prints `$HOME` on either. For pipes, `&&`, globs, or variables, run a shell. From `verify.py`:
 
 ```python
         # Modal's exec() returns a live process (drain p.stdout.read(), p.wait()).
@@ -142,71 +147,33 @@ What doesn't change: both run a bare binary and its arguments, with no shell. `s
             raise AssertionError(f"sh exec: exit {sh.exit_code}, stdout {sh.stdout_text!r}")
 ```
 
-If your Modal code reads output while the command is still running, `exec` is the wrong port. The Tenki SDK's `sb.start(...)` returns a live process instead (iterate `proc.stdout`, then `proc.wait()`). This example doesn't use it.
+To read output while a command runs, use `sb.start(...)`, which returns a live process: iterate `proc.stdout`, then call `proc.wait()`. This example doesn't use it.
 
-### Files: relative paths, and the arguments swap
+## Other differences
 
-Tenki confines the SDK's file methods to `/home/tenki`, the sandbox's working directory, so write to relative paths. Modal's `sb.filesystem` methods want absolute paths. The argument order also flips: Modal's `write_text(data, remote_path)` becomes Tenki's `write_text(path, data)`. From `verify.py`:
+- **Files use relative paths, and the arguments swap.** SDK file methods are confined to `/home/tenki`. Modal's `write_text(data, remote_path)` becomes `write_text(path, data)`:
 
-```python
-        sb.fs.write_text("migrate.txt", "modal->tenki")
-        back = sb.fs.read_text("migrate.txt")
-```
+  ```python
+          sb.fs.write_text("migrate.txt", "modal->tenki")
+          back = sb.fs.read_text("migrate.txt")
+  ```
 
-Shell commands run with `exec` can still write anywhere in the sandbox.
-
-### Disposal and lifetime
-
-`sb.terminate()` maps 1:1 to Modal's `sb.terminate()`. `Sandbox` is also a context manager, so `with Sandbox.create(...) as sb:` disposes it for you when the block ends. Either way, the sandbox is a sandbox billed per second, and it terminates itself when it reaches its lifetime cap. Set the cap with `max_duration`.
-
-Don't map Modal's `idle_timeout` to Tenki's `idle_timeout_minutes`: the SDK accepts it but ignores it, and Tenki sandboxes don't auto-pause on idle. Use `max_duration`, or call `sb.pause()` yourself. Pausing is free, and a paused sandbox keeps its memory and disk.
-
-## Check it works
-
-```bash
-node verify.mjs      # or: .venv/bin/python verify.py
-```
-
-On success it prints one line, where the part in parentheses is the first 8 characters of the sandbox ID:
-
-```
-✓ modal-to-tenki-migration: create (<id>…) → exec python3 + sh + fs round-trip → 42 → dispose
-```
-
-`verify.py` runs the whole loop against a live sandbox: create, `exec` a bare binary, `exec` a shell one-liner, a `sb.fs` file round-trip, and dispose. It asserts each result and exits non-zero with a `✗ <ErrorType>: <message>` line on any failure after the key check (a missing key prints the `No API key` line below). `verify.mjs` is a thin shim so the cookbook's Node CI harness can run the Python: it invokes `.venv/bin/python verify.py` if `.venv/bin/python` exists (otherwise `$PYTHON`, then `python3`) and exits with its status. This is what CI runs.
-
-A pass proves your key works and the Tenki side of the port behaves as shown, with no Modal account and no model key. It doesn't run `run.py`, touch Modal, or exercise the API map's `env`, `cwd`, reconnect and list rows.
+  Commands run with `exec` can write anywhere.
+- **Use `max_duration` for lifetime.** Don't map Modal's `idle_timeout` to `idle_timeout_minutes`: the SDK accepts it but ignores it, and Tenki doesn't pause idle sandboxes. Use `max_duration`, or call `sb.pause()` yourself. A paused sandbox is free and keeps its memory and disk.
+- **Outbound network is on by default**, as on Modal. Pass `allow_outbound=False` to isolate a sandbox.
 
 ## Troubleshooting
 
-**❌ ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.`` from `verify.py`, or `missing auth token: set TENKI_AUTH_TOKEN or TENKI_API_KEY` from `run.py`.** No key was found in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY` or `~/.config/tenki/config.yaml`. Export `TENKI_API_KEY=tk_...` or run `tenki login --api-key <key>`.
-
-**❌ `invalid auth token: expected an API key or service token starting with tk_`.** The key you passed isn't a Tenki API key, for example a Modal token ID. Create a `tk_` key at https://app.tenki.cloud and use that.
-
-**❌ `permission_denied … path outside workdir` from `sb.fs`.** You passed an absolute path outside `/home/tenki`, which is easy to do when porting Modal code, since Modal's filesystem calls take absolute paths. Use a relative path, or write the file with a shell command through `exec`.
-
-**❌ `$HOME`, a pipe or `&&` comes through literally.** `exec` runs the binary directly, with no shell. Wrap the command: `sb.exec("sh", "-c", "…")`.
-
-## FAQ
-
-**When shouldn't I use this?**
-When your Modal code depends on reading a command's output while it runs: Tenki's `exec` returns only after the command finishes, so you'd port to `sb.start(...)` instead, which this example doesn't cover. When you rely on Modal's `idle_timeout`: Tenki ignores `idle_timeout_minutes` and doesn't auto-pause idle sandboxes, so bound the sandbox with `max_duration` instead. When you're on Python older than 3.10, which the `tenki` SDK requires. And when you need more than the sandbox loop: this example covers create, `exec`, file read and write, and dispose, and nothing more.
-
-**Do I need a Modal account or the `modal` package?**
-No. `requirements.txt` installs only `tenki`, and the Modal code lives in docstrings and comments.
-
-**Do I need a workspace ID?**
-No. Tenki infers the workspace from your API key, and `tenki login` stores only the key. `run.py` and `verify.py` pass `workspace_id` only if they find one, in `TENKI_WORKSPACE_ID` or in a `current_workspace_id` line in `~/.config/tenki/config.yaml`; otherwise the key's workspace is used.
-
-**Is outbound network on?**
-Yes, as on Modal. The Python SDK defaults to `allow_outbound=True`. Pass `create(..., allow_outbound=False)` to lock a sandbox down.
-
-**Why is there a `verify.mjs` in a Python example?**
-The rest of the cookbook is Node, and CI runs every example's verify script on Node 20 and Python 3.12 with only `TENKI_API_KEY` set. `verify.mjs` hands off to `verify.py`, the same pattern as [`run-code-python`](../run-code-python/) and [`crewai-code-interpreter`](../crewai-code-interpreter/).
+| Problem | Fix |
+| --- | --- |
+| ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.`` or `missing auth token` | Export `TENKI_API_KEY` or run `tenki login --api-key <key>`. |
+| `invalid auth token: expected an API key or service token starting with tk_` | That's not a Tenki key (perhaps a Modal token ID). Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `permission_denied … path outside workdir` from `sb.fs` | Modal takes absolute paths; Tenki SDK file calls need paths under `/home/tenki`. Use a relative path. |
+| `$HOME`, a pipe, or `&&` comes through literally | Wrap the command: `sb.exec("sh", "-c", "…")`. |
 
 ## Related
 
-- [`tenki` Python SDK docs](https://tenki.cloud/docs/sandbox/sdk), the package on [PyPI](https://pypi.org/project/tenki/), and its source at [LuxorLabs/tenki-sdk-python](https://github.com/LuxorLabs/tenki-sdk-python)
-- [Tenki docs](https://tenki.cloud/docs) and [tenki.cloud](https://tenki.cloud)
+- [E2B to Tenki](../e2b-to-tenki-migration/) and [Daytona to Tenki](../daytona-to-tenki-migration/) (Node)
+- [Run code with Python](../run-code-python/)
+- [`tenki` SDK docs](https://tenki.cloud/docs/sandbox/sdk) and [LuxorLabs/tenki-sdk-python](https://github.com/LuxorLabs/tenki-sdk-python)
 - [Modal `Sandbox` reference](https://modal.com/docs/sdk/py/latest/Sandbox)
-- [`e2b-to-tenki-migration`](../e2b-to-tenki-migration/) and [`daytona-to-tenki-migration`](../daytona-to-tenki-migration/): the same port from E2B and Daytona, in Node
