@@ -75,6 +75,7 @@ Open the example closest to what you are building and follow its README. Agent-f
 | [Pause, snapshot, and resume](examples/snapshots-pause-resume/) | Preserve a sandbox and pick up where it left off |
 | [Run code with Python](examples/run-code-python/) | The official `tenki` Python SDK |
 | [Run a full-stack app](examples/agent-fullstack-app/) | Serve an API, frontend, and seeded database from one sandbox |
+| [Host a long-running service](examples/host-a-service/) | Keep an app running on a sticky sandbox behind a stable URL, with its data on a volume |
 
 ### Agent frameworks
 
