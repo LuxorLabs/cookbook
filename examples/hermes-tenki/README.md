@@ -1,8 +1,17 @@
 # Hermes Agent
 
-Run [Hermes Agent](https://github.com/NousResearch/hermes-agent)'s shell tool in a Tenki sandbox instead of on your machine. Hermes runs every shell command through a pluggable terminal backend. This example drives the Tenki backend, `TenkiEnvironment`, directly, with snapshot-and-restore sessions, so it needs a Tenki key and no model key.
+Let the Hermes agent run shell commands on a cloud machine instead of your computer, and keep its files between sessions.
 
-> **Status:** the Tenki backend isn't in a Hermes release. This example pins it from the fork [`opencolin/hermes-tenki`](https://github.com/opencolin/hermes-tenki) at commit `2890bd3` ([opencolin/hermes-tenki#6](https://github.com/opencolin/hermes-tenki/pull/6)), which uses the `tenki` 1.x SDK. Upstream Hermes `main` has a plugin hook for terminal backends (`register_terminal_environment_provider`); once a release includes it, the backend can ship as a plugin.
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) is an open-source AI agent from Nous Research. One of its tools is a terminal: when Hermes decides to run a shell command, it hands the command to a **terminal backend**, the piece that actually runs it. The default backend runs commands on your own machine, and Hermes lets you swap in others.
+
+This example uses a Tenki backend, `TenkiEnvironment`, so every command runs in a Tenki sandbox. It supports two kinds of **session** (one run of the agent on a task):
+
+- An **ephemeral** session deletes the sandbox when it ends.
+- A **persistent** session saves a **snapshot** of the sandbox (a copy of its disk) when it ends, then deletes it. The next session for the same task starts a new sandbox from that snapshot, so the agent's files are still there.
+
+The demo calls the backend directly, the same way Hermes's terminal tool would, so it needs a Tenki key and no model key.
+
+> **Status:** the Tenki backend isn't in a Hermes release yet. This example installs it from a fork, [`opencolin/hermes-tenki`](https://github.com/opencolin/hermes-tenki), at a fixed commit ([opencolin/hermes-tenki#6](https://github.com/opencolin/hermes-tenki/pull/6)). Once a Hermes release supports plugin backends, it can ship as a plugin instead.
 
 ## Set it up with a coding agent
 
@@ -47,7 +56,7 @@ This example reads the key from the environment only.
 python run.py
 ```
 
-`run.py` runs commands in a sandbox, ends the session, starts a new one with the same task ID, and reads back a file the first session wrote:
+`run.py` starts a persistent session, runs a few commands and writes a file, then ends the session. It starts a second session with the same task ID and reads the file back:
 
 ```
 Session 1, sandbox 01a14663-…
@@ -69,7 +78,7 @@ Cleaning up
   deleted snapshot …
 ```
 
-The two sandbox IDs differ: session 2 is a new VM restored from session 1's snapshot.
+The two sandbox IDs differ: session 2 is a new VM started from session 1's snapshot, which is why `notes.txt` is still there.
 
 ### 4. Verify
 
@@ -82,9 +91,9 @@ node verify.mjs      # or: python verify.py
 | Checks | What they cover |
 |---|---|
 | 1 | Hermes' `check_terminal_requirements()` accepts the `tenki` backend |
-| 2–9 | An ephemeral session: cwd is `/home/tenki`; output, exit codes, and stderr come back; cwd carries across calls; stdin arrives byte for byte |
+| 2–9 | An ephemeral session: commands start in `/home/tenki`; output, exit codes, and error output come back; a `cd` carries over to the next command; input sent to a command arrives unchanged |
 | 10 | `cleanup()` terminates the ephemeral VM |
-| 11–12 | A persistent session snapshots on `cleanup()`, and a new session with the same `task_id` reads back the file |
+| 11–12 | A persistent session saves a snapshot on `cleanup()`, and a new session with the same `task_id` reads back the file |
 
 It leaves no sandbox or snapshot behind.
 
@@ -104,11 +113,11 @@ result = env.execute("echo hello")   # {"output": "hello\n", "returncode": 0}
 env.cleanup()
 ```
 
-- **Every `execute()` runs in the same VM.** The working directory carries across calls, exit codes and stderr come back, and stdin is piped byte for byte.
+- **Every `execute()` runs in the same VM.** A `cd` carries over to the next call, exit codes and error output come back, and input is passed through unchanged.
 - **Ephemeral sessions** (`persistent_filesystem=False`) terminate the VM on `cleanup()`.
-- **Persistent sessions** snapshot on `cleanup()`, wait until the snapshot is durable, record its ID in `$HERMES_HOME/tenki_snapshots.json`, and terminate the VM. The next session with the same `task_id` starts from that snapshot. If the snapshot fails, the VM is paused instead, so files aren't lost.
-- **Sandboxes are tagged `hermes-agent`**, with `hermes_task_id` and a per-profile token in metadata, so two Hermes profiles never share sandboxes.
-- **Your `~/.hermes` stays local** unless you turn on `tenki_sync_hermes_home`.
+- **Persistent sessions** take a snapshot on `cleanup()`, wait until it's safely stored, record its ID in `$HERMES_HOME/tenki_snapshots.json`, and terminate the VM. The next session with the same `task_id` starts from that snapshot. If the snapshot fails, the VM is paused instead, so files aren't lost.
+- **Sandboxes are tagged `hermes-agent`**, with `hermes_task_id` and a per-profile token in metadata, so two Hermes profiles (separate Hermes setups on one machine) never share sandboxes.
+- **Your `~/.hermes` folder (Hermes's settings and memory) stays local** unless you turn on `tenki_sync_hermes_home`.
 
 `run.py` and `verify.py` point `HERMES_HOME` at a temporary directory and finish with `teardown()`, which terminates the run's sandboxes and deletes its snapshots.
 

@@ -1,6 +1,16 @@
 # Harbor
 
-Run [Harbor](https://github.com/harbor-framework/harbor) agent evals with each trial in its own Tenki VM. Harbor, from the creators of [Terminal-Bench](https://www.tbench.ai), runs a coding agent (Claude Code, Codex, OpenCode, Goose, mini-swe-agent, Terminus, and others) against a benchmark's tasks, grades every attempt with the task's own tests, and records the trajectory. [`tenki-harbor`](https://github.com/LuxorLabs/tenki-harbor) adds Tenki as a Harbor environment, so trials run in parallel, one VM each, with the task's container running under Docker inside.
+Measure how well a coding agent solves a benchmark, with every attempt running on its own cloud machine.
+
+[Harbor](https://github.com/harbor-framework/harbor), from the creators of the [Terminal-Bench](https://www.tbench.ai) benchmark, runs **evals**: it gives a coding agent (Claude Code, Codex, OpenCode, Goose, mini-swe-agent, Terminus, and others) a set of tasks, checks each attempt with the task's own tests, and reports how many passed. A few terms you'll see:
+
+- A **task** is one problem from a benchmark, packaged with a Docker image to work in and tests that check the answer.
+- A **trial** is one agent's attempt at one task.
+- The **reward** is a trial's score: `1.0` if the tests pass, `0.0` if not. Harbor reports the mean across trials.
+- The **trajectory** is the record of everything the agent did during a trial, which you can browse afterwards.
+- An **environment** is where Harbor runs each trial. By default that's Docker on your machine.
+
+[`tenki-harbor`](https://github.com/LuxorLabs/tenki-harbor) adds Tenki as an environment. Each trial gets its own Tenki VM, with the task's Docker container running inside it, so you can run many trials at once without overloading your machine, and an agent can't affect anything outside its VM.
 
 ## Set it up with a coding agent
 
@@ -50,7 +60,7 @@ source .venv/bin/activate
 export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
 ```
 
-`harbor run` reads the key from the environment only and exits in preflight without it. A `tenki login` key isn't enough, except for `verify.py`.
+`harbor run` reads the key from the environment only, and stops before starting any trial if it's missing. A `tenki login` key isn't enough, except for `verify.py`.
 
 ### 3. Run one trial with no model
 
@@ -58,7 +68,7 @@ export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
 harbor run -t hello-world/hello-world -e tenki_harbor:TenkiEnvironment --agent oracle
 ```
 
-The `oracle` agent runs the task's reference solution, so no model key is needed. It creates a VM, runs and grades the task, prints a mean reward of `1.000`, and terminates the VM in under a minute.
+`oracle` isn't a real agent: it runs the task's known-good solution, so it needs no model key and should always pass. It's a quick way to check your setup. It creates a VM, runs and grades the task, prints a mean reward of `1.000`, and terminates the VM in under a minute.
 
 ### 4. Run a benchmark with an agent
 
@@ -70,7 +80,7 @@ harbor run -d terminal-bench@2.0 -e tenki_harbor:TenkiEnvironment \
 harbor view jobs
 ```
 
-This runs Claude Code on the first 10 Terminal-Bench 2.0 tasks, 16 at a time. Drop `-l` to run all 89. `--ae KEY=value` passes extra variables to the agent. Results go to `jobs/`, and `harbor view` serves a local browser for the trajectories.
+This runs Claude Code on the first 10 Terminal-Bench 2.0 tasks, 16 at a time. Drop `-l` to run all 89. `--ae KEY=value` passes extra variables to the agent. Results go to `jobs/`, and `harbor view` opens a local web page where you can browse each trial's trajectory.
 
 The same run as a job config, [`job.yaml`](job.yaml), run with `harbor run -c job.yaml`:
 
@@ -93,7 +103,7 @@ datasets:
     n_tasks: 10 # remove to run all 89 tasks
 ```
 
-With the `oracle` agent on all 89 Terminal-Bench 2.0 tasks, 79 pass on Tenki. The other 10 fail because of the tasks themselves; the [tenki-harbor README](https://github.com/LuxorLabs/tenki-harbor#terminal-bench-20-results) lists each reason.
+With the `oracle` agent on all 89 Terminal-Bench 2.0 tasks, 79 pass on Tenki. The other 10 fail because of problems in the tasks themselves; the [tenki-harbor README](https://github.com/LuxorLabs/tenki-harbor#terminal-bench-20-results) lists each reason.
 
 ### 5. Verify
 
@@ -112,7 +122,7 @@ node verify.mjs        # or: .venv/bin/python verify.py
 1. Create a Tenki session sized to the task's CPU, memory, and storage (2 vCPU and 4 GB if unset), tagged `harbor` with the Harbor session id in its metadata.
 2. Install and start Docker (about 12 s on the base image).
 3. Pull the task's image, or build its Dockerfile in the VM.
-4. Route Harbor's `exec` and file transfers into the container with `docker exec` and `docker cp`.
+4. Send the agent's commands and file copies into that container with `docker exec` and `docker cp`.
 5. Terminate the session when the trial ends, pass or fail.
 
 ### Environment options
@@ -171,7 +181,7 @@ tenki-harbor cleanup    # terminate them
 | `Pass at most one of image and snapshot_id.` | Pass one. |
 | `Tenki session for <trial> is '<STATE>', expected terminated` | Check with `tenki-harbor sessions`; end it with `tenki-harbor cleanup`. |
 
-To run one model through several harnesses and compare them, see [`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals). If your tasks run fine in local Docker and you don't need a VM per trial, Harbor's default environment needs no Tenki key.
+To run one model through several coding agents (harnesses) and compare them, see [`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals). If your tasks run fine in local Docker and you don't need a VM per trial, Harbor's default environment needs no Tenki key.
 
 ## Related
 

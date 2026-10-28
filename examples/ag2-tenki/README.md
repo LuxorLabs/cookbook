@@ -1,8 +1,12 @@
 # AG2
 
-Run an [AG2](https://github.com/ag2ai/ag2) agent's `SandboxShellTool` and `SandboxCodeTool` in a Tenki sandbox with AG2's native Tenki backend, `ag2.extensions.tenki` ([ag2ai/ag2#3096](https://github.com/ag2ai/ag2/pull/3096)). One `TenkiEnvironment` serves both tools, files persist between tool calls, and the sandbox is terminated when the environment closes.
+Let an AG2 agent run shell commands and code on a Tenki cloud machine instead of your computer.
 
-This is for AG2 1.x (`from ag2 import Agent`). The older `import autogen` API is now [AG2 Classic](https://github.com/ag2ai/ag2-classic) and doesn't include this backend.
+[AG2](https://github.com/ag2ai/ag2) (formerly AutoGen) is an open-source Python framework for building AI agents. It has two built-in tools for running things: `SandboxShellTool` runs shell commands, and `SandboxCodeTool` runs code. Both run inside an **environment** you choose, and AG2 includes a Tenki one, `TenkiEnvironment` in `ag2.extensions.tenki`.
+
+One `TenkiEnvironment` is one Tenki sandbox. Give it to both tools and they share it, so a file one tool writes is there for the other. The sandbox is deleted when the environment closes.
+
+This is for AG2 1.x (`from ag2 import Agent`). The older `import autogen` API is now [AG2 Classic](https://github.com/ag2ai/ag2-classic) and doesn't include the Tenki environment.
 
 ## Set it up with a coding agent
 

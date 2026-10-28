@@ -1,8 +1,18 @@
 # Prefect
 
-Run each [Prefect 3.x](https://docs.prefect.io) flow run in its own Tenki sandbox. [`prefect-tenki`](https://github.com/luxorlabs/tenki-prefect) adds a `tenki` worker type: the worker polls a work pool, creates a fresh sandbox when it picks up a run, runs the flow there, and closes the sandbox when the run ends.
+Run each of your Prefect workflows on a fresh cloud machine that's deleted when the run finishes.
 
-> **Status:** `prefect-tenki` is pre-alpha (`0.1.0.dev0`) and not on PyPI. `requirements.txt` installs it from git at commit `4517af56`, the head of [LuxorLabs/tenki-prefect#7](https://github.com/LuxorLabs/tenki-prefect/pull/7), which moves it to `tenki>=1.4.1`. That PR is still open, so the commit lives on `opencolin/tenki-prefect`.
+[Prefect](https://docs.prefect.io) is an open-source tool for scheduling and running Python workflows. Some Prefect terms you'll see:
+
+- A **flow** is a workflow: a Python function decorated with `@flow`. Each time it runs is a **flow run**.
+- A **deployment** tells Prefect where a flow's code lives and lets you trigger runs from the UI, the CLI, or a schedule.
+- A **work pool** is a queue of flow runs waiting to start, along with settings for where they run.
+- A **worker** is a process you start that watches a work pool and starts each flow run somewhere: as a local process, a Docker container, a Kubernetes job, and so on.
+- A **block** is a saved piece of configuration in Prefect, such as a credential.
+
+[`prefect-tenki`](https://github.com/luxorlabs/tenki-prefect) adds a `tenki` worker type. When the worker picks up a flow run, it creates a new Tenki sandbox, runs the flow there, and deletes the sandbox when the run ends. Each run gets a clean machine, and nothing runs on the worker's own machine. This example works with Prefect 3.x.
+
+> **Status:** `prefect-tenki` is an early preview (`0.1.0.dev0`) and isn't on PyPI. `requirements.txt` installs it from GitHub at a fixed commit, from an open pull request ([LuxorLabs/tenki-prefect#7](https://github.com/LuxorLabs/tenki-prefect/pull/7)) that updates it to the current Tenki SDK.
 
 ## Set it up with a coding agent
 
@@ -23,7 +33,7 @@ You need:
 
 - Python 3.10 or later, [uv](https://docs.astral.sh/uv/) (or `venv` and pip), and git.
 - A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
-- For real flow runs: Prefect Cloud or a Prefect server the sandbox can reach, a Tenki image or snapshot with Prefect and your flow's dependencies, and a git repo with your flow code.
+- For real flow runs: Prefect Cloud, or a Prefect server the sandbox can reach over the internet; a Tenki image or snapshot with Prefect and your flow's dependencies installed; and a git repo with your flow code.
 
 ### 1. Install
 
@@ -42,11 +52,11 @@ python -c "import prefect_tenki; print(prefect_tenki.TenkiWorker.type)"   # prin
 export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN or a `tenki login` key also work
 ```
 
-This is for `verify.mjs`. The worker reads its key from a Prefect block, set up in step 3.
+This is for `verify.mjs`. The worker reads its key from a Prefect block instead, which you set up in step 3.
 
 ### 3. Run
 
-Point Prefect at an API the sandbox can reach. `http://localhost:4200` only exists on your machine:
+The flow runs inside the sandbox and reports its progress back to Prefect, so Prefect's API must be reachable from the internet. A local Prefect server at `http://localhost:4200` only exists on your machine, so use Prefect Cloud or a hosted server. Then create a work pool that uses the Tenki worker:
 
 ```bash
 prefect cloud login
@@ -54,7 +64,7 @@ prefect cloud login
 prefect work-pool create --type tenki my-tenki-pool
 ```
 
-Save your key as a block. Only the worker uses it; it never reaches the sandbox's environment:
+Save your Tenki key as a block. Only the worker uses it to create sandboxes; it's never passed into the sandbox:
 
 ```python
 from prefect_tenki import TenkiCredentials
@@ -62,7 +72,7 @@ from prefect_tenki import TenkiCredentials
 TenkiCredentials(api_key="tk_...").save("tenki-prod")
 ```
 
-Set the pool's `credentials` job variable to `tenki-prod`, and `image` (or `snapshot_id`) to an image with Prefect installed, in the Prefect UI or with `prefect work-pool update my-tenki-pool --base-job-template <file>`. Then start a worker and deploy a flow:
+Each work pool has **job variables**, the settings the worker uses for every run (listed [below](#job-variables)). Set `credentials` to `tenki-prod`, and `image` (or `snapshot_id`) to a Tenki image with Prefect installed. You can do this in the Prefect UI or with `prefect work-pool update my-tenki-pool --base-job-template <file>`. Then start a worker, and in another terminal, deploy a flow and run it:
 
 ```bash
 prefect worker start --pool my-tenki-pool
@@ -93,7 +103,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
 ✓ prefect-tenki: TenkiWorker.run() → live sandbox → flow command exit 0 → teardown
 ```
 
-`verify.py` uses a temporary `PREFECT_HOME`, checks the worker type registers as `tenki`, and drives `TenkiWorker.run()` directly with a stand-in command, with network off:
+`verify.py` checks the Tenki side without a Prefect server. It uses a temporary Prefect settings folder (`PREFECT_HOME`), checks the worker type is registered as `tenki`, and calls `TenkiWorker.run()` directly with a stand-in command in place of a real flow, with the sandbox's network off:
 
 ```python
     # Same shape a `prefect worker start` builds per flow run, minus the
