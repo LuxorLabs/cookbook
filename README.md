@@ -100,6 +100,7 @@ Give an agent a sandbox to run the code it writes.
 | --- | --- |
 | [MCP server](examples/mcp-tenki-sandbox/) | Sandbox tools for Claude, Cursor, or any MCP client |
 | [MCP Apps](examples/copilotkit-mcp-apps/) | Tools that bring their own UI, rendered in a CopilotKit chat |
+| [Remote MCP server](examples/remote-mcp-server/) | Your own MCP server on a stable, token-protected preview URL |
 | [Claude Code](examples/claude-code-sandbox/) | Headless coding agent on a real repo checkout |
 | [Codex](examples/codex-sandbox/) | OpenAI's coding agent, headless, on a real repo checkout |
 | [OpenCode](examples/opencode-sandbox/) | Headless OpenCode server on a public preview URL |
