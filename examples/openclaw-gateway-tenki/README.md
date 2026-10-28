@@ -98,12 +98,12 @@ XDG_RUNTIME_DIR="/run/user/$(id -u)" openclaw gateway install
 - **`publicOrigin`** makes the preview URL the only browser origin the gateway accepts. A dashboard opened from any other origin is refused with `origin not allowed`.
 - **`trustedProxies`.** The edge connects from `172.30.0.0/16` and rewrites `X-Forwarded-For` (a client can't spoof it). Without this setting the gateway rejects every proxied request with `proxy_attribution_required`.
 - **systemd.** The sandbox runs systemd, so `openclaw gateway install` registers a user service that restarts the gateway if it exits. Lingering keeps it running with nobody logged in.
-- **The named URL is separate from the sandbox.** `run.mjs` reuses the URL with your slug, or creates it. It binds the URL to the new sandbox only after the gateway is healthy, so a rebuild swaps sandboxes behind the same address. The hostname is `<slug>--<workspace suffix>`, and the slug is unique in your workspace.
+- **The named URL is separate from the sandbox.** `run.mjs` reuses the URL with your slug, or creates it bound to the new sandbox. A URL that already serves an older sandbox moves to the new one only after the new gateway is healthy, so a rebuild swaps sandboxes behind the same address. The hostname is `<slug>--<workspace suffix>.<region>.sb.tenki.sh`, and the slug is unique in your workspace. A URL created without a sandbox has no region in its hostname and doesn't serve until it is bound, which is why `run.mjs` always binds before it reads the address.
 - **Sticky.** `sticky: true` keeps the sandbox running with no lifetime cap, across pause and resume.
 
 ## Notes
 
-- **Cost and cleanup.** The sandbox runs, and bills, until you terminate it. Remove everything with `tenki sandbox terminate <sandbox-id>` and `tenki sandbox preview-url rm <preview-url-id>` (IDs from `tenki sandbox preview-url list`).
+- **Cost and cleanup.** The sandbox runs, and bills, until you terminate it. `tenki sandbox terminate <sandbox-id>` removes it and also deletes the named URL bound to it. Running `run.mjs` again with the same slug recreates the same address.
 - **State lives on the sandbox disk.** Config, sessions, paired devices, and the model key sit in `~/.openclaw` on the sandbox. A rebuilt sandbox starts fresh, so you pair your browser again.
 - **One sandbox at a time.** After a rebuild, `run.mjs` prints the previous sandbox's ID. It no longer serves the URL but keeps running until you terminate it.
 - **Model key.** `setup.sh` passes `ANTHROPIC_API_KEY` to `--anthropic-api-key`. For another provider, swap the flag (`openclaw onboard --help` lists them), or add one later from the dashboard.

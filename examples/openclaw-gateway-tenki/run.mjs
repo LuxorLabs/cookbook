@@ -11,7 +11,7 @@ const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || proc
 
 // A named preview URL is a workspace object with a fixed address. Reuse it if it exists, so the
 // dashboard keeps its address when you rebuild the sandbox behind it.
-const url = (await tenki.previewUrls.list()).find((u) => u.slug === SLUG) ?? (await tenki.previewUrls.create(SLUG));
+const existing = (await tenki.previewUrls.list()).find((u) => u.slug === SLUG);
 
 // sticky: true keeps the sandbox running until you terminate it.
 const sandbox = await tenki.createAndWait({
@@ -22,6 +22,13 @@ const sandbox = await tenki.createAndWait({
   diskSizeGb: 10,
   tags: ["openclaw-gateway"],
 });
+
+// The working hostname includes the sandbox's region, which a URL only gets once it is bound. So a
+// new (or unbound) URL is bound right away; a URL serving an older sandbox moves after setup.
+const previous = existing?.sessionId;
+let url = existing;
+if (!url) url = await tenki.previewUrls.create(SLUG, { sessionId: sandbox.id, port: PORT });
+else if (!previous) url = await tenki.previewUrls.bind(url.id, sandbox.id, PORT);
 
 try {
   await sandbox.writeFile("/home/tenki/setup.sh", readFileSync(new URL("./setup.sh", import.meta.url), "utf8"));
@@ -41,10 +48,17 @@ try {
   throw e;
 }
 
-// Point the URL at the new gateway only once it is healthy.
-if (url.sessionId) await tenki.previewUrls.unbind(url.id);
-await tenki.previewUrls.bind(url.id, sandbox.id, PORT);
+// Move a URL that served an older sandbox only once the new gateway is healthy.
+if (previous) {
+  await tenki.previewUrls.unbind(url.id);
+  const moved = await tenki.previewUrls.bind(url.id, sandbox.id, PORT);
+  if (moved.previewUrl !== url.previewUrl) {
+    // Different region, different hostname: tell the gateway its new origin.
+    await sandbox.exec("bash", { args: ["-lc", `openclaw config set gateway.publicOrigin ${moved.previewUrl}`] });
+  }
+  url = moved;
+}
 
 console.log(`dashboard: ${url.previewUrl}`);
 console.log(`sandbox:   ${sandbox.id}`);
-if (url.sessionId) console.log(`previous sandbox: ${url.sessionId} (remove it with: tenki sandbox terminate ${url.sessionId})`);
+if (previous) console.log(`previous sandbox: ${previous} (remove it with: tenki sandbox terminate ${previous})`);
