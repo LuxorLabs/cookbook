@@ -1,6 +1,10 @@
 # Composio
 
-Give a [Composio](https://composio.dev) agent Tenki sandboxes. [`@tenkicloud/composio-tools`](https://github.com/LuxorLabs/tenki-composio-tools) registers a Tenki custom toolkit on a Composio session with six tools: `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX` (exposed as `LOCAL_TENKI_*`). The tools run in your process against the Tenki SDK, so there's no backend to deploy. With an Anthropic key, `agent.mjs` has Claude boot a sandbox, run commands, and terminate it.
+Let an agent built on Composio start its own Tenki cloud machines and run commands on them.
+
+[Composio](https://composio.dev) gives AI agents ready-made tools for hundreds of apps, grouped into **toolkits** (one per app). Your agent works with them through a **session**, which holds the tools it may use. You can also add your own **custom toolkits** to a session.
+
+[`@tenkicloud/composio-tools`](https://github.com/LuxorLabs/tenki-composio-tools) is a custom toolkit for Tenki with six tools: `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX`. Composio names custom tools with a `LOCAL_` prefix, so the agent sees them as `LOCAL_TENKI_CREATE_SANDBOX` and so on. The tools run in your own process and call Tenki directly, so there's no server to deploy. With an Anthropic key, `agent.mjs` has Claude start a sandbox, run commands in it, and delete it.
 
 ## Set it up with a coding agent
 

@@ -1,6 +1,10 @@
 # Convex
 
-Give each signed-in user of a [Convex](https://www.convex.dev) app its own Tenki sandbox. The [`@tenkicloud/convex`](https://www.npmjs.com/package/@tenkicloud/convex) component creates, runs commands in, pauses, resumes, and destroys sandboxes from Convex actions, and keeps each sandbox's state in a Convex table your UI can subscribe to.
+Give each signed-in user of your Convex app their own Tenki cloud machine, and show its status live in your UI.
+
+[Convex](https://www.convex.dev) is a backend platform: you write server functions in TypeScript, store data in Convex's database, and your frontend updates automatically when that data changes. Functions that call outside services, like Tenki, are called **actions**. A **component** is a reusable package of Convex functions and tables you add to your app.
+
+The [`@tenkicloud/convex`](https://www.npmjs.com/package/@tenkicloud/convex) component lets your actions create sandboxes, run commands in them, pause, resume, and delete them. It records each sandbox's state in a Convex table, so your UI can show whether a user's sandbox is running or paused without polling.
 
 ## Set it up with a coding agent
 

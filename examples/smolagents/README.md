@@ -1,6 +1,10 @@
 # Hugging Face smolagents
 
-Run a [smolagents](https://github.com/huggingface/smolagents) `CodeAgent`'s generated Python in a Tenki sandbox. `TenkiExecutor` is a remote executor, like smolagents' own E2B, Docker, Modal, and Blaxel executors: one sandbox per agent session, a persistent Python namespace across steps, and cleanup when the agent finishes. The agent loop, model calls, and model key stay in your process.
+Run the Python that a smolagents agent writes on a Tenki cloud machine instead of your computer.
+
+[smolagents](https://github.com/huggingface/smolagents) is Hugging Face's library for building AI agents. Its `CodeAgent` works by writing Python: at each step the model writes a short snippet (call a tool, compute something, print a result), smolagents runs it, and the model reads the output to decide the next step. Since that's code you haven't read, smolagents lets you choose an **executor**, the place the snippets run. It ships executors for E2B, Docker, Modal, and Blaxel.
+
+`TenkiExecutor` is one for Tenki. It starts one sandbox per agent session and keeps a single Python process running in it, so variables and imports from one step are still there in the next, and it deletes the sandbox when the agent finishes. The agent itself, the model calls, and your model key stay in your process.
 
 `TenkiExecutor` lives in this example, not in smolagents. Copy `tenki_executor.py` into your project and pass it with `CodeAgent(executor=...)`. smolagents 1.26.0 has no `executor_type="tenki"`; [PR #2563](https://github.com/huggingface/smolagents/pull/2563) proposes one.
 

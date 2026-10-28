@@ -1,6 +1,10 @@
 # CopilotKit MCP Apps
 
-A [CopilotKit](https://copilotkit.ai) chat whose sandbox tools come with their own UI. Ask it to run code and a console appears in the chat with the output and a live shell into the Tenki sandbox. Ask it for a web app and the page appears in the chat, served from a sandbox on a public URL. The tools are a plain MCP server using the [MCP Apps](https://github.com/modelcontextprotocol/ext-apps) extension, so any MCP Apps host can drive them.
+An AI chat app where running code or building a web page shows the result right in the conversation, served from a Tenki cloud machine.
+
+[CopilotKit](https://copilotkit.ai) is a framework for adding AI chat to your own web app. The chat's tools here come from an **MCP server**. MCP (Model Context Protocol) is a standard way to offer tools to an AI model, so any app that speaks it can use them. **[MCP Apps](https://github.com/modelcontextprotocol/ext-apps)** is an extension to MCP that lets a tool return a small interactive web page along with its result, which the chat app (the **host**) shows inline.
+
+Ask the chat to run code, and a console appears in the conversation with the output and a live shell into the Tenki sandbox. Ask it for a web app, and the page appears in the chat, served from a sandbox on a public URL. The tools are a plain MCP server, so CopilotKit or any other host that supports MCP Apps can use them.
 
 ## Set it up with a coding agent
 

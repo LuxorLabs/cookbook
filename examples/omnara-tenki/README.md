@@ -1,6 +1,10 @@
 # Omnara
 
-Run [Omnara](https://github.com/omnara-ai/omnara) agents on Tenki sandboxes. Omnara is an open-source managed agent platform with an API for running agents on any model and machine. With a Tenki machine pool, each agent gets its own Linux VM with passwordless `sudo`, where it runs commands and installs what a task needs. The integration landed in [omnara#537](https://github.com/omnara-ai/omnara/pull/537).
+Give each agent you run through Omnara its own Tenki cloud machine to work on.
+
+[Omnara](https://github.com/omnara-ai/omnara) is an open-source platform for running AI agents: you start agents through its API or app, on the model of your choice, and Omnara runs them on machines it manages for you. You tell Omnara where to get those machines with a **machine pool**, a named group of machines from one provider, with limits on size and on how many run at once.
+
+With a Tenki pool, each agent gets its own Linux VM with full admin rights (passwordless `sudo`), where it runs commands and installs what its task needs. Omnara creates the VMs as agents need them and deletes idle ones.
 
 ## Set it up with a coding agent
 

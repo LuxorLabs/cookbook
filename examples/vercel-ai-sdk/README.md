@@ -1,6 +1,10 @@
 # Vercel AI SDK
 
-Use a Tenki sandbox as the [Vercel AI SDK](https://ai-sdk.dev)'s `experimental_sandbox`. AI SDK 7 passes that sandbox to every tool's `execute`, so tools run commands and file I/O in it. `tenki-sandbox.mjs` is a thin adapter from Tenki's `Session` to the SDK's `Experimental_SandboxSession`. Copy that one file into your project.
+Give the tools in your Vercel AI SDK app a cloud machine to run commands and handle files on, instead of your server.
+
+The [Vercel AI SDK](https://ai-sdk.dev) is a TypeScript library for building apps on language models. You give a model **tools**, functions it can call, such as one that runs a shell command. AI SDK 7 adds an experimental **sandbox** option: you pass `generateText()` a sandbox object as `experimental_sandbox`, and the SDK hands it to every tool, so tools run commands and read or write files there instead of on the machine running your app.
+
+The SDK defines what a sandbox object must look like (`Experimental_SandboxSession`) but doesn't supply one. `tenki-sandbox.mjs` is a small adapter that turns a Tenki sandbox into one. Copy that one file into your project. In this example, a model uses a `runCommand` tool to compute the 20th Fibonacci number with Python in the sandbox.
 
 The adapter boots sandboxes with outbound network off. Pass `createTenkiSandbox({ allowOutbound: true })` if tools need `pip install` or downloads.
 
@@ -62,7 +66,7 @@ node verify.mjs
 ✓ vercel-ai-sdk: run (42) → file round-trip → missing→null → spawn, on live Tenki
 ```
 
-`verify.mjs` calls the adapter's methods directly, as the AI SDK would. It checks all nine required members, runs `python3` with `run`, writes and reads `work/note.txt` (which also tests parent-directory creation), expects `null` for a missing file, and streams output from `spawn`. It doesn't load `ai` or call a model.
+`verify.mjs` calls the adapter's methods directly, as the AI SDK would, with no model. It checks that the adapter has all nine methods and properties the SDK requires, runs `python3` with `run`, writes and reads `work/note.txt` (which also tests parent-directory creation), expects `null` for a missing file, and streams output from `spawn`. It doesn't load `ai` or call a model.
 
 ## Use it in your app
 
