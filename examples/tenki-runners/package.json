@@ -1,0 +1,9 @@
+{
+  "name": "tenki-runners",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — move a GitHub Actions workflow onto Tenki Runners by changing runs-on.",
+  "dependencies": {
+    "yaml": "^2.9.1"
+  }
+}
