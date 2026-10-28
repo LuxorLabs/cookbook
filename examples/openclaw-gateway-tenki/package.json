@@ -1,0 +1,10 @@
+{
+  "name": "openclaw-gateway-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — host the OpenClaw gateway in a sticky Tenki sandbox behind a named preview URL.",
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1",
+    "ws": "^8.22.0"
+  }
+}

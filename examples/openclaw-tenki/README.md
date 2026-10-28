@@ -171,3 +171,4 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
 - [OpenClaw](https://github.com/openclaw/openclaw) and [ClawHub](https://clawhub.ai)
 - [`@tenkicloud/openclaw` on npm](https://www.npmjs.com/package/@tenkicloud/openclaw) and [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw)
 - [DeerFlow](../deerflow-tenki/) and [Pause, snapshot, and resume](../snapshots-pause-resume/)
+- [OpenClaw gateway on Tenki](../openclaw-gateway-tenki/): host the gateway itself in a sticky sandbox, with its dashboard on a named preview URL
