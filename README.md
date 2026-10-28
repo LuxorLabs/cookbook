@@ -103,6 +103,7 @@ Give an agent a sandbox to run the code it writes.
 | [Claude Code](examples/claude-code-sandbox/) | Headless coding agent on a real repo checkout |
 | [Codex](examples/codex-sandbox/) | OpenAI's coding agent, headless, on a real repo checkout |
 | [OpenCode](examples/opencode-sandbox/) | Headless OpenCode server on a public preview URL |
+| [code-server](examples/code-server-tenki/) | VS Code in the browser on a sticky sandbox, with the workspace on a volume and a named URL |
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own sandbox |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes on Tenki sandboxes |
