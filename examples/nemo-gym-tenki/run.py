@@ -1,4 +1,4 @@
-"""Run one NeMo Gym-style rollout step in a Tenki sandbox.
+"""Score one NeMo Gym rollout (one attempt by a model at a task) in a Tenki sandbox.
 
     uv sync && uv run python run.py
 """
@@ -8,7 +8,7 @@ import asyncio
 from nemo_gym.sandbox.providers.base import SandboxSpec
 from nemo_gym.sandbox.providers.registry import create_provider, list_providers
 
-# Agent-generated code a rollout might need to execute and score.
+# Code a model might write during a rollout. Running it is how the attempt gets scored.
 SOLUTION = """\
 def fizzbuzz(n):
     return "FizzBuzz" if n % 15 == 0 else "Fizz" if n % 3 == 0 else "Buzz" if n % 5 == 0 else str(n)
@@ -21,14 +21,15 @@ print("tests passed")
 async def main() -> None:
     print("providers:", ", ".join(list_providers()))
 
-    # The same dict goes under `sandbox_provider:` in a NeMo Gym config.
+    # Pick the Tenki provider and size its VMs. In a NeMo Gym config file, the same
+    # settings go under `sandbox_provider:`.
     provider = create_provider({"tenki": {"create": {"cpu_cores": 1, "memory_mb": 1024, "max_duration_s": 600}}})
-    # spec.files are written into spec.workdir when the sandbox is created.
+    # Start a sandbox with the model's solution copied into /home/tenki/task.
     handle = await provider.create(SandboxSpec(workdir="/home/tenki/task", files={"solution.py": SOLUTION}))
     print(f"sandbox {handle.sandbox_id}")
     try:
         r = await provider.exec(handle, "python3 solution.py", cwd="/home/tenki/task")
-        reward = 1.0 if r.return_code == 0 else 0.0
+        reward = 1.0 if r.return_code == 0 else 0.0  # tests passed: full reward
         print(f"exit {r.return_code}: {(r.stdout or r.stderr or '').strip()}")
         print(f"reward {reward}")
     finally:

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Spawned by pi-env's Connection as: node bridge.mjs <sessionId> serve --token <hex>
-// Runs the daemon inside the Tenki sandbox and pipes its stdio through — the
-// framed protocol rides Tenki's exec data plane, no SSH involved.
+// pi-env starts this script as: node bridge.mjs <sessionId> serve --token <hex>
+// It starts the pi-env daemon inside the Tenki sandbox and connects the daemon's
+// input and output to this process's, using Tenki's command API instead of SSH.
 import { Readable, Writable } from "node:stream";
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 
@@ -23,7 +23,7 @@ try {
 	await piped;
 	process.exit(exitCode ?? 1);
 } catch (err) {
-	// An unreachable sandbox becomes a clean spawn failure; pi-env retries on the next request.
+	// If the sandbox can't be reached, exit with an error; pi-env tries again on the next request.
 	console.error(`bridge: ${err?.message ?? err}`);
 	process.exit(1);
 }

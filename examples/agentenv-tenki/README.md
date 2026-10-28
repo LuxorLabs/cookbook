@@ -1,6 +1,12 @@
 # AgentEnv
 
-Run Scale AI's [AgentEnv Framework](https://www.agentenvframework.com) tasks on Tenki VMs. AgentEnv is an open-source (Apache-2.0) framework for building RL environments, where tasks are DAGs of steps that deploy an environment, bring in an agent, and grade the result. Its built-in `tenki` sandbox backend gives each environment and agent its own Tenki VM, with Docker inside and a public HTTPS URL for each exposed port.
+Give every AI agent task you test or train on its own disposable cloud machine.
+
+[AgentEnv Framework](https://www.agentenvframework.com), from Scale AI, is an open-source (Apache-2.0) tool for building **environments**: reproducible setups where an AI agent attempts a job and gets a score. A coding environment might start a web app, ask an agent to fix a bug in it, then run the app's tests to grade the fix. Teams use these scores to evaluate agents and to train models with **reinforcement learning (RL)**, where the score is the signal the model learns from.
+
+In AgentEnv, a **task** is a list of steps that run in order: deploy the environment, bring in the agent, and grade the result. Each environment and each agent runs inside a **sandbox**, a machine AgentEnv starts for that run. The built-in `tenki` sandbox backend makes each of those a Tenki VM, with Docker installed and a public HTTPS URL for every port the task opens. Nothing runs on your computer, and you can run many tasks side by side.
+
+This example runs AgentEnv's bundled `hello` task on Tenki. It needs no model key.
 
 ## Set it up with a coding agent
 
@@ -32,7 +38,7 @@ uv venv --python 3.12
 uv pip install -r requirements.txt   # agentenv-framework[tenki]>=0.9.1326, tenki[async]>=1.4.1
 ```
 
-Run every command from this folder: `agent-env` finds `.agentenv/config.toml` by walking up from the working directory. To install the CLI as a tool instead, run `uv tool install 'agentenv-framework[tenki]'` and call `agent-env`.
+Run every command from this folder. `agent-env` reads its settings from `.agentenv/config.toml`, which it looks for in the current folder and its parents. To install the CLI as a tool instead, run `uv tool install 'agentenv-framework[tenki]'` and call `agent-env`.
 
 ### 2. Set your API key
 
@@ -40,7 +46,7 @@ Run every command from this folder: `agent-env` finds `.agentenv/config.toml` by
 export TENKI_API_KEY=tk_...
 ```
 
-The provider reads the key only through AgentEnv's config. This folder's [`.agentenv/config.toml`](.agentenv/config.toml) points it at the variable:
+AgentEnv only reads the key through its config file. This folder's [`.agentenv/config.toml`](.agentenv/config.toml) makes Tenki the default and tells it to read the key from that variable:
 
 ```toml
 [sandbox]
@@ -51,11 +57,11 @@ agent_default = "tenki"
 api_key = "env:TENKI_API_KEY"
 ```
 
-`default` covers environments and `agent_default` covers agents. A `tenki login` key isn't enough for `agent-env`. For a shared deployment, use `api_key = "secret:tenki_api_key"`, and never put the key itself in the file. `.venv/bin/agent-env config show` prints the config in effect with the key masked.
+`default` sets where environments run and `agent_default` sets where agents run. A `tenki login` key isn't enough for `agent-env`. For a shared deployment, use `api_key = "secret:tenki_api_key"`, and never put the key itself in the file. `.venv/bin/agent-env config show` prints the config in effect with the key masked.
 
 ### 3. Run
 
-The bundled `hello` task deploys a sandbox, loads a file into it, and grades it, with no model:
+The bundled `hello` task is the smallest possible task: it starts a sandbox, copies a file into it, and checks the file is there. It uses no model:
 
 ```bash
 .venv/bin/agent-env -v run hello --sandbox tenki
@@ -73,7 +79,7 @@ node verify.mjs        # or: .venv/bin/python verify.py
 ✓ agentenv-tenki: `tenki` provider from config.toml → create_vm + exposed port → root exec (42) → terminate
 ```
 
-[`verify.py`](verify.py) resolves the `tenki` backend through `agent-env`'s registry from this folder's config and drives it against the live API:
+[`verify.py`](verify.py) is a faster check of the Tenki side. It asks AgentEnv for the `tenki` backend named in this folder's config, then uses it directly: it starts a VM with port 8080 open, runs a command as root, and deletes the VM.
 
 ```python
 async def main():
@@ -93,7 +99,7 @@ async def main():
         await sb.terminate()
 ```
 
-It skips the Docker install (`setup_for_gateway=False`) and involves no agent, so it's quicker than `hello`. The provider's own tests are [upstream](https://github.com/scaleapi/agentenv-framework/tree/main/src/agent_env/providers/sandbox_providers/tenki).
+It skips the Docker install (`setup_for_gateway=False`) and involves no agent, so it finishes in well under the few minutes `hello` takes. The provider's own tests are [upstream](https://github.com/scaleapi/agentenv-framework/tree/main/src/agent_env/providers/sandbox_providers/tenki).
 
 ## Use Tenki for one run only
 
@@ -125,9 +131,9 @@ Then set `snapshot_id = "<id>"` in the provider config (`tenki sandbox snapshot 
 
 ## How the provider works
 
-- **One VM per sandbox**, running the gateway's docker-compose, the agent's `docker run`, and artifact collection under Docker. Commands run as root.
+- **One VM per sandbox.** Inside it, the environment's own services run under Docker Compose, the agent runs in its own Docker container, and output files are collected for grading. Commands run as root.
 - **Ports:** each exposed port gets a public HTTPS URL under `sb.tenki.sh` (HTTP and WebSocket), with no authentication in front of it.
-- **Egress:** allow-all, or an allowlist of up to 256 hostnames and 64 IPv4 CIDRs, applied outside the VM. `*.sb.tenki.sh` and `*.us.sb.tenki.sh` are always allowed. A wildcard covers one label.
+- **Outbound network:** allow-all, or an allowlist of up to 256 hostnames and 64 IPv4 CIDRs, applied outside the VM. `*.sb.tenki.sh` and `*.us.sb.tenki.sh` are always allowed. A wildcard covers one label.
 - **Sizing:** whole vCPUs, at least 2 vCPU / 4 GiB. A request beyond Tenki's limits is refused, not shrunk.
 - **Lifetime:** the task's `timeout` is the VM's hard maximum lifetime and every command's time budget. A VM whose setup fails is terminated.
 - **Tags:** every VM is tagged `agentenv`, so `tenki sandbox list --tags agentenv` lists them.
@@ -135,9 +141,9 @@ Then set `snapshot_id = "<id>"` in the provider config (`tenki sandbox snapshot 
 ## Things to know
 
 - No GPUs.
-- `create_vm(image=...)` is refused. VMs boot the configured `image` or `snapshot_id`, and OCI images run under Docker inside them.
-- An agent's `LITELLM_API_KEY` is passed into its VM, as on other providers. Tasks with agents read the model from AgentEnv's `[model]` table.
-- No IPv6 egress rules.
+- `create_vm(image=...)` is refused. VMs boot the configured `image` or `snapshot_id`, and a task's Docker images run under Docker inside them.
+- An agent's model key, `LITELLM_API_KEY`, is passed into its VM, as on other backends. Tasks with agents read the model from AgentEnv's `[model]` table.
+- Outbound network rules are IPv4 only.
 
 ## Troubleshooting
 

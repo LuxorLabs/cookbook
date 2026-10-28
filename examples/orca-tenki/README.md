@@ -1,8 +1,14 @@
 # orca
 
-Back [orca](https://github.com/stablyai/orca)'s Cloud VM recipe with Tenki sandboxes. orca normally runs each coding agent in a git worktree on your machine. Its ephemeral-VM recipe hook (**Cloud VM** in orca's settings) runs a command you supply to `create`, `suspend`, `resume`, and `destroy` a machine per workspace. This folder is that command: it boots a Tenki sandbox with your repo cloned, hands orca an SSH target, and pauses, resumes, and destroys it.
+Give each of your orca coding agents its own cloud machine with your repo on it, instead of running them all on your laptop.
 
-> **Status:** orca v1.4.224 doesn't adopt the machine yet. orca wants the checkout on the workspace's branch at the commit it pinned, and wants `resume` to print a fresh recipe result; `recipe.mjs` does neither yet ([Troubleshooting](#troubleshooting) has the errors). CI skips this example because Tenki's gateway SSH host keys change between connections.
+[orca](https://github.com/stablyai/orca) is an open-source app for running several coding agents, such as Claude Code or Codex, side by side on one repo. Each agent works in its own **workspace**: by default, a separate copy of your repo (a git worktree) on your machine.
+
+orca has an experimental **Cloud VM** setting that puts each workspace on a remote machine instead. You give orca a **recipe**: a command it runs with one of four modes, `create`, `suspend`, `resume`, or `destroy`, to manage that machine. `create` prints JSON telling orca how to reach the machine over SSH, and orca connects there to run the agent.
+
+This folder is a recipe for Tenki. `create` starts a sandbox with your repo cloned and prints SSH details, `suspend` pauses it for free, `resume` brings it back, and `destroy` deletes it.
+
+> **Status:** orca v1.4.224 doesn't fully accept the machine yet. orca expects the repo to be checked out on the workspace's branch and commit, and expects `resume` to print fresh connection details. `recipe.mjs` doesn't do either yet ([Troubleshooting](#troubleshooting) has the errors), so you can run each mode by hand but not a full orca session.
 
 ## Set it up with a coding agent
 
@@ -54,7 +60,7 @@ cat create.json
 printf '{"recipeResult":%s}' "$(cat create.json)" | node recipe.mjs destroy && rm create.json
 ```
 
-`create.json` is the JSON orca reads. `destroy` prints `{"ok":true,"mode":"destroy"}`. To try `suspend` and `resume`, pipe the same `printf` output to `node recipe.mjs suspend` and `node recipe.mjs resume` before destroying.
+`create.json` is the connection info orca would read. `destroy` prints `{"ok":true,"mode":"destroy"}`. To try `suspend` and `resume`, pipe the same `printf` output to `node recipe.mjs suspend` and `node recipe.mjs resume` before destroying.
 
 ### 4. Verify
 
@@ -66,7 +72,7 @@ node verify.mjs
 ✓ orca-tenki: recipe create → ssh (yocto-queue) → suspend → resume → ssh again → destroy
 ```
 
-`verify.mjs` runs `recipe.mjs` once per mode as orca would, checks the `create` result's shape, connects over SSH with only what `create` printed, checks the user and the cloned repo, suspends, resumes, connects again, and destroys the sandbox (also on failure). It doesn't run orca.
+`verify.mjs` runs `recipe.mjs` once per mode, the way orca would. It checks the JSON `create` printed, connects over SSH using only that JSON, checks the user and the cloned repo, suspends, resumes, connects again, and destroys the sandbox (even if a step fails). It doesn't run orca itself.
 
 ## Wire it into orca
 
@@ -83,13 +89,13 @@ environmentRecipes:
     destroy: node /path/to/orca-tenki/recipe.mjs destroy
 ```
 
-Keep `checkoutMode: provisioned-root`; orca rejects a result whose mode doesn't match. Make sure `TENKI_AUTH_TOKEN` is in orca's environment, since orca passes it to the recipe and to the `ssh` that runs `ssh-proxy.mjs`.
+Keep `checkoutMode: provisioned-root`, which tells orca the recipe clones the repo itself. orca rejects a result whose mode doesn't match. Make sure `TENKI_AUTH_TOKEN` is in orca's environment, since orca passes it to the recipe and to the `ssh` that runs `ssh-proxy.mjs`.
 
 orca runs `create` from your checkout and sets `ORCA_REPO_URL`. The recipe clones it into `/home/tenki/repo`, or the checkout's `origin` if it's empty.
 
 ## How the recipe works
 
-`create` makes an ed25519 keypair under `~/.tenki-orca/`, boots a sandbox with the repo cloned and the key installed, and mints an SSH certificate:
+`create` makes an SSH key pair under `~/.tenki-orca/`, starts a sandbox with the repo cloned and the public key installed, and asks Tenki for a short-lived SSH certificate that lets that key log in:
 
 ```js
     sandbox = await tenki.createAndWait({
@@ -103,7 +109,7 @@ orca runs `create` from your checkout and sets `ORCA_REPO_URL`. The recipe clone
     writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
 ```
 
-It prints the one JSON object orca expects. `userData` carries the session id to later modes:
+It prints the one JSON object orca expects: where to SSH, as whom, with which key, and where the repo is. orca passes `userData` back to later modes, so they know which sandbox to act on:
 
 ```js
   process.stdout.write(JSON.stringify({
@@ -126,18 +132,19 @@ It prints the one JSON object orca expects. `userData` carries the session id to
   }));
 ```
 
-Tenki carries SSH over a WebSocket, so `ssh-proxy.mjs` is a `ProxyCommand` that bridges a stock `ssh` client to it:
+Tenki carries SSH over a WebSocket rather than a plain network port, so a normal `ssh` client can't connect on its own. `ssh-proxy.mjs` fills the gap. It's a `ProxyCommand`, a program `ssh` runs and talks through instead of opening its own connection:
 
 ```js
-// ssh(1) ProxyCommand: bridges stdio <-> a Tenki sandbox's SSH WebSocket transport.
-// Tenki carries SSH over ws(s)://.../v1/ssh/<id>, so a stock ssh client needs this shim.
+// An ssh ProxyCommand: ssh runs this script and talks through its input and output
+// instead of opening a network connection itself. Tenki carries SSH over a WebSocket
+// (ws(s)://.../v1/ssh/<id>), so this script relays bytes between ssh and that WebSocket.
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 
 const sessionId = process.argv[2];
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 const conn = await tenki.ssh(sessionId);
 
-// Serialize writes; conn.write is async and ssh will not tolerate reordered bytes.
+// Send chunks one at a time, in order: conn.write is async, and ssh breaks if bytes arrive out of order.
 let tail = Promise.resolve();
 process.stdin.on("data", (c) => { tail = tail.then(() => conn.write(new Uint8Array(c))).catch(() => {}); });
 process.stdin.on("end", () => { tail.then(() => conn.close()); });
@@ -160,7 +167,7 @@ process.exit(0);
   if (mode === "suspend") await sandbox.pause();
   else if (mode === "resume") {
     await sandbox.resume();
-    // resume() returns while the session is still RESUMING; anything else 409s until it lands.
+    // resume() returns before the sandbox is running again, and other calls fail until it is, so wait.
     const deadline = Date.now() + 120_000;
     while (!isReady(sandbox.state)) {
       if (Date.now() > deadline) throw new Error(`resume timed out: state still ${sandbox.state} after 120s`);
@@ -170,19 +177,17 @@ process.exit(0);
 ```
 
 - `suspend` pauses the sandbox. Pausing is free and keeps memory and disk.
-- `resume` polls until the sandbox is running (up to 120 seconds), mints a fresh certificate, re-learns the host key, and prints `{"ok":true,"mode":"resume"}`.
+- `resume` waits until the sandbox is running (up to 120 seconds), gets a fresh SSH certificate, saves the server's key again, and prints `{"ok":true,"mode":"resume"}`.
 - `destroy` terminates the sandbox and removes its key directory and `known_hosts` entry.
 
-The SSH host key belongs to Tenki's gateway, and orca's target has no `HostKeyAlias`, so `create` learns the key once under a per-sandbox alias:
+ssh normally checks that a server's **host key** matches the one it saw last time. Here that key belongs to Tenki's SSH gateway rather than the sandbox, and orca's connection settings can't say which name to check it under, so `create` saves it once under a name unique to the sandbox:
 
 ```js
-  // The SSH host key belongs to Tenki's gateway, not to the sandbox's own sshd. Its host
-  // certs are signed by cert.caPub, but their principals are gateway hostnames and orca's
-  // target has no HostKeyAlias, so a @cert-authority pin can't match. Learn the key once
-  // here under a per-sandbox alias, so later connections verify normally instead of
-  // skipping the check.
-  // Session ids are UUIDv7: the front is a timestamp, so a prefix collides across
-  // sandboxes created near each other — alias on the random tail instead.
+  // ssh checks that the server it reaches is the one it saw before (its "host key").
+  // Here that key belongs to Tenki's SSH gateway, not to the sandbox, and orca gives ssh
+  // no way to say which name to check it under. So connect once now, save the key under
+  // a name unique to this sandbox, and later connections are checked against it.
+  // Sandbox ids start with a timestamp, so build that name from the random end of the id.
   alias = `tenki-${sandbox.id.replaceAll("-", "").slice(-12)}`;
   mkdirSync(`${homedir()}/.ssh`, { recursive: true });
   if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
@@ -192,7 +197,7 @@ The SSH host key belongs to Tenki's gateway, and orca's target has no `HostKeyAl
 
 ## Things to know
 
-- Each sandbox gets its own key directory because OpenSSH loads the certificate from `<identityFile>-cert.pub`, and orca's target has no certificate field.
+- Each sandbox gets its own key folder. ssh finds a key's certificate by looking for `<key file>-cert.pub` next to it, and orca has no setting for the certificate, so each sandbox's key and certificate sit together.
 - Log in as `tenki`. The repo is at `/home/tenki/repo`.
 - The recipe sets no lifetime cap, so a sandbox orca never destroys runs until your workspace's maximum duration.
 - Private repos are untested; the recipe passes no Git credentials.

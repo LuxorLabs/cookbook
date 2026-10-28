@@ -1,8 +1,19 @@
 # Covalent
 
-Run each [Covalent](https://github.com/AgnostiqHQ/covalent) task in its own Tenki sandbox. The [`covalent-tenki-plugin`](https://github.com/LuxorLabs/tenki-covalent-plugin) adds `TenkiExecutor`: every electron assigned to it runs in a fresh VM with root, created on demand and destroyed when the task finishes. Tasks can't leak state into each other, which suits untrusted steps and steps with conflicting dependencies.
+Run each step of a Python workflow on its own fresh cloud machine, created when the step starts and deleted when it ends.
 
-> **Status:** `covalent-tenki-plugin` 0.1.1 isn't on PyPI yet ([tenki-covalent-plugin#1](https://github.com/LuxorLabs/tenki-covalent-plugin/pull/1)), and 0.1.0 no longer installs, so step 1 fails until 0.1.1 ships. CI skips this example until then.
+[Covalent](https://github.com/AgnostiqHQ/covalent) is an open-source Python tool for running workflows: you split a job into Python functions, mark which ones are steps, and Covalent runs them in order, sending each step to wherever you tell it to run. Covalent has its own names for these pieces:
+
+- An **electron** is one step: a Python function decorated with `@ct.electron`.
+- A **lattice** is the workflow: a function decorated with `@ct.lattice` that calls electrons.
+- An **executor** decides where an electron runs. The default runs it on your machine.
+- The **dispatcher** is a local Covalent server, started with `covalent start`, that runs your workflows and hands each electron to its executor.
+
+The [`covalent-tenki-plugin`](https://github.com/LuxorLabs/tenki-covalent-plugin) adds one more executor, `TenkiExecutor`. Every electron that uses it runs in a new Tenki sandbox, a disposable Linux VM with root access, so steps can't interfere with each other. That suits steps that run code you don't trust, and steps whose dependencies conflict.
+
+In this example, one electron installs `numpy` in a sandbox, computes √(0 + 1 + … + 99), and returns about 70.36.
+
+> **Status:** the plugin's 0.1.1 release isn't on PyPI yet, and 0.1.0 no longer installs, so the install step fails until 0.1.1 ships ([tenki-covalent-plugin#1](https://github.com/LuxorLabs/tenki-covalent-plugin/pull/1)).
 
 <!-- When covalent-tenki-plugin 0.1.1 is on PyPI: delete the Status note, the first Troubleshooting row, and the "until 0.1.1" clause in the tenki-sandbox row; then unskip examples/covalent-tenki/ in .github/workflows/verify.yml. When tenki-covalent-plugin#1 merges, delete the sentence in "The workflow" saying the plugin README's table predates 0.1.1. -->
 
@@ -23,7 +34,7 @@ Set up the Tenki "Covalent" example from https://github.com/LuxorLabs/cookbook, 
 
 You need:
 
-- Python 3.12 for the workflow. Tasks travel to the VM with `cloudpickle`, so your Python minor version must match the sandbox's (3.12 on the default image). `verify.py` runs on 3.10 or later.
+- Python 3.12 for the workflow. The executor packs each step up on your machine and unpacks it in the sandbox (with `cloudpickle`), which only works when both sides run the same Python version, and the default sandbox image has 3.12. `verify.py` runs on 3.10 or later.
 - A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
 
 ### 1. Install
@@ -36,17 +47,17 @@ source .venv/bin/activate
 uv pip install -r requirements.txt      # covalent-tenki-plugin>=0.1.1, tenki>=1.4.1
 ```
 
-The plugin brings in `covalent` and `cloudpickle`. Keep the `>=0.1.1` floor: 0.1.0 depends on `tenki-sandbox`, the SDK's old PyPI name.
+The plugin brings in `covalent` and `cloudpickle`. Keep the `>=0.1.1` minimum: 0.1.0 depends on `tenki-sandbox`, an old package name that no longer installs.
 
 ### 2. Set your API key
 
-Export it in the terminal where you'll start the dispatcher:
+Export it in the terminal where you'll run `covalent start`:
 
 ```bash
 export TENKI_API_KEY=tk_...
 ```
 
-The executor runs inside the dispatcher and reads only `TENKI_API_KEY` or `TENKI_AUTH_TOKEN`. `verify.py` also accepts a key saved with `tenki login --api-key <key>`, but the executor doesn't.
+The executor runs inside the dispatcher, so the dispatcher needs the key in its environment when it starts. It reads only `TENKI_API_KEY` or `TENKI_AUTH_TOKEN`. `verify.py` also accepts a key saved with `tenki login --api-key <key>`, but the executor doesn't.
 
 ### 3. Verify
 
@@ -58,7 +69,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
 ✓ covalent-tenki: TenkiExecutor imports + a task-style command ran in a live Tenki sandbox → 42
 ```
 
-`verify.py` constructs a `TenkiExecutor`, then boots a sandbox, runs `python3 -c "print(6 * 7)"`, and terminates it. It doesn't dispatch a workflow. `verify.mjs` is a CI shim that runs it with `.venv/bin/python`, `$PYTHON`, or `python3`.
+`verify.py` checks the Tenki side without starting Covalent: it creates a `TenkiExecutor`, starts a sandbox, runs `python3 -c "print(6 * 7)"`, and deletes the sandbox. `verify.mjs` is the wrapper CI runs; it calls `verify.py` with `.venv/bin/python`, `$PYTHON`, or `python3`.
 
 ### 4. Run the workflow
 
@@ -67,20 +78,20 @@ covalent start
 python workflow.py
 ```
 
-`workflow.py` prints `dispatched:` and the dispatch ID, waits while the task's VM bootstraps (2 to 3 minutes on the default image), then prints `result:` and √4950, about 70.36. Stop the dispatcher with `covalent stop`.
+`covalent start` starts the dispatcher in the background. `workflow.py` sends it the workflow and prints `dispatched:` with an ID for the run. It then waits 2 to 3 minutes while the step's sandbox starts and installs Python packages, and prints `result:` and √4950, about 70.36. Stop the dispatcher with `covalent stop`.
 
 ## The workflow
 
-`workflow.py`, without the 422 workaround below:
+`workflow.py` defines one electron, `sqrt_of_sum`, sends it to Tenki, and wraps it in a one-step lattice. This is the file without the bug workaround described [below](#covalent-422-workaround):
 
 ```python
 import covalent as ct
 
-# … the Covalent 422 workaround (Step 5) …
+# … the Covalent 422 workaround (see below) …
 
 from covalent_tenki_plugin import TenkiExecutor  # noqa: E402 (after the patch)
 
-# Each electron assigned this executor runs in a fresh Tenki sandbox.
+# Every electron that uses this executor runs in its own new Tenki sandbox.
 tenki = TenkiExecutor(cpu_cores=2, memory_mb=4096, sandbox_requirements="numpy")
 
 
@@ -102,20 +113,22 @@ if __name__ == "__main__":
     print("result:", result.result)  # sqrt(sum(0..99)) = sqrt(4950) ~= 70.36
 ```
 
-`TenkiExecutor` sets each task's VM size and `sandbox_requirements`, a space-separated string of pip specs installed in the VM. Only electrons with `executor=tenki` run on Tenki. See the [plugin README](https://github.com/LuxorLabs/tenki-covalent-plugin) for every argument. Its table on `main` predates 0.1.1: where it lists `project_id`, 0.1.1 takes an optional `workspace_id` (default: the first workspace on your key).
+`TenkiExecutor` sets each step's VM size and `sandbox_requirements`, a space-separated list of pip packages to install in the VM before the step runs. Only electrons with `executor=tenki` run on Tenki; the rest use Covalent's default. See the [plugin README](https://github.com/LuxorLabs/tenki-covalent-plugin) for every argument. Its table on `main` predates 0.1.1: where it lists `project_id`, 0.1.1 takes an optional `workspace_id` (default: the first workspace on your key).
+
+## How it works
 
 For each electron, the executor:
 
-1. Creates a sandbox named `covalent-<dispatch_id>-<node_id>`, tagged `covalent`, with a server-side lifetime of `sandbox_max_duration_seconds` (default 3600), so a crashed dispatcher can't leave it billing.
-2. Bootstraps a venv at `/home/tenki/.covalent-venv` with `cloudpickle`, your dispatcher's `covalent` version, and `sandbox_requirements` (skipped when you pass `image`), and checks the Python version matches.
-3. Sends the pickled function and arguments through the SDK's exec calls (no SSH or object storage) and reads back the result or re-raises the exception.
-4. Terminates the sandbox.
+1. Creates a sandbox named `covalent-<dispatch_id>-<node_id>`, tagged `covalent`. Tenki deletes it after `sandbox_max_duration_seconds` (default 3600) no matter what, so a crashed dispatcher can't leave a VM running and billing.
+2. Sets up a Python virtual environment at `/home/tenki/.covalent-venv` with `cloudpickle`, the same `covalent` version you have locally, and your `sandbox_requirements`, and checks that the Python versions match. Passing `image` skips this.
+3. Packs up the function and its arguments with `cloudpickle`, sends them to the sandbox through Tenki's command API (no SSH or file storage needed), runs the function, and brings back its return value. If the function raised an exception, the same exception is raised on your side.
+4. Deletes the sandbox.
 
-The dispatcher stays responsive while tasks run, because the executor runs SDK calls in a thread.
+The dispatcher keeps running other steps while one is in a sandbox, because the executor makes its Tenki calls on a separate thread.
 
 ## Covalent 422 workaround
 
-With `covalent` 0.240.0 and `requests>=2.34`, every `ct.dispatch()` fails with `422 Unprocessable Entity`, because Covalent posts the manifest without a `Content-Type: application/json` header. `workflow.py` applies the [workaround from the plugin README](https://github.com/LuxorLabs/tenki-covalent-plugin#known-upstream-issue-unrelated-to-this-plugin) right after `import covalent`. Delete it once Covalent fixes the bug:
+This is a Covalent bug, not a Tenki one. With `covalent` 0.240.0 and `requests>=2.34`, every `ct.dispatch()` fails with `422 Unprocessable Entity`, because Covalent sends the workflow to the dispatcher without a `Content-Type: application/json` header. `workflow.py` applies the [workaround from the plugin README](https://github.com/LuxorLabs/tenki-covalent-plugin#known-upstream-issue-unrelated-to-this-plugin) right after `import covalent`. Delete it once Covalent fixes the bug:
 
 ```python
 from covalent._dispatcher_plugins import local as ldisp
@@ -130,14 +143,14 @@ ldisp.APIClient.post = _patched_post
 
 ## Cut the cold start
 
-The bootstrap runs once per electron, so it adds up across many short tasks.
+Setting up Python in each new sandbox (step 2 above) takes a couple of minutes and happens once per electron, so it adds up across many short steps.
 
 - **Batch small steps** into fewer electrons.
-- **Use a prepared image.** `TenkiExecutor(image=…)` skips the bootstrap. The image must have a venv at exactly `/home/tenki/.covalent-venv` with `cloudpickle`, your dispatcher's `covalent` version, your task's dependencies, and a matching Python minor version. `sandbox_requirements` is ignored when `image` is set.
+- **Use a prepared image.** `TenkiExecutor(image=…)` boots from an image you've already set up and skips that step. The image must have a venv at exactly `/home/tenki/.covalent-venv` with `cloudpickle`, your dispatcher's `covalent` version, your task's dependencies, and a matching Python minor version. `sandbox_requirements` is ignored when `image` is set.
 
 ## Limits
 
-- Payloads and results travel through exec calls, so a result of tens of MB can hit message-size limits. Write large artifacts to external storage from inside the task.
+- Arguments and results travel through Tenki's command API, so a result of tens of MB can hit message-size limits. Write large artifacts to external storage from inside the task.
 - Covalent's cancel API isn't wired up. `task_timeout_seconds` (default 1800) stops a runaway task, and `sandbox_max_duration_seconds` is the backstop.
 - Every task starts in a clean VM. The plugin doesn't use volumes or snapshots for shared caches.
 

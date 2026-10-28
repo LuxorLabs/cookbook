@@ -2,6 +2,8 @@
 
 Runnable examples for [Tenki Sandbox](https://tenki.cloud/products/sandbox). Each folder under `examples/` is a short program you can run against the live API and copy into your own project.
 
+A **sandbox** is a disposable Linux virtual machine in the cloud that you create from code. You run commands in it, read and write its files, and delete it when you're done, so code you don't fully trust (an AI agent's commands, a user's script, a test suite) runs there instead of on your own computer or servers. Most examples here take a tool you may already use, such as an agent framework or a workflow runner, and point the place it runs code at a Tenki sandbox.
+
 The first example takes about 10 minutes once you have an API key.
 
 ## Quick start
