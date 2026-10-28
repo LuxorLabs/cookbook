@@ -1,8 +1,12 @@
 # AgentBox
 
-Run [AgentBox](https://github.com/madarco/agentbox) coding agents (`claude`, `codex`, `opencode`) in Tenki VMs. AgentBox moves your project into a dedicated VM, which it calls a box, and runs agents there in parallel with your own settings. With the [`@tenkicloud/agentbox-provider`](https://www.npmjs.com/package/@tenkicloud/agentbox-provider) plugin, every box is a Tenki VM with its own kernel, Docker inside, public preview URLs, and free pause/resume. You don't need Docker locally.
+Run Claude Code, Codex, or OpenCode on a copy of your project in a cloud VM, with as many running side by side as you like.
 
-Pin the AgentBox CLI to **0.29.2**. Plugin 0.1.1 targets provider SDK v2, which AgentBox 0.27.1 through 0.29.2 load; 0.30.0 and later accept only v4. SDK v4 support is in progress in [tenki-agentbox-provider#6](https://github.com/LuxorLabs/tenki-agentbox-provider/pull/6).
+[AgentBox](https://github.com/madarco/agentbox) is a command-line tool that gives each coding agent its own isolated machine, which it calls a **box**. It copies your project into the box (including changes you haven't committed), installs the agents with your settings, and lets you attach to any box to watch or take over. Because each agent has its own box, several can work at once without stepping on each other or on your computer.
+
+Where boxes run is up to a **provider** plugin. With [`@tenkicloud/agentbox-provider`](https://www.npmjs.com/package/@tenkicloud/agentbox-provider), every box is a Tenki VM, with Docker inside, public URLs for previewing apps the agent runs, and free pause and resume. You don't need Docker on your machine.
+
+> **Use AgentBox 0.29.2.** The Tenki plugin (0.1.1) is built for AgentBox's older plugin interface, provider SDK v2, which versions 0.27.1 through 0.29.2 support. AgentBox 0.30.0 and later accept only v4 and won't load it. Support for the newer interface is in progress in [tenki-agentbox-provider#6](https://github.com/LuxorLabs/tenki-agentbox-provider/pull/6).
 
 ## Set it up with a coding agent
 
@@ -35,7 +39,7 @@ agentbox plugin add @tenkicloud/agentbox-provider
 agentbox plugin list                 # -> tenki … (SDK v2)
 ```
 
-Move both pins together. AgentBox runs plugins in-process with full access to your host and credentials, so only add plugins you trust.
+Upgrade the two together. AgentBox plugins run with full access to your machine and credentials, so only add plugins you trust.
 
 ### 2. Set your API key
 
@@ -46,13 +50,15 @@ agentbox doctor                      # shows the `tenki:` group
 
 The plugin reads `TENKI_AUTH_TOKEN` (or the alias `TENKI_API_TOKEN`) from your shell, then from `~/.agentbox/secrets.env`. It doesn't read `TENKI_API_KEY` or a `tenki login` key. If no key is set, the first `prepare` or `create` prompts for one and saves it.
 
-### 3. Bake the base image (once per workspace)
+### 3. Build the base image (once per workspace)
+
+New boxes start from a prepared image, so they don't reinstall everything each time. Build it once:
 
 ```bash
 agentbox prepare --provider tenki
 ```
 
-This boots a builder VM from Tenki's `sandbox` image, installs tmux, the AgentBox runtime, the coding agents, your agent settings, and MCP servers, then snapshots it and records the id in `~/.agentbox/tenki-prepared.json`. It takes 8 to 12 minutes on a billable 20 GB builder. Tail `~/.agentbox/logs/latest.log` to watch. Credentials are seeded per box, never into the image. If the snapshot is deleted or your token points at another workspace, the next `prepare` bakes again.
+This starts a temporary VM from Tenki's `sandbox` image, installs tmux, AgentBox's own tools, the coding agents, your agent settings, and MCP servers (extra tools for the agents), then saves it as a snapshot and records the id in `~/.agentbox/tenki-prepared.json`. It takes 8 to 12 minutes, billed as a normal 20 GB VM. Tail `~/.agentbox/logs/latest.log` to watch. Your credentials are added to each box when it's created, never saved in the image. If the snapshot is deleted or your key points at another workspace, the next `prepare` builds it again.
 
 ### 4. Create a box and start an agent
 
@@ -63,7 +69,7 @@ agentbox create --provider tenki     # about 3 minutes
 agentbox tenki claude                # Claude Code inside the box
 ```
 
-Your project is a git clone on a per-box branch, including uncommitted and untracked changes. If AgentBox hasn't captured an agent's login yet, log in once inside a box and later boxes reuse it. Set `box.provider: tenki` in `agentbox.yaml` to drop `--provider tenki`.
+Inside the box, your project is a git clone on its own branch, including uncommitted and untracked changes. `agentbox tenki claude` attaches your terminal to Claude Code running there. If AgentBox hasn't captured an agent's login yet, log in once inside a box and later boxes reuse it. Set `box.provider: tenki` in `agentbox.yaml` to drop `--provider tenki`.
 
 ### 5. Verify the setup
 
@@ -80,22 +86,22 @@ node verify.mjs
 ✓ agentbox-tenki: plugin exposes the SDK v2 tenki provider → live boot → exec (box 42) → file round-trip → dispose
 ```
 
-`verify.mjs` checks that the published plugin exposes the SDK v2 provider contract AgentBox 0.29.2 loads (`create`, `start`, `reconnect`, `pause`, `resume`, `stop`, `destroy`, `exec`, `buildAttach`, `checkpoint.create`), then boots a small VM, runs a command, round-trips a file, and disposes of it. It doesn't need the AgentBox CLI and doesn't run `prepare` or `create`. It reads `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or a `tenki login` key. You can run it before the bake to confirm your key works.
+`verify.mjs` checks that the published plugin has every function AgentBox 0.29.2 expects from a provider (`create`, `start`, `reconnect`, `pause`, `resume`, `stop`, `destroy`, `exec`, `buildAttach`, `checkpoint.create`), then boots a small VM, runs a command, round-trips a file, and disposes of it. It doesn't need the AgentBox CLI and doesn't run `prepare` or `create`. It reads `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or a `tenki login` key. You can run it before the bake to confirm your key works.
 
 ## Working with boxes
 
-- **Push from a box** with `agentbox-ctl git push`. The push goes through the host relay, which holds your git credentials, so keys never enter the box.
+- **Push from a box** with `agentbox-ctl git push`. The push is relayed through your machine, which holds your git credentials, so keys never enter the box.
 - **Preview URLs.** Every exposed port gets a public HTTPS URL; `expose:` in `agentbox.yaml` and `agentbox open` work as on other providers. The in-box web proxy listens on 8080. Anyone with a URL can reach that port, so use a signed, expiring URL for anything that shouldn't stay public.
 - **Checkpoints.** From the project root, `agentbox checkpoint create --name setup` snapshots a warm box live, and `agentbox create --provider tenki --snapshot setup` boots new boxes from it.
 - **Pause.** `agentbox pause <box>` and `agentbox start <box>` use Tenki pause/resume: free while paused, processes intact.
-- **Lifetime.** Boxes get 45 minutes unless you set `AGENTBOX_TENKI_TIMEOUT_MS`. The host keepalive extends a box while you use it, starting from that value.
+- **Lifetime.** A box shuts down after 45 minutes unless you set `AGENTBOX_TENKI_TIMEOUT_MS`. While you're using a box, AgentBox keeps extending that deadline.
 
 | Setting | Where | Notes |
 | --- | --- | --- |
 | VM size | `--size` / `box.size` | `cpu-memory[-disk]` in GB, e.g. `4-8-20` |
 | Base image | `AGENTBOX_TENKI_BASE_IMAGE` | what `prepare` layers onto (default `sandbox`) |
 | Workspace | `AGENTBOX_TENKI_WORKSPACE_ID` | defaults to the token's own scope |
-| Session lifetime | `AGENTBOX_TENKI_TIMEOUT_MS` | seeds the host keepalive loop |
+| Box lifetime | `AGENTBOX_TENKI_TIMEOUT_MS` | how long a box lives before AgentBox extends it |
 | Default checkpoint | `box.defaultCheckpoint` | generic AgentBox key |
 
 ## Clean up

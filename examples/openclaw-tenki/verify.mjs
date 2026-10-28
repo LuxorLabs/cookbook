@@ -61,11 +61,11 @@ try {
 	const found = await client.list({ tags: [TAG], workspaceId });
 	assert(found.some((s) => s.id === session.id), `list({tags:["${TAG}"]}) did not return the session`);
 
-	// Shell scripts run as `/bin/sh -c` with a `set --` prefix carrying $1..$n.
+	// Shell scripts run as `/bin/sh -c`, with a `set --` prefix that sets their arguments $1..$n.
 	const r1 = await session.exec("/bin/sh", { args: ["-c", `set -- 'hello world'\necho "arg:$1"`] });
 	assert(r1.exitCode === 0 && stdoutText(r1).trim() === "arg:hello world", `positional args: ${JSON.stringify(stdoutText(r1))}`);
 
-	// No stdin stream on the SDK exec surface: the backend stages stdin as a session file onto fd 0.
+	// The SDK's exec call has no input stream, so the plugin writes input to a file and the command reads it from there.
 	const stdinFile = `/home/tenki/.openclaw-stdin-${randomUUID()}`;
 	await session.writeFile(stdinFile, "stdin staged as a session file\n");
 	const r2 = await session.exec("/bin/sh", {
