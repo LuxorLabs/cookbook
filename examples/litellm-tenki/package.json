@@ -1,0 +1,9 @@
+{
+  "name": "litellm-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example: a LiteLLM proxy in a sticky Tenki sandbox on a named preview URL, with provider keys injected at egress.",
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1"
+  }
+}
