@@ -1,0 +1,51 @@
+# Copy to .github/workflows/ci.yml in a Node project. The only lines that changed
+# from a GitHub-hosted workflow are the runs-on values.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: tenki-standard-small-2c-4g # was: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    runs-on: tenki-standard-medium-4c-8g # was: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+
+  image:
+    runs-on: tenki-standard-medium-4c-8g # was: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: docker build -t app:${{ github.sha }} .
