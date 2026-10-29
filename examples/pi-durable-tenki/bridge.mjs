@@ -14,6 +14,17 @@ try {
 	const handle = session.run(["/home/tenki/pi-env", ...daemonArgs], {
 		stdin: Readable.toWeb(process.stdin),
 	});
+	// Tenki keeps this exec stream open while another client pauses the sandbox, so
+	// watch the state and exit once it leaves RUNNING: pi-env then respawns the
+	// bridge, resuming the sandbox, on the next request.
+	setInterval(async () => {
+		try {
+			await session.refresh();
+			if (session.state !== "RUNNING") process.exit(1);
+		} catch {
+			/* a failed poll is not a pause; the next one decides */
+		}
+	}, 1000).unref();
 	const piped = Promise.allSettled([
 		handle.stdout.pipeTo(Writable.toWeb(process.stdout)),
 		handle.stderr.pipeTo(Writable.toWeb(process.stderr)),
