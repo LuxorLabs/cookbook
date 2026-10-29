@@ -1,8 +1,17 @@
 # Pi Durable
 
-Run [Pi](https://github.com/earendil-works/pi) Durable's agent tools in a Tenki sandbox. Pi's Durable harness checkpoints every conversation, model turn, and tool call to storage. Its `@earendil-works/pi-env` package runs tools on another machine through a small daemon, normally over SSH. This example runs that daemon in a Tenki sandbox with no SSH, so Pi checkpoints the agent's state and Tenki can pause and resume the machine. A read after a pause resumes the sandbox on its own.
+Give a long-running AI agent a cloud machine for its commands and files, and pause that machine for free whenever the agent is idle.
 
-pi-durable and pi-env are experimental upstream, and their APIs can change between releases. This example was built against 1.2.0.
+[Pi](https://github.com/earendil-works/pi) is an open-source toolkit for building AI agents. Two of its packages matter here:
+
+- **Pi Durable** (`@earendil-works/pi-durable`) runs agents that survive crashes and restarts. It saves every conversation, model reply, and tool call to storage as it happens, so if the process dies mid-task, reopening the storage picks up where it stopped.
+- **pi-env** (`@earendil-works/pi-env`) lets that agent's tools (running commands, reading and writing files) act on another machine instead of yours. It copies a small helper program, the **daemon**, to that machine and talks to it, normally over SSH.
+
+This example makes the other machine a Tenki sandbox and replaces SSH with Tenki's own API. Pi keeps the agent's memory safe in storage, and Tenki can pause the sandbox between tasks, which saves its memory and disk and stops billing. The next time the agent touches the sandbox, it resumes on its own.
+
+The demo needs no model key: it runs a command and writes a file the way an agent's tools would, pauses the sandbox, and reads the file back.
+
+Pi Durable and pi-env are experimental, and their APIs can change between releases. This example was built against 1.2.0.
 
 ## Set it up with a coding agent
 
@@ -55,7 +64,7 @@ pausing (snapshot memory + disk, free the VM) ...
 resumed -> state the agent built up
 ```
 
-The pause takes about a minute. The read after it resumes the sandbox, respawns the daemon in about 0.5 s, and finds the file. The script terminates the sandbox at the end.
+The pause takes about a minute. The read after it resumes the sandbox, restarts the daemon in about 0.5 s, and finds the file. The script deletes the sandbox at the end.
 
 ### 4. Verify
 
@@ -67,15 +76,27 @@ node verify.mjs
 ✓ pi-durable-tenki: boot + daemon → hello → exec → file round-trip → pause → same env resumes, file intact
 ```
 
-`verify.mjs` checks that the daemon reports `linux`, `uname -s` prints `Linux`, a marker file round-trips, the sandbox reaches `PAUSED`, and a read on the same env returns the marker and leaves the sandbox `RUNNING`. It needs no model key, so it doesn't run the Durable harness or an agent turn.
+`verify.mjs` checks that the daemon reports `linux`, `uname -s` prints `Linux`, a file written to the sandbox reads back the same, the sandbox reaches `PAUSED`, and a read afterwards returns the file and leaves the sandbox `RUNNING`. It needs no model key, so it doesn't run a real agent.
+
+## How it works
+
+1. **`tenki-env.mjs`** starts a sandbox, copies the pi-env daemon into it, and returns an **env**: the object Pi's tools call to run commands and read or write files.
+2. **pi-env** talks to the daemon by starting a local command and sending messages through that command's input and output. Normally the command is `ssh`. Here it's **`bridge.mjs`**, which starts the daemon inside the sandbox through Tenki's API and passes the messages back and forth.
+3. Before each connection, `tenki-env.mjs` checks whether the sandbox is paused and resumes it if so. That's why a call after a pause just works.
+
+A few terms you'll see in the code:
+
+- **`env.exec()`, `env.writeFile()`, `env.readTextFile()`** are what Pi's tools call. Each returns a result object, and `getOrThrow()` unwraps it or throws the error.
+- **`BACKGROUND_CONTEXT`** is the context argument every env call takes. Inside an agent, Pi supplies its own; a standalone script like this one passes this default.
+- **`harnessEnv`** is the same env in the shape Pi Durable's `Harness` expects (see [Use it in a Durable worker](#use-it-in-a-durable-worker)).
 
 ## The demo
 
 `run.mjs`:
 
 ```js
-// Drive Pi Durable's ExecutionEnv surface on a Tenki sandbox, pause the
-// sandbox mid-session, and watch the same env recover on the next call.
+// Run commands and write a file in a Tenki sandbox through Pi Durable's env
+// interface, pause the sandbox, and show the next call picks up where it left off.
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { getOrThrow } from "@earendil-works/pi-durable/env";
 import { createTenkiEnv } from "./tenki-env.mjs";
@@ -104,7 +125,7 @@ try {
 
 ## Use it in a Durable worker
 
-`createTenkiEnv()` returns a `harnessEnv` for the harness's `env` option:
+In a real agent, Pi Durable's `Harness` runs the conversation and calls tools. Pass it `harnessEnv` as its `env` option, and every tool call runs in the sandbox:
 
 ```js
 import { Harness } from "@earendil-works/pi-durable";
@@ -123,18 +144,18 @@ const harness = await Harness.open(storage, {
 
 - Copy `tenki-env.mjs` and `bridge.mjs` into the same directory. The connection starts the bridge from there.
 - `createTenkiEnv()` takes `{ cpuCores, memoryMb, onLog }` (defaults: 1 core, 1024 MB). `onLog` receives daemon and bridge diagnostics.
-- Use one env id and one `Connection` per sandbox. In Pi, equal env ids mean the same files, and `edit`/`write` serialize by env id and path.
+- Use one env id and one `Connection` per sandbox. Pi assumes two envs with the same id share files, and it orders `edit` and `write` calls by env id and path.
 - Check a custom env against Pi's expectations with `registerEnvConformance()` from `@earendil-works/pi-durable/testing`.
 
 ## How the bridge works
 
-pi-env's `Connection` spawns a local command and speaks its framed protocol over that process's stdio. Normally that's `ssh`. Here it's `bridge.mjs`, which starts the daemon in the sandbox and pipes its stdio over Tenki's exec data plane:
+pi-env's `Connection` starts a local command and exchanges messages with the daemon through that command's standard input and output. Normally the command is `ssh`. Here it's `bridge.mjs`, which starts the daemon in the sandbox with Tenki's command API and connects the two streams:
 
 ```js
 #!/usr/bin/env node
-// Spawned by pi-env's Connection as: node bridge.mjs <sessionId> serve --token <hex>
-// Runs the daemon inside the Tenki sandbox and pipes its stdio through — the
-// framed protocol rides Tenki's exec data plane, no SSH involved.
+// pi-env starts this script as: node bridge.mjs <sessionId> serve --token <hex>
+// It starts the pi-env daemon inside the Tenki sandbox and connects the daemon's
+// input and output to this process's, using Tenki's command API instead of SSH.
 import { Readable, Writable } from "node:stream";
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 
@@ -147,17 +168,33 @@ try {
   const handle = session.run(["/home/tenki/pi-env", ...daemonArgs], {
     stdin: Readable.toWeb(process.stdin),
   });
-  handle.stdout.pipeTo(Writable.toWeb(process.stdout)).catch(() => {});
-  handle.stderr.pipeTo(Writable.toWeb(process.stderr)).catch(() => {});
-  process.exit((await handle).exitCode ?? 1);
+  // Tenki keeps this exec stream open while another client pauses the sandbox, so
+  // watch the state and exit once it leaves RUNNING: pi-env then respawns the
+  // bridge, resuming the sandbox, on the next request.
+  setInterval(async () => {
+    try {
+      await session.refresh();
+      if (session.state !== "RUNNING") process.exit(1);
+    } catch {
+      /* a failed poll is not a pause; the next one decides */
+    }
+  }, 1000).unref();
+  const piped = Promise.allSettled([
+    handle.stdout.pipeTo(Writable.toWeb(process.stdout)),
+    handle.stderr.pipeTo(Writable.toWeb(process.stderr)),
+  ]);
+  const { exitCode } = await handle;
+  // Drain the final framed stdout frame before exiting, or pi-env sees a half-response.
+  await piped;
+  process.exit(exitCode ?? 1);
 } catch (err) {
-  // An unreachable sandbox becomes a clean spawn failure; pi-env retries on the next request.
+  // If the sandbox can't be reached, exit with an error; pi-env tries again on the next request.
   console.error(`bridge: ${err?.message ?? err}`);
   process.exit(1);
 }
 ```
 
-`tenki-env.mjs` uploads the static linux-x64 daemon from the pi-env package (2.4 MB) and wires a `RemoteExecutionEnv` through the bridge. The `command` option is re-run on every reconnect, so a paused sandbox is resumed before the bridge starts:
+`tenki-env.mjs` uploads the daemon (a 2.4 MB Linux program that ships inside the pi-env package) and creates a `RemoteExecutionEnv` that connects through the bridge. pi-env calls the `command` option on every reconnect, so a paused sandbox is resumed before the bridge starts:
 
 ```js
   // The pi-env package ships a static linux-x64 daemon that runs on Tenki's stock image.
@@ -165,8 +202,8 @@ try {
   await session.writeFile("/home/tenki/pi-env", readFileSync(daemon));
   await session.exec(["chmod", "+x", "/home/tenki/pi-env"]);
 
-  // pi-env recomputes `command` on every (re)connect, so a sandbox paused between
-  // requests is resumed before the bridge spawns — the next call recovers on its own.
+  // pi-env calls `command` every time it (re)connects. Resuming a paused sandbox here
+  // means the next call after a pause just works, with no extra code in the agent.
   const connection = new Connection({
     command: async () => {
       await session.refresh();
@@ -179,7 +216,7 @@ try {
     onLog,
   });
 
-  // Equal env ids mean the same files, so: one id (and one Connection) per sandbox.
+  // Pi treats two envs with the same id as sharing files, so use one id (and one Connection) per sandbox.
   const env = new RemoteExecutionEnv({
     connection,
     id: `pi-env:tenki:${session.id}`,
@@ -189,8 +226,8 @@ try {
 
 Daemon behavior to know, from pi-env's [protocol](https://github.com/earendil-works/pi/blob/main/packages/env/docs/protocol.md):
 
-- The daemon exits when its stdin ends or after 30 s without traffic and kills every process it started. A dead bridge leaks nothing, but commands don't survive a pause or a dropped connection.
-- A reconnect is a fresh daemon session. Handles opened before it, such as readers and running execs, fail cleanly instead of reaching the new daemon.
+- The daemon exits when its connection closes or after 30 s with no messages, and stops every process it started. Nothing is left running if the bridge dies, but a running command doesn't survive a pause or a dropped connection.
+- A reconnect starts a new daemon. Anything opened before it, such as a file reader or a running command, fails with an error instead of reaching the new daemon.
 
 ## Troubleshooting
 

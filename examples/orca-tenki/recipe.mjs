@@ -1,8 +1,9 @@
-// An orca ephemeral-VM recipe backed by Tenki sandboxes: one disposable machine per agent,
-// instead of N git worktrees sharing your laptop.
+// An orca Cloud VM recipe backed by Tenki sandboxes: each orca workspace gets its own
+// disposable machine, instead of every agent sharing your laptop.
 //
-// orca runs this once per lifecycle mode. `create` prints one JSON object describing an SSH
-// target; `suspend`/`resume`/`destroy` get that same JSON back on stdin as recipeResult.
+// orca calls this script with a mode: create, suspend, resume, or destroy. `create` prints
+// one JSON object telling orca how to SSH in; the other modes get that same JSON back on
+// stdin as `recipeResult`.
 import { TenkiSandbox, isReady } from "@tenkicloud/sandbox";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
@@ -43,13 +44,11 @@ if (mode === "create") {
 		const cert = await tenki.issueSandboxSSHCert(sandbox.id, publicKey);
 		writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
 
-		// The SSH host key belongs to Tenki's gateway, not to the sandbox's own sshd. Its host
-		// certs are signed by cert.caPub, but their principals are gateway hostnames and orca's
-		// target has no HostKeyAlias, so a @cert-authority pin can't match. Learn the key once
-		// here under a per-sandbox alias, so later connections verify normally instead of
-		// skipping the check.
-		// Session ids are UUIDv7: the front is a timestamp, so a prefix collides across
-		// sandboxes created near each other — alias on the random tail instead.
+		// ssh checks that the server it reaches is the one it saw before (its "host key").
+		// Here that key belongs to Tenki's SSH gateway, not to the sandbox, and orca gives ssh
+		// no way to say which name to check it under. So connect once now, save the key under
+		// a name unique to this sandbox, and later connections are checked against it.
+		// Sandbox ids start with a timestamp, so build that name from the random end of the id.
 		alias = `tenki-${sandbox.id.replaceAll("-", "").slice(-12)}`;
 		mkdirSync(`${homedir()}/.ssh`, { recursive: true });
 		if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
@@ -90,7 +89,7 @@ if (mode === "create") {
 	if (mode === "suspend") await sandbox.pause();
 	else if (mode === "resume") {
 		await sandbox.resume();
-		// resume() returns while the session is still RESUMING; anything else 409s until it lands.
+		// resume() returns before the sandbox is running again, and other calls fail until it is, so wait.
 		const deadline = Date.now() + 120_000;
 		while (!isReady(sandbox.state)) {
 			if (Date.now() > deadline) throw new Error(`resume timed out: state still ${sandbox.state} after 120s`);

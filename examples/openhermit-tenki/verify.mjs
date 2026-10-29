@@ -31,7 +31,7 @@ const client = new TenkiSandbox({ authToken });
 const text = (bytes) => new TextDecoder().decode(bytes);
 let session;
 try {
-	// 1) boot a sticky session, as the backend's ensure() does
+	// 1) start a long-lived ("sticky") sandbox, as the backend does for each agent
 	session = await client.createAndWait({
 		cpuCores: 1,
 		memoryMb: 1024,
@@ -40,8 +40,8 @@ try {
 		workspaceId,
 	});
 
-	// 2) exec the way TenkiExecBackend.exec() does: sh -c, cwd agent_home, env passed
-	//    through, timeout_ms handed to the SDK's guest-enforced timeout
+	// 2) run a command the way the backend does: through sh -c, in agent_home, with the
+	//    agent's environment variables, and with a time limit enforced inside the sandbox
 	const r1 = await session.run(["sh", "-c", 'echo "$GREETING $(python3 -c "print(6*7)")"'], {
 		cwd: "/home/tenki",
 		env: { GREETING: "hermit" },
@@ -65,8 +65,8 @@ try {
 		throw new Error("skill file round-trip mismatch");
 	}
 
-	// 4) reattach by id — what the gateway does after a restart (readySession: resume if
-	//    paused, wait until RUNNING)
+	// 4) reconnect by id, as the gateway does after a restart: resume the sandbox if it's
+	//    paused, wait until it's running, and check the files are still there
 	const again = await client.get(session.id);
 	if (again.state === "PAUSED") await again.resume();
 	if (again.state !== "RUNNING") await again.waitReady(180_000);

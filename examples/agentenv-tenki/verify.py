@@ -1,5 +1,5 @@
 """
-Smoke-verify the AgentEnv example without a model key:
+Check the Tenki side of the AgentEnv example, without a model key:
   1. agent-env resolves the built-in `tenki` backend from this folder's
      .agentenv/config.toml, and
   2. that provider boots a live Tenki VM, exposes a port, runs a command as

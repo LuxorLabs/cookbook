@@ -1,6 +1,12 @@
 # OpenHermit
 
-Run [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) agents on Tenki sandboxes. OpenHermit deploys fleets of AI agents as services, with a gateway that keeps state in PostgreSQL. With its `tenki` sandbox type, each agent's shell commands, file tools, and skills run in one sticky Tenki sandbox that survives gateway restarts. This folder holds a check of the Tenki side, not OpenHermit itself.
+Give each of your OpenHermit agents its own cloud machine that keeps its files between conversations and costs nothing while idle.
+
+[OpenHermit](https://github.com/HCF-STUDIOS/openhermit) runs AI agents as always-on services. A server called the **gateway** manages them and stores their settings and history in PostgreSQL. Each agent gets a **sandbox**, the machine where its shell commands run, its file tools read and write, and its **skills** (instruction files it can load) live. By default that's a Docker container on the gateway's machine.
+
+OpenHermit's `tenki` sandbox type makes it a Tenki VM instead. Each agent keeps one VM for its whole life: OpenHermit pauses it when the agent goes quiet and resumes it on the next command, and it reconnects to the same VM after a gateway restart, so the agent's files are always where it left them.
+
+The steps below set up OpenHermit with a Tenki-backed agent. This folder's `verify.mjs` is a quicker check that your Tenki key works and the backend's Tenki calls succeed, without installing OpenHermit.
 
 ## Set it up with a coding agent
 
@@ -25,7 +31,7 @@ You need:
 - PostgreSQL, or Docker so the setup wizard can start one.
 - An [OpenRouter](https://openrouter.ai) API key for the agent's model (`google/gemini-3-flash-preview` by default).
 
-The Tenki backend merged after OpenHermit's latest npm release (`0.10.0`), so run OpenHermit from source until the next release.
+The Tenki backend was added after OpenHermit's latest npm release (`0.10.0`), so run OpenHermit from source until the next release.
 
 ### 1. Install OpenHermit from source
 
@@ -37,7 +43,7 @@ The checkout already depends on `@tenkicloud/sandbox` `^1.4.0`. `npm run dev:cli
 
 ### 2. Set your API key
 
-The gateway reads the key from its own env file, not your shell or `tenki login`:
+The gateway reads the key from its own settings file, not your shell or `tenki login`:
 
 ```bash
 npm run dev:cli -- setup                            # DATABASE_URL, tokens
@@ -59,9 +65,9 @@ npm run dev:cli -- agents start main
 npm run dev:cli -- chat --agent main                # the agent's shell now runs on Tenki
 ```
 
-- `--no-sandbox` skips the default Docker sandbox, which would otherwise take the `default` alias.
-- Without a model key the agent can't run a turn. You can put `OPENROUTER_API_KEY` in the gateway's `.env` instead.
-- `agents start` prints a `[deprecated]` warning and can be skipped; the runner starts on demand.
+- `--no-sandbox` skips the default Docker sandbox, so the Tenki one becomes the agent's `default`.
+- Without a model key the agent can't reply. You can put `OPENROUTER_API_KEY` in the gateway's `.env` instead.
+- `agents start` prints a `[deprecated]` warning and can be skipped; the agent starts on its first message anyway.
 
 ### 4. Verify
 
@@ -69,9 +75,9 @@ npm run dev:cli -- chat --agent main                # the agent's shell now runs
 npm run dev:cli -- sandbox list --agent main
 ```
 
-You see one sandbox with alias `default` and type `tenki`. Its status reads `pending` until the agent's first command, then `provisioned`.
+You see one sandbox named `default` with type `tenki`. Its status reads `pending` until the agent runs its first command, which creates the VM, then `provisioned`.
 
-To check the Tenki side without a gateway, database, or model, run this folder's check:
+To check your Tenki key and the backend's Tenki calls without a gateway, database, or model key, run this folder's check:
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
@@ -92,16 +98,16 @@ Pass these to `sandbox add --config`. All are optional.
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `cpu_cores` / `memory_mb` / `disk_size_gb` | `2` / `4096` / `10` | sandbox size |
-| `agent_home` | `/home/tenki` | workspace mount point and default `cwd` |
-| `timeout_ms` | `300000` | guest-enforced per-command timeout; on expiry exit 137, partial stdout/stderr kept |
+| `agent_home` | `/home/tenki` | where the agent's files go, and the folder commands start in |
+| `timeout_ms` | `300000` | time limit for each command, enforced inside the sandbox; a command that runs over exits with code 137 and keeps the output it printed |
 | `workspace_id` | inferred from the key | explicit Tenki workspace |
-| `base_url` | Tenki cloud | self-hosted / staging endpoint |
+| `base_url` | Tenki cloud | a different Tenki API endpoint |
 
 Keep `agent_home` under `/home/tenki`, where Tenki confines the SDK's file I/O. OpenHermit can't change an existing sandbox's config, so set `timeout_ms` when you add it.
 
 ### Put every new agent on Tenki
 
-Register a gateway preset, then restart:
+Save the Tenki settings as a named **preset** on the gateway, make it the default for new agents, then restart:
 
 ```bash
 npm run dev:cli -- gateway config set sandboxPresets.tenki-default \
@@ -114,19 +120,19 @@ Set the preset before `autoProvisionSandbox`, which must name a known preset. To
 
 ## How the backend works
 
-- **One sticky sandbox per agent.** It creates the session with `sticky: true`, stores its id, and after a gateway restart reattaches with `client.get(id)`, resuming it if paused. It creates a new, empty sandbox only when the old one has expired or been terminated.
-- **Commands run as `sh -c`** in `agent_home`, with the agent's pass-through secrets as env vars. A command past `timeout_ms` exits 137 with its partial output kept.
-- **Skills sync as file uploads**, staged and swapped in. A sync while paused sets a dirty flag, and the next `ensure()` re-pushes them.
-- **Pause, not terminate.** Pausing is free, and the next command resumes the VM. OpenHermit pauses the sandbox 5 minutes after the agent's last command (`exec.lifecycle`), when the gateway evicts an idle runner (30 minutes, `OPENHERMIT_EVICTION_TTL_MINUTES`), when you disable the agent, or when its runner stops.
+- **One long-lived sandbox per agent.** The backend creates the sandbox with Tenki's `sticky: true` option, which keeps it able to pause and resume, and saves its id. After a gateway restart it reconnects with `client.get(id)` and resumes it if paused. It creates a new, empty sandbox only when the old one has expired or been deleted.
+- **Commands run through `sh -c`** in `agent_home`, with the secrets you've given the agent as environment variables. A command that runs past `timeout_ms` exits with code 137 and keeps the output it printed.
+- **Skills are uploaded as files** and swapped in all at once. If skills change while the sandbox is paused, the backend uploads them the next time the sandbox is used.
+- **Pause, not delete.** Pausing is free, and the next command resumes the VM. OpenHermit pauses the sandbox 5 minutes after the agent's last command (`exec.lifecycle`), when the gateway unloads an idle agent (after 30 minutes, `OPENHERMIT_EVICTION_TTL_MINUTES`), when you disable the agent, or when it stops.
 
-`verify.mjs` makes the same SDK calls. It boots a sticky session and runs a command the way the backend does:
+`verify.mjs` makes the same Tenki calls. It starts a long-lived sandbox and runs a command the way the backend does:
 
 ```js
 const client = new TenkiSandbox({ authToken });
 const text = (bytes) => new TextDecoder().decode(bytes);
 let session;
 try {
-  // 1) boot a sticky session, as the backend's ensure() does
+  // 1) start a long-lived ("sticky") sandbox, as the backend does for each agent
   session = await client.createAndWait({
     cpuCores: 1,
     memoryMb: 1024,
@@ -135,8 +141,8 @@ try {
     workspaceId,
   });
 
-  // 2) exec the way TenkiExecBackend.exec() does: sh -c, cwd agent_home, env passed
-  //    through, timeout_ms handed to the SDK's guest-enforced timeout
+  // 2) run a command the way the backend does: through sh -c, in agent_home, with the
+  //    agent's environment variables, and with a time limit enforced inside the sandbox
   const r1 = await session.run(["sh", "-c", 'echo "$GREETING $(python3 -c "print(6*7)")"'], {
     cwd: "/home/tenki",
     env: { GREETING: "hermit" },
@@ -147,11 +153,11 @@ try {
   }
 ```
 
-It then checks that a timed-out command keeps its partial output, writes a skill file, and reattaches by id as the gateway does after a restart:
+It then checks that a timed-out command keeps its partial output, writes a skill file, and reconnects by id as the gateway does after a restart:
 
 ```js
-  // 4) reattach by id — what the gateway does after a restart (readySession: resume if
-  //    paused, wait until RUNNING)
+  // 4) reconnect by id, as the gateway does after a restart: resume the sandbox if it's
+  //    paused, wait until it's running, and check the files are still there
   const again = await client.get(session.id);
   if (again.state === "PAUSED") await again.resume();
   if (again.state !== "RUNNING") await again.waitReady(180_000);
@@ -159,11 +165,11 @@ It then checks that a timed-out command keeps its partial output, writes a skill
   if (!text(r2.stdout).includes("demo skill")) throw new Error("reattached session lost workspace state");
 ```
 
-A `finally` block disposes the session. The backend's own tests are upstream in [`tenki-backend.test.ts`](https://github.com/HCF-STUDIOS/openhermit/blob/main/apps/agent/test/tenki-backend.test.ts).
+A `finally` block deletes the sandbox. The backend's own tests are upstream in [`tenki-backend.test.ts`](https://github.com/HCF-STUDIOS/openhermit/blob/main/apps/agent/test/tenki-backend.test.ts).
 
 ## Things to know
 
-- **Sandboxes don't clean up after themselves.** Sticky sessions have no lifetime cap, the backend never terminates them, and `sandbox remove` only marks OpenHermit's row `deleted`. Before removing a sandbox, copy its **External ID** from the admin UI's Sandboxes tab (http://127.0.0.1:4000/admin/, after `npm run build:ui -w @openhermit/gateway`), then `close()` the session that `client.get(id)` returns.
+- **Sandboxes don't clean up after themselves.** They have no lifetime cap, the backend never deletes them, and `sandbox remove` only marks the sandbox `deleted` in OpenHermit's database. Before removing a sandbox, copy its **External ID** from the admin UI's Sandboxes tab (http://127.0.0.1:4000/admin/, after `npm run build:ui -w @openhermit/gateway`), then `close()` the session that `client.get(id)` returns.
 - **Outbound network is on**, and the backend has no setting to turn it off.
 
 ## Troubleshooting

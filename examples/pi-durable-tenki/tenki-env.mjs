@@ -1,4 +1,4 @@
-// Boot a Tenki sandbox and wire Pi Durable's ExecutionEnv surface to it via pi-env.
+// Start a Tenki sandbox and connect it to Pi Durable as the place where agent tools run.
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
@@ -25,8 +25,8 @@ export async function createTenkiEnv({ cpuCores = 1, memoryMb = 1024, onLog } = 
 		await session.writeFile("/home/tenki/pi-env", readFileSync(daemon));
 		await session.exec(["chmod", "+x", "/home/tenki/pi-env"]);
 
-		// pi-env recomputes `command` on every (re)connect, so a sandbox paused between
-		// requests is resumed before the bridge spawns — the next call recovers on its own.
+		// pi-env calls `command` every time it (re)connects. Resuming a paused sandbox here
+		// means the next call after a pause just works, with no extra code in the agent.
 		const connection = new Connection({
 			command: async () => {
 				await session.refresh();
@@ -39,7 +39,7 @@ export async function createTenkiEnv({ cpuCores = 1, memoryMb = 1024, onLog } = 
 			onLog,
 		});
 
-		// Equal env ids mean the same files, so: one id (and one Connection) per sandbox.
+		// Pi treats two envs with the same id as sharing files, so use one id (and one Connection) per sandbox.
 		const env = new RemoteExecutionEnv({
 			connection,
 			id: `pi-env:tenki:${session.id}`,

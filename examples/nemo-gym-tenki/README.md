@@ -1,8 +1,18 @@
 # NeMo Gym
 
-Run [NVIDIA NeMo Gym](https://github.com/NVIDIA-NeMo/Gym) rollouts in Tenki sandboxes, one disposable VM per rollout. Installing [`nemo-gym-tenki`](https://github.com/opencolin/nemo-gym-tenki) registers a `tenki` provider on NeMo Gym's `nemo_gym.sandbox_providers` entry point, so NeMo Gym picks Tenki by name, the same way it picks Docker or E2B, with no change to NeMo Gym itself.
+Run and score the code a model writes during training, each attempt on its own disposable cloud machine.
 
-> **Status:** `nemo-gym-tenki` isn't on PyPI yet. This example installs it from git at commit `ec0ee66` ([opencolin/nemo-gym-tenki#1](https://github.com/opencolin/nemo-gym-tenki/pull/1)), which uses the `tenki` 1.x SDK. A built-in provider is proposed upstream in [NVIDIA-NeMo/Gym#2346](https://github.com/NVIDIA-NeMo/Gym/pull/2346).
+[NVIDIA NeMo Gym](https://github.com/NVIDIA-NeMo/Gym) is a library for training language models with **reinforcement learning (RL)**: the model attempts a task many times, each attempt gets a score, and training nudges the model toward the attempts that scored well. A few terms you'll see:
+
+- A **rollout** is one attempt at a task, for example the model writing a function to solve a coding problem.
+- The **reward** is that attempt's score. Here it's `1.0` if the model's code passes the task's tests and `0.0` if it doesn't.
+- A **sandbox provider** is where NeMo Gym runs the code it needs to score. It ships providers for Docker, E2B, and others.
+
+Model-written code shouldn't run on your training machines, and you may run thousands of rollouts at once. [`nemo-gym-tenki`](https://github.com/opencolin/nemo-gym-tenki) adds a `tenki` provider, so each rollout's code runs in its own Tenki VM that's deleted afterwards. Once it's installed, NeMo Gym finds it by name, with no change to NeMo Gym itself.
+
+This example scores one rollout: it puts a solution file in a sandbox, runs its tests, and prints the reward.
+
+> **Status:** `nemo-gym-tenki` isn't on PyPI yet, so this example installs it from GitHub at a fixed commit. A built-in Tenki provider is proposed in NeMo Gym itself ([NVIDIA-NeMo/Gym#2346](https://github.com/NVIDIA-NeMo/Gym/pull/2346)).
 
 ## Set it up with a coding agent
 
@@ -39,7 +49,7 @@ uv sync                 # NeMo Gym 0.7.0, nemo-gym-tenki, and tenki, into ./.ven
 export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
 ```
 
-The provider uses the key's workspace. Set `connection.workspace_id` to pick another.
+Sandboxes are created in the key's Tenki workspace. Set `connection.workspace_id` in the provider config to pick another.
 
 ### 3. Run
 
@@ -47,7 +57,7 @@ The provider uses the key's workspace. Set `connection.workspace_id` to pick ano
 uv run python run.py
 ```
 
-`run.py` stages an agent's solution into a sandbox, runs its tests there, and scores the result:
+`run.py` lists the sandbox providers NeMo Gym can see (`tenki` should be among them), copies a model's solution into a new sandbox, runs its tests there, and turns the exit code into a reward:
 
 ```
 providers: apptainer, daytona, docker, e2b, ecs_fargate, enroot, local, opensandbox, openshell, tenki
@@ -66,27 +76,30 @@ node verify.mjs      # or: uv run python verify.py
 ✓ nemo-gym-tenki: `tenki` provider via entry point → create 01a1… with staged files → exec 42 → env → exit 3 → close (stopped)
 ```
 
-`verify.py` checks that NeMo Gym lists the `tenki` provider, creates a sandbox with a file staged into `spec.workdir`, runs it, checks `spec.env` and a non-zero exit code, closes the sandbox, and confirms it stopped. `verify.mjs` runs `uv sync --locked` first, installing uv into the current Python if it isn't on your `PATH`.
+`verify.py` checks that NeMo Gym lists the `tenki` provider, creates a sandbox with a file copied in, runs it, checks that environment variables reach the sandbox and that a failing command reports its exit code, then closes the sandbox and confirms it stopped. `verify.mjs` runs `uv sync --locked` first, installing uv into the current Python if it isn't on your `PATH`.
 
 ## The code
+
+The provider has three calls: `create` starts a sandbox from a `SandboxSpec` (the working folder, files to copy in, size, and so on), `exec` runs a command in it, and `close` deletes it.
 
 ```python
 from nemo_gym.sandbox.providers.base import SandboxSpec
 from nemo_gym.sandbox.providers.registry import create_provider
 
-# The same dict goes under `sandbox_provider:` in a NeMo Gym config.
+# Pick the Tenki provider and size its VMs. In a NeMo Gym config file, the same
+# settings go under `sandbox_provider:`.
 provider = create_provider({"tenki": {"create": {"cpu_cores": 1, "memory_mb": 1024, "max_duration_s": 600}}})
-# spec.files are written into spec.workdir when the sandbox is created.
+# Start a sandbox with the model's solution copied into /home/tenki/task.
 handle = await provider.create(SandboxSpec(workdir="/home/tenki/task", files={"solution.py": SOLUTION}))
 try:
     r = await provider.exec(handle, "python3 solution.py", cwd="/home/tenki/task")
-    reward = 1.0 if r.return_code == 0 else 0.0
+    reward = 1.0 if r.return_code == 0 else 0.0  # tests passed: full reward
 finally:
     await provider.close(handle)  # terminates the sandbox
     await provider.aclose()
 ```
 
-In a NeMo Gym environment config, select the provider by name:
+In a NeMo Gym environment config (the YAML file that describes a task), select the provider by name:
 
 ```yaml
 sandbox_provider:
@@ -99,9 +112,9 @@ sandbox_provider:
 
 ## How it works
 
-- **Spec mapping.** `SandboxSpec.resources` maps to `cpu_cores`, `memory_mb`, and `disk_size_gb`; `spec.image` to a Tenki image; `spec.env` and `spec.metadata` pass through; `spec.ttl_s` becomes the VM's `max_duration`; `spec.files` are written into `spec.workdir` after boot.
+- **Spec fields.** Each `SandboxSpec` field becomes a Tenki setting: `resources` sets the VM's `cpu_cores`, `memory_mb`, and `disk_size_gb`; `image` picks a Tenki image; `env` and `metadata` pass through; `ttl_s` becomes the VM's maximum lifetime; `files` are written into `workdir` after the VM starts.
 - **Network.** Outbound access is on, so rollouts can `pip install` or `git clone`. Set `create.allow_outbound: false` to lock a rollout down.
-- **Reconnect across processes.** The provider implements `ConnectableProvider`, so a handle can be serialized and reopened by sandbox ID elsewhere, for distributed rollout collection.
+- **Reconnect from another process.** A sandbox handle can be saved and reopened by sandbox ID in a different process or on another machine (the provider implements NeMo Gym's `ConnectableProvider`). That lets you spread rollouts across many workers.
 - **CPU only.** A spec that asks for `resources.gpu` is rejected.
 
 ## Troubleshooting

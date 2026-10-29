@@ -1,5 +1,5 @@
 // The Claude Agent SDK with Tenki as its execution backend: every command the
-// agent runs and every file it writes lands in a disposable sandbox, not on this box.
+// agent runs and every file it writes lands in a Tenki sandbox, not on this computer.
 //
 // Needs a model key: export ANTHROPIC_API_KEY=...
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
@@ -8,7 +8,8 @@ import { makeTenkiTools } from "./tenki-tools.mjs";
 
 const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
-// One sandbox for the whole agent session, reused across every tool call.
+// Start one sandbox and reuse it for every tool call, so files persist between steps.
+// `await using` deletes the sandbox automatically when the script ends.
 await using sandbox = await tenki.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
@@ -18,14 +19,15 @@ await using sandbox = await tenki.createAndWait({
 for await (const message of query({
 	prompt: "Write fib.py, a Python script that computes the 30th Fibonacci number, run it, and tell me the number.",
 	options: {
-		tools: [], // empty array disables every built-in tool — nothing can execute locally
+		tools: [], // turn off the SDK's built-in tools, which would run on this computer
+		// Offer Claude the three sandbox tools, bundled as an in-process MCP server named "tenki".
 		mcpServers: { tenki: createSdkMcpServer({ name: "tenki", version: "1.0.0", tools: makeTenkiTools(sandbox) }) },
-		// In-process MCP tools are still namespaced mcp__<server>__<tool>.
+		// Let Claude call them without a permission prompt. The SDK names them mcp__<server>__<tool>.
 		allowedTools: ["mcp__tenki__bash", "mcp__tenki__write_file", "mcp__tenki__read_file"],
-		maxTurns: 12,
+		maxTurns: 12, // stop after 12 rounds of back-and-forth
 	},
 })) {
-	// Every tool call printed here ran in the sandbox. There is no local one to fall back to.
+	// Print each tool call Claude makes. All of them run in the sandbox.
 	if (message.type === "assistant") {
 		for (const block of message.message.content) {
 			if (block.type === "tool_use") console.log(`→ ${block.name} ${JSON.stringify(block.input).slice(0, 70)}`);
@@ -34,6 +36,6 @@ for await (const message of query({
 	if (message.type === "result") console.log(message.result);
 }
 
-// The proof: the script the agent wrote is in the sandbox, and nowhere on this machine.
+// Show that the script Claude wrote is in the sandbox, not on this computer.
 const proof = await sandbox.exec("ls", { args: ["-l", "fib.py"] });
 console.log(proof.exitCode === 0 ? stdoutText(proof) : `fib.py is not in the sandbox: ${stderrText(proof).trim()}`);

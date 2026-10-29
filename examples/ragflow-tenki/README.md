@@ -1,6 +1,12 @@
 # RAGFlow
 
-Run [RAGFlow](https://github.com/infiniflow/ragflow)'s code components in Tenki sandboxes. RAGFlow ships a `tenki` sandbox provider: each code execution gets a fresh Tenki sandbox that is destroyed afterwards, with nothing to run locally (no executor-manager, gVisor, or Docker base images). This folder holds a check of the Tenki calls the provider makes, not RAGFlow itself.
+Let RAGFlow agents run Python and JavaScript safely, each run on a fresh Tenki cloud machine.
+
+[RAGFlow](https://github.com/infiniflow/ragflow) is an open-source platform for building AI apps on top of your own documents. It's built around **RAG** (retrieval-augmented generation): finding the passages in your documents that answer a question and giving them to a model along with the question. RAGFlow also lets you build **agent workflows** by connecting blocks in a visual editor. One of those blocks, the **code component**, runs a short Python or JavaScript program, for example to clean up data or call an API.
+
+That code has to run somewhere isolated. RAGFlow's own option needs extra services on your server. Its `tenki` **sandbox provider** instead runs each execution in a new Tenki sandbox and deletes it afterwards, so there's nothing extra to install or run.
+
+The steps below switch RAGFlow to Tenki. This folder's `main.go` is a quicker check that your Tenki key works and the provider's Tenki calls succeed, without RAGFlow.
 
 ## Set it up with a coding agent
 
@@ -41,7 +47,7 @@ To configure it from the environment instead, save no sandbox settings and set `
 
 ### 3. Run
 
-Use the connection test on the same page. It creates a sandbox with your settings, runs a short Python program, and destroys it. Then run an agent workflow with a code component.
+Use the connection test on the same page. It creates a sandbox with your settings, runs a short Python program, and deletes it. Then run an agent workflow that has a code component; its code now runs on Tenki.
 
 ### 4. Verify
 
@@ -68,7 +74,7 @@ go 1.25.3
 require github.com/LuxorLabs/tenki-sdk-go/sandbox v1.4.1
 ```
 
-It calls `WhoAmI`, creates a sandbox with outbound network off, runs `python3 -c` and `node -e`, collects `artifacts/result.json` the way the provider does (list, stat, read), and closes the sandbox. The run is capped at 5 minutes. The first run downloads Go modules, and the Go 1.25.3 toolchain if yours is older. It doesn't run RAGFlow or touch the v0.27.x Python provider; RAGFlow's [`tenki_test.go`](https://github.com/infiniflow/ragflow/blob/main/internal/agent/sandbox/tenki_test.go) covers the RAGFlow side.
+It checks your key (`WhoAmI`), creates a sandbox with outbound network off, runs `python3 -c` and `node -e`, collects `artifacts/result.json` the way the provider does (list, stat, read), and closes the sandbox. The run is capped at 5 minutes. The first run downloads Go modules, and the Go 1.25.3 toolchain if yours is older. It doesn't run RAGFlow or touch the v0.27.x Python provider; RAGFlow's [`tenki_test.go`](https://github.com/infiniflow/ragflow/blob/main/internal/agent/sandbox/tenki_test.go) covers the RAGFlow side.
 
 ## Settings
 
@@ -84,11 +90,11 @@ It calls `WhoAmI`, creates a sandbox with outbound network off, runs `python3 -c
 
 ## What each execution does
 
-- **Create, execute, destroy.** Nothing persists between executions. Each sandbox carries `max_lifetime` server-side, so one RAGFlow never destroys still ends.
-- **Python and JavaScript.** Python runs as `python3 -c` and JavaScript as `node -e`, in `/home/tenki/ragflow-codeexec-<session id>`, wrapped to pass the component's arguments and return `main()`'s value.
+- **Create, run, delete.** Nothing carries over between executions. Tenki deletes each sandbox after `max_lifetime` no matter what, so one RAGFlow fails to delete still goes away.
+- **Python and JavaScript.** A code component defines a `main()` function. The provider wraps it so it receives the component's inputs and its return value comes back to RAGFlow, then runs it with `python3 -c` or `node -e` in `/home/tenki/ragflow-codeexec-<session id>`.
 - **One time limit.** `timeout` caps each execution. A component can ask for less but not more.
-- **Artifacts come back.** Files written to `artifacts/` are collected if their extension is `.csv`, `.html`, `.jpeg`, `.jpg`, `.json`, `.pdf`, `.png`, or `.svg`, within the count and size caps, at most 16 directories deep, and not symlinks.
-- **Structured results.** stdout, stderr, exit code, and timing map to RAGFlow's `ExecutionResult`. A non-zero exit is a normal result.
+- **Output files come back.** Files the code writes to `artifacts/` are collected if their extension is `.csv`, `.html`, `.jpeg`, `.jpg`, `.json`, `.pdf`, `.png`, or `.svg`, within the count and size caps, at most 16 directories deep, and not symlinks.
+- **Results.** Output, error output, exit code, and timing go back to RAGFlow as the component's result. A non-zero exit code is reported as a result, not as a provider failure.
 
 On v0.27.x the Python provider writes `main.py` or `main.js` and runs the file, with the same caps and defaults.
 

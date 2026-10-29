@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Spawned by pi-env's Connection as: node bridge.mjs <sessionId> serve --token <hex>
-// Runs the daemon inside the Tenki sandbox and pipes its stdio through — the
-// framed protocol rides Tenki's exec data plane, no SSH involved.
+// pi-env starts this script as: node bridge.mjs <sessionId> serve --token <hex>
+// It starts the pi-env daemon inside the Tenki sandbox and connects the daemon's
+// input and output to this process's, using Tenki's command API instead of SSH.
 import { Readable, Writable } from "node:stream";
 import { TenkiSandbox } from "@tenkicloud/sandbox";
 
@@ -14,6 +14,17 @@ try {
 	const handle = session.run(["/home/tenki/pi-env", ...daemonArgs], {
 		stdin: Readable.toWeb(process.stdin),
 	});
+	// Tenki keeps this exec stream open while another client pauses the sandbox, so
+	// watch the state and exit once it leaves RUNNING: pi-env then respawns the
+	// bridge, resuming the sandbox, on the next request.
+	setInterval(async () => {
+		try {
+			await session.refresh();
+			if (session.state !== "RUNNING") process.exit(1);
+		} catch {
+			/* a failed poll is not a pause; the next one decides */
+		}
+	}, 1000).unref();
 	const piped = Promise.allSettled([
 		handle.stdout.pipeTo(Writable.toWeb(process.stdout)),
 		handle.stderr.pipeTo(Writable.toWeb(process.stderr)),
@@ -23,7 +34,7 @@ try {
 	await piped;
 	process.exit(exitCode ?? 1);
 } catch (err) {
-	// An unreachable sandbox becomes a clean spawn failure; pi-env retries on the next request.
+	// If the sandbox can't be reached, exit with an error; pi-env tries again on the next request.
 	console.error(`bridge: ${err?.message ?? err}`);
 	process.exit(1);
 }

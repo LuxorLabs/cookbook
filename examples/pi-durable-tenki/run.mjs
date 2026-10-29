@@ -1,5 +1,5 @@
-// Drive Pi Durable's ExecutionEnv surface on a Tenki sandbox, pause the
-// sandbox mid-session, and watch the same env recover on the next call.
+// Run commands and write a file in a Tenki sandbox through Pi Durable's env
+// interface, pause the sandbox, and show the next call picks up where it left off.
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { getOrThrow } from "@earendil-works/pi-durable/env";
 import { createTenkiEnv } from "./tenki-env.mjs";

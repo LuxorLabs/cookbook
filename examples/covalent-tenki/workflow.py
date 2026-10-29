@@ -1,6 +1,6 @@
-"""Run a Covalent workflow where each task executes in its own disposable Tenki
-sandbox (fresh Linux VM with real root, created on demand, destroyed when the
-task finishes).
+"""Run a Covalent workflow where each step (an "electron") runs in its own
+Tenki sandbox: a fresh Linux VM with root access, created when the step starts
+and deleted when it finishes.
 
 Full run (needs a Covalent dispatcher):
     export TENKI_API_KEY=tk_...       # a tk_ API key (see README). Set it BEFORE
@@ -34,7 +34,7 @@ ldisp.APIClient.post = _patched_post
 
 from covalent_tenki_plugin import TenkiExecutor  # noqa: E402 (after the patch)
 
-# Each electron assigned this executor runs in a fresh Tenki sandbox.
+# Every electron that uses this executor runs in its own new Tenki sandbox.
 tenki = TenkiExecutor(cpu_cores=2, memory_mb=4096, sandbox_requirements="numpy")
 
 
