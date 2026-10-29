@@ -147,9 +147,25 @@ try {
   const handle = session.run(["/home/tenki/pi-env", ...daemonArgs], {
     stdin: Readable.toWeb(process.stdin),
   });
-  handle.stdout.pipeTo(Writable.toWeb(process.stdout)).catch(() => {});
-  handle.stderr.pipeTo(Writable.toWeb(process.stderr)).catch(() => {});
-  process.exit((await handle).exitCode ?? 1);
+  // Tenki keeps this exec stream open while another client pauses the sandbox, so
+  // watch the state and exit once it leaves RUNNING: pi-env then respawns the
+  // bridge, resuming the sandbox, on the next request.
+  setInterval(async () => {
+    try {
+      await session.refresh();
+      if (session.state !== "RUNNING") process.exit(1);
+    } catch {
+      /* a failed poll is not a pause; the next one decides */
+    }
+  }, 1000).unref();
+  const piped = Promise.allSettled([
+    handle.stdout.pipeTo(Writable.toWeb(process.stdout)),
+    handle.stderr.pipeTo(Writable.toWeb(process.stderr)),
+  ]);
+  const { exitCode } = await handle;
+  // Drain the final framed stdout frame before exiting, or pi-env sees a half-response.
+  await piped;
+  process.exit(exitCode ?? 1);
 } catch (err) {
   // An unreachable sandbox becomes a clean spawn failure; pi-env retries on the next request.
   console.error(`bridge: ${err?.message ?? err}`);
