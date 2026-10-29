@@ -1,8 +1,6 @@
 # Golden image: build once, restore per sandbox
 
-Install your toolchain on one builder sandbox, snapshot it, and create every later sandbox from that snapshot. The install runs once; each restore boots in seconds with the tools already there. This is how you hand out a sandbox per user, per agent run, or per CI job without paying for `apt-get` and `npm install -g` every time.
-
-The notes under "What we learned" come from a production site that restores a sandbox per visitor from a golden image carrying Claude Code, Codex, OpenCode, Gemini CLI, tmux, code-server and more.
+Install a tool on one builder sandbox, snapshot it with `tenki.createSnapshotAndWait()`, and create a new sandbox from that snapshot with `tenki.createAndWait({ snapshotId })`. The install runs once; every later sandbox boots in seconds with the tool already there. The builder is terminated as soon as the snapshot is ready, the restored sandbox when the script ends, and the demo's snapshot is deleted at the end.
 
 ## Set it up with a coding agent
 
