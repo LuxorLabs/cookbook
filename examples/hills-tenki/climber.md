@@ -13,7 +13,7 @@ send it a submission and get back a signed report.
   submit.sh         sends submission/ to the judge and prints the signed report
   task.json         the hill's description: task, params, submission contract
   submission/       your submission, its own git repo. The only thing that is scored.
-  reports/          one signed report per evaluation, numbered: 001-baseline.json, ...
+  reports/          one signed report per evaluation, numbered: 000-baseline.json, ...
   journal.html      your running record (below)
 ```
 

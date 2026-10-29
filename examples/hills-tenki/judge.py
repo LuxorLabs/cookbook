@@ -26,7 +26,7 @@ PORT = int(os.environ.get("PORT", "8080"))
 MAX_BODY = 64 * 1024 * 1024
 
 
-def hills(*args, timeout=None):
+def hills(*args, timeout=60):  # the server is single-threaded, so nothing may hang it
     return subprocess.run(["hills", *args], cwd=PROJECT, capture_output=True, text=True, timeout=timeout)
 
 
@@ -51,7 +51,10 @@ class Judge(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/describe":
-            r = hills("describe", HILL)
+            try:
+                r = hills("describe", HILL)
+            except subprocess.TimeoutExpired as e:
+                return self.send(500, {"error": str(e)})
             return self.send(200, json.loads(r.stdout)) if r.returncode == 0 else self.send(500, {"error": r.stderr})
         self.send(404, {"error": "GET /describe, POST /eval, POST /verify"})
 

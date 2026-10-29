@@ -10,7 +10,7 @@ Run a hills optimization loop across two Tenki sandboxes:
   python climb.py status     the agent's log tail and the scores so far
   python climb.py down       download journal.html + reports/, then terminate both
 
-Needs Python 3.10+ and requirements.txt. Tenki key from TENKI_API_KEY or
+Needs Python 3.12+ and requirements.txt. Tenki key from TENKI_API_KEY or
 ~/.config/tenki/config.yaml (`tenki login --api-key`). The agent's model key
 (ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENCODE_API_KEY or OPENROUTER_API_KEY) is
 read from your environment and handed to the climber only.
@@ -157,21 +157,30 @@ def up(args):
 
 
 def find():
-    client = Client(**{k: v for k, v in auth().items() if k == "auth_token"})
+    opts = auth()
+    client = Client(auth_token=opts["auth_token"])
     found = {}
-    for sb in client.list(tags=[TAG]):
+    for sb in client.list(workspace_id=opts.get("workspace_id"), tags=[TAG]):
+        if sb.state in ("TERMINATING", "TERMINATED"):  # listed briefly after `down`
+            continue
         role = "judge" if "judge" in (sb.info.tags or []) else "climber"
         found[role] = sb
     if not found:
         sys.exit("No hills-tenki sandboxes running. Start with `python climb.py up`.")
     for sb in found.values():
-        if sb.state != "RUNNING":
-            sb.resume()
+        if sb.state in ("PAUSING", "PAUSED"):  # e.g. paused at the lifetime cap
+            sb.resume()  # returns while the sandbox is still RESUMING
+            for _ in range(90):
+                if sb.refresh().state == "RUNNING":
+                    break
+                time.sleep(2)
     return found
 
 
 def status(_args):
     climber = find().get("climber")
+    if not climber:
+        sys.exit("No climber sandbox running. Start with `python climb.py up`.")
     print(climber.shell(
         "cd climb && tail -n 15 ../climb.log; echo; echo '--- reports'; "
         "for r in reports/*.json; do printf '%s  ' \"$r\"; python3 -c \"import json,sys; r=json.load(open(sys.argv[1])); "
