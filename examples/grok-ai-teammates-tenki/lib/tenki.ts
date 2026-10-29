@@ -1,5 +1,5 @@
-// Tenki replacement for lib/daytona.ts in Grok AI Teammates. It exports the same
-// functions, plus a Sandbox class with the slice of Daytona's sandbox API that
+// Tenki sandbox module for Grok AI Teammates. It exports the functions the app
+// imports for its bot computers, plus a Sandbox class with the methods
 // lib/sandbox-tools.ts calls, so that file only changes its imports.
 import { randomBytes } from "node:crypto"
 
@@ -48,7 +48,7 @@ touch $D/tokens; chmod 600 $D/tokens
 (exec 3<>/dev/tcp/127.0.0.1/${VNC_PORT}) 2>/dev/null ||
   setsid websockify --web /usr/share/novnc --token-plugin TokenFile --token-source $D/tokens 0.0.0.0:${VNC_PORT} &`
 
-// Daytona's executeCommand returns stdout and stderr as one string
+// The tools expect stdout and stderr as one string
 const combined = (res: ExecResult) =>
   Buffer.concat(res.outputs.map((o) => o.data)).toString("utf8")
 
@@ -76,7 +76,7 @@ const keysym = (k: string) =>
   KEYS[k.toLowerCase()] ?? (/^f\d+$/i.test(k) ? k.toUpperCase() : k)
 const BUTTONS = { left: 1, middle: 2, right: 3 } as const
 
-// A bot's sandbox, shaped like the parts of Daytona's Sandbox the tools use
+// A bot's sandbox, shaped like the API lib/sandbox-tools.ts calls
 export class Sandbox {
   constructor(readonly session: Session) {}
 
@@ -100,7 +100,7 @@ export class Sandbox {
     this.run(["xdotool", ...args.map(String)]).then(() => undefined)
 
   process = {
-    // A fresh bash in the home directory, like Daytona's; timeout is in seconds
+    // A fresh bash in the home directory; timeout is in seconds
     executeCommand: async (
       command: string,
       cwd?: string,
@@ -400,9 +400,9 @@ export async function stopBotSandbox(sandboxId: string) {
   if (session.state === "RUNNING") await session.pause()
 }
 
-// Daytona stops a sandbox that has been idle for 15 minutes; Tenki leaves a
-// sticky one running. This pauses the bot sandboxes no command has touched for
-// that long, and returns their IDs. Run it on a schedule (trigger/pause-idle.ts).
+// Tenki leaves a sticky sandbox running until it is paused or deleted. This pauses
+// the bot sandboxes no command has touched for idleMinutes, and returns their IDs.
+// Run it on a schedule (trigger/pause-idle.ts).
 export async function stopIdleSandboxes(idleMinutes = 15) {
   const cutoff = Date.now() - idleMinutes * 60_000
   const sessions = await tenki().list({

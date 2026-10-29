@@ -1,4 +1,4 @@
-// Drives lib/tenki.ts, the Tenki replacement for the app's lib/daytona.ts, against live Tenki:
+// Drives lib/tenki.ts, the app's Tenki sandbox module, against live Tenki:
 // create a bot sandbox, shell + files + memory, the desktop (install, keyboard, mouse, PNG
 // screenshot), noVNC over the preview URL with and without the token, metering, pause →
 // resume keeps files and desktop, delete. Token/workspace from env or ~/.config/tenki/config.yaml.

@@ -1,6 +1,6 @@
 # Grok AI Teammates on Tenki
 
-[Grok AI Teammates](https://github.com/code-with-antonio/ai-teammates) by [Code With Antonio](https://github.com/code-with-antonio) is an open-source chat app where every bot has a job and a Linux computer of its own: it runs shell commands, edits files, keeps notes, and drives a desktop you can watch from the chat. The app runs those computers on Daytona. This example swaps in [Tenki Sandboxes](https://tenki.cloud): one sticky sandbox per bot, its desktop streamed over noVNC on a named preview URL, paused when idle.
+[Grok AI Teammates](https://github.com/code-with-antonio/ai-teammates) by [Code With Antonio](https://github.com/code-with-antonio) is an open-source chat app where every bot has a job and a Linux computer of its own: it runs shell commands, edits files, keeps notes, and drives a desktop you can watch from the chat. This example runs those computers on [Tenki Sandboxes](https://tenki.cloud): one sticky sandbox per bot, its desktop streamed over noVNC on a named preview URL, paused when idle.
 
 The upstream repository has no license file, so this example ships only replacement files and the steps to apply them to your own clone. The app's code stays in its repository.
 
@@ -9,7 +9,7 @@ The upstream repository has no license file, so this example ships only replacem
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Move my clone of https://github.com/code-with-antonio/ai-teammates from Daytona to Tenki, using the "Grok AI Teammates on Tenki" example from https://github.com/LuxorLabs/cookbook (examples/grok-ai-teammates-tenki).
+Run my clone of https://github.com/code-with-antonio/ai-teammates on Tenki sandboxes, using the "Grok AI Teammates on Tenki" example from https://github.com/LuxorLabs/cookbook (examples/grok-ai-teammates-tenki).
 1. Clone the cookbook next to my app, cd into examples/grok-ai-teammates-tenki, and run npm install.
 2. The verify script needs a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it anywhere except my app's .env.local.
 3. Run node verify.mjs and confirm it prints a line starting with ✓.
@@ -73,20 +73,20 @@ npm run typecheck
 
 | File | Change |
 | --- | --- |
-| `lib/daytona.ts` | Removed; `lib/tenki.ts` exports the same functions |
+| The app's original sandbox module | Removed; `lib/tenki.ts` exports the same functions |
 | `lib/sandbox-tools.ts` | Imports `Sandbox` and the helpers from `@/lib/tenki`; the tools are unchanged |
 | `trigger/usage.ts`, `trigger/chat.ts`, `actions/bot.ts`, `actions/chat.ts` | Import from `@/lib/tenki` |
 | `trigger/pause-idle.ts` | New: pauses bot sandboxes idle for 15 minutes |
 | `scripts/build-desktop-image.mjs` | New, optional: bakes the desktop packages into an image |
 
-In `.env.local`, replace `DAYTONA_API_KEY` with your Tenki key:
+In `.env.local`, replace the old sandbox provider's key with your Tenki key:
 
 ```bash
 TENKI_API_KEY=tk_...
 TENKI_DESKTOP_IMAGE=   # optional, see below
 ```
 
-The chat agent's tools and both scheduled tasks call Tenki from Trigger.dev. `npx trigger.dev@4.7.3 dev` reads `.env.local`; before `deploy`, add the same variables to the project's production environment in Trigger.dev, where the app's README lists `DAYTONA_API_KEY`. Then follow the app's README from "Set up billing".
+The chat agent's tools and both scheduled tasks call Tenki from Trigger.dev. `npx trigger.dev@4.7.3 dev` reads `.env.local`; before `deploy`, add the same variables to the project's production environment in Trigger.dev. Then follow the app's README from "Set up billing".
 
 Without `TENKI_DESKTOP_IMAGE`, a bot installs the desktop packages the first time its desktop opens, which takes about a minute. To skip that, build an image once and set the variable to the ref it prints:
 
@@ -102,20 +102,19 @@ The build takes about 90 seconds. Bots created from the image start their deskto
 
 ## How it works
 
-| Daytona call in `lib/daytona.ts` | Tenki in `lib/tenki.ts` |
+| What the app does | How `lib/tenki.ts` does it |
 | --- | --- |
-| `daytona.create({ labels: { botId } })` | `createAndWait({ sticky: true, tags: ["ai-teammates", "bot-<id>"], allowInbound: true })` |
-| `sandbox.start()` on a stopped sandbox | `session.resume()` on a paused one |
-| `sandbox.stop()` | `session.pause()` |
-| `daytona.delete()` | Delete the sandbox's preview URLs, then `session.close()` |
-| `daytona.list({ states: ["started", …] })` | `list({ tags: ["ai-teammates"] })`, filtered to states that hold a VM |
-| Auto-stop after 15 idle minutes | `stopIdleSandboxes()` from `trigger/pause-idle.ts`, by `lastActivityAt` |
-| `process.executeCommand` | `exec(["bash", "-c", command])`, stdout and stderr combined |
-| `fs.downloadFile` / `uploadFile` / `listFiles` | `cat`, a staged `writeFile` plus `mv`, and `find`, so any path works |
-| `computerUse.start()` | Starts Xvfb, openbox, x11vnc and websockify; installs them if missing |
-| `computerUse.mouse.*`, `keyboard.*` | `xdotool` |
-| `computerUse.screenshot.takeCompressed` | ImageMagick `import -window root` |
-| `getSignedPreviewUrl(6080, 3600)` | A named preview URL bound to the sandbox's port 6080, plus a token |
+| Create a bot's computer | `createAndWait({ sticky: true, tags: ["ai-teammates", "bot-<id>"], allowInbound: true })` |
+| Start / stop it | `session.resume()` / `session.pause()` |
+| Delete it | Delete the sandbox's preview URLs, then `session.close()` |
+| List running computers for metering | `list({ tags: ["ai-teammates"] })`, filtered to states that hold a VM |
+| Stop idle computers | `stopIdleSandboxes()` from `trigger/pause-idle.ts`, by `lastActivityAt` |
+| Run a shell command | `exec(["bash", "-c", command])`, stdout and stderr combined |
+| Read, write and list files | `cat`, a staged `writeFile` plus `mv`, and `find`, so any path works |
+| Start the desktop | Starts Xvfb, openbox, x11vnc and websockify; installs them if missing |
+| Mouse and keyboard | `xdotool` |
+| Screenshot | ImageMagick `import -window root` |
+| Desktop URL for the chat | A named preview URL bound to the sandbox's port 6080, plus a token |
 
 - **Sticky, then paused.** Tenki ends a sandbox after two hours unless it is sticky. A sticky sandbox runs until it is paused or deleted, so the app's own stop calls (the meter stops the sandboxes of users with no sandbox time left) and `trigger/pause-idle.ts` pause it. A paused sandbox keeps its memory and files, is not billed, and resumes in a few seconds on its bot's next tool call. Its desktop processes come back with it.
 - **The desktop URL is the password.** Preview URLs are public, so websockify only lets in a connection carrying a 48-character random token. `getBotDesktopUrl()` writes a fresh token on every call and returns `wss://…/websockify?token=…`, which the app's noVNC client opens unchanged. A new call stops the old address from opening new connections; open ones stay up. The VNC server listens on localhost only.
@@ -143,6 +142,5 @@ The build takes about 90 seconds. Bots created from the image start their deskto
 ## Related
 
 - [Trigger.dev](../trigger-dev-tenki/): run code in a Tenki sandbox from a Trigger.dev task
-- [Daytona to Tenki](../daytona-to-tenki-migration/)
 - [Pause, snapshot, and resume](../snapshots-pause-resume/)
 - [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox)
