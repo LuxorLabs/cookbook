@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { getOrThrow } from "@earendil-works/pi-durable/env";
-import { createTenkiEnv } from "./tenki-env.mjs";
+import { createTenkiEnv, retryIfLost } from "./tenki-env.mjs";
 
 if (!process.env.TENKI_AUTH_TOKEN && !process.env.TENKI_API_KEY) {
 	try {
@@ -65,7 +65,7 @@ try {
 
 	step = "read after pause";
 	// Same env object: this read resumes the sandbox and respawns the daemon.
-	const back = getOrThrow(await env.readTextFile("marker.txt", BACKGROUND_CONTEXT));
+	const back = await retryIfLost(async () => getOrThrow(await env.readTextFile("marker.txt", BACKGROUND_CONTEXT)));
 	assert(back.trim() === marker, "marker lost across pause/resume");
 	await waitState(session, "RUNNING");
 

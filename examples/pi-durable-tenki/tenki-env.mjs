@@ -63,3 +63,19 @@ export async function createTenkiEnv({ cpuCores = 1, memoryMb = 1024, onLog } = 
 		throw err;
 	}
 }
+
+/**
+ * Run `fn`, and run it once more if it fails with "pi-env connection lost".
+ * Tenki can keep the old daemon's stream open for a while after a pause, so the
+ * first request after it may reach the paused daemon and fail when that stream
+ * closes. The retry reconnects, which resumes the sandbox. Use it only for
+ * requests that are safe to repeat, such as reads.
+ */
+export async function retryIfLost(fn) {
+	try {
+		return await fn();
+	} catch (err) {
+		if (!String(err?.message ?? err).includes("connection lost")) throw err;
+		return await fn();
+	}
+}

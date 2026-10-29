@@ -2,7 +2,7 @@
 // sandbox mid-session, and watch the same env recover on the next call.
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { getOrThrow } from "@earendil-works/pi-durable/env";
-import { createTenkiEnv } from "./tenki-env.mjs";
+import { createTenkiEnv, retryIfLost } from "./tenki-env.mjs";
 
 const { session, connection, env, dispose } = await createTenkiEnv();
 try {
@@ -19,7 +19,7 @@ try {
 	await session.pause();
 
 	// Same env object: this read resumes the sandbox and respawns the daemon.
-	const back = getOrThrow(await env.readTextFile("notes.txt", BACKGROUND_CONTEXT));
+	const back = await retryIfLost(async () => getOrThrow(await env.readTextFile("notes.txt", BACKGROUND_CONTEXT)));
 	console.log(`resumed -> ${back.trim()}`);
 } finally {
 	await dispose();

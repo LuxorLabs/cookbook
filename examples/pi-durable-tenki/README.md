@@ -78,7 +78,7 @@ node verify.mjs
 // sandbox mid-session, and watch the same env recover on the next call.
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { getOrThrow } from "@earendil-works/pi-durable/env";
-import { createTenkiEnv } from "./tenki-env.mjs";
+import { createTenkiEnv, retryIfLost } from "./tenki-env.mjs";
 
 const { session, connection, env, dispose } = await createTenkiEnv();
 try {
@@ -95,7 +95,7 @@ try {
   await session.pause();
 
   // Same env object: this read resumes the sandbox and respawns the daemon.
-  const back = getOrThrow(await env.readTextFile("notes.txt", BACKGROUND_CONTEXT));
+  const back = await retryIfLost(async () => getOrThrow(await env.readTextFile("notes.txt", BACKGROUND_CONTEXT)));
   console.log(`resumed -> ${back.trim()}`);
 } finally {
   await dispose();
@@ -191,6 +191,7 @@ Daemon behavior to know, from pi-env's [protocol](https://github.com/earendil-wo
 
 - The daemon exits when its stdin ends or after 30 s without traffic and kills every process it started. A dead bridge leaks nothing, but commands don't survive a pause or a dropped connection.
 - A reconnect is a fresh daemon session. Handles opened before it, such as readers and running execs, fail cleanly instead of reaching the new daemon.
+- Tenki can keep the old daemon's stream open for a while after a pause. The first request after a pause can then reach the paused daemon and fail with `pi-env connection lost`. `retryIfLost` in `tenki-env.mjs` runs a request once more in that case, which reconnects and resumes the sandbox. Use it only for requests that are safe to repeat, such as reads.
 
 ## Troubleshooting
 
