@@ -131,6 +131,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
 | [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent sandboxes for an agent fleet |
 | [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
+| [Grok AI Teammates](examples/grok-ai-teammates-tenki/) | A sticky sandbox per chat bot, with a noVNC desktop and idle pause, for the Trigger.dev app |
 
 ### Migrating from another provider
 
