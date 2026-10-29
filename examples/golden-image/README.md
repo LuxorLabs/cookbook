@@ -2,7 +2,7 @@
 
 Install your toolchain on one builder sandbox, snapshot it, and create every later sandbox from that snapshot. The install runs once; each restore boots in seconds with the tools already there. This is how you hand out a sandbox per user, per agent run, or per CI job without paying for `apt-get` and `npm install -g` every time.
 
-The pattern comes from [AgentCamp OS](https://agentcamp.dev), which restores a sandbox per visitor from a golden image that carries Claude Code, Codex, OpenCode, Gemini CLI, tmux, code-server and more. The notes under "What we learned" are measured on that image.
+The notes under "What we learned" come from a production site that restores a sandbox per visitor from a golden image carrying Claude Code, Codex, OpenCode, Gemini CLI, tmux, code-server and more.
 
 ## Set it up with a coding agent
 
