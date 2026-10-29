@@ -77,6 +77,13 @@ The two sandbox IDs differ: session 2 is a new VM restored from session 1's snap
 node verify.mjs      # or: python verify.py
 ```
 
+It ends with:
+
+```text
+============================================================
+OK: all 12 checks passed
+```
+
 `verify.mjs` runs `setup.sh` if `./hermes-agent` is missing, then `verify.py`, which makes 12 checks against live Tenki:
 
 | Checks | What they cover |
