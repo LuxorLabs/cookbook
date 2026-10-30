@@ -109,6 +109,7 @@ Give an agent a sandbox to run the code it writes.
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
 | [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
 | [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
+| [Tinker RL](examples/tinker-harbor-rl-tenki/) | RL training on Terminal-Bench with Tinker's hosted GPUs and one Tenki sandbox per rollout |
 | [Convex](examples/convex-tenki/) | A sandbox per user from Convex actions, with live state in a Convex table |
 
 ### Tenki Code Reviewer
