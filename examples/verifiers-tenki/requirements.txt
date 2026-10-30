@@ -1,0 +1,6 @@
+tenki>=1.4.1
+# verifiers' out-of-tree runtime hook (`type = "custom"` + `import_path`) is newer than the 0.4.0 release,
+# so this pins the PyPI build of main from 2026-10-30 (commit b8cce23df). Re-pin deliberately: it moves daily.
+verifiers==0.4.1.dev118
+# The Environments Hub environment eval.py runs: primeintellect/gsm8k, version eb4818f9 (0.1.4).
+gsm8k @ https://hub.primeintellect.ai/primeintellect/gsm8k/@eb4818f9/gsm8k-0.1.4-py3-none-any.whl
