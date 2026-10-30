@@ -1,0 +1,13 @@
+{
+  "name": "claude-code-ssh",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — one command to boot a Tenki sandbox and SSH into Claude Code.",
+  "bin": { "tenki-claude": "./tenki-claude.mjs" },
+  "scripts": {
+    "verify": "node verify.mjs"
+  },
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1"
+  }
+}
