@@ -166,14 +166,16 @@ To check every example, from the repository root:
 node verify.mjs
 ```
 
-It runs each example's `verify.mjs` and ends with `✓ all examples passed`, or with `✗ N example(s) failed` and a non-zero exit. It does not install dependencies. Install them first, as CI does in [`.github/workflows/verify.yml`](.github/workflows/verify.yml).
+It runs each example's `verify.mjs` and ends with `✓ all examples passed`, or with `✗ N example(s) failed` and a non-zero exit. It does not install dependencies. Install them first, as CI does in [`.github/scripts/verify-example.sh`](.github/scripts/verify-example.sh).
 
-CI runs the same checks on every push and pull request, and a failed check blocks the merge. Two examples are skipped in CI:
+CI ([`.github/workflows/verify.yml`](.github/workflows/verify.yml)) runs one job per example, so a failure shows against its example and `Re-run failed jobs` reruns only that one. It first boots and disposes one sandbox with the repo's `TENKI_API_KEY`, so a rejected key fails in one line instead of forty. A pull request verifies the examples it touches plus `run-code-in-a-sandbox`, or everything when it changes a file outside `examples/`. Pushes to `main`, the nightly run, and manual runs verify everything. The `verify` check is green when every planned example passed or was skipped.
 
-- `composio-tenki`, which needs a Composio API key
-- `covalent-tenki`, until [`covalent-tenki-plugin` 0.1.1](https://github.com/LuxorLabs/tenki-covalent-plugin/pull/1) is on PyPI
+Two kinds of file beside an example tell CI, and the root script, to skip it:
 
-`node verify.mjs` on your machine runs those two as well. If they fail locally, see Troubleshooting.
+- `.verify-requires`: one environment variable per line. When one is unset the example is skipped, not failed. `composio-tenki` declares `COMPOSIO_API_KEY`.
+- `.verify-skip`: the first line is the reason, with a link to what has to change. `covalent-tenki` waits for [`covalent-tenki-plugin` 0.1.1](https://github.com/LuxorLabs/tenki-covalent-plugin/pull/1) on PyPI; `orca-tenki` waits for stable gateway host keys.
+
+`node verify.mjs` at the root honours `.verify-skip` and prints the reason. It does not read `.verify-requires`, so `composio-tenki` runs locally and needs its key.
 
 ## Official integrations
 
@@ -211,7 +213,8 @@ These projects ship a Tenki provider or backend:
 - **`No API key. Set TENKI_API_KEY, or run tenki login --api-key <key>`.** A Python `verify.py` found no key in those same places. Export `TENKI_API_KEY`, or run `tenki login --api-key <key>`.
 - **`node run.mjs` fails with a `SyntaxError` at `await using`.** Top-level `await using` needs Node 24. Node 22 cannot parse it. `node verify.mjs` still runs on Node 20.
 - **`node verify.mjs` at the repository root prints `FAILED: <example>` for an example you have not set up.** The root script expects that example's dependencies to be installed already. Install them in the example folder, or run that folder's own `node verify.mjs`.
-- **`FAILED: composio-tenki` or `FAILED: covalent-tenki` from `node verify.mjs` at the repository root.** CI skips both. `composio-tenki` also needs a `COMPOSIO_API_KEY` from [app.composio.dev](https://app.composio.dev). `covalent-tenki` needs `covalent-tenki-plugin` 0.1.1 or later, because 0.1.0 depends on the renamed `tenki-sandbox` package and no longer installs. Until 0.1.1 is published, run `node verify.mjs` inside the examples you use.
+- **`FAILED: composio-tenki` from `node verify.mjs` at the repository root.** It needs a `COMPOSIO_API_KEY` from [app.composio.dev](https://app.composio.dev). CI skips it when the key is unset; the root script does not.
+- **The `verify` check is red on your pull request but your example's job is green.** Open the red job. If it is `key check and plan`, the repo's `TENKI_API_KEY` secret was rejected and a maintainer has to rotate it; nothing in the PR can fix that. A fork's pull request does not receive the secret.
 - **`ModuleNotFoundError: No module named '<package>'` from a Python example's `verify.mjs`.** The shim runs `.venv/bin/python` when that file exists, and otherwise `$PYTHON` or `python3`. Create the venv in the example folder with `uv venv --python 3.12` and `uv pip install -r requirements.txt`. You can also set `PYTHON` to an interpreter that already has the packages.
 
 ## FAQ

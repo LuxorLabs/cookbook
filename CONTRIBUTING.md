@@ -19,7 +19,8 @@ This is the examples/cookbook layer for Tenki, and this is your playbook. New he
 **Every example runs on Tenki and proves it in CI.** A public example that doesn't work damages the brand more than a missing one helps.
 
 - Each example ships a **`verify.mjs`** that exercises it against the live Tenki API and **exits non-zero on any failure**.
-- CI (`.github/workflows/verify.yml`) runs every `verify.mjs` with a `TENKI_API_KEY` secret. A red build blocks the merge.
+- CI (`.github/workflows/verify.yml`) runs `verify.mjs` with a `TENKI_API_KEY` secret, one job per example: a pull request runs the examples it touches plus `run-code-in-a-sandbox`; `main` and the nightly run cover everything. A red `verify` check blocks the merge.
+- An example that needs a third-party key lists the variable in `.verify-requires` (skipped when unset). One that cannot run yet carries a `.verify-skip` whose first line says why and links to what has to change. Never skip inside the workflow file.
 - `verify.mjs` proves the *Tenki-facing* part. If an example needs an LLM (an agent turn), verify the tool/backend against Tenki directly — don't require a model key in CI. (See `langchain-code-interpreter` for the pattern.)
 
 ## What to build

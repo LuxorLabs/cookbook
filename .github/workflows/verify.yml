@@ -1,70 +1,116 @@
 name: verify
 
-# Every example must run against the live Tenki API. A red build blocks the merge.
-# Requires repo secret TENKI_API_KEY.
+# Every example runs against the live Tenki API, one job per example, so one failure never
+# hides the others and `Re-run failed jobs` reruns only the red one. Pull requests verify the
+# examples they touch plus the smoke example; pushes to main, the nightly run and manual runs
+# verify everything. Requires the repo secret TENKI_API_KEY.
 
 on:
   push:
+    branches: [main]
   pull_request:
+  schedule:
+    - cron: "17 6 * * *" # nightly: catches upstream breakage without blocking PRs
   workflow_dispatch:
+    inputs:
+      examples:
+        description: "Space-separated example dirs (examples/foo/ …), or all"
+        default: all
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  verify:
+  plan:
+    name: key check and plan
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      count: ${{ steps.plan.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Check the API key before spending 40 jobs on it
+        env:
+          TENKI_API_KEY: ${{ secrets.TENKI_API_KEY }}
+        working-directory: examples/run-code-in-a-sandbox
+        run: |
+          npm install --no-audit --no-fund >/dev/null
+          node --input-type=module -e '
+            import { TenkiSandbox } from "@tenkicloud/sandbox";
+            if (!process.env.TENKI_API_KEY) {
+              console.log("::error title=TENKI_API_KEY missing::The repo secret TENKI_API_KEY is not set (forks do not receive it).");
+              process.exit(1);
+            }
+            try {
+              const t = new TenkiSandbox({ authToken: process.env.TENKI_API_KEY });
+              await using s = await t.createAndWait({ cpuCores: 1, memoryMb: 1024 });
+              console.log(`key ok: sandbox ${s.id} booted and was disposed`);
+            } catch (e) {
+              const m = String(e?.message ?? e);
+              const hint = /unauthori[sz]ed|unauthenticated/i.test(m)
+                ? "Tenki rejected TENKI_API_KEY. Rotate the repo secret (Settings → Secrets → Actions) and re-run."
+                : "Tenki could not boot a sandbox with TENKI_API_KEY.";
+              console.log(`::error title=Tenki key check failed::${hint} (${m})`);
+              process.exit(1);
+            }
+          '
+      - id: plan
+        name: Choose the examples to verify
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          INPUT_EXAMPLES: ${{ inputs.examples }}
+        run: node .github/scripts/plan.mjs
+
+  example:
+    name: ${{ matrix.dir }}
+    needs: plan
+    if: needs.plan.outputs.count != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
       - uses: actions/setup-python@v5
+        if: hashFiles(format('{0}requirements.txt', matrix.dir), format('{0}pyproject.toml', matrix.dir), format('{0}verify.py', matrix.dir)) != ''
         with:
-          python-version: "3.12"   # Python examples (crewai) need 3.10+
+          python-version: "3.12"
       - uses: actions/setup-go@v5
+        if: hashFiles(format('{0}go.mod', matrix.dir)) != ''
         with:
-          go-version-file: examples/ragflow-tenki/go.mod
-      - name: Install + verify each example against Tenki
+          go-version-file: ${{ matrix.dir }}go.mod
+      - name: Install and verify against Tenki
         env:
           TENKI_API_KEY: ${{ secrets.TENKI_API_KEY }}
-          # Third-party keys some examples need. Unset → that example is skipped,
-          # not failed (see .verify-requires below).
+          # Third-party keys some examples declare in .verify-requires. Unset → skipped, not failed.
           COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
         run: |
-          # One example must not abort the rest. Run every verify, skip an example
-          # when a key it declares in .verify-requires is unset, and fail the job
-          # only if a runnable example fails. benchmarks/ follow the same rule.
-          fails=""; skips=""
-          for d in examples/*/ benchmarks/*/; do
-            [ -f "${d}verify.mjs" ] || continue
-            if [ "$d" = "examples/covalent-tenki/" ]; then
-              # Pins covalent-tenki-plugin>=0.1.1, which is not on PyPI yet
-              # (LuxorLabs/tenki-covalent-plugin#1). Unskip when 0.1.1 ships.
-              echo "== ${d} == skipped (covalent-tenki-plugin 0.1.1 unreleased)"
-              skips="${skips} ${d}"
-              continue
-            fi
-            if [ "$d" = "examples/orca-tenki/" ]; then
-              # Gateway SSH host keys are not stable across connections, so the
-              # pinned-alias verification can fail intermittently. Skipped until
-              # gateways present a verifiable stable identity; verify locally.
-              echo "== ${d} == skipped (gateway host keys not yet stable)"
-              skips="${skips} ${d}"
-              continue
-            fi
-            miss=""
-            if [ -f "${d}.verify-requires" ]; then
-              while IFS= read -r var || [ -n "$var" ]; do
-                [ -z "$var" ] && continue
-                [ -z "${!var}" ] && { miss="$var"; break; }
-              done < "${d}.verify-requires"
-            fi
-            if [ -n "$miss" ]; then
-              echo "== ${d} == SKIP (${miss} unset)"; skips="${skips} ${d}"; continue
-            fi
-            echo "== ${d} =="
-            if ( cd "$d"
-                 [ -f package.json ] && npm install --no-audit --no-fund
-                 [ -f requirements.txt ] && python -m pip install -r requirements.txt
-                 node verify.mjs ); then :; else fails="${fails} ${d}"; fi
-          done
-          echo; echo "skipped:${skips:- none}"; echo "failed:${fails:- none}"
-          [ -z "$fails" ] || { echo "::error::runnable examples failed:${fails}"; exit 1; }
+          echo "| Example | Result | Note |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          .github/scripts/verify-example.sh "${{ matrix.dir }}"
+
+  verify:
+    # The one check to require on main: green when every planned example passed or was skipped.
+    name: verify
+    needs: [plan, example]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "plan: ${{ needs.plan.result }}, examples: ${{ needs.example.result }}"
+          case "${{ needs.plan.result }}/${{ needs.example.result }}" in
+            success/success|success/skipped) echo "✓ all planned examples passed" ;;
+            *) echo "::error::a planned example failed, or the key check did; open the red job above"; exit 1 ;;
+          esac
