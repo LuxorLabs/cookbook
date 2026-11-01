@@ -50,7 +50,8 @@ jobs:
             }
             try {
               const t = new TenkiSandbox({ authToken: process.env.TENKI_API_KEY });
-              await using s = await t.createAndWait({ cpuCores: 1, memoryMb: 1024 });
+              const s = await t.createAndWait({ cpuCores: 1, memoryMb: 1024 }); // Node 20: no `await using`
+              await s[Symbol.asyncDispose]();
               console.log(`key ok: sandbox ${s.id} booted and was disposed`);
             } catch (e) {
               const m = String(e?.message ?? e);
