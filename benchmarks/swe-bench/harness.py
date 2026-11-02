@@ -21,12 +21,15 @@ Usage:
   # prove the pipeline on one instance, no model:
   python harness.py --dataset lite --instances psf__requests-1963 --oracle
 
+  # no-edit control (neither --oracle nor --model): nothing may resolve
+  python harness.py --dataset lite --limit 20
+
   # run your own model (OpenAI-compatible endpoint) over the first 20:
   python harness.py --dataset lite --limit 20 \
     --model your-model --api-base https://api.openai.com/v1 --api-key-env OPENAI_API_KEY
 
 Requires: swebench, datasets, tenki (see requirements.txt). A model run
-also needs `mini-swe-agent` (imported lazily, only for --model).
+also needs `mini-swe-agent>=2.4.6,<3` (imported lazily, only for --model).
 """
 from __future__ import annotations
 
@@ -35,10 +38,13 @@ import base64
 import concurrent.futures as cf
 import json
 import os
+import shlex
+import signal
 import sys
 import tempfile
 import threading
 import time
+import uuid
 from datetime import date
 from pathlib import Path
 
@@ -49,7 +55,7 @@ from swebench.harness.grading import (
 )
 from swebench.harness.constants import FAIL_TO_PASS, PASS_TO_PASS
 
-from tenki_sandbox import Client
+from tenki_sandbox import Client, WaitReadyFailedError
 
 # Add a row to run another SWE-bench-family dataset. Anything that ships the
 # per-instance `swebench/sweb.eval.x86_64.*` images works with this exact harness;
@@ -124,12 +130,17 @@ def _sh_retry(sb, cmd: str, timeout: int = 240, tries: int = 3, what: str = "cmd
     return False, out
 
 
-def _dexec(sb, script: str, timeout: int = 600, workdir: str = "/testbed") -> tuple[bool, str]:
-    """Run a bash script INSIDE the swebench container. The script is piped in via
-    base64 on stdin so quoting/newlines can't corrupt it."""
+def _dexec_cmd(script: str, workdir: str = "/testbed", env: dict[str, str] | None = None) -> str:
+    """The VM-side command that runs a bash script INSIDE the swebench container. The
+    script is piped in via base64 on stdin so quoting/newlines can't corrupt it."""
     b64 = base64.b64encode(script.encode()).decode()
-    cmd = f"echo {b64} | base64 -d | sudo docker exec -i -w {workdir} {CID} bash -s"
-    return _sh(sb, cmd, timeout=timeout)
+    envs = "".join(f" -e {shlex.quote(f'{k}={v}')}" for k, v in (env or {}).items())
+    return f"echo {b64} | base64 -d | sudo docker exec -i{envs} -w {workdir} {CID} bash -s"
+
+
+def _dexec(sb, script: str, timeout: int = 600, workdir: str = "/testbed") -> tuple[bool, str]:
+    """Run a bash script INSIDE the swebench container."""
+    return _sh(sb, _dexec_cmd(script, workdir), timeout=timeout)
 
 
 def provision(sb, iid: str) -> None:
@@ -189,95 +200,196 @@ def grade(sb, test_spec) -> tuple[bool, dict]:
 # ---- agent mode (optional; needs mini-swe-agent + a model key) --------------
 
 class _ContainerEnv:
-    """mini-SWE-agent environment: every action runs in the container at /testbed."""
+    """mini-SWE-agent 2.x environment: every action runs in the container at /testbed.
 
-    def __init__(self, sb):
+    2.x passes each action as a dict ({"command": ...}) and expects the env to raise
+    Submitted when the agent prints the submit marker (see LocalEnvironment)."""
+
+    def __init__(self, sb, *, cwd: str = "/testbed", timeout: int = 600, env: dict | None = None):
         self.sb = sb
         # SWE-bench test suites can be slow — a low per-command cap reads as a
         # model failure. Give agent commands real headroom.
-        self.config = type("C", (), {"cwd": "/testbed", "timeout": 600})()
+        self.config = type("C", (), {"cwd": cwd, "timeout": timeout, "env": env or {}})()
 
-    def execute(self, command: str, cwd: str = "") -> dict:
-        ok, out = _dexec(self.sb, command, timeout=self.config.timeout, workdir=cwd or "/testbed")
-        return {"output": out, "returncode": 0 if ok else 1}
+    def execute(self, action: dict, cwd: str = "", *, timeout: int | None = None) -> dict:
+        from minisweagent.exceptions import Submitted
 
-    def get_template_vars(self) -> dict:
-        return {"cwd": "/testbed"}
+        try:
+            r = self.sb.exec("bash", "-lc", _dexec_cmd(action.get("command", ""), cwd or self.config.cwd,
+                                                       self.config.env),
+                             timeout=timeout or self.config.timeout)
+            out = (r.stdout_text or "") + (r.stderr_text or "")
+            info = "command timed out" if r.timed_out else ""
+            output = {"output": out, "returncode": -1 if r.timed_out else r.exit_code, "exception_info": info}
+        except Exception as e:  # noqa: BLE001 — surface sandbox errors to the model, like LocalEnvironment
+            output = {"output": "", "returncode": -1,
+                      "exception_info": f"An error occurred while executing the command: {e}"}
+        lines = output["output"].lstrip().splitlines(keepends=True)
+        if lines and lines[0].strip() == "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT" and output["returncode"] == 0:
+            submission = "".join(lines[1:])
+            raise Submitted({"role": "exit", "content": submission,
+                             "extra": {"exit_status": "Submitted", "submission": submission}})
+        return output
+
+    def get_template_vars(self, **kwargs) -> dict:
+        return {"cwd": self.config.cwd, "timeout": self.config.timeout, **kwargs}
+
+    def serialize(self) -> dict:
+        return {"info": {"config": {"environment": {"cwd": self.config.cwd, "timeout": self.config.timeout},
+                                    "environment_type": f"{__name__}._ContainerEnv"}}}
 
 
-def run_agent(sb, instance: dict, model_id: str, api_base: str, api_key_env: str) -> None:
-    """Drive mini-SWE-agent against /testbed inside the container, against any
-    OpenAI-compatible endpoint (bring your own model + key)."""
-    import glob
+def run_agent(sb, instance: dict, model_id: str, api_base: str, api_key_env: str, model=None) -> None:
+    """Drive mini-SWE-agent (2.x) against /testbed inside the container, against any
+    OpenAI-compatible endpoint (bring your own model + key). `model` overrides the
+    litellm model (e.g. a DeterministicModel for an offline test)."""
     import yaml
     from minisweagent.agents.default import DefaultAgent
+    from minisweagent.config import get_config_path
     from minisweagent.models import get_model
-    import minisweagent
 
-    cfg = {"model_name": "openai/" + model_id, "model_kwargs": {
-        "api_base": api_base, "api_key": os.environ[api_key_env],
-        "temperature": 0.0, "max_tokens": 16000}}
     # Reasoning models that stream their thoughts on a separate channel need the
     # text-based litellm shim, or the parser can drop the answer. OpenRouter is the
     # common case; flip this on for your endpoint if answers come back empty.
-    if "openrouter.ai" in api_base:
-        cfg["model_class"] = "litellm_textbased"
-    model = get_model("openai/" + model_id, config=cfg)
+    textbased = "openrouter.ai" in api_base
+    # mini-SWE-agent ships a swebench config (system/instance templates telling the
+    # model it's in /testbed and to edit in place, plus the observation templates
+    # and container env). Reuse it for fidelity.
+    cfg = yaml.safe_load(get_config_path("swebench_backticks" if textbased else "swebench").read_text())
+    agent_cfg, env_cfg, model_cfg = cfg["agent"], cfg.get("environment", {}), cfg.get("model", {})
 
-    # mini-SWE-agent ships a swebench agent config (system/instance templates telling
-    # the model it's in /testbed and to edit in place). Reuse it for fidelity.
-    root = Path(minisweagent.__file__).resolve().parent
-    cfgs = glob.glob(str(root / "**" / "swebench.yaml"), recursive=True)
-    tmpl = yaml.safe_load(Path(cfgs[0]).read_text())["agent"] if cfgs else {}
+    if model is None:
+        model_cfg = {**model_cfg, "model_name": "openai/" + model_id, "model_kwargs": {
+            **model_cfg.get("model_kwargs", {}),
+            "api_base": api_base, "api_key": os.environ[api_key_env],
+            "temperature": 0.0, "max_tokens": 16000}}
+        if textbased:
+            model_cfg["model_class"] = "litellm_textbased"
+        model = get_model("openai/" + model_id, config=model_cfg)
 
-    agent = DefaultAgent(model, _ContainerEnv(sb),
-                         system_template=tmpl.get("system_template"),
-                         instance_template=tmpl.get("instance_template"),
-                         step_limit=int(tmpl.get("step_limit", 40)),
-                         cost_limit=float(tmpl.get("cost_limit", 5.0)))
+    env = _ContainerEnv(sb, cwd=env_cfg.get("cwd", "/testbed"), env=env_cfg.get("env"))
+    agent = DefaultAgent(model, env, **agent_cfg)
     try:
-        agent.run(instance["problem_statement"])
-    except Exception as e:  # agent loops raise on submit/limits — grading still runs
+        result = agent.run(instance["problem_statement"])
+        log(f"    (agent exit: {result.get('exit_status')})")
+    except Exception as e:  # grading still runs on whatever the agent left in /testbed
         log(f"    (agent stop: {type(e).__name__}: {str(e)[:120]})")
+
+
+# ---- sandbox lifecycle -------------------------------------------------------
+# Every sandbox this process creates carries RUN_TAG, so cleanup() can find one even
+# when Ctrl-C lands mid-create, before we hold a handle to it.
+
+RUN_TAG = f"swe-bench-{uuid.uuid4().hex[:12]}"
+_live: dict[str, object] = {}  # sandbox id -> Sandbox, until terminated
+_live_lock = threading.Lock()
+_DONE = ("TERMINATING", "TERMINATED")
+
+
+def _terminate(sb) -> str | None:
+    """Terminate one sandbox, retrying once. Returns None, or the error (already logged)."""
+    err = ""
+    for attempt in (1, 2):
+        try:
+            close_err = None
+            try:
+                sb.close_if_open()
+            except Exception as e:  # noqa: BLE001 — judged by the state below
+                close_err = e
+            sb.refresh()  # a racing terminate (cleanup() vs a worker) still ends TERMINATING
+            if sb.state not in _DONE:
+                raise close_err or RuntimeError(f"state is {sb.state} after terminate")
+            with _live_lock:
+                _live.pop(sb.id, None)
+            return None
+        except Exception as e:  # noqa: BLE001
+            err = f"{type(e).__name__}: {str(e)[:200]}"
+            log(f"  WARNING: terminate {sb.id} failed (attempt {attempt}/2): {err}")
+            if attempt == 1:
+                time.sleep(3)
+    log(f"  WARNING: sandbox {sb.id} may still be RUNNING. Stop it: tenki sandbox terminate {sb.id}")
+    return err
+
+
+def cleanup() -> list[str]:
+    """Terminate every sandbox this process created and still holds, then sweep the
+    workspace for any other sandbox tagged RUN_TAG. Returns the ids that failed."""
+    with _live_lock:
+        pending = list(_live.values())
+    failed = [sb.id for sb in pending if _terminate(sb)]
+    try:
+        client, wid = tenki_client()
+        for sb in client.list(workspace_id=wid, tags=[RUN_TAG]):
+            if sb.state not in _DONE and sb.id not in failed:
+                log(f"  terminating leftover sandbox {sb.id} ({sb.name})")
+                if _terminate(sb):
+                    failed.append(sb.id)
+    except Exception as e:  # noqa: BLE001
+        log(f"  WARNING: could not list sandboxes tagged {RUN_TAG} to check for leftovers: "
+            f"{type(e).__name__}: {str(e)[:200]}")
+    return failed
+
+
+def raise_on_sigterm() -> None:
+    """Treat SIGTERM (CI cancel, `timeout`) like Ctrl-C so the same cleanup runs."""
+    def handler(signum, frame):
+        raise KeyboardInterrupt(f"signal {signum}")
+    signal.signal(signal.SIGTERM, handler)
+
+
+def ignore_signals() -> None:
+    """Call before cleanup(): a second Ctrl-C must not abort the teardown itself."""
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
 
 # ---- one instance, end to end ----------------------------------------------
 
 def run_one(instance: dict, *, oracle: bool = False, model_id: str | None = None,
-            api_base: str = "", api_key_env: str = "", keep: bool = False) -> dict:
+            api_base: str = "", api_key_env: str = "", keep: bool = False, model=None) -> dict:
     iid = instance["instance_id"]
     test_spec = make_test_spec(instance)
     client, wid = tenki_client()
     t0 = time.time()
-    sb = client.create(name=f"swe-{iid[:32]}", workspace_id=wid, cpu_cores=2,
-                       memory_mb=4096, max_duration=1800, disk_size_gb=DISK_GB)
+    sb, result = None, {"instance_id": iid}
     try:
-        log(f"  [{iid}] provisioning (pull {image_name(iid).split('/')[-1]}) …")
+        try:
+            sb = client.create(name=f"swe-{iid[:32]}", workspace_id=wid, cpu_cores=2,
+                               memory_mb=4096, max_duration=1800, disk_size_gb=DISK_GB,
+                               tags=["swe-bench", RUN_TAG])
+        except WaitReadyFailedError as e:  # admitted but never ready: still ours to stop
+            sb = e.sandbox
+            raise
+        finally:
+            if sb is not None:
+                with _live_lock:
+                    _live[sb.id] = sb
+        log(f"  [{iid}] sandbox {sb.id}; provisioning (pull {image_name(iid).split('/')[-1]}) …")
         provision(sb, iid)
         if oracle:
             apply_gold(sb, instance["patch"])
             mode = "oracle"
-        elif model_id:
-            log(f"  [{iid}] running agent {model_id} …")
-            run_agent(sb, instance, model_id, api_base, api_key_env)
-            mode = model_id
+        elif model_id or model is not None:
+            mode = model_id or "stub-model"
+            log(f"  [{iid}] running agent {mode} …")
+            run_agent(sb, instance, model_id or "", api_base, api_key_env, model=model)
         else:
             mode = "empty"  # no edit -> must NOT resolve (negative control)
         resolved, detail = grade(sb, test_spec)
         dt = time.time() - t0
         log(f"  [{iid}] {mode:16} resolved={resolved}  "
             f"F2P {detail.get('fail_to_pass')}  P2P {detail.get('pass_to_pass')}  ({dt:.0f}s)")
-        return {"instance_id": iid, "mode": mode, "resolved": resolved, "seconds": round(dt), **detail}
+        result = {"instance_id": iid, "mode": mode, "resolved": resolved, "seconds": round(dt), **detail}
     except Exception as e:
         log(f"  [{iid}] ERROR {type(e).__name__}: {str(e)[:200]}")
-        return {"instance_id": iid, "mode": "error", "resolved": None,
-                "error": f"{type(e).__name__}: {str(e)[:200]}"}
+        result = {"instance_id": iid, "mode": "error", "resolved": None,
+                  "error": f"{type(e).__name__}: {str(e)[:200]}"}
     finally:
-        if not keep:
-            try:
-                sb.terminate()
-            except Exception:
-                pass
+        # Also runs on KeyboardInterrupt, which then propagates to the caller.
+        if sb is not None and not keep:
+            if err := _terminate(sb):
+                result["teardown_error"] = f"{sb.id}: {err}"
+    return result
 
 
 def load_instances(dataset: str, instances: list[str] | None, limit: int | None) -> list[dict]:
@@ -314,13 +426,27 @@ def main() -> int:
     mode = "oracle" if a.oracle else (a.model or "empty")
     log(f"SWE-bench/{a.dataset} on Tenki: {len(rows)} instance(s), {a.workers} workers, mode={mode}")
 
+    raise_on_sigterm()
     results = []
-    with cf.ThreadPoolExecutor(max_workers=a.workers) as ex:
+    ex = cf.ThreadPoolExecutor(max_workers=a.workers)
+    try:
         futs = [ex.submit(run_one, r, oracle=a.oracle, model_id=a.model,
                           api_base=a.api_base, api_key_env=a.api_key_env, keep=a.keep)
                 for r in rows]
         for fut in cf.as_completed(futs):
             results.append(fut.result())
+    except KeyboardInterrupt:
+        log("\nInterrupted: terminating this run's sandboxes …")
+        ignore_signals()
+        ex.shutdown(wait=False, cancel_futures=True)
+        if not a.keep:
+            failed = cleanup()
+            log(f"  {len(failed)} sandbox(es) could not be terminated: {', '.join(failed)}" if failed
+                else "  all sandboxes terminated")
+        sys.stdout.flush()
+        os._exit(130)  # don't wait on workers still blocked in sandbox calls
+    ex.shutdown()
+    leftovers = [] if a.keep else cleanup()
 
     resolved = [r for r in results if r.get("resolved") is True]
     errs = [r for r in results if r.get("mode") == "error"]
@@ -330,6 +456,9 @@ def main() -> int:
          "resolvedRate": round(100 * len(resolved) / max(1, len(results) - len(errs)), 1),
          "results": results}, indent=2) + "\n")
     log(f"Wrote {a.out}")
+    if leftovers:
+        log(f"ERROR: {len(leftovers)} sandbox(es) may still be RUNNING: {', '.join(leftovers)}")
+        return 1
     return 0
 
 
