@@ -12,7 +12,7 @@ Run SWE-bench on Tenki sandboxes, following https://github.com/LuxorLabs/cookboo
 2. Create a venv with uv venv and run uv pip install -r requirements.txt.
 3. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
 4. Run node verify.mjs and confirm the ✓ line for pallets__flask-4992.
-5. Before a model run, ask me which model, endpoint, and how many instances. Check the model key is exported (ask me to export it if not), install mini-swe-agent and pyyaml, run with --empty first and confirm nothing resolves, then run the harness with --model.
+5. Before a model run, ask me which model, endpoint, and how many instances. Check the model key is exported (ask me to export it if not), install "mini-swe-agent>=2.4.6,<3" and pyyaml, run the harness once with neither --oracle nor --model (the no-edit control) and confirm nothing resolves, then run it with --model.
 ```
 
 ## Quick start
@@ -65,7 +65,7 @@ node verify.mjs        # or: .venv/bin/python verify.py
 
 ## Run a model
 
-This uses [`mini-swe-agent`](https://github.com/SWE-agent/mini-swe-agent) as the scaffold (`pip install mini-swe-agent pyyaml`):
+This uses [`mini-swe-agent`](https://github.com/SWE-agent/mini-swe-agent) 2.x as the scaffold (`uv pip install "mini-swe-agent>=2.4.6,<3" pyyaml`):
 
 ```bash
 export OPENAI_API_KEY=sk-...
@@ -75,7 +75,15 @@ export OPENAI_API_KEY=sk-...
 
 Each instance gets its own sandbox, so `--workers N` runs them in parallel. Results, with per-instance `resolved`, F2P/P2P counts, and a `resolvedRate`, go to `swebench-tenki.json` (`--out` to change). `--keep` leaves VMs running for debugging.
 
-Run with `--empty` (no edit) first. Every instance must come back `resolved=False`; if one resolves, the grader is getting the wrong tests.
+Without `--keep`, every sandbox is terminated when an instance finishes, fails, or on Ctrl-C (or SIGTERM), and each is tagged with the run's id so one caught mid-create is found too. If a terminate fails twice, the harness prints a `WARNING` with the sandbox id and a `tenki sandbox terminate` command, and exits non-zero.
+
+First run the same instances with neither `--oracle` nor `--model`. That is the no-edit control (`mode=empty`): every instance must come back `resolved=False`; if one resolves, the grader is getting the wrong tests.
+
+```bash
+.venv/bin/python harness.py --dataset lite --limit 20 --workers 4
+```
+
+If your model isn't in litellm's price list, the first model call fails on cost tracking; `export MSWEA_COST_TRACKING=ignore_errors` to run without a cost limit.
 
 ## Datasets
 
