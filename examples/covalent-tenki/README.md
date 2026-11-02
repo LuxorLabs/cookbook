@@ -76,7 +76,7 @@ python workflow.py
 ```python
 import covalent as ct
 
-# … the Covalent 422 workaround (Step 5) …
+# … the Covalent 422 workaround (see "Covalent 422 workaround" below) …
 
 from covalent_tenki_plugin import TenkiExecutor  # noqa: E402 (after the patch)
 

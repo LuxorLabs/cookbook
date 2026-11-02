@@ -1,6 +1,6 @@
 # Pause, snapshot, and resume
 
-Write a file into a Tenki sandbox, pause it, resume it, and read the file back. `pause()` saves the sandbox's memory and disk and releases the VM, so a paused sandbox costs nothing and leaves your concurrency quota. `resume()` brings back the same sandbox, with the same id, from that snapshot.
+Write a file into a Tenki sandbox, pause it, resume it, and read the file back. `pause()` saves the sandbox's memory and disk and releases the VM, so a paused sandbox leaves your concurrency quota. `resume()` brings back the same sandbox, with the same id, from that snapshot.
 
 ## Set it up with a coding agent
 
@@ -117,7 +117,7 @@ const waitState = async (want) => {
 
 Timing and retention:
 
-- Pausing takes about 20 seconds here. Resuming takes about 1 second, and file and exec calls work as soon as it returns.
+- Pausing takes about 20 seconds here. File and exec calls work as soon as `resume()` returns.
 - A pause snapshot expires after `pauseRetentionMs`, set at create time. After that the sandbox can't be resumed. `sandbox.pauseExpiresAt` shows when.
 - Sandboxes don't pause on idle. Call `pause()` yourself.
 

@@ -68,7 +68,7 @@ UV_EXTRAS=tenki make dev
 
 `make dev` re-syncs the backend on every start and doesn't detect the Tenki extra, so `UV_EXTRAS=tenki` keeps the SDK installed. You can put it in `.env` instead. Setting `UV_EXTRAS` turns off DeerFlow's extra detection, so list all the extras you use, for example `UV_EXTRAS=postgres,tenki`.
 
-Open http://localhost:2026 and start a thread that runs code. `logs/gateway.log` shows `Created Tenki sandbox <id> (name=deer-flow-tenki-<id>)`, and after the turn, `Released Tenki sandbox <id> to warm pool (sandbox still running)`.
+Open http://localhost:2026 and start a thread that runs code. `logs/gateway.log` shows `Created Tenki sandbox <id> (name=deer-flow-tenki-<id>)`, and after the turn, `Released Tenki sandbox <id> to warm pool (microVM still running)`.
 
 ### 5. Verify the Tenki side
 
