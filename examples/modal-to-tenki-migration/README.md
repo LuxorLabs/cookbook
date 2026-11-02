@@ -90,7 +90,7 @@ if workspace_id:
 
 # Modal: `Sandbox.create(app=app)` — everything hangs off an App. Tenki: no App
 # object — a sandbox is placed by workspace_id. `create(...)` boots
-# the sandbox and waits until it's RUNNING (~2s); the `with` block disposes it.
+# the sandbox and waits until it's RUNNING; the `with` block disposes it.
 with Sandbox.create(**opts) as sandbox:
     # Modal's exec() returns a *live* process — you drain `p.stdout.read()` and call
     # `p.wait()` for the exit code. Tenki's exec() blocks until the command finishes
@@ -159,7 +159,7 @@ To read output while a command runs, use `sb.start(...)`, which returns a live p
   ```
 
   Commands run with `exec` can write anywhere.
-- **Use `max_duration` for lifetime.** Don't map Modal's `idle_timeout` to `idle_timeout_minutes`: the SDK accepts it but ignores it, and Tenki doesn't pause idle sandboxes. Use `max_duration`, or call `sb.pause()` yourself. A paused sandbox is free and keeps its memory and disk.
+- **Use `max_duration` for lifetime.** Don't map Modal's `idle_timeout` to `idle_timeout_minutes`: the SDK accepts it but ignores it, and Tenki doesn't pause idle sandboxes. Use `max_duration`, or call `sb.pause()` yourself. A paused sandbox keeps its memory and disk.
 - **Outbound network is on by default**, as on Modal. Pass `allow_outbound=False` to isolate a sandbox.
 
 ## Troubleshooting
