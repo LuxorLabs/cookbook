@@ -131,6 +131,7 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
 | [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent sandboxes for an agent fleet |
 | [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
+| [OpenClaw](examples/openclaw-tenki/) | Sandbox backend for the personal AI assistant: every agent tool call runs in a Tenki sandbox |
 
 ### Migrating from another provider
 
