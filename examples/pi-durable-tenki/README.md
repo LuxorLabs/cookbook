@@ -128,7 +128,7 @@ const harness = await Harness.open(storage, {
 
 ## How the bridge works
 
-pi-env's `Connection` spawns a local command and speaks its framed protocol over that process's stdio. Normally that's `ssh`. Here it's `bridge.mjs`, which starts the daemon in the sandbox and pipes its stdio over Tenki's exec data plane:
+pi-env's `Connection` spawns a local command and speaks its framed protocol over that process's stdio. Normally that's `ssh`. Here it's `bridge.mjs`, which starts the daemon in the sandbox and pipes its stdio over Tenki's exec data plane. A pause from another client doesn't end that stream, so the bridge watches the session and exits when it leaves `RUNNING`:
 
 ```js
 #!/usr/bin/env node
@@ -147,9 +147,27 @@ try {
   const handle = session.run(["/home/tenki/pi-env", ...daemonArgs], {
     stdin: Readable.toWeb(process.stdin),
   });
-  handle.stdout.pipeTo(Writable.toWeb(process.stdout)).catch(() => {});
-  handle.stderr.pipeTo(Writable.toWeb(process.stderr)).catch(() => {});
-  process.exit((await handle).exitCode ?? 1);
+  // Pausing from another client leaves this stream open (it hangs until the session
+  // ends), so watch the state and drop the connection; pi-env resumes on the next request.
+  setInterval(async () => {
+    try {
+      await session.refresh();
+    } catch {
+      return;
+    }
+    if (session.state !== "RUNNING") {
+      console.error(`bridge: sandbox ${session.state.toLowerCase()}`);
+      process.exit(1);
+    }
+  }, 1000).unref();
+  const piped = Promise.allSettled([
+    handle.stdout.pipeTo(Writable.toWeb(process.stdout)),
+    handle.stderr.pipeTo(Writable.toWeb(process.stderr)),
+  ]);
+  const { exitCode } = await handle;
+  // Drain the final framed stdout frame before exiting, or pi-env sees a half-response.
+  await piped;
+  process.exit(exitCode ?? 1);
 } catch (err) {
   // An unreachable sandbox becomes a clean spawn failure; pi-env retries on the next request.
   console.error(`bridge: ${err?.message ?? err}`);
