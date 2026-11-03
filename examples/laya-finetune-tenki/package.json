@@ -1,0 +1,9 @@
+{
+  "name": "laya-finetune-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example: fine-tune a Laya decision model on your own labelled tickets inside a Tenki sandbox, on CPU.",
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1"
+  }
+}
