@@ -1,0 +1,24 @@
+name: links
+
+# Checks every link in the Markdown with lychee (settings in lychee.toml), so URL moves
+# during the Luxor Agent Cloud rename are proven rather than assumed. Weekly as well, to
+# catch upstream docs that move.
+
+on:
+  pull_request:
+    paths: ["**/*.md", "lychee.toml", ".github/workflows/links.yml"]
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --config lychee.toml './**/*.md'
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
