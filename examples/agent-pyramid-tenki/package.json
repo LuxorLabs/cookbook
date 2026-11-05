@@ -1,0 +1,9 @@
+{
+  "name": "agent-pyramid-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — an architect agent, four lead agents and sixteen engineer agents, each in its own Tenki sandbox, drawn as a live 3D pyramid.",
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1"
+  }
+}

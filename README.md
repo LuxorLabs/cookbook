@@ -93,6 +93,7 @@ Give an agent a sandbox to run the code it writes.
 | [Pi Durable](examples/pi-durable-tenki/) | Remote execution env. Every tool call runs in a sandbox |
 | [AG2](examples/ag2-tenki/) | Native sandbox backend for shell and code tools |
 | [PraisonAI](examples/praisonai-tenki/) | One shared sandbox for a whole agent team |
+| [Agent pyramid](examples/agent-pyramid-tenki/) | Each agent splits its prompt into up to 4 for sub-agents, 85 agents with a sandbox each, in a live 3D view |
 
 ### Developer tools
 
