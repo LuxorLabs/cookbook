@@ -1,0 +1,26 @@
+name: brand
+
+# The Tenki → Luxor Agent Cloud rename (scripts/README.md). Fails when a "tenki" mention is
+# not covered by a rename rule or a protect pattern in scripts/rebrand.rules.mjs, so every
+# new name is decided once, in one place, before it spreads through the examples.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  brand:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Codemod tests
+        run: node --test scripts/rebrand.test.mjs
+      - name: Every tenki mention is classified
+        run: node scripts/rebrand.mjs --check
+      - name: What each phase would change
+        if: always()
+        run: node scripts/rebrand.mjs --report >> "$GITHUB_STEP_SUMMARY"
