@@ -164,7 +164,7 @@ try {
 
 ## Browser sessions
 
-- **End every session in `finally`.** SDK 0.8.0 has no close method, so `tinyfish.mjs` calls TinyFish's [`DELETE` endpoint](https://docs.tinyfish.ai/browser-api/reference.md). It retries `409`, `429`, `500`, `503`, `504`, network errors, and 15-second timeouts up to three times, honoring `Retry-After` (up to 30 s), and throws if the session isn't confirmed ended.
+- **End every session in `finally`.** SDK 0.11.0 has no close method, so `tinyfish.mjs` calls TinyFish's [`DELETE` endpoint](https://docs.tinyfish.ai/browser-api/reference.md). It retries `409`, `429`, `500`, `503`, `504`, network errors, and 15-second timeouts up to three times, honoring `Retry-After` (up to 30 s), and throws if the session isn't confirmed ended.
 - **`timeout_seconds` (5 to 86400) is an inactivity timeout.** A session with no CDP commands for that long ends on its own. Omitting it uses your plan's maximum. `tinyfish.mjs` sets 120.
 - **Creating a session takes 10 to 30 seconds.** If you pass `url` to `sessions.create`, wait for the page to load before reading it.
 - **Sessions use TinyFish's US residential proxy** unless you set `proxy_config` (`{ enabled: false }` connects directly).
@@ -198,7 +198,7 @@ A sandbox with a secret policy can't open WebSockets, so `connectOverCDP` fails 
 
 ## Image versions
 
-`tenki/tinyfish:stable` currently pins the CLI at 0.50.0 and the SDK at 0.8.0, and moves when Tenki publishes a new build. To pin the build you tested, run `tenki sandbox registry resolve tenki/tinyfish:stable` and pass `image: "tenki/tinyfish@<snapshot-id>"`. See [Tenki's TinyFish image](https://tenki.cloud/docs/sandbox/tinyfish).
+`tenki/tinyfish:stable` currently pins the CLI at 0.59.0 and the SDK at 0.11.0, and moves when Tenki publishes a new build. To pin the build you tested, run `tenki sandbox registry resolve tenki/tinyfish:stable` and pass `image: "tenki/tinyfish@<snapshot-id>"`. See [Tenki's TinyFish image](https://tenki.cloud/docs/sandbox/tinyfish).
 
 ## Troubleshooting
 
