@@ -63,3 +63,18 @@ export async function createTenkiEnv({ cpuCores = 1, memoryMb = 1024, onLog } = 
 		throw err;
 	}
 }
+
+/**
+ * Run `call`, and run it once more if the daemon connection was lost mid-request.
+ * A pause can leave the old bridge open for a while, so the first request after it
+ * may ride a connection that is about to drop. The retry reconnects, which resumes
+ * the sandbox before the bridge spawns.
+ */
+export async function retryOnLostConnection(call) {
+	try {
+		return await call();
+	} catch (err) {
+		if (!String(err?.message ?? err).includes("connection lost")) throw err;
+		return await call();
+	}
+}
