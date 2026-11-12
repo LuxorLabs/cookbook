@@ -168,12 +168,13 @@ node verify.mjs
 
 It runs each example's `verify.mjs` and ends with `✓ all examples passed`, or with `✗ N example(s) failed` and a non-zero exit. It does not install dependencies. Install them first, as CI does in [`.github/workflows/verify.yml`](.github/workflows/verify.yml).
 
-CI runs the same checks on every push and pull request, and a failed check blocks the merge. Two examples are skipped in CI:
+CI runs the same checks on every push and pull request, and a failed check blocks the merge. Three examples are skipped in CI:
 
 - `composio-tenki`, which needs a Composio API key
 - `covalent-tenki`, until [`covalent-tenki-plugin` 0.1.1](https://github.com/LuxorLabs/tenki-covalent-plugin/pull/1) is on PyPI
+- `orca-tenki`, until gateway SSH host keys are stable across connections
 
-`node verify.mjs` on your machine runs those two as well. If they fail locally, see Troubleshooting.
+`node verify.mjs` on your machine runs those three as well. If they fail locally, see Troubleshooting.
 
 ## Official integrations
 

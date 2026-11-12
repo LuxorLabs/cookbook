@@ -193,7 +193,7 @@ Daemon behavior to know, from pi-env's [protocol](https://github.com/earendil-wo
 
 - The daemon exits when its stdin ends or after 30 s without traffic and kills every process it started. A dead bridge leaks nothing, but commands don't survive a pause or a dropped connection.
 - A reconnect is a fresh daemon session. Handles opened before it, such as readers and running execs, fail cleanly instead of reaching the new daemon.
-- The first call after a pause can fail with `connection lost` while the old bridge is still closing. Retry it once with `retryOnLostConnection`. The retry reconnects and resumes the sandbox.
+- The first call after a pause can fail with `connection lost` while the old bridge is still closing. If the call is idempotent, such as a read, retry it once with `retryOnLostConnection`. The retry reconnects and resumes the sandbox. Don't retry a call that changes state, since it may already have run.
 
 ## Troubleshooting
 
@@ -204,7 +204,7 @@ Daemon behavior to know, from pi-env's [protocol](https://github.com/earendil-wo
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
 | `npm warn EBADENGINE Unsupported engine` | Use Node 22.19 or later. On Node 20 it's only a warning. |
 | `pi-env connection lost` from a handle opened before a pause | Handles belong to the old daemon session. Open a new one. |
-| `pi-env connection lost` on the first call after a pause | The old bridge can stay open for a while after the pause, so the call rides a connection that then drops. Retry once: `retryOnLostConnection` in `tenki-env.mjs` does this, and the retry resumes the sandbox. |
+| `pi-env connection lost` on the first call after a pause | The old bridge can stay open for a while after the pause, so the call rides a connection that then drops. Retry an idempotent call once: `retryOnLostConnection` in `tenki-env.mjs` does this, and the retry resumes the sandbox. |
 | `bridge: <message>` in `onLog` | The bridge couldn't reach the sandbox. pi-env retries on the next request. |
 
 ## Related
