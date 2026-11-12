@@ -5,7 +5,7 @@ This is the examples/cookbook layer for Tenki, and this is your playbook. New he
 ## Setup (5 minutes)
 
 1. **Get a Tenki account + key.** Install the CLI and run `tenki login` — it writes a `tk_` API key to `~/.config/tenki/config.yaml`. The examples read it from there automatically.
-2. **Node 24+.** (The verify scripts only need Node 20, which is what CI runs; the `run.mjs` demos use top-level `await using`, which needs 24.)
+2. **Node 24+.** (The verify scripts only need Node 20, and CI runs them on Node 24; the `run.mjs` demos use top-level `await using`, which needs 24.)
 3. **Run an example to confirm your setup works:**
    ```bash
    cd examples/run-code-in-a-sandbox

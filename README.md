@@ -9,7 +9,7 @@ The first example takes about 10 minutes once you have an API key.
 You need:
 
 - A [Tenki account](https://tenki.cloud) and a `tk_` API key. Create keys at [app.tenki.cloud](https://app.tenki.cloud).
-- Node.js 24 or later for the JavaScript demos. Several `run.mjs` scripts, including the first example, use top-level `await using`, which Node 22 cannot parse. The verify scripts run on Node 20, which is what CI uses.
+- Node.js 24 or later for the JavaScript demos. Several `run.mjs` scripts, including the first example, use top-level `await using`, which Node 22 cannot parse. The verify scripts also run on Node 20. CI runs them on Node 24.
 - Python 3.12 and [uv](https://docs.astral.sh/uv/) for the Python examples. They run on Python 3.10 or later. CI uses 3.12. The Covalent example needs your local minor version to match the sandbox image (3.12 on the default image).
 - Optional: the [Tenki CLI](https://tenki.cloud/docs/sandbox/cli), if you want `tenki login` to store the key.
 
@@ -168,12 +168,13 @@ node verify.mjs
 
 It runs each example's `verify.mjs` and ends with `✓ all examples passed`, or with `✗ N example(s) failed` and a non-zero exit. It does not install dependencies. Install them first, as CI does in [`.github/workflows/verify.yml`](.github/workflows/verify.yml).
 
-CI runs the same checks on every push and pull request, and a failed check blocks the merge. Two examples are skipped in CI:
+CI runs the same checks on every push and pull request, and a failed check blocks the merge. Three examples are skipped in CI:
 
 - `composio-tenki`, which needs a Composio API key
 - `covalent-tenki`, until [`covalent-tenki-plugin` 0.1.1](https://github.com/LuxorLabs/tenki-covalent-plugin/pull/1) is on PyPI
+- `orca-tenki`, until gateway SSH host keys are stable across connections
 
-`node verify.mjs` on your machine runs those two as well. If they fail locally, see Troubleshooting.
+`node verify.mjs` on your machine runs those three as well. If they fail locally, see Troubleshooting.
 
 ## Official integrations
 

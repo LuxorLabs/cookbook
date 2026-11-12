@@ -42,10 +42,13 @@ jobs:
           path: ~/.npm
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 22.23.5
       - run: npm ci
       - run: npm test
-      - run: echo "npm cache ${{ steps.npm-cache.outputs.source }} (generation ${{ steps.npm-cache.outputs.generation }})"
+      - run: echo "npm cache $CACHE_SOURCE (generation $CACHE_GENERATION)"
+        env:
+          CACHE_SOURCE: ${{ steps.npm-cache.outputs.source }}
+          CACHE_GENERATION: ${{ steps.npm-cache.outputs.generation }}
 
   lint:
     runs-on: tenki-standard-medium-4c-8g
