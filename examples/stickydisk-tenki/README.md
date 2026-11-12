@@ -42,7 +42,7 @@ jobs:
           path: ~/.npm
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 22.23.5
       - run: npm ci
       - run: npm test
       - run: echo "npm cache ${{ steps.npm-cache.outputs.source }} (generation ${{ steps.npm-cache.outputs.generation }})"
