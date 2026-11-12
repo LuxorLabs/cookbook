@@ -59,7 +59,7 @@ node verify.mjs
 ✓ run-code-in-a-sandbox: create → exec python3 → 42 → dispose
 ```
 
-`verify.mjs` boots a sandbox, runs `python3 -c "print(6 * 7)"`, fails unless it exits 0 with `42` on stdout, and disposes of the sandbox in a `finally` block. CI runs it on Node 20.
+`verify.mjs` boots a sandbox, runs `python3 -c "print(6 * 7)"`, fails unless it exits 0 with `42` on stdout, and disposes of the sandbox in a `finally` block. CI runs it on Node 24.
 
 ## The code
 

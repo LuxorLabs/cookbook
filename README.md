@@ -9,7 +9,7 @@ The first example takes about 10 minutes once you have an API key.
 You need:
 
 - A [Tenki account](https://tenki.cloud) and a `tk_` API key. Create keys at [app.tenki.cloud](https://app.tenki.cloud).
-- Node.js 24 or later for the JavaScript demos. Several `run.mjs` scripts, including the first example, use top-level `await using`, which Node 22 cannot parse. The verify scripts run on Node 20, which is what CI uses.
+- Node.js 24 or later for the JavaScript demos. Several `run.mjs` scripts, including the first example, use top-level `await using`, which Node 22 cannot parse. The verify scripts also run on Node 20. CI runs them on Node 24.
 - Python 3.12 and [uv](https://docs.astral.sh/uv/) for the Python examples. They run on Python 3.10 or later. CI uses 3.12. The Covalent example needs your local minor version to match the sandbox image (3.12 on the default image).
 - Optional: the [Tenki CLI](https://tenki.cloud/docs/sandbox/cli), if you want `tenki login` to store the key.
 
