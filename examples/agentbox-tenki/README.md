@@ -1,6 +1,6 @@
 # AgentBox
 
-Run [AgentBox](https://github.com/madarco/agentbox) coding agents (`claude`, `codex`, `opencode`) in Tenki VMs. AgentBox moves your project into a dedicated VM, which it calls a box, and runs agents there in parallel with your own settings. With the [`@tenkicloud/agentbox-provider`](https://www.npmjs.com/package/@tenkicloud/agentbox-provider) plugin, every box is a Tenki VM with its own kernel, Docker inside, public preview URLs, and free pause/resume. You don't need Docker locally.
+Run [AgentBox](https://github.com/madarco/agentbox) coding agents (`claude`, `codex`, `opencode`) in Tenki VMs. AgentBox moves your project into a dedicated VM, which it calls a box, and runs agents there in parallel with your own settings. With the [`@tenkicloud/agentbox-provider`](https://www.npmjs.com/package/@tenkicloud/agentbox-provider) plugin, every box is a Tenki VM with its own kernel, Docker inside, public preview URLs, and pause/resume. You don't need Docker locally.
 
 Pin the AgentBox CLI to **0.29.2**. Plugin 0.1.1 targets provider SDK v2, which AgentBox 0.27.1 through 0.29.2 load; 0.30.0 and later accept only v4. SDK v4 support is in progress in [tenki-agentbox-provider#6](https://github.com/LuxorLabs/tenki-agentbox-provider/pull/6).
 
@@ -87,7 +87,7 @@ node verify.mjs
 - **Push from a box** with `agentbox-ctl git push`. The push goes through the host relay, which holds your git credentials, so keys never enter the box.
 - **Preview URLs.** Every exposed port gets a public HTTPS URL; `expose:` in `agentbox.yaml` and `agentbox open` work as on other providers. The in-box web proxy listens on 8080. Anyone with a URL can reach that port, so use a signed, expiring URL for anything that shouldn't stay public.
 - **Checkpoints.** From the project root, `agentbox checkpoint create --name setup` snapshots a warm box live, and `agentbox create --provider tenki --snapshot setup` boots new boxes from it.
-- **Pause.** `agentbox pause <box>` and `agentbox start <box>` use Tenki pause/resume: free while paused, processes intact.
+- **Pause.** `agentbox pause <box>` and `agentbox start <box>` use Tenki pause/resume, with processes intact.
 - **Lifetime.** Boxes get 45 minutes unless you set `AGENTBOX_TENKI_TIMEOUT_MS`. The host keepalive extends a box while you use it, starting from that value.
 
 | Setting | Where | Notes |

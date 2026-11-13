@@ -128,7 +128,7 @@ Things to know:
 ```python
     def __init__(self, additional_imports, logger, allow_pickle=False, **sandbox_kwargs):
         super().__init__(additional_imports, logger, allow_pickle)
-        # Boot the sandbox and wait until it's RUNNING (~2s).
+        # Boot the sandbox and wait until it's RUNNING.
         self.sandbox = Sandbox.create(**sandbox_kwargs)
         # Drop the kernel + client into /home/tenki and start the kernel daemon.
         self._put("/home/tenki/kernel.py", _KERNEL)

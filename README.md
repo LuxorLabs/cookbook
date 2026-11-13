@@ -48,7 +48,7 @@ node run.mjs
 exit 0 -> 42
 ```
 
-The script creates a sandbox, runs `python3 -c "print(6 * 7)"` inside it, prints the exit code and output, and terminates the sandbox when the script ends, because `await using` disposes it. The sandbox boots in about 2 seconds and is billed per second.
+The script creates a sandbox, runs `python3 -c "print(6 * 7)"` inside it, prints the exit code and output, and terminates the sandbox when the script ends, because `await using` disposes it. The sandbox is billed per second.
 
 The same loop in Python is [Run code with Python](examples/run-code-python/). From the repository root:
 
@@ -184,7 +184,7 @@ Packages you install in your own project:
 | --- | --- | --- |
 | [Composio tools](https://github.com/LuxorLabs/tenki-composio-tools) | `npm install @tenkicloud/composio-tools` | Create, execute, snapshot, and terminate tools for Composio agents |
 | [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki sandboxes |
-| [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
+| [GitHub Actions](https://github.com/LuxorLabs/tenki-actions) | `uses: LuxorLabs/tenki-actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
 | [Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) | `go get github.com/LuxorLabs/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
 | [Convex component](https://github.com/LuxorLabs/tenki-convex) | `npm install @tenkicloud/convex` | Creates and drives sandboxes from Convex actions, with each one's state in a Convex table |
 

@@ -69,7 +69,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
 The end of `run.py` does the work:
 
 ```python
-# `Sandbox.create(...)` boots a sandbox and waits until it's RUNNING (~2s).
+# `Sandbox.create(...)` boots a sandbox and waits until it's RUNNING.
 # The `with` block disposes it (terminates the VM) when the scope ends.
 with Sandbox.create(**opts) as sandbox:
     # exec(command, *args) runs a bare binary + its args — no shell splitting,

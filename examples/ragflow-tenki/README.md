@@ -140,7 +140,7 @@ The check makes the Go provider's create call. From `main.go`:
 
 ## Related
 
-- [RAGFlow](https://github.com/infiniflow/ragflow) and its [sandbox quickstart](https://github.com/infiniflow/ragflow/blob/main/docs/administrator/configurations/sandbox_quickstart.md)
+- [RAGFlow](https://github.com/infiniflow/ragflow) and its [sandbox docs](https://github.com/infiniflow/ragflow/blob/main/docs/administrator/sandbox/overview.md), including [Configure Tenki](https://github.com/infiniflow/ragflow/blob/main/docs/administrator/sandbox/configure_ssh_and_cloud_providers.md#configure-tenki)
 - [ragflow#17305](https://github.com/infiniflow/ragflow/pull/17305) (adds the provider), [ragflow#18117](https://github.com/infiniflow/ragflow/pull/18117) (drops `project_id`), [ragflow#20389](https://github.com/infiniflow/ragflow/pull/20389) (removes the Python provider)
 - [Tenki Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) and the [Tenki docs](https://tenki.cloud/docs)
 - [DeerFlow](../deerflow-tenki/): another app with a built-in Tenki sandbox provider
