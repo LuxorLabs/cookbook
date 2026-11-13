@@ -1,0 +1,5 @@
+tenki>=1.4.1
+# tinker-cookbook has no tagged releases; pin the commit this example was checked against.
+# The [modal] extra is needed only because the Harbor RL recipe imports its Modal sandbox
+# module when it loads. Nothing runs on Modal and no Modal account is needed.
+tinker-cookbook[modal] @ git+https://github.com/thinking-machines-lab/tinker-cookbook.git@4a3a2829190b45999021e423bc90b7523108edf4

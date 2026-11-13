@@ -108,8 +108,18 @@ Give an agent a sandbox to run the code it writes.
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes on Tenki sandboxes |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
 | [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
-| [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
 | [Convex](examples/convex-tenki/) | A sandbox per user from Convex actions, with live state in a Convex table |
+
+### Reinforcement learning
+
+Run RL rollouts, environments, and evals with one disposable sandbox per episode.
+
+| Example | What it covers |
+| --- | --- |
+| [Tinker RL](examples/tinker-harbor-rl-tenki/) | RL training on Terminal-Bench with Tinker's hosted GPUs and one Tenki sandbox per rollout |
+| [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
+| [NeMo Gym](examples/nemo-gym-tenki/) | A `tenki` sandbox provider for NVIDIA NeMo Gym rollouts |
+| [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
 
 ### Tenki Code Reviewer
 
@@ -128,7 +138,6 @@ Run a self-hosted agent platform's sandboxes on Tenki.
 | [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
 | [RAGFlow](examples/ragflow-tenki/) | Ephemeral sandboxes for the RAG engine's code components |
 | [Open WebUI](examples/open-webui-tenki/) | Sandboxed code interpreter for the self-hosted chat platform |
-| [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
 | [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent sandboxes for an agent fleet |
 | [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
 
