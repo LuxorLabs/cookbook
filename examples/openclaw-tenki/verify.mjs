@@ -43,9 +43,12 @@ try {
 	// Part 1: the plugin contract OpenClaw loads.
 	assert(manifest.id === "tenki", `manifest id is ${JSON.stringify(manifest.id)}`);
 	assert(manifest.configSchema?.additionalProperties === false, "configSchema is not strict");
-	const keys = "authToken baseUrl workspaceId image workspaceRoot idleTimeoutMinutes cpuCores memoryMb diskSizeGb tags";
-	const missing = keys.split(" ").filter((k) => !(k in (manifest.configSchema?.properties ?? {})));
+	const props = manifest.configSchema?.properties ?? {};
+	const keys = "authToken baseUrl workspaceId image workspaceRoot cpuCores memoryMb diskSizeGb tags";
+	const missing = keys.split(" ").filter((k) => !(k in props));
 	assert(!missing.length, `configSchema missing keys: ${missing.join(", ")}`);
+	// 0.3.0 replaced idleTimeoutMinutes (ignored by the SDK) with maxDurationMinutes; 0.2.0 is still what npm serves.
+	assert("maxDurationMinutes" in props || "idleTimeoutMinutes" in props, "configSchema has neither maxDurationMinutes nor idleTimeoutMinutes");
 	assert(pkg.openclaw?.extensions?.length, "package.json openclaw.extensions is empty");
 	assert(pkg.openclaw?.install?.minHostVersion, "openclaw.install.minHostVersion missing");
 	assert(pkg.dependencies?.["@tenkicloud/sandbox"], "@tenkicloud/sandbox dependency missing");

@@ -2,7 +2,7 @@
 
 Run every [OpenClaw](https://github.com/openclaw/openclaw) agent tool in a Tenki sandbox. With the [`@tenkicloud/openclaw`](https://www.npmjs.com/package/@tenkicloud/openclaw) plugin and `sandbox.mode: "all"`, shell commands, the filesystem bridge, and interactive PTY sessions run in a Tenki session instead of on your machine. The plugin is published on [ClawHub](https://clawhub.ai), with source at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
 
-> **Status:** plugin 0.2.0 loads only on OpenClaw 2026.7.x (from 2026.7.1-2; tested on 2026.7.34). OpenClaw 2026.8.1 and later, including `latest`, removed the `openclaw/plugin-sdk/zod` import it uses, so it fails to load there even though the install reports success.
+> **Status:** plugin 0.3.0 requires OpenClaw 2026.10.9 or later (`openclaw.install.minHostVersion`) and Node.js 24.22.1+ or 26.12.1+. Tested end to end on 2026.10.9. Plugin 0.2.x stays published for OpenClaw 2026.7.x hosts and does not load on 2026.8.1 or later. This example tracks 0.3.0; until it is on npm, `npm install` here pulls 0.2.0 and `verify.mjs` accepts either manifest.
 
 ## Set it up with a coding agent
 
@@ -10,10 +10,10 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
 Make my OpenClaw agents run their tools in Tenki sandboxes, following https://github.com/LuxorLabs/cookbook/tree/main/examples/openclaw-tenki.
-1. Check my OpenClaw version with openclaw --version. The plugin loads only on 2026.7.x, so if I'm on 2026.8.1 or later, stop and tell me before changing anything.
+1. Check my OpenClaw version with openclaw --version. Plugin 0.3.0 needs 2026.10.9 or later and Node 24.22.1+ (or 26.12.1+). If I'm on 2026.7.x, install plugin 0.2.x instead; if I'm on 2026.8.x or 2026.9.x, stop and tell me before changing anything.
 2. Check that ssh, ssh-keygen, and tar are installed, then run openclaw plugins install clawhub:@tenkicloud/openclaw.
 3. The Gateway needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud). Ask me to add it to ~/.openclaw/.env myself. Never ask me to paste the key to you, print it, or write it to a file yourself.
-4. Add the plugins.entries.tenki and agents.defaults.sandbox blocks from the README to ~/.openclaw/openclaw.json, then run openclaw gateway restart and openclaw gateway status.
+4. Add the plugins.entries.tenki and agents.defaults.sandbox blocks from the README to ~/.openclaw/openclaw.json (plus plugins.allow: ["tenki"] if the plugin was not installed from ClawHub), then run openclaw gateway restart and openclaw gateway status.
 5. To check the Tenki side, clone https://github.com/LuxorLabs/cookbook, cd into examples/openclaw-tenki, run npm install and node verify.mjs (it needs the key exported in that shell; ask me to export it), and confirm the ✓ line.
 6. If a step fails, use the Troubleshooting table in the example's README.md.
 ```
@@ -22,16 +22,16 @@ Make my OpenClaw agents run their tools in Tenki sandboxes, following https://gi
 
 You need:
 
-- An OpenClaw 2026.7.x host. That release needs Node.js `>=22.22.3 <23`, `>=24.15.0 <25`, or `>=25.9.0`.
+- An OpenClaw 2026.10.9 or later host, on Node.js `>=24.22.1` or `>=26.12.1`. For a 2026.7.x host, use plugin 0.2.x instead.
 - A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
 - `ssh`, `ssh-keygen`, and `tar` on the machine that runs OpenClaw.
 
 ### 1. Install
 
-If you install OpenClaw from npm, pin a 2026.7.x version:
+If you install OpenClaw from npm, pin 2026.10.9 or later:
 
 ```bash
-npm install -g openclaw@2026.7.34 --allow-scripts=openclaw
+npm install -g openclaw@2026.10.9 --allow-scripts=openclaw
 openclaw onboard --install-daemon
 ```
 
@@ -41,7 +41,7 @@ Omit `--allow-scripts=openclaw` on npm 11.15 and earlier. Then install the plugi
 openclaw plugins install clawhub:@tenkicloud/openclaw
 ```
 
-Or from a checkout: `(cd ~ && git clone https://github.com/LuxorLabs/tenki-openclaw && openclaw plugins install ./tenki-openclaw)`.
+Or from a checkout: `(cd ~ && git clone https://github.com/LuxorLabs/tenki-openclaw && openclaw plugins install ./tenki-openclaw)`. A plugin installed from a local path or archive instead of ClawHub must also be listed in `plugins.allow` (Step 3), or the host refuses to load it. Don't `plugins install --link` a checkout that has its own `node_modules/openclaw`; the host rejects it (see Troubleshooting).
 
 ### 2. Set your API key
 
@@ -60,11 +60,12 @@ Add this to `~/.openclaw/openclaw.json` (JSON5) to enable the plugin and make `t
 ```jsonc
 {
   "plugins": {
+    // Only for a plugin installed from a local path or archive. ClawHub installs don't need it.
+    "allow": ["tenki"],
     "entries": {
       "tenki": {
         "enabled": true,
         "config": {
-          "image": "ubuntu-24",
           "memoryMb": 4096,
         },
       },
@@ -75,11 +76,15 @@ Add this to `~/.openclaw/openclaw.json` (JSON5) to enable the plugin and make `t
       "sandbox": {
         "mode": "all",
         "backend": "tenki",
+        // Defaults to "none". "rw" mirrors the agent workspace into the session.
+        "workspaceAccess": "rw",
       },
     },
   },
 }
 ```
+
+Leave `image` out unless you have a registry image: Tenki rejects base-image ids such as `ubuntu-24`.
 
 Then restart the Gateway:
 
@@ -106,7 +111,7 @@ node verify.mjs
 ✓ openclaw-tenki: plugin contract → live find-by-tag → sh positional args → stdin staging → SSH cert + gateway → dispose
 ```
 
-`verify.mjs` needs no OpenClaw host. It checks the published plugin's manifest (id `tenki`, the strict config schema, host version pin), then makes the Tenki calls the backend relies on against a live session: find by tag, exec with positional args, stdin staging, an SSH certificate and gateway stream, and dispose. It uses SDK 1.4.1 or later; the published plugin pins `@tenkicloud/sandbox` 0.5.2. The backend's own tests run at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
+`verify.mjs` needs no OpenClaw host. It checks the published plugin's manifest (id `tenki`, the strict config schema, host version pin), then makes the Tenki calls the backend relies on against a live session: find by tag, exec with positional args, stdin staging, an SSH certificate and gateway stream, and dispose. It uses SDK 1.4.1 or later; plugin 0.3.0 pins `@tenkicloud/sandbox` 1.4.1 (0.2.0 pinned 0.5.2). The backend's own tests run at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
 
 ## Plugin config
 
@@ -114,12 +119,12 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
 
 | Key | What it sets |
 | --- | --- |
-| `authToken` | Tenki API key. Prefer `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` (Step 4). |
+| `authToken` | Tenki API key. Prefer `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` (Step 2). |
 | `baseUrl` | Tenki API endpoint override. Defaults to the SDK's `TENKI_API_ENDPOINT` / `TENKI_API_URL` fallback. |
 | `workspaceId` | Tenki workspace the sessions are created in. Optional. |
-| `image` | Base image id for created sessions. Omit for the Tenki default image. |
+| `image` | Tenki registry image ref (`workspace/name:tag` or `name@<snapshot-id>`, listed by `tenki sandbox registry list`). Omit for the Tenki default image. Base-image ids such as `ubuntu-24` are rejected with `registry image not found`. |
 | `workspaceRoot` | Absolute path inside the session for per-scope workspaces. Defaults to `/tmp/openclaw-sandboxes`. |
-| `idleTimeoutMinutes` | Passed to session create. Don't rely on it to stop a session (see FAQ). |
+| `maxDurationMinutes` | Hard cap on session lifetime in minutes; the session is terminated after that much total runtime. Replaces `idleTimeoutMinutes`, which the SDK ignores. |
 | `cpuCores` / `memoryMb` / `diskSizeGb` | Resources per session. |
 | `tags` | Extra tags attached to created sessions, after `openclaw` and the runtime tag. |
 
@@ -148,7 +153,7 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
 
 ## Things to know
 
-- **Sessions don't stop on their own.** The plugin never pauses a session and sets no lifetime cap, and Tenki doesn't pause on idle, so `idleTimeoutMinutes` doesn't stop anything. Sessions close when OpenClaw removes the sandbox runtime. Find leftovers by the `openclaw` tag.
+- **Sessions don't stop on idle.** The plugin never pauses a session and Tenki doesn't pause on idle. Set `maxDurationMinutes` for a hard cap; otherwise sessions close when OpenClaw removes the sandbox runtime. Find leftovers by the `openclaw` tag.
 - **Outbound network is always on.** The config has no option to turn it off.
 - `sandbox.docker.binds` isn't supported.
 - Large workspaces are buffered in memory during upload.
@@ -158,7 +163,10 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
 
 | Problem | Fix |
 | --- | --- |
-| `Plugin tenki cannot import openclaw/plugin-sdk/zod` | Your host is 2026.8.1 or later. Run a 2026.7.x host. |
+| `[not_found] registry image not found` | `image` is a registry ref, not a base-image id. Remove `image` or use a ref from `tenki sandbox registry list`. |
+| Plugin skipped with `reason=provenance-invalid` | The plugin wasn't installed from ClawHub. Add `"allow": ["tenki"]` under `plugins`. |
+| `Plugin entry is outside its captured source package` | You ran `plugins install --link` on a checkout with its own `node_modules/openclaw`. Install from ClawHub or a tarball instead. |
+| `SSH sandbox environment requires secure script staging` | Plugin older than 0.3.0 on a 2026.10.x host. Upgrade the plugin. |
 | `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY …` | Put the key in `~/.openclaw/.env` or the Gateway's environment, then `openclaw gateway restart`. |
 | `Invalid tenki plugin config: …`, or the Gateway won't start | Run `openclaw doctor` and fix the key it names. |
 | `Tenki workspaceRoot must be an absolute POSIX path` | Use an absolute `workspaceRoot`. |
