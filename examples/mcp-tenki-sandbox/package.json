@@ -7,7 +7,7 @@
     "verify": "node verify.mjs"
   },
   "dependencies": {
-    "@tenkicloud/mcp": "^0.1.0",
+    "@tenkicloud/mcp": ">=0.3.1",
     "@modelcontextprotocol/sdk": "^1.0.0"
   }
 }
