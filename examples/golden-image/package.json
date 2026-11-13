@@ -1,0 +1,9 @@
+{
+  "name": "golden-image",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — build a toolchain once on a builder sandbox, snapshot it, and restore every later sandbox from that golden image.",
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1"
+  }
+}
