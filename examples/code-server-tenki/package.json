@@ -1,0 +1,9 @@
+{
+  "name": "code-server-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — VS Code in the browser (code-server) on a persistent Tenki dev box.",
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1"
+  }
+}
