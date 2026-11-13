@@ -1,0 +1,7 @@
+-r requirements.txt
+# TRL's GRPO API changes between minor versions, so these are the exact versions train.py
+# was checked against. torch is left to TRL: pick the build for your GPU if the default isn't it.
+trl==1.17.1
+transformers==5.22.1
+peft==0.21.2
+datasets==5.1.0

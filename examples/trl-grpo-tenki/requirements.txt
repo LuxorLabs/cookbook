@@ -1,0 +1,3 @@
+# Everything the reward, reward_smoke.py and verify.py need. CI installs this file only.
+# To train, install requirements-train.txt, which adds TRL, PyTorch and the rest.
+tenki>=1.4.1
