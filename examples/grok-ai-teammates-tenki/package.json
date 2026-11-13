@@ -1,0 +1,10 @@
+{
+  "name": "grok-ai-teammates-tenki",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example: run Grok AI Teammates bots on Tenki sandboxes.",
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1",
+    "tsx": "4.23.15"
+  }
+}
