@@ -1,0 +1,9 @@
+{
+  "name": "host-a-service",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — host a long-running service on a sticky Tenki sandbox behind a stable preview URL, with its data on a volume.",
+  "dependencies": {
+    "@tenkicloud/sandbox": ">=1.4.1"
+  }
+}
