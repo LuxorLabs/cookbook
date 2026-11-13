@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent pyramid</title>
+<style>
+:root {
+	--bg: #0a0c11; --panel: rgba(16, 19, 27, 0.88); --line: #262b38; --text: #e7e9ee; --muted: #8a91a3;
+	--waiting: #5b6273; --thinking: #a78bfa; --running: #f5b14c; --passed: #3fd08a; --failed: #ef4444; --box: #5fb4ff;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.45 ui-sans-serif, system-ui, -apple-system, sans-serif; overflow: hidden; }
+#scene { position: fixed; inset: 0; }
+.label { pointer-events: none; text-align: center; white-space: nowrap; transform: translateY(-14px); }
+.label b { display: block; font: 600 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); text-shadow: 0 1px 3px #000; }
+.label i { font: 10px ui-monospace, Menlo, monospace; font-style: normal; color: var(--muted); }
+.label.l0 b { font-size: 13px; }
+.label.l2 b { font-size: 9px; opacity: .75; }
+.label.l2 i { display: none; }
+.label.l3 { display: none; }
+.label.sel b, .label.sel i { display: block; opacity: 1; font-size: 11px; }
+.label.l3.sel { display: block; }
+#hud { position: fixed; top: 16px; left: 16px; width: min(340px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; backdrop-filter: blur(6px); }
+#hud h1 { margin: 0 0 2px; font-size: 15px; }
+#goal { color: var(--muted); margin: 0 0 10px; }
+#answer { margin: -4px 0 10px; max-height: 30vh; overflow: auto; white-space: pre-wrap; font: 12px/1.4 ui-monospace, Menlo, monospace; color: var(--passed); }
+#stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+#stats div { background: rgba(255,255,255,0.03); border: 1px solid var(--line); border-radius: 6px; padding: 6px; text-align: center; }
+#stats b { display: block; font: 600 16px ui-monospace, Menlo, monospace; }
+#stats span { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+#legend { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--muted); font-size: 11px; }
+#legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; background: var(--c); vertical-align: -0.5px; }
+#legend .box::before { border-radius: 1px; background: none; border: 1px solid var(--box); }
+#detail { position: fixed; top: 16px; right: 16px; width: min(420px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: none; }
+#detail.on { display: block; }
+#detail h2 { margin: 0; font: 600 14px ui-monospace, Menlo, monospace; }
+#detail .meta { color: var(--muted); margin: 4px 0 8px; font-size: 12px; }
+#detail h3 { margin: 10px 0 4px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+#detail pre { background: #05070b; border: 1px solid var(--line); border-radius: 6px; padding: 8px; overflow: auto; font: 11px/1.4 ui-monospace, Menlo, monospace; white-space: pre-wrap; }
+#detail button { float: right; background: none; border: 0; color: var(--muted); font-size: 18px; cursor: pointer; }
+#log { position: fixed; left: 16px; bottom: 16px; width: min(520px, calc(100vw - 32px)); max-height: 30vh; overflow: hidden; font: 11px/1.5 ui-monospace, Menlo, monospace; color: var(--muted); mask-image: linear-gradient(to top, #000 60%, transparent); pointer-events: none; }
+#log div b { color: var(--text); font-weight: 500; }
+#status { position: fixed; right: 16px; bottom: 16px; color: var(--muted); font-size: 11px; }
+@media (max-width: 700px) { #log { display: none; } #detail { top: auto; bottom: 16px; max-height: 45vh; } }
+</style>
+<script type="importmap">
+{ "imports": {
+	"three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+	"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="scene"></div>
+<section id="hud">
+	<h1>Agent pyramid on Tenki</h1>
+	<p id="goal">Waiting for the first prompt…</p>
+	<p id="answer" hidden></p>
+	<div id="stats">
+		<div><b id="s-agents">0</b><span>agents</span></div>
+		<div><b id="s-live">0</b><span>sandboxes</span></div>
+		<div><b id="s-passed">0</b><span>passed</span></div>
+		<div><b id="s-runs">0</b><span>code runs</span></div>
+	</div>
+	<div id="legend">
+		<span style="--c:var(--waiting)">waiting</span><span style="--c:var(--thinking)">thinking</span><span style="--c:var(--running)">running code</span>
+		<span style="--c:var(--passed)">passed</span><span style="--c:var(--failed)">failed</span><span class="box">its sandbox</span>
+	</div>
+</section>
+<aside id="detail"><button id="close" aria-label="Close">×</button><div id="detail-body"></div></aside>
+<div id="log"></div>
+<div id="status">connecting…</div>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const COLORS = Object.fromEntries(["waiting", "thinking", "running", "passed", "failed"].map((s) => [s, new THREE.Color(css(`--${s}`))]));
+const BOX = new THREE.Color(css("--box"));
+
+const host = document.getElementById("scene");
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+host.appendChild(renderer.domElement);
+const labels = new CSS2DRenderer();
+labels.domElement.style.cssText = "position:absolute;inset:0;pointer-events:none";
+host.appendChild(labels.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(css("--bg"));
+scene.fog = new THREE.Fog(scene.background, 30, 70);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+camera.position.set(19, 15, 22);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 4.6, 0);
+controls.enableDamping = true;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.6;
+controls.addEventListener("start", () => (controls.autoRotate = false));
+
+scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x14161c, 1.2));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(6, 14, 8);
+scene.add(sun);
+const grid = new THREE.GridHelper(30, 30, 0x1d2230, 0x151924);
+scene.add(grid);
+
+// The pyramid: each level is a square grid twice as wide as the one above (2×2, 4×4, 8×8),
+// and each agent's sub-agents sit in the quadrant under it.
+const HEIGHT = [11, 7.4, 3.8, 0.4];
+const SPACING = [0, 3.6, 2.4, 1.54];
+const APEX = new THREE.Vector3(0, HEIGHT[0], 0);
+const levelOf = (id) => id.split(".").length - 1;
+const parentOf = (id) => (id.includes(".") ? id.slice(0, id.lastIndexOf(".")) : null);
+function place(id) {
+	const path = id.split(".").slice(1).map(Number);
+	const k = Math.min(path.length, 3);
+	if (!k) return APEX.clone();
+	let gx = 0, gz = 0;
+	for (const i of path.slice(0, 3)) (gx = gx * 2 + (i & 1)), (gz = gz * 2 + ((i >> 1) & 1));
+	const n = 2 ** k;
+	return new THREE.Vector3((gx - (n - 1) / 2) * SPACING[k], HEIGHT[k], (gz - (n - 1) / 2) * SPACING[k]);
+}
+
+// Faint pyramid faces behind the agents.
+{
+	const c = 6.4, y0 = 0;
+	const pts = [APEX, new THREE.Vector3(-c, y0, -c), new THREE.Vector3(c, y0, -c), new THREE.Vector3(c, y0, c), new THREE.Vector3(-c, y0, c)];
+	const g = new THREE.BufferGeometry().setFromPoints([1, 2, 3, 4].flatMap((i) => [pts[0], pts[i], pts[i], pts[i === 4 ? 1 : i + 1]]));
+	scene.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0x2b3245, transparent: true, opacity: 0.6 })));
+	const faces = new THREE.BufferGeometry().setFromPoints([1, 2, 3, 4].flatMap((i) => [pts[0], pts[i], pts[i === 4 ? 1 : i + 1]]));
+	faces.computeVertexNormals();
+	scene.add(new THREE.Mesh(faces, new THREE.MeshBasicMaterial({ color: 0x4b6cff, transparent: true, opacity: 0.035, side: THREE.DoubleSide, depthWrite: false })));
+}
+
+const nodes = new Map();
+const pulses = [];
+const pickables = [];
+const R = [0.6, 0.45, 0.32, 0.2];
+
+function node(id) {
+	if (nodes.has(id)) return nodes.get(id);
+	const r = R[Math.min(levelOf(id), 3)];
+	const pos = place(id);
+	const mat = new THREE.MeshStandardMaterial({ color: COLORS.waiting, emissive: COLORS.waiting, emissiveIntensity: 0.35, roughness: 0.4 });
+	const ball = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16), mat);
+	ball.position.copy(pos);
+	ball.userData.id = id;
+	ball.scale.setScalar(0.01);
+	scene.add(ball);
+	pickables.push(ball);
+	// The agent's sandbox: a cube of edges around it that appears while it boots and fades when disposed.
+	const boxMat = new THREE.LineBasicMaterial({ color: BOX, transparent: true, opacity: 0 });
+	const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(r * 2.6, r * 2.6, r * 2.6)), boxMat);
+	box.position.copy(pos);
+	scene.add(box);
+	const el = document.createElement("div");
+	el.className = `label l${Math.min(levelOf(id), 3)}`;
+	el.innerHTML = `<b></b><i></i>`;
+	const label = new CSS2DObject(el);
+	label.position.copy(pos).add(new THREE.Vector3(0, r + 0.25, 0));
+	scene.add(label);
+	let edge = null;
+	const p = parentOf(id);
+	if (p) {
+		const from = place(p);
+		const g = new THREE.BufferGeometry().setFromPoints([from, pos]);
+		edge = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0x39415a, transparent: true, opacity: 0.7 }));
+		scene.add(edge);
+	}
+	const n = { id, level: levelOf(id), state: "waiting", box: null, ball, mat, boxMat, edge, el, runs: 0, born: performance.now(), data: {} };
+	nodes.set(id, n);
+	return n;
+}
+
+function pulse(fromId, toId, color) {
+	const s = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 8), new THREE.MeshBasicMaterial({ color }));
+	scene.add(s);
+	pulses.push({ s, a: place(fromId), b: place(toId), t: 0 });
+}
+
+const logEl = document.getElementById("log");
+function log(html) {
+	const d = document.createElement("div");
+	d.innerHTML = html;
+	logEl.prepend(d);
+	while (logEl.children.length > 40) logEl.lastChild.remove();
+}
+
+let selected = null;
+function apply(ev) {
+	const n = node(ev.id);
+	const prev = n.state;
+	if (ev.detail && n.prompt === undefined) n.prompt = ev.detail;
+	Object.assign(n.data, ev);
+	if (ev.title) n.el.querySelector("b").textContent = ev.title;
+	if (ev.id === "r" && ev.detail && !n.data.goal) {
+		n.data.goal = ev.detail;
+		document.getElementById("goal").textContent = ev.detail;
+	}
+	if (ev.state) {
+		n.state = ev.state;
+		if (ev.state === "running") n.runs++;
+		const p = parentOf(ev.id);
+		if (p && (ev.state === "passed" || ev.state === "failed") && prev !== ev.state) pulse(ev.id, p, COLORS[ev.state]);
+		if (ev.state === "thinking" && prev === "waiting" && p && !n.data.dispatched) (n.data.dispatched = true), pulse(p, ev.id, COLORS.thinking);
+		const who = `<b>${n.data.title || ev.id}</b>`;
+		const msg = { running: "runs code in its sandbox", passed: `answers: ${esc(String(ev.answer ?? "").split("\n")[0].slice(0, 80))}`, failed: "failed", waiting: prev === "thinking" && ev.detail ? `splits its prompt` : "" }[ev.state];
+		if (msg) log(`${who} ${msg}`);
+	}
+	if (ev.id === "r" && ev.answer !== undefined) {
+		const a = document.getElementById("answer");
+		a.textContent = `Answer: ${ev.answer}`;
+		a.hidden = false;
+	}
+	if (ev.box) {
+		n.box = ev.box;
+		if (ev.box === "ready") log(`<b>${n.data.title || ev.id}</b> sandbox …${String(ev.sandboxId).slice(-8)} ready`);
+	}
+	n.el.querySelector("i").textContent = n.box === "gone" ? `${n.state} · sandbox gone` : n.state;
+	stats();
+	if (selected === ev.id) show(ev.id);
+}
+
+function stats() {
+	const all = [...nodes.values()];
+	document.getElementById("s-agents").textContent = all.length;
+	document.getElementById("s-live").textContent = all.filter((n) => n.box === "ready" || n.box === "booting").length;
+	document.getElementById("s-passed").textContent = all.filter((n) => n.state === "passed").length;
+	document.getElementById("s-runs").textContent = all.reduce((a, n) => a + n.runs, 0);
+}
+
+const esc = (s) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+function show(id) {
+	if (selected) nodes.get(selected)?.el.classList.remove("sel");
+	selected = id;
+	const n = nodes.get(id);
+	n.el.classList.add("sel");
+	const d = n.data;
+	document.getElementById("detail-body").innerHTML =
+		`<h2>${esc(d.title || id)}</h2>` +
+		`<div class="meta">level ${n.level} · ${n.state}${n.runs ? ` · ${n.runs} code run${n.runs > 1 ? "s" : ""}` : ""}${d.sandboxId ? ` · sandbox ${esc(d.sandboxId)}` : ""}${n.box === "gone" ? " (terminated)" : ""}</div>` +
+		`<h3>Prompt</h3><pre>${esc(d.goal || n.prompt || d.detail)}</pre>` +
+		(d.answer !== undefined ? `<h3>Answer</h3><pre>${esc(d.answer)}</pre>` : "") +
+		(d.code ? `<h3>Last code it ran</h3><pre>${esc(d.code)}</pre>` : "") +
+		(d.output ? `<h3>Its output</h3><pre>${esc(d.output)}</pre>` : "");
+	document.getElementById("detail").classList.add("on");
+}
+document.getElementById("close").onclick = () => { if (selected) nodes.get(selected).el.classList.remove("sel"); selected = null; document.getElementById("detail").classList.remove("on"); };
+
+const ray = new THREE.Raycaster();
+const ptr = new THREE.Vector2();
+renderer.domElement.addEventListener("click", (e) => {
+	ptr.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+	ray.setFromCamera(ptr, camera);
+	const hit = ray.intersectObjects(pickables)[0];
+	if (hit) show(hit.object.userData.id);
+});
+
+function resize() {
+	renderer.setSize(innerWidth, innerHeight);
+	labels.setSize(innerWidth, innerHeight);
+	camera.aspect = innerWidth / innerHeight;
+	camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+resize();
+
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+	const t = clock.getElapsedTime();
+	for (const n of nodes.values()) {
+		const grow = Math.min(1, (performance.now() - n.born) / 450);
+		const active = n.state === "thinking" || n.state === "running";
+		n.ball.scale.setScalar(grow * (active ? 1 + 0.08 * Math.sin(t * 6) : 1));
+		const c = COLORS[n.state] ?? COLORS.waiting;
+		n.mat.color.lerp(c, 0.15);
+		n.mat.emissive.lerp(c, 0.15);
+		n.mat.emissiveIntensity = active ? 0.7 + 0.3 * Math.sin(t * 6) : n.state === "passed" ? 0.55 : 0.3;
+		const target = n.box === "booting" ? 0.25 + 0.35 * Math.abs(Math.sin(t * 5)) : n.box === "ready" ? 0.9 : n.box === "gone" ? 0.1 : n.box === "failed" ? 0.9 : 0;
+		n.boxMat.opacity += (target - n.boxMat.opacity) * 0.12;
+		if (n.box === "failed") n.boxMat.color.copy(COLORS.failed);
+		if (n.edge) {
+			n.edge.material.color.lerp(active ? c : new THREE.Color(0x39415a), 0.1);
+			n.edge.material.opacity = active ? 1 : 0.6;
+		}
+	}
+	for (let i = pulses.length - 1; i >= 0; i--) {
+		const p = pulses[i];
+		p.t += 0.025;
+		p.s.position.lerpVectors(p.a, p.b, Math.min(p.t, 1));
+		if (p.t >= 1) { scene.remove(p.s); pulses.splice(i, 1); }
+	}
+	controls.update();
+	renderer.render(scene, camera);
+	labels.render(scene, camera);
+});
+
+// Live events from run.mjs (or a replay of the last run).
+const status = document.getElementById("status");
+const es = new EventSource("events");
+es.onopen = () => (status.textContent = "live");
+es.onmessage = (m) => apply(JSON.parse(m.data));
+es.addEventListener("end", (m) => { status.textContent = m.data || "run finished"; es.close(); });
+es.onerror = () => (status.textContent = "disconnected");
+</script>
+</body>
+</html>
