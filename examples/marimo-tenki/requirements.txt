@@ -1,0 +1,2 @@
+tenki>=1.4.1
+websockets>=15
