@@ -105,6 +105,7 @@ Give an agent a sandbox to run the code it writes.
 | [OpenCode](examples/opencode-sandbox/) | Headless OpenCode server on a public preview URL |
 | [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
 | [Covalent](examples/covalent-tenki/) | Each workflow task in its own sandbox |
+| [Trigger.dev](examples/trigger-dev-tenki/) | Untrusted and agent-written code from background tasks and chat agents, paused across waits |
 | [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes on Tenki sandboxes |
 | [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
 | [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
