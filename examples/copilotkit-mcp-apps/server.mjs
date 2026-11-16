@@ -6,7 +6,7 @@
  * renders that resource in the conversation and wires it to the tool call — so
  * the answer arrives as something the user can keep working in.
  *
- * Two apps here, each backed by a Tenki sandbox:
+ * Two apps here, each backed by a Luxor sandbox:
  *   run_code_in_sandbox → a console: the program, its output, and a live shell
  *   launch_web_app      → the app it just wrote, served from the sandbox
  *
@@ -32,7 +32,7 @@ const bridge = readFileSync(createRequire(import.meta.url).resolve("@modelcontex
 
 const PORT = Number(process.env.MCP_PORT || 3108);
 const BASE = `http://localhost:${PORT}`;
-const VIEWS = { console: "ui://tenki/console.html", preview: "ui://tenki/preview.html" };
+const VIEWS = { console: "ui://luxor/console.html", preview: "ui://luxor/preview.html" };
 
 const ok = (structured, text) => ({ structuredContent: structured, content: [{ type: "text", text }] });
 const failed = (kind, err) => {
@@ -42,16 +42,16 @@ const failed = (kind, err) => {
 const clip = (s, n) => (s.length > n ? `${s.slice(0, n)}\n… [${s.length - n} more chars, shown in full in the app]` : s);
 
 function createServer() {
-	const server = new McpServer({ name: "tenki-sandboxes", version: "1.0.0" });
+	const server = new McpServer({ name: "luxor-sandboxes", version: "1.0.0" });
 	const sandboxId = z.string().min(1).describe("Sandbox id from an earlier result — reuse it to keep working in the same machine.");
 
 	registerAppTool(
 		server,
 		"run_code_in_sandbox",
 		{
-			title: "Run code in a Tenki sandbox",
+			title: "Run code in a Luxor sandbox",
 			description:
-				"Run a Python, JavaScript (Node) or shell program in a fresh Tenki sandbox and open a console the user can keep working in: " +
+				"Run a Python, JavaScript (Node) or shell program in a fresh Luxor sandbox and open a console the user can keep working in: " +
 				"the code, its output, and a live shell into the same machine. Pass sandbox_id to reuse one (files persist, no boot). " +
 				"Standard library only unless allow_internet is true.",
 			inputSchema: {
@@ -90,9 +90,9 @@ function createServer() {
 		server,
 		"launch_web_app",
 		{
-			title: "Serve a web app from a Tenki sandbox",
+			title: "Serve a web app from a Luxor sandbox",
 			description:
-				"Write a web app into a Tenki sandbox, start it, expose its port on a public URL, and show it running inside the chat. " +
+				"Write a web app into a Luxor sandbox, start it, expose its port on a public URL, and show it running inside the chat. " +
 				"For a page, pass `html` — one self-contained file, inline CSS and JS, no external requests. " +
 				"For a server, put it in `files` and pass start_command; it must listen on 0.0.0.0 and the given port (also $PORT).",
 			inputSchema: {
@@ -162,7 +162,7 @@ function createServer() {
 	);
 
 	for (const [view, uri] of Object.entries(VIEWS)) {
-		registerAppResource(server, `tenki-${view}`, uri, { mimeType: RESOURCE_MIME_TYPE, description: `Tenki ${view} app` }, async () => ({
+		registerAppResource(server, `luxor-${view}`, uri, { mimeType: RESOURCE_MIME_TYPE, description: `Luxor Agent Cloud ${view} app` }, async () => ({
 			contents: [{ uri, mimeType: RESOURCE_MIME_TYPE, text: widgetHtml(view, bridge) }],
 		}));
 	}
@@ -174,7 +174,7 @@ function createServer() {
 // Stateless: a fresh server per request, which is what MCP Apps hosts expect —
 // they open a connection per tool call and per proxied call from the UI.
 
-// The tools spend the server's Tenki key with no auth, so listen on loopback only.
+// The tools spend the server's Luxor Agent Cloud key with no auth, so listen on loopback only.
 // createMcpExpressApp's `host` only adds Host-header checks; listen() sets the bind address.
 const HOST = "127.0.0.1";
 const app = createMcpExpressApp({ host: HOST });
@@ -203,5 +203,5 @@ app.listen(PORT, HOST, (err) => {
 		process.exit(1);
 	}
 	console.log(`MCP App server on ${BASE}/mcp — sandboxes under ${APP_DIR}`);
-	if (!hasToken) console.error("No Tenki token: set TENKI_AUTH_TOKEN or run `tenki login`. Tool calls will fail until you do.");
+	if (!hasToken) console.error("No Luxor Agent Cloud token: set TENKI_AUTH_TOKEN or run `luxor login`. Tool calls will fail until you do.");
 });

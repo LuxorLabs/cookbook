@@ -1,10 +1,10 @@
-# Contributing to the Tenki Cookbook
+# Contributing to the Luxor Agent Cloud Cookbook
 
-This is the examples/cookbook layer for Tenki, and this is your playbook. New here? Read this top to bottom once, then you're set.
+This is the examples/cookbook layer for Luxor Agent Cloud, and this is your playbook. New here? Read this top to bottom once, then you're set.
 
 ## Setup (5 minutes)
 
-1. **Get a Tenki account + key.** Install the CLI and run `tenki login` — it writes a `tk_` API key to `~/.config/tenki/config.yaml`. The examples read it from there automatically.
+1. **Get a Luxor Agent Cloud account + key.** Install the CLI and run `luxor login` — it writes a `tk_` API key to `~/.config/luxor/config.yaml`. The examples read it from there automatically.
 2. **Node 24+.** (The verify scripts only need Node 20, and CI runs them on Node 24; the `run.mjs` demos use top-level `await using`, which needs 24.)
 3. **Run an example to confirm your setup works:**
    ```bash
@@ -16,15 +16,15 @@ This is the examples/cookbook layer for Tenki, and this is your playbook. New he
 
 ## The one rule (non-negotiable)
 
-**Every example runs on Tenki and proves it in CI.** A public example that doesn't work damages the brand more than a missing one helps.
+**Every example runs on Luxor Agent Cloud and proves it in CI.** A public example that doesn't work damages the brand more than a missing one helps.
 
-- Each example ships a **`verify.mjs`** that exercises it against the live Tenki API and **exits non-zero on any failure**.
+- Each example ships a **`verify.mjs`** that exercises it against the live Luxor Agent Cloud API and **exits non-zero on any failure**.
 - CI (`.github/workflows/verify.yml`) runs every `verify.mjs` with a `TENKI_API_KEY` secret. A red build blocks the merge.
-- `verify.mjs` proves the *Tenki-facing* part. If an example needs an LLM (an agent turn), verify the tool/backend against Tenki directly — don't require a model key in CI. (See `langchain-code-interpreter` for the pattern.)
+- `verify.mjs` proves the *sandbox-facing* part. If an example needs an LLM (an agent turn), verify the tool/backend against Luxor Agent Cloud directly — don't require a model key in CI. (See `langchain-code-interpreter` for the pattern.)
 
 ## What to build
 
-Any small, runnable example that shows one clear Tenki integration or workflow is welcome. Pick the shipped example closest to your idea and copy the pattern from it.
+Any small, runnable example that shows one clear Luxor Agent Cloud integration or workflow is welcome. Pick the shipped example closest to your idea and copy the pattern from it.
 
 ## Anatomy of an example
 
@@ -32,11 +32,11 @@ Any small, runnable example that shows one clear Tenki integration or workflow i
 examples/<name>/
   README.md        # the tutorial — what it does, the whole integration, how to run
   package.json     # deps ("type": "module")
-  verify.mjs       # CI-runnable proof it works against Tenki
+  verify.mjs       # CI-runnable proof it works against Luxor Agent Cloud
   <code>           # the example itself (a script, agent/, tool + agent, …)
 ```
 
-`verify.mjs` reads the token from `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` (CI) or `~/.config/tenki/config.yaml` (local), drives the Tenki-facing code, asserts the result, and cleans up any sandbox it created. Keep it under ~60 lines. Copy one from a shipped example.
+`verify.mjs` reads the token from `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` (CI) or `~/.config/luxor/config.yaml` (local), drives the sandbox-facing code, asserts the result, and cleans up any sandbox it created. Keep it under ~60 lines. Copy one from a shipped example.
 
 **Which template to copy:**
 - Direct SDK use → **`run-code-in-a-sandbox`**
@@ -47,9 +47,9 @@ examples/<name>/
 
 1. `cp -r` the closest template to `examples/<your-name>/`.
 2. Swap in your code; keep it to one clear thing.
-3. Write `verify.mjs` — assert the Tenki-facing result, clean up.
+3. Write `verify.mjs` — assert the sandbox-facing result, clean up.
 4. Run it: `node verify.mjs` → must print ✓.
-5. Write the `README.md` (the tutorial) — link back to `tenki.cloud`, name the products used.
+5. Write the `README.md` (the tutorial) — link back to `luxor.ai`, name the products used.
 6. Add a row to the repo `README.md` examples table.
 7. Open the PR. CI runs your `verify.mjs`.
 8. Write the companion article (the example is the code; the article is the walkthrough).
@@ -57,8 +57,8 @@ examples/<name>/
 ## Style
 
 - **Short and runnable beats comprehensive.** One clear thing per example.
-- Name the Tenki products used; link back to `tenki.cloud`.
-- Tenki confines file I/O to `/home/tenki` — use relative paths.
+- Name the Luxor Agent Cloud products used; link back to `luxor.ai`.
+- Luxor Agent Cloud confines file I/O to `/home/tenki` — use relative paths.
 - Note any gotchas inline (e.g. `exec(cmd, { args })` doesn't shell-split; outbound network is on by default — pass `allowOutbound: false` to isolate).
 
 ## Review flow

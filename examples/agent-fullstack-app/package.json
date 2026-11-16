@@ -2,8 +2,8 @@
   "name": "agent-fullstack-app",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — an agent stands up a full-stack app (API + frontend + seeded DB) in one Tenki sandbox, drives the endpoints, and exposes the UI.",
+  "description": "Cookbook example — an agent stands up a full-stack app (API + frontend + seeded DB) in one Luxor sandbox, drives the endpoints, and exposes the UI.",
   "dependencies": {
-    "@tenkicloud/sandbox": ">=1.4.1"
+    "@luxorai/sandbox": ">=1.4.1"
   }
 }

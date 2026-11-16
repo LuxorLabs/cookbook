@@ -1,19 +1,19 @@
 /**
- * Proves the Tenki-facing half of this example without a model key: boot a sandbox with
+ * Proves the sandbox-facing half of this example without a model key: boot a sandbox with
  * OpenCode baked in and a repo cloned, check it reads OPENAI_API_KEY, start the headless
  * server, expose it, and assert the public URL is both password-protected and serving the
  * checkout. (Driving the agent needs a model key; CONTRIBUTING says CI verifies the backend,
  * not the model.)
- * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+ * Token/workspace from env (CI) or ~/.config/luxor/config.yaml (local `luxor login`).
  */
-import { TenkiSandbox, WaitReadyFailedError, stdoutText } from "@tenkicloud/sandbox";
-import { readFileSync } from "node:fs";
+import { LuxorSandbox, WaitReadyFailedError, stdoutText } from "@luxorai/sandbox";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { randomBytes } from "node:crypto";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/tenki/config.yaml`, "utf8");
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
@@ -23,18 +23,18 @@ const cfg = (key) => {
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
+	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 
 const PORT = 4096;
 const PASSWORD = randomBytes(24).toString("hex");
-const tenki = new TenkiSandbox({ authToken });
+const luxor = new LuxorSandbox({ authToken });
 let sandbox;
 try {
 	const cloneRepoUrl = "https://github.com/sindresorhus/yocto-queue";
 	// A failed wait never assigns `sandbox`, so finally cannot reach it: dispose the attached session here.
-	sandbox = await tenki.createAndWait({ cpuCores: 2, memoryMb: 4096, enableOpenCode: true, allowInbound: true, cloneRepoUrl, workspaceId }).catch(async (e) => {
+	sandbox = await luxor.createAndWait({ cpuCores: 2, memoryMb: 4096, enableOpenCode: true, allowInbound: true, cloneRepoUrl, workspaceId }).catch(async (e) => {
 		if (e instanceof WaitReadyFailedError) await e.session[Symbol.asyncDispose]();
 		throw e;
 	});

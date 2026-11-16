@@ -1,0 +1,9 @@
+{
+  "name": "anchor-browser-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — drive an Anchor Browser remote browser over CDP from Luxor Agent Cloud's tenki/anchor sandbox image.",
+  "dependencies": {
+    "@luxorai/sandbox": ">=1.4.1"
+  }
+}

@@ -2,10 +2,10 @@
   "name": "claude-agent-sdk",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — the Claude Agent SDK with Tenki as its execution backend.",
+  "description": "Cookbook example — the Claude Agent SDK with Luxor Agent Cloud as its execution backend.",
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.233",
-    "@tenkicloud/sandbox": ">=1.4.1",
+    "@luxorai/sandbox": ">=1.4.1",
     "zod": "^4.4.3"
   }
 }

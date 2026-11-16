@@ -1,5 +1,5 @@
 """
-A CrewAI agent that runs code in a Tenki sandbox to answer questions.
+A CrewAI agent that runs code in a Luxor sandbox to answer questions.
 
 Needs Python 3.10+, the deps in requirements.txt, and OPENAI_API_KEY (CrewAI's
 default model). Run: python agent.py
@@ -9,12 +9,12 @@ import os
 from crewai import Agent, Crew, Task
 from tenki import Sandbox
 
-from tenki_tool import TenkiCodeInterpreter
+from luxor_tool import LuxorCodeInterpreter
 
 
 def cfg(key):
     try:
-        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
+        with open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()
@@ -33,7 +33,7 @@ with Sandbox.create(**opts) as sandbox:
         role="Data analyst",
         goal="Answer questions by running Python in a sandbox instead of guessing.",
         backstory="You verify every numeric answer by executing code.",
-        tools=[TenkiCodeInterpreter(sandbox=sandbox)],
+        tools=[LuxorCodeInterpreter(sandbox=sandbox)],
         verbose=True,
     )
     task = Task(

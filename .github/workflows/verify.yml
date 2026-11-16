@@ -1,6 +1,6 @@
 name: verify
 
-# Every example must run against the live Tenki API. A red build blocks the merge.
+# Every example must run against the live Luxor Agent Cloud API. A red build blocks the merge.
 # Requires repo secret TENKI_API_KEY.
 
 on:
@@ -24,8 +24,8 @@ jobs:
           python-version: "3.12"   # Python examples (crewai) need 3.10+
       - uses: actions/setup-go@v5
         with:
-          go-version-file: examples/ragflow-tenki/go.mod
-      - name: Install + verify each example against Tenki
+          go-version-file: examples/ragflow-luxor/go.mod
+      - name: Install + verify each example against Luxor Agent Cloud
         env:
           TENKI_API_KEY: ${{ secrets.TENKI_API_KEY }}
           # Third-party keys some examples need. Unset → that example is skipped,
@@ -38,14 +38,14 @@ jobs:
           fails=""; skips=""
           for d in examples/*/ benchmarks/*/; do
             [ -f "${d}verify.mjs" ] || continue
-            if [ "$d" = "examples/covalent-tenki/" ]; then
+            if [ "$d" = "examples/covalent-luxor/" ]; then
               # Pins covalent-tenki-plugin>=0.1.1, which is not on PyPI yet
               # (LuxorLabs/tenki-covalent-plugin#1). Unskip when 0.1.1 ships.
               echo "== ${d} == skipped (covalent-tenki-plugin 0.1.1 unreleased)"
               skips="${skips} ${d}"
               continue
             fi
-            if [ "$d" = "examples/orca-tenki/" ]; then
+            if [ "$d" = "examples/orca-luxor/" ]; then
               # Gateway SSH host keys are not stable across connections, so the
               # pinned-alias verification can fail intermittently. Skipped until
               # gateways present a verifiable stable identity; verify locally.

@@ -1,0 +1,9 @@
+{
+  "name": "omnara-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — run Omnara agents on Luxor Agent Cloud VMs with a Luxor Agent Cloud machine pool.",
+  "dependencies": {
+    "@luxorai/sandbox": "^1.4.1"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "e2b-to-luxor-migration",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — migrate an E2B sandbox script to Luxor Agent Cloud: side-by-side snippets, an API map, and a runnable Luxor Agent Cloud port.",
+  "dependencies": {
+    "@luxorai/sandbox": ">=1.4.1"
+  }
+}

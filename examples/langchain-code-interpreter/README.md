@@ -1,18 +1,18 @@
 # LangChain (JavaScript)
 
-Give a LangChain.js agent a `run_python` code-interpreter tool that runs in a Tenki sandbox. The agent writes Python, the tool runs it in one sandbox shared for the session, and the output goes back to the agent. The tool is one file, `tenki-tool.mjs`, that you can copy into your own agent. For Python agents, see [LangChain (Python)](../langchain-python/).
+Give a LangChain.js agent a `run_python` code-interpreter tool that runs in a Luxor sandbox. The agent writes Python, the tool runs it in one sandbox shared for the session, and the output goes back to the agent. The tool is one file, `luxor-tool.mjs`, that you can copy into your own agent. For Python agents, see [LangChain (Python)](../langchain-python/).
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "LangChain (JavaScript)" example from https://github.com/LuxorLabs/cookbook.
+Set up the Luxor Agent Cloud "LangChain (JavaScript)" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/langchain-code-interpreter, check that Node.js is 22 or later, and run npm install.
-2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.mjs, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for agent.mjs, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (no model call, expects 55), then node agent.mjs.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
-Then add tenki-tool.mjs to my own LangChain.js agent: create one sandbox per session, pass makeCodeTool(sandbox) in the tools list, and dispose the sandbox in a finally block.
+Then add luxor-tool.mjs to my own LangChain.js agent: create one sandbox per session, pass makeCodeTool(sandbox) in the tools list, and dispose the sandbox in a finally block.
 ```
 
 ## Quick start
@@ -20,7 +20,7 @@ Then add tenki-tool.mjs to my own LangChain.js agent: create one sandbox per ses
 You need:
 
 - Node.js 22 or later for `agent.mjs` (current `@langchain/openai` requires it). `verify.mjs` runs on Node 20.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - An OpenAI API key, for the agent run only.
 
 ### 1. Install
@@ -31,7 +31,7 @@ cd cookbook/examples/langchain-code-interpreter
 npm install
 ```
 
-This installs `@langchain/core`, `@langchain/langgraph`, `@langchain/openai`, `@tenkicloud/sandbox`, and `zod`. On Node 20, npm warns `EBADENGINE` for `@langchain/openai`; `verify.mjs` still runs.
+This installs `@langchain/core`, `@langchain/langgraph`, `@langchain/openai`, `@luxorai/sandbox`, and `zod`. On Node 20, npm warns `EBADENGINE` for `@langchain/openai`; `verify.mjs` still runs.
 
 ### 2. Set your keys
 
@@ -40,7 +40,7 @@ export TENKI_AUTH_TOKEN=tk_...
 export OPENAI_API_KEY=sk-...
 ```
 
-`TENKI_API_KEY` and a key saved with `tenki login --api-key <key>` also work. `TENKI_AUTH_TOKEN` always wins. After that, `agent.mjs` prefers the `tenki login` key over `TENKI_API_KEY`, while `verify.mjs` prefers `TENKI_API_KEY`. `TENKI_WORKSPACE_ID` is optional.
+`TENKI_API_KEY` and a key saved with `luxor login --api-key <key>` also work. `TENKI_AUTH_TOKEN` always wins. After that, `agent.mjs` prefers the `luxor login` key over `TENKI_API_KEY`, while `verify.mjs` prefers `TENKI_API_KEY`. `TENKI_WORKSPACE_ID` is optional.
 
 ### 3. Run the agent
 
@@ -57,7 +57,7 @@ node verify.mjs
 ```
 
 ```
-✓ langchain-code-interpreter: LangChain tool executed Python in a Tenki sandbox → 55
+✓ langchain-code-interpreter: LangChain tool executed Python in a Luxor sandbox → 55
 ```
 
 `verify.mjs` calls the tool directly with `print(sum(range(11)))` and checks for `55`. It needs no OpenAI key.
@@ -67,10 +67,10 @@ node verify.mjs
 `agent.mjs`, from where it creates the sandbox:
 
 ```js
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || cfg("auth_token") });
+const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || cfg("auth_token") });
 
 // One sandbox for the whole agent session, reused across every tool call.
-const sandbox = await tenki.createAndWait({
+const sandbox = await luxor.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
   workspaceId: process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id"),
@@ -79,7 +79,7 @@ const sandbox = await tenki.createAndWait({
 try {
   const agent = createReactAgent({
     llm: new ChatOpenAI({ model: "gpt-4o-mini" }), // needs OPENAI_API_KEY
-    tools: [makeCodeTool(sandbox)], // the tool runs the agent's code in Tenki
+    tools: [makeCodeTool(sandbox)], // the tool runs the agent's code in Luxor Agent Cloud
   });
 
   const result = await agent.invoke({
@@ -96,18 +96,18 @@ To use a different model provider, swap `ChatOpenAI` for its LangChain chat mode
 
 ## The tool
 
-`tenki-tool.mjs`:
+`luxor-tool.mjs`:
 
 ```js
-// A LangChain tool that runs Python in a Tenki sandbox.
+// A LangChain tool that runs Python in a Luxor sandbox.
 //
-// Given a live Tenki sandbox, returns a LangChain tool the agent can call to
+// Given a live Luxor sandbox, returns a LangChain tool the agent can call to
 // execute code. `exec(command, { args })` passes args directly (no shell), so
 // multi-line agent-generated code goes through as a single `-c` argument
 // without escaping surprises.
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { stdoutText, stderrText } from "@tenkicloud/sandbox";
+import { stdoutText, stderrText } from "@luxorai/sandbox";
 
 export function makeCodeTool(sandbox) {
   return tool(
@@ -142,9 +142,9 @@ Things to know:
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | Export `TENKI_AUTH_TOKEN` or run `tenki login --api-key <key>`. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Use a `tk_` key. If only `agent.mjs` fails, an old key in `~/.config/tenki/config.yaml` is winning over `TENKI_API_KEY`; export `TENKI_AUTH_TOKEN` instead. |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | Export `TENKI_AUTH_TOKEN` or run `luxor login --api-key <key>`. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Use a `tk_` key. If only `agent.mjs` fails, an old key in `~/.config/luxor/config.yaml` is winning over `TENKI_API_KEY`; export `TENKI_AUTH_TOKEN` instead. |
 | ``Missing credentials. Please pass an `apiKey`, …`` | Export `OPENAI_API_KEY`. |
 | `npm warn EBADENGINE` for `@langchain/openai` | Use Node 22 for `agent.mjs`, or install `@langchain/openai@1.5.8`, the last release that supports Node 20. |
 | `✗ tool returned "…"` | The quoted text is the sandbox's output. Read it for the error. |
@@ -154,4 +154,4 @@ Things to know:
 - [LangChain (Python)](../langchain-python/): the same tool for a Python agent
 - [Run code in a sandbox](../run-code-in-a-sandbox/): the bare SDK loop
 - [LangChain.js](https://github.com/langchain-ai/langchainjs) and [LangGraph.js](https://github.com/langchain-ai/langgraphjs)
-- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
+- [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox) and the [Luxor Agent Cloud docs](https://luxor.ai/docs)

@@ -1,0 +1,9 @@
+{
+  "name": "cursor-origin-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — Luxor Code Reviewer on Cursor Origin pull requests: a starter repo with AGENTS.md review rules and a PR that plants an authorization bug.",
+  "dependencies": {
+    "@luxorai/sandbox": ">=1.4.1"
+  }
+}

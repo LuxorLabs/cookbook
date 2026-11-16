@@ -1,16 +1,16 @@
-// OpenAI Codex, headless, on a real repo in a disposable Tenki sandbox:
+// OpenAI Codex, headless, on a real repo in a disposable Luxor sandbox:
 // clone -> let the agent edit the checkout -> read back the diff.
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { LuxorSandbox } from "@luxorai/sandbox";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
 const TASK = "Add a toArray() method to the Queue class in index.js that returns the queued values as an array, oldest first. Declare it in index.d.ts and add a test for it in test.js.";
 // codex exec reads its key from CODEX_API_KEY and ignores OPENAI_API_KEY.
 const PASSTHROUGH = ["CODEX_API_KEY"];
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
 // cloneRepoUrl checks the repo out to ./repo before createAndWait resolves.
-await using sandbox = await tenki.createAndWait({
+await using sandbox = await luxor.createAndWait({
 	cpuCores: 2,
 	memoryMb: 4096,
 	cloneRepoUrl: REPO,

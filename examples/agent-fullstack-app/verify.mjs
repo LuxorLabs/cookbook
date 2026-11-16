@@ -3,15 +3,15 @@
  * every endpoint (GET/POST/PATCH), expose the frontend, fetch it from the public
  * internet, check that writes through the public URL are refused, assert each
  * step, then terminate the sandbox.
- * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+ * Token/workspace from env (CI) or ~/.config/luxor/config.yaml (local `luxor login`).
  */
-import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
-import { readFileSync } from "node:fs";
+import { LuxorSandbox, stdoutText } from "@luxorai/sandbox";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/tenki/config.yaml`, "utf8");
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
@@ -19,15 +19,15 @@ const cfg = (key) => {
 };
 const token = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 if (!token) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
+	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 
 const PORT = 8000;
-const tenki = new TenkiSandbox({ authToken: token });
+const luxor = new LuxorSandbox({ authToken: token });
 let sandbox;
 try {
-	sandbox = await tenki.createAndWait({
+	sandbox = await luxor.createAndWait({
 		cpuCores: 1,
 		memoryMb: 1024,
 		allowInbound: true,

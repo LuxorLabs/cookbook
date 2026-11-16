@@ -1,0 +1,9 @@
+{
+  "name": "crabbox-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — Crabbox syncs your uncommitted working tree to a Luxor sandbox and runs your tests there.",
+  "dependencies": {
+    "@luxorai/sandbox": ">=1.4.1"
+  }
+}

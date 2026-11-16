@@ -1,0 +1,9 @@
+{
+  "name": "tinyfish-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — drive TinyFish's fetch, search, and remote browser APIs from the tenki/tinyfish image.",
+  "dependencies": {
+    "@luxorai/sandbox": ">=1.4.1"
+  }
+}

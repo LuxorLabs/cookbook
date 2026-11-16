@@ -2,8 +2,8 @@
   "name": "expose-a-port",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — expose a sandbox port and get a public preview URL from Tenki.",
+  "description": "Cookbook example — expose a sandbox port and get a public preview URL from Luxor Agent Cloud.",
   "dependencies": {
-    "@tenkicloud/sandbox": ">=1.4.1"
+    "@luxorai/sandbox": ">=1.4.1"
   }
 }

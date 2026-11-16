@@ -77,15 +77,21 @@ const spans = (src, re) => [...src.matchAll(new RegExp(re.source, re.flags.inclu
 const inScope = (rule, cat, at) => rule.scope === "any" || [].concat(rule.scope).includes(cat[at]);
 const upTo = (p) => PHASES.indexOf(p);
 
+const applies = (x, file) => !x.files || x.files.test(file);
+const guards = (file, src, cat) =>
+	protect.filter((p) => applies(p, file)).map((p) => [p, spans(src, p.find).filter(([a]) => !p.scope || inScope(p, cat, a))]);
+const expand = (rule, m) =>
+	typeof rule.replace === "function" ? rule.replace(...m) : rule.replace.replace(/\$(\d)/g, (_, n) => m[+n] ?? "");
+
 /** Apply every decided rule up to `phase` to one file's source. */
 export function rewrite(file, src, phase) {
-	for (const rule of rules.filter((r) => upTo(r.phase) <= upTo(phase) && r.replace !== null)) {
+	for (const rule of rules.filter((r) => upTo(r.phase) <= upTo(phase) && r.replace !== null && applies(r, file))) {
 		const cat = categories(file, src);
-		const guarded = protect.flatMap((p) => spans(src, p.find));
+		const guarded = guards(file, src, cat).flatMap(([, s]) => s);
 		let out = "", last = 0;
 		for (const [a, b, m] of spans(src, rule.find)) {
 			if (!inScope(rule, cat, a) || guarded.some(([x, y]) => a < y && x < b)) continue;
-			out += src.slice(last, a) + m[0].replace(new RegExp(rule.find.source, rule.find.flags.replace("g", "")), rule.replace);
+			out += src.slice(last, a) + expand(rule, m);
 			last = b;
 		}
 		src = out + src.slice(last);
@@ -96,8 +102,8 @@ export function rewrite(file, src, phase) {
 /** Classify every "tenki" in one file: [{ at, line, by }] where by is a rule, a protect pattern, or null. */
 export function classify(file, src) {
 	const cat = categories(file, src);
-	const guarded = protect.map((p) => [p, spans(src, p.find)]);
-	const covered = rules.map((r) => [r, spans(src, r.find).filter(([a]) => inScope(r, cat, a))]);
+	const guarded = guards(file, src, cat);
+	const covered = rules.filter((r) => applies(r, file)).map((r) => [r, spans(src, r.find).filter(([a]) => inScope(r, cat, a))]);
 	return [...src.matchAll(/tenki/gi)].map(({ index: at }) => {
 		const hit = (list) => list.find(([, s]) => s.some(([a, b]) => a <= at && at < b))?.[0];
 		return { at, line: src.slice(0, at).split("\n").length, by: hit(guarded) ?? hit(covered) ?? null };

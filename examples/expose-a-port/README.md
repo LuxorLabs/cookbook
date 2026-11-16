@@ -1,17 +1,17 @@
 # Expose a port
 
-Start an HTTP server inside a Tenki sandbox, expose its port with `sandbox.exposePort()`, and fetch the public HTTPS preview URL from your machine. Anyone with the URL can reach the server while it is exposed: a browser, a webhook, or another service.
+Start an HTTP server inside a Luxor sandbox, expose its port with `sandbox.exposePort()`, and fetch the public HTTPS preview URL from your machine. Anyone with the URL can reach the server while it is exposed: a browser, a webhook, or another service.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "Expose a port" example from https://github.com/LuxorLabs/cookbook.
+Set up the Luxor Agent Cloud "Expose a port" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo and cd into examples/expose-a-port.
 2. Check that Node.js is 24 or later, then run npm install.
-3. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
-4. Run node run.mjs and confirm it prints a preview URL and "GET 200 -> Hello from a Tenki sandbox!", then run node verify.mjs.
+3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+4. Run node run.mjs and confirm it prints a preview URL and "GET 200 -> Hello from a Luxor sandbox!", then run node verify.mjs.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
 Then show me how to serve my own app from the sandbox on a preview URL.
 ```
@@ -21,7 +21,7 @@ Then show me how to serve my own app from the sandbox on a preview URL.
 You need:
 
 - Node.js 24 or later for `run.mjs`, which uses top-level `await using`. `verify.mjs` runs on Node 20.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 
 ### 1. Install
 
@@ -37,7 +37,7 @@ npm install
 export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -47,7 +47,7 @@ node run.mjs
 
 ```text
 preview URL: https://…
-GET 200 -> Hello from a Tenki sandbox!
+GET 200 -> Hello from a Luxor sandbox!
 ```
 
 The URL stops working when the script exits, because `await using` terminates the sandbox.
@@ -60,7 +60,7 @@ node verify.mjs
 
 ```text
   preview URL: https://…
-✓ expose-a-port: server → exposePort → host GET 200 → "Hello from Tenki 68n1b3"
+✓ expose-a-port: server → exposePort → host GET 200 → "Hello from Luxor Agent Cloud 68n1b3"
 ```
 
 `verify.mjs` writes a page with a random suffix, exposes port 8000, fetches the preview URL from your machine with retries, and checks for status `200` and that suffix. It terminates the sandbox either way.
@@ -69,13 +69,13 @@ node verify.mjs
 
 ```js
 const PORT = 8000;
-const BODY = "Hello from a Tenki sandbox!";
+const BODY = "Hello from a Luxor sandbox!";
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
-// allowInbound: true lets the Tenki gateway route public traffic to the sandbox port.
+// allowInbound: true lets the Luxor Agent Cloud gateway route public traffic to the sandbox port.
 // (Outbound isn't needed here — the host does the fetching, not the sandbox.)
-await using sandbox = await tenki.createAndWait({
+await using sandbox = await luxor.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
   allowInbound: true,
@@ -98,7 +98,7 @@ console.log(`preview URL: ${previewUrl}`);
 
 // Fetch it from the host (the public internet), just like a browser would.
 const res = await fetch(previewUrl);
-console.log(`GET ${res.status} -> ${(await res.text()).trim()}`); // 200 -> Hello from a Tenki sandbox!
+console.log(`GET ${res.status} -> ${(await res.text()).trim()}`); // 200 -> Hello from a Luxor sandbox!
 ```
 
 ## How it works
@@ -127,7 +127,7 @@ console.log(`GET ${res.status} -> ${(await res.text()).trim()}`); // 200 -> Hell
 - `ttlMs` makes the mapping expire on its own. Without it, no expiry is set.
 - `slug` (`exposePort(PORT, { slug: "my-app" })`) asks for a named exposure. Named exposures keep the same hostname across sessions when served under a preview slug reserved for your workspace (a Team-plan feature in workspace Settings). Starter workspaces get a generated hostname per session. If `wildcard` is `true`, wait for `wildcardStatus` to be `READY`, and read `wildcardStatusReason` if it is `FAILED`.
 - `sandbox.unexposePort(port)` removes a mapping, and `sandbox.listExposedPorts()` lists the live ones.
-- The URL stops serving when you unexpose it, when `ttlMs` runs out, while the sandbox is paused, and when the sandbox ends. Tenki doesn't pause idle sandboxes, so pass `maxDurationMs` to `createAndWait` if a killed script could leave one running.
+- The URL stops serving when you unexpose it, when `ttlMs` runs out, while the sandbox is paused, and when the sandbox ends. Luxor Agent Cloud doesn't pause idle sandboxes, so pass `maxDurationMs` to `createAndWait` if a killed script could leave one running.
 
 The server is public while exposed. This example adds no auth in front of it.
 
@@ -135,9 +135,9 @@ The server is public while exposed. This example adds no auth in front of it.
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
 | `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key in this shell. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `SyntaxError` at `await using` | Use Node 24 or later, or run `verify.mjs`. |
 | `InboundDisabledError` from `exposePort` | Create the sandbox with `allowInbound: true`. |
 | `exec()` never returns after changing the server command | Background the server with `setsid … >log 2>&1 </dev/null &`. |
@@ -145,8 +145,8 @@ The server is public while exposed. This example adds no auth in front of it.
 
 ## Related
 
-- [Tenki docs: port exposure and networking](https://tenki.cloud/docs/sandbox/sessions#port-exposure-and-networking)
-- [MCP server](../mcp-tenki-sandbox/): includes a `tenki_create_preview_url` tool for servers an agent starts
+- [Luxor Agent Cloud docs: port exposure and networking](https://luxor.ai/docs/sandbox/sessions#port-exposure-and-networking)
+- [MCP server](../mcp-luxor-sandbox/): includes a `tenki_create_preview_url` tool for servers an agent starts
 - [Run a full-stack app](../agent-fullstack-app/): an API, frontend, and database behind one preview URL
 - [Pause, snapshot, and resume](../snapshots-pause-resume/)
-- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox)
+- [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox)

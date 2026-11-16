@@ -1,7 +1,7 @@
-// What the Tenki → Luxor Agent Cloud rename does to each mention of "tenki", phase by phase.
-// See scripts/README.md. Every case-insensitive "tenki" in the repo must be matched by a rule
-// or a protect pattern; `node scripts/rebrand.mjs --check` fails on any mention that is not,
-// so a new name is decided here before it spreads.
+// What the Tenki → Luxor rename does to each mention of "tenki". See scripts/README.md.
+// Every case-insensitive "tenki" in the repo must be matched by a rule or a protect pattern;
+// `node scripts/rebrand.mjs --check` fails on any mention that is not, so a new name is decided
+// here before it spreads.
 //
 // scope: "text"    Markdown prose, including untagged and ```text fences (the coding-agent prompts)
 //        "comment" comments in code, and in code fences inside Markdown
@@ -9,75 +9,108 @@
 //        "code"    everything else in code: identifiers, keywords, and `inline code` in Markdown
 //        "any"     anywhere
 //        or a list of these
-// replace: null means the new name is not decided yet. The rule still classifies the mention,
-// but --write skips it.
+// replace: null classifies a mention whose new name is not decided; --write leaves it alone.
 
-export const PHASES = ["1", "2a", "2b", "2c", "3"];
+export const PHASES = ["1"];
+
+const PROSE = ["text", "comment", "string"];
+
+// Example folders: examples/<name>-tenki becomes examples/<name>-luxor.
+export const FOLDERS = [
+	"ag2", "agentbox", "agentenv", "anchor-browser", "composio", "computesdk", "convex", "covalent", "crabbox",
+	"cursor-origin", "deerflow", "harbor", "hermes", "nemo-gym", "omnara", "open-webui", "openclaw", "openhermit",
+	"orca", "pi-durable", "praisonai", "prefect", "ragflow", "stickydisk", "tinyfish",
+];
+const FOLDER = `(?:${FOLDERS.join("|")})-tenki|(?:e2b|daytona|modal)-to-tenki-migration|mcp-tenki-sandbox`;
+// A folder name only where it names the folder: a path, a relative link, a verify line, a package name.
+const AS_FOLDER = new RegExp(`(?<=\\/|\\[|✓ |"name": "|FAILED: |\`)(${FOLDER})(?![\\w-])`, "g");
 
 export const rules = [
-	// Phase 1: prose and docs links. luxor.ai/docs already redirects to tenki.cloud/docs.
-	// luxor.ai redirects to tenki.cloud keeping the path, so every page link can move now.
+	// Domains. tenki.cloud, app.tenki.cloud and api.tenki.cloud all moved to luxor.ai.
 	{ phase: "1", scope: "any", find: /https?:\/\/(www\.)?tenki\.cloud(?=[\/\s)"'`>\]#?]|$)/gm, replace: "https://luxor.ai" },
+	{ phase: "1", scope: "any", find: /\b(app|api)\.tenki\.cloud\b/g, replace: "$1.luxor.ai" },
 	{ phase: "1", scope: "any", find: /(?<![.\w/])tenki\.cloud\b/g, replace: "luxor.ai" },
-	// The brand as a word, wherever it is prose: Markdown, comments, and strings (log lines,
-	// page titles). Not in code, where Tenki is a class (the Convex component's).
-	{ phase: "1", scope: ["text", "comment", "string"], find: /\bTenki [Ss]andbox(es)?\b/g, replace: "Luxor Agent Cloud sandbox$1" },
-	{ phase: "1", scope: ["text", "comment", "string"], find: /\bTenki('s)?\b(?![-_])/g, replace: "Luxor Agent Cloud$1" },
-	{ phase: "1", scope: ["text", "comment", "string"], find: /\bTenki-(facing|side|backed|hosted|specific|only)\b/g, replace: "sandbox-$1" },
 
-	// Phase 2a: app and API hosts, once app.luxor.ai serves.
-	{ phase: "2a", scope: "any", find: /\bapp\.tenki\.cloud\b/g, replace: "app.luxor.ai" },
-	{ phase: "2a", scope: "any", find: /\bapi\.tenki\.cloud\b/g, replace: null },
+	// Product names, as luxor.ai names them.
+	{ phase: "1", scope: PROSE, find: /\bTenki Sandbox(es)?\b/g, replace: "Luxor Sandbox$1" },
+	{ phase: "1", scope: PROSE, find: /\bTenki sandbox(es)?\b/g, replace: "Luxor sandbox$1" },
+	{ phase: "1", scope: PROSE, find: /\bTenki (Code Reviewer|Runners?|runners?|blog)\b/g, replace: "Luxor $1" },
+	{ phase: "1", scope: PROSE, find: /\bTenki CLI\b/g, replace: "Luxor CLI" },
+	{ phase: "1", scope: PROSE, find: /\bTenki-(facing|side|backed|hosted|specific|only)\b/g, replace: "sandbox-$1" },
+	// The company and platform everywhere else it is a word in prose.
+	{ phase: "1", scope: PROSE, find: /\bTenki('s)?\b(?![-_])/g, replace: "Luxor Agent Cloud$1" },
 
-	// Phase 2b: our packages, classes, env vars, CLI and images. Names not decided yet.
-	{ phase: "2b", scope: "any", find: /@tenkicloud\/[a-z0-9-]+/g, replace: null },
-	{ phase: "2b", scope: "any", find: /\bTenki(Sandbox|Credentials|Compute|Worker|Resources|Session)\b/g, replace: null },
-	{ phase: "2b", scope: "any", find: /\bTENKI_[A-Z0-9_]+\b/g, replace: null },
-	{ phase: "2b", scope: "any", find: /(~|\$HOME|\$\{homedir\(\)\}|\bhomedir\(\)\s*,\s*["'`])?\/?\.config\/tenki\b/g, replace: null },
-	{ phase: "2b", scope: "any", find: /\btenki (login|logout|whoami|sandbox|snapshot|workspace|auth|config)\b/g, replace: null },
-	{ phase: "2b", scope: "any", find: /\btenki\/[a-z0-9-]+(:[a-z0-9.-]+)?/g, replace: null }, // container images
-	{ phase: "2b", scope: "any", find: /\b(from|import) tenki\b|\bpip install tenki\b|pypi\.org\/project\/tenki\b|\btenki(?=[>=<~ ]=?[0-9])/g, replace: null }, // Python SDK
-	{ phase: "2b", scope: "any", find: /\btenki_sandbox\b/g, replace: null },
-	{ phase: "2b", scope: "any", find: /\btenki(?=\[|\s*>=|,\s|\s\+\s)|(?<=(#|\band|\bONLY|\bonly|\bIf|\bthe)\s)tenki\b(?! (provider|sandbox provider|exec backend))|\btenki(?= or crabbox)/g, replace: null },
-	{ phase: "2b", scope: "any", find: /\btenki-[a-z0-9-]+#\d+/g, replace: null }, // issues in our plugin repos
-	{ phase: "2b", scope: "any", find: /\btenki`?(?=`?\s+(\d\.x\s+)?(Python |Go |TypeScript |JavaScript )?(SDK|CLI|package|client)\b)|\btenki(?=`?\s\+\s)|(?<=\b(datasets|swebench|requirements),\s*)tenki\b/g, replace: null },
-	{ phase: "2b", scope: "any", find: /tenki-sdk-go/g, replace: null },
-	{ phase: "2b", scope: "any", find: /LuxorLabs\/tenki-[a-z0-9-]+/gi, replace: null }, // our plugin repos
-	{ phase: "2b", scope: "any", find: /\b(covalent-tenki-plugin|covalent_tenki_plugin|tenki-mcp|tenki-openclaw|tenki_harbor|tenki-harbor)\b/g, replace: null },
+	// npm packages: every @tenkicloud package is published as @luxorai at the same version.
+	{ phase: "1", scope: "any", find: /@tenkicloud\/(sandbox|convex|mcp|composio-tools|agentbox-provider|openclaw)\b/g, replace: "@luxorai/$1" },
+	{ phase: "1", scope: "any", find: /\bTenkiSandbox\b/g, replace: "LuxorSandbox" },
+	{ phase: "1", scope: "any", find: /\btenkiToolkit\b/g, replace: "luxorToolkit" },
+	{ phase: "1", scope: "any", find: /\btenki-mcp\b(?=\s*(server|binary|bin|\)|`|$))/gm, replace: "luxor-mcp" },
 
-	// Phase 2c: example folders and our own helper names inside examples.
-	{ phase: "2c", scope: "any", find: /\b(e2b|daytona|modal)-to-tenki-migration\b/g, replace: "$1-migration" },
-	{ phase: "2c", scope: "any", find: /\b(mcp)-tenki-sandbox\b/g, replace: "$1-sandbox" },
-	{ phase: "2c", scope: "any", find: /\b([a-z0-9]+(?:-[a-z0-9]+)*)-tenki\b(?![-.]?[a-z])/g, replace: "$1" },
-	{ phase: "2c", scope: "any", find: /\btenki[-_](tool|tools|executor|env|sandbox|exec|run_code|create_sandbox|terminate_sandbox|write_file|read_file|list_files)\b/g, replace: null },
-	{ phase: "2c", scope: "any", find: /\b(make|create|new)?Tenki[A-Z][A-Za-z]*\b/g, replace: null },
-	{ phase: "2c", scope: "any", find: /\b[a-z][A-Za-z]*Tenki[A-Za-z]*\b/g, replace: null },
-	{ phase: "2c", scope: "any", find: /\btenki[A-Z][A-Za-z]*\b/g, replace: null },
-	{ phase: "2c", scope: "any", find: /\b[a-z0-9]+-tenki-[a-z0-9-]+|\btenki-pool\b|\btenki:(?=`? group)|(?<=mcp add )tenki\b/g, replace: null }, // names we chose
-	// Anything else in code or `inline code` is an identifier we chose (a variable, an MCP server
-	// name, a tool name). Each is renamed by hand, with --dry-run, in the phase that renames its package.
-	{ phase: "2c", scope: "code", find: /[A-Za-z0-9_$]*tenki[A-Za-z0-9_$]*/gi, replace: null },
-	{ phase: "2c", scope: "string", find: /[A-Za-z0-9_$./:-]*tenki[A-Za-z0-9_$./:-]*/gi, replace: null }, // names in strings: tool names, ids, sample output
-	{ phase: "2c", scope: "any", find: /[A-Za-z0-9_$.]*(tenki(?!\.cloud\b|\.sh\b)[._(]|[._]tenki)[A-Za-z0-9_$.]*/gi, replace: null },
+	// The CLI is `luxor` now, and `luxor login` writes ~/.config/luxor/config.yaml.
+	{ phase: "1", scope: "any", find: /\btenki (login|logout|whoami|status|sandbox|snapshot|workspace|auth|config|template|volume|preview)\b/g, replace: "luxor $1" },
+	{ phase: "1", scope: "any", find: /\.config\/tenki\/config\.yaml/g, replace: ".config/luxor/config.yaml" },
+	{ phase: "1", scope: PROSE, find: /\b(the|a) tenki CLI\b|\btenki(?= or crabbox)/g, replace: (m) => m.replace("tenki", "luxor") },
+
+	// Example folders and the names of things the examples themselves define.
+	{ phase: "1", scope: "any", find: AS_FOLDER, replace: (m) => m.replace("-to-tenki-", "-to-luxor-").replace("-tenki", "-luxor") },
+	{ phase: "1", scope: "any", find: /\btenki([-_])(tools?|sandbox|env|executor)(?=\.(mjs|py)\b|["'`]|\s+import\b|$)/gm, replace: "luxor$1$2" },
+	{ phase: "1", scope: "any", find: /\b(make|create)Tenki(Tools|Sandbox|Env)\b/g, replace: "$1Luxor$2" },
+	{ phase: "1", scope: "any", find: /\btenkiEnv\b/g, replace: "luxorEnv" },
+	// The variable that holds the SDK client: const tenki = new LuxorSandbox(...) becomes const luxor.
+	{ phase: "1", scope: "code", find: /\b(const|let|var) tenki\b|\btenki(?=\.(createAndWait|create|get|list|createSnapshotAndWait|deleteSnapshot|snapshots|sessions|volumes|whoAmI|getUsage|workspaces|templates|exec|destroy|writeFile|readFile)\b)|(?<=[(,{] ?)tenki(?=[,)} ])/g, replace: (m) => m.replace("tenki", "luxor") },
+	{ phase: "1", scope: "any", find: /\bTenkiCodeInterpreter\b/g, replace: "LuxorCodeInterpreter" },
+	{ phase: "1", scope: "any", files: /smolagents\//, find: /\bTenkiExecutor\b/g, replace: "LuxorExecutor" },
+	{ phase: "1", scope: "any", find: /\btenki_client\b/g, replace: "luxor_client" },
+	{ phase: "1", scope: "any", find: /\bmcp__tenki__/g, replace: "mcp__luxor__" },
+	{ phase: "1", scope: "any", find: /\b(mcpServers: \{ |claude mcp add |name: ")tenki\b/g, replace: "$1luxor" },
+	{ phase: "1", scope: "any", find: /\btenki-(sandboxes|orca|example|verify|cookbook-verify|pool)\b/g, replace: "luxor-$1" },
+	{ phase: "1", scope: "any", find: /\b(ragflow|prefect)-tenki-verify\b/g, replace: "$1-luxor-verify" },
+	// Strings the examples print and check, and names they give things.
+	{ phase: "1", scope: "any", find: /\bhello-from-tenki\b|\bhello from tenki\b|\bmodal->tenki\b|\bhello-tenki\b|\bpi-env:tenki:|\bpi-durable-tenki(?= \$)|\btenki-\$\{|reconcile tenki sandboxes|ui:\/\/tenki\//g, replace: (m) => m.replace("tenki", "luxor") },
+	{ phase: "1", scope: "code", find: /\btenki(?=\.[a-z]\w*\()/g, replace: "luxor" },
+	{ phase: "1", scope: "code", files: /\.md$/, find: /\bTenki(?= (token|kernel|backend at|→))/g, replace: "Luxor Agent Cloud" }, // messages our own scripts print
+	{ phase: "1", scope: "any", find: /\bswebench-tenki\.json\b|\btenki-api-key\b|`tenki-…`/g, replace: (m) => m.replace("tenki", "luxor") },
+	// UI text in the CopilotKit example lives in JSX and nested template literals, which the tokenizer reads as code.
+	{ phase: "1", scope: "any", files: /copilotkit-mcp-apps\//, find: /\bTenki (Sandbox|sandbox(es)?)\b/g, replace: (m) => m.replace("Tenki", "Luxor") },
+	{ phase: "1", scope: "any", files: /copilotkit-mcp-apps\//, find: /<b>Tenki<\/b>/g, replace: "<b>Luxor</b>" },
+	{ phase: "1", scope: "any", files: /copilotkit-mcp-apps\//, find: /\btenki(?=\.[a-z]\w*\()/g, replace: "luxor" },
+	{ phase: "1", scope: "any", files: /\.ya?ml$/, find: /\bTenki\b(?![-_])/g, replace: "Luxor Agent Cloud" },
 ];
 
-// Mentions that stay "tenki" until something outside the cookbook changes.
+// Names that stay "tenki" because something outside the cookbook still uses them.
 export const protect = [
-	// The platform: the sandbox user and the preview-URL domain.
-	{ why: "platform: sandbox user", find: /\/home\/tenki\b|\buser(name)? `?tenki`?|\btenki@/g },
+	// The platform.
+	{ why: "platform: sandbox user", find: /\/home\/tenki\b|\buser(name)? `?tenki`?|\btenki@|\btenki tenki\b|x86_64\s+tenki\b/g },
 	{ why: "platform: preview domain", find: /\b[a-z0-9.-]*sb\.tenki\.sh\b/g },
-	// Other projects' identifiers: renamed only after each upstream adds a luxor alias.
-	{ why: "upstream: ComputeSDK", find: /@computesdk\/tenki\b|\bcomputesdk[./-]tenki\b/g },
-	{ why: "upstream: AG2", find: /\bag2\.extensions\.tenki\b|\bag2\[tenki\]/g },
-	{ why: "upstream: PraisonAI", find: /\bpraisonai[a-z_.]*\.tenki\b|\bpraisonai\[tenki\]/g },
-	{ why: "upstream: provider ids", find: /(provider|backend|runtime|compute)["']?\s*[:=]\s*["']tenki["']|["']tenki["']\s*:/g },
-	{ why: "upstream: links into other projects", find: /https?:\/\/(?!(app\.|api\.)?tenki\.cloud)(?!github\.com\/LuxorLabs\/)[^\s)\]>"'`]*tenki[^\s)\]>"'`]*/gi },
-	{ why: "upstream: provider names in other tools' CLIs and configs", find: /(--provider|--sandbox|--type|--extra|UV_EXTRAS=|provider[=:]|tools_run_on=|default\s*=)\s*["'`]{0,2}tenki\b|\[tenki\]|\bagentbox( plugin list[^\n]*?| [a-z]+ --provider)? tenki\b|["'`]{1,2}tenki["'`]{1,2}(?=\s+(worker|provider|backend|exec|extension|group))|\b(the|a|built-in|its|SDK v2) [`"]?tenki[`"]? (provider|backend|worker|exec backend|extension|group)\b/g },
-	{ why: "upstream: provider ids as strings", find: /`{0,2}["']tenki["']`{0,2}|`tenki` (sandbox provider|exec backend|provider|backend)|\b(selecting|runtime as) tenki\b|\btenki(?=\s+sandbox\s+01)|prints: tenki\b|\btenki is required\b/g },
-	{ why: "platform: sandbox user and host in shell output", find: /\btenki tenki\b|x86_64\s+tenki\b/g },
-	{ why: "platform: Runners labels", find: /\btenki-(standard|large|small|medium|xlarge)[a-z0-9-]*|#tenki-isnt-[a-z0-9-]+|\/blog\/tenki-[a-z0-9-]+/g },
+	{ why: "platform: Runners labels", find: /\btenki-(standard|large|small|medium|xlarge)[a-z0-9-]*/g },
 	{ why: "platform: Code Reviewer bot", find: /@tenki-reviewer\b/g },
+	{ why: "platform: container images", find: /\btenki\/(anchor|tinyfish)\b(:[a-z0-9.-]+)?/g },
+	// What the SDKs and packages still call themselves.
+	{ why: "SDK: environment variables (the SDK reads only TENKI_*)", find: /\bTENKI_[A-Z0-9_]+\b/g },
+	{ why: "SDK: the Python package", find: /(?:^|;|`)\s*(from|import) tenki\b|\bpip install tenki\b|pypi\.org\/project\/tenki\b|\btenki(?=\[|\s*[><=~]=?\s*[0-9])|\btenki_sandbox\b|`tenki`|\btenki`?(?=`?\s+(\d\.x\s+)?(Python |Go )?(SDK|package|client)\b)|(?<=(#|\band|\bONLY|\bonly|\bdatasets|\bswebench|\brequirements),?\s)tenki\b|\btenki(?=\s\+\s)/gm },
+	{ why: "SDK: the Go module and SDK repos", find: /tenki-sdk-(go|python|es)|\btenkisdk\b/g },
+	{ why: "SDK: plugin and integration repos", find: /\b(LuxorLabs|TenkiCloud|opencolin)\/[\w.-]*tenki[\w.-]*|\btenki-[a-z0-9-]+#\d+|\bTenkiCloud\b/g },
+	{ why: "SDK: MCP tool names and server id", find: /\btenki_(?!(tools?|executor|client)\b)[a-z_]+\b|\btenki-mcp\b|"tenki" MCP server/g },
+	{ why: "SDK: plugin ids in OpenClaw and AgentBox", find: /id "tenki"|\bprovider: tenki\b|\bkind: tenki\b|\btenki:(?=`? group)/g },
+	// The Convex component still exports its class as Tenki and registers as components.tenki,
+	// so its example keeps the class and the variable that holds it.
+	{ why: "SDK: the Convex component's Tenki class", files: /convex-(tenki|luxor)\//, scope: "code", find: /\bcomponents\.tenki\b|\b(class|new) Tenki\b|\b(import \{ ?|\{ ?)Tenki\b|\bTenki(?=[(<.])|\btenki(?=\.[a-zA-Z]|\s*=\s*new\b|\s*[,)])|\b(const|let) tenki\b|\bimport tenki\b|\btenki(?= from)/g },
+	{ why: "SDK: the Convex component's Tenki class", files: /convex-(tenki|luxor)\//, find: /\btenki\.create\b/g },
+	{ why: "SDK: the Convex component name", find: /\bcomponents\.tenki\b|\buse\(tenki\)|\bimport tenki from\b/g },
+	{ why: "SDK: names the packages define (env vars, tool slugs, runtime tags)", find: /[A-Z_]*TENKI[A-Z_]*|\boc-tenki-|\bworker-type: tenki\b|\btenki-prod\b|\bid: tenki\b|\blinux tenki\b|\btenki: (collect|exec)\b/g },
+	{ why: "SDK: messages the packages print, quoted in troubleshooting", scope: "code", files: /\.md$/, find: /\bTenki\b(?! (token|kernel|backend at|→))/g },
+	{ why: "upstream: the Covalent plugin's executor class", files: /covalent-(tenki|luxor)\/|^README\.md$/, find: /\bTenkiExecutor\b/g },
+	{ why: "upstream: Covalent's executor variable", files: /covalent-(tenki|luxor)\//, find: /\btenki\b(?= = Tenki|\))|executor=tenki\b/g },
+	{ why: "SDK: configs the old tenki CLI wrote, still read as a fallback", find: /\["luxor", "tenki"\]|\("luxor", "tenki"\)/g },
+	{ why: "SDK: the Python SDK's old PyPI name, and its branch names", find: /(?<!mcp-)\btenki-sandbox\b(?!\.mjs)|\btenki-sdk-1\.x\b/g },
+	{ why: "SDK: the OpenClaw plugin id", find: /\bplugins\.entries\.tenki\b|\bPlugin tenki\b|\bInvalid tenki plugin\b/g },
+	{ why: "platform: the sandbox user, as id -un prints it", find: /"tenki https:|username: "tenki"/g },
+	{ why: "upstream: DeerFlow's sandbox names", find: /deer-flow-tenki-/g },
 	{ why: "legal: copyright holder", find: /Copyright \(c\) \d{4} Tenki Cloud/g },
-	// Product names that need their own decision.
-	{ why: "decision: other product names", find: /\bTenki (Code Reviewer|Runners?|runners?|runner label|Cloud|Mobile|Team|blog)\b/g },
+	// Other projects' identifiers: renamed only after each upstream adds a luxor alias.
+	{ why: "upstream: links into other projects", find: /https?:\/\/(?!(app\.|api\.)?tenki\.cloud)(?!github\.com\/LuxorLabs\/)(?!www\.npmjs\.com\/package\/@tenkicloud\/)[^\s)\]>"'`]*tenki[^\s)\]>"'`]*/gi },
+	{ why: "upstream: AG2, PraisonAI, ComputeSDK, Prefect, agentenv, Harbor, Covalent, Hermes, NeMo Gym, OpenHermit", find: /\{ ?tenki ?\}(?= from "@computesdk)|(?<!examples\/|\.\.\/|✓ |FAILED: )@computesdk\/tenki\b|\bcomputesdk[./]tenki\b|\bag2\.extensions\.tenki\b|\bag2\[tenki\]|\bpraisonai[a-z_.]*\.tenki\b|\bpraisonai\[tenki\]|\bTenki(Environment|Compute|ComputeLegacy|Worker|WorkerJobConfiguration|Credentials|Resources|SandboxProvider|ExecBackend|Session)\b|(?<!examples\/|\.\.\/|✓ |FAILED: |\/path\/to\/)\b(covalent[-_]tenki[-_]plugin|tenki_harbor|tenki-harbor|nemo-gym-tenki|hermes-tenki|prefect_tenki|prefect-tenki|tenki-prefect|langchain-tenki|praisonai-tenki|openhermit-tenki|tenki-plugin)\b|\btenki_snapshots\b|\btools\.environments\.tenki\b|\benvironments\/tenki\.py\b/g },
+	{ why: "upstream: provider names in other tools' CLIs and configs", find: /(--provider|--sandbox|--type|--extra|UV_EXTRAS=|provider[=:]|tools_run_on=|default\s*=|sandbox_providers\/|providers\/|providers\.)\s*["'`]{0,2}tenki\b|\[tenki\]|\bagentbox( plugin list[^\n]*?| [a-z]+ --provider)? tenki\b|(?<!name: )["'`]{1,2}tenki["'`]{1,2}|\b(the|a|built-in|its|SDK v2) [`"]?tenki[`"]? (provider|backend|worker|exec backend|extension|group|sandbox provider)\b|\b(selecting|runtime as) tenki\b|\btenki(?=\s+sandbox\s+01)|prints: tenki\b|\btenki is required\b|\bsandbox\/tenki(_test)?\.go\b|backends\/tenki\.ts\b|\bpackages\/tenki\b|\bcommunity\.tenki\b|tenki-backend\.test\.ts|\bextensions\/tenki\.mdx\b|compute\/tenki\.py\b|\bprovider=tenki\b|\btoolkit: "TENKI"/g },
+	{ why: "upstream: names other tools give their Tenki provider", find: /--(env-|agent-)?sandbox tenki\b|\btenki\(\)|,tenki\b|test_tenki_provider\.py|tenki-harness-evals|TERMINAL_ENV=tenki|\bterminal\.tenki\b|"tenki\.py"|tenki_\*|owui_tenki_out|\.\/tenki-openclaw|(STATE_DIR|\.openclaw)\/tenki\b|\btenki-default\b|"type":"tenki"|sandbox type: tenki|SANDBOX_PROVIDER_TYPE=tenki|`tenki: [a-zA-Z][^`]*`|executor type: tenki|\btenki(?=\.(diskGB|image)\b)|crabbox-provider-tenki|\/tenki-prepared\.json|\btenki:(?=\s+cpus)|\btarget: linux\b/g },
+	{ why: "upstream: blog and docs slugs", find: /#tenki-isnt-[a-z0-9-]+|\/blog\/[a-z0-9-]*tenki[a-z0-9-]*/g },
 ];

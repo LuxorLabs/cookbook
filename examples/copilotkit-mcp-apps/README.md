@@ -1,15 +1,15 @@
 # CopilotKit MCP Apps
 
-A [CopilotKit](https://copilotkit.ai) chat whose sandbox tools come with their own UI. Ask it to run code and a console appears in the chat with the output and a live shell into the Tenki sandbox. Ask it for a web app and the page appears in the chat, served from a sandbox on a public URL. The tools are a plain MCP server using the [MCP Apps](https://github.com/modelcontextprotocol/ext-apps) extension, so any MCP Apps host can drive them.
+A [CopilotKit](https://copilotkit.ai) chat whose sandbox tools come with their own UI. Ask it to run code and a console appears in the chat with the output and a live shell into the Luxor sandbox. Ask it for a web app and the page appears in the chat, served from a sandbox on a public URL. The tools are a plain MCP server using the [MCP Apps](https://github.com/modelcontextprotocol/ext-apps) extension, so any MCP Apps host can drive them.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Run the CopilotKit MCP Apps example on Tenki, following https://github.com/LuxorLabs/cookbook/tree/main/examples/copilotkit-mcp-apps.
+Run the CopilotKit MCP Apps example on Luxor Agent Cloud, following https://github.com/LuxorLabs/cookbook/tree/main/examples/copilotkit-mcp-apps.
 1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/copilotkit-mcp-apps, check that Node.js is 20.11 or later, and run npm install.
-2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
 3. Run node verify.mjs and confirm it prints the ✓ line.
 4. Copy chat/.env.example to chat/.env and ask me to fill in LLM_API_KEY myself. Then start the server with npm start, and in a second terminal run npm install && npm run dev in chat/, and tell me to open http://localhost:3000.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -20,7 +20,7 @@ Run the CopilotKit MCP Apps example on Tenki, following https://github.com/Luxor
 You need:
 
 - Node.js 20.11 or later.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - For the chat: an API key for an OpenAI-compatible endpoint that serves `/chat/completions`. The default is [Aisa](https://aisa.one) with `claude-sonnet-5`; OpenRouter and OpenAI also work.
 
 ### 1. Install
@@ -34,10 +34,10 @@ npm install
 ### 2. Set your API keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY or a `tenki login` key also work
+export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY or a `luxor login` key also work
 ```
 
-Only the MCP server needs the Tenki key. The chat never sees it. For the chat, copy its env file:
+Only the MCP server needs the Luxor Agent Cloud key. The chat never sees it. For the chat, copy its env file:
 
 ```bash
 cp chat/.env.example chat/.env
@@ -82,7 +82,7 @@ A console appears with the code, the output, and boot and run times. Type `ls -l
 
 ### 4. Verify
 
-From the example's root, with the Tenki key exported in that terminal:
+From the example's root, with the Luxor Agent Cloud key exported in that terminal:
 
 ```bash
 node verify.mjs
@@ -112,10 +112,10 @@ node verify.mjs
 | File | What it is |
 | --- | --- |
 | [`server.mjs`](server.mjs) | The MCP server: four tools and two `ui://` resources, over Streamable HTTP on port 3108 (`MCP_PORT`) |
-| [`sandboxes.mjs`](sandboxes.mjs) | The Tenki calls: boot, run, serve, destroy |
+| [`sandboxes.mjs`](sandboxes.mjs) | The Luxor Agent Cloud calls: boot, run, serve, destroy |
 | [`widget.mjs`](widget.mjs) | The app page the host renders: plain HTML and JavaScript, no build step |
 | [`chat/`](chat/) | The Next.js CopilotKit chat |
-| [`verify.mjs`](verify.mjs) | Drives the server's tools against live Tenki |
+| [`verify.mjs`](verify.mjs) | Drives the server's tools against live Luxor Agent Cloud |
 
 ### A tool with a UI
 
@@ -126,9 +126,9 @@ An MCP App tool is a normal MCP tool that names a `ui://` resource. From `server
     server,
     "run_code_in_sandbox",
     {
-      title: "Run code in a Tenki sandbox",
+      title: "Run code in a Luxor sandbox",
       description:
-        "Run a Python, JavaScript (Node) or shell program in a fresh Tenki sandbox and open a console the user can keep working in: " +
+        "Run a Python, JavaScript (Node) or shell program in a fresh Luxor sandbox and open a console the user can keep working in: " +
         "the code, its output, and a live shell into the same machine. Pass sandbox_id to reuse one (files persist, no boot). " +
         "Standard library only unless allow_internet is true.",
       inputSchema: {
@@ -147,7 +147,7 @@ Each view is served as an HTML page:
 
 ```js
   for (const [view, uri] of Object.entries(VIEWS)) {
-    registerAppResource(server, `tenki-${view}`, uri, { mimeType: RESOURCE_MIME_TYPE, description: `Tenki ${view} app` }, async () => ({
+    registerAppResource(server, `luxor-${view}`, uri, { mimeType: RESOURCE_MIME_TYPE, description: `Luxor Agent Cloud ${view} app` }, async () => ({
       contents: [{ uri, mimeType: RESOURCE_MIME_TYPE, text: widgetHtml(view, bridge) }],
     }));
   }
@@ -167,7 +167,7 @@ The page loads it as a blob module, so it works in a hosted chat that can't reac
 const bridgeBytes = Uint8Array.from(atob(BRIDGE_B64), (c) => c.charCodeAt(0));
 const { App } = await import(URL.createObjectURL(new Blob([bridgeBytes], { type: "text/javascript" })));
 
-const app = new App({ name: "Tenki sandbox", version: "1.0.0" }, {}, { autoResize: true });
+const app = new App({ name: "Luxor sandbox", version: "1.0.0" }, {}, { autoResize: true });
 const el = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
 let data = null;
@@ -202,7 +202,7 @@ The console's shell and the destroy button use `sandbox_exec` and `sandbox_destr
 
 The page calls them through the host with `app.callServerTool`, and hands work back to the agent with `app.sendMessage`.
 
-### The Tenki side
+### The Luxor Agent Cloud side
 
 From `sandboxes.mjs`:
 
@@ -216,12 +216,12 @@ From `sandboxes.mjs`:
  */
 export async function acquire({ sandboxId, name, allowInbound = false, allowOutbound = false }) {
   if (sandboxId) {
-    const existing = await tenki.get(sandboxId);
+    const existing = await luxor.get(sandboxId);
     assertOurs(existing);
     return { session: existing, bootMs: null, reused: true };
   }
   const started = Date.now();
-  const session = await tenki.createAndWait({
+  const session = await luxor.createAndWait({
     name,
     workspaceId,
     cpuCores: 2,
@@ -264,15 +264,15 @@ export function createAgent(): BuiltInAgent {
 
 ## Things to know
 
-- **Keep the server on localhost.** It has no authentication, listens on `127.0.0.1`, and rejects requests not addressed to localhost. Anything that reaches port 3108 can run code on your Tenki account, so add authentication before binding it to `0.0.0.0` or putting it behind a tunnel.
+- **Keep the server on localhost.** It has no authentication, listens on `127.0.0.1`, and rejects requests not addressed to localhost. Anything that reaches port 3108 can run code on your Luxor Agent Cloud account, so add authentication before binding it to `0.0.0.0` or putting it behind a tunnel.
 - To use another MCP Apps host, point it at `http://localhost:3108/mcp` from the same machine.
 
 ## Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY …` | Export a key or run `tenki login --api-key <key>` before `npm start` or `verify.mjs`. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY …` | Export a key or run `luxor login --api-key <key>` before `npm start` or `verify.mjs`. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | The agent answers in text and the chat logs `MCP tool discovery failed` | Start the server with `npm start`, and check `MCP_URL` in `chat/.env`. |
 | `Sandbox <id> was created without inbound access …` | Ask the agent to launch the app without a `sandbox_id`. |
 | `The server never listened on port <port>.` | The `start_command` must listen on `0.0.0.0` and `$PORT`, and can't install packages. Check the log lines that follow. |
@@ -284,6 +284,6 @@ export function createAgent(): BuiltInAgent {
 ## Related
 
 - [MCP Apps](https://github.com/modelcontextprotocol/ext-apps), [CopilotKit](https://copilotkit.ai), and [`@ag-ui/mcp-apps-middleware`](https://www.npmjs.com/package/@ag-ui/mcp-apps-middleware)
-- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
-- [MCP server](../mcp-tenki-sandbox/): Tenki's own MCP server for Claude or Cursor, without app UIs
+- [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox) and the [Luxor Agent Cloud docs](https://luxor.ai/docs)
+- [MCP server](../mcp-luxor-sandbox/): Luxor Agent Cloud's own MCP server for Claude or Cursor, without app UIs
 - [Expose a port](../expose-a-port/): the preview URL on its own

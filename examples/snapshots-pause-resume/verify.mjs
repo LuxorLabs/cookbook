@@ -1,16 +1,16 @@
 /**
  * Proves pause/resume persists sandbox state: create → write a unique marker →
  * pause → resume → read the marker back → assert it survived. Also asserts pause
- * produced a durable snapshot. Token/workspace from env (CI) or ~/.config/tenki/config.yaml.
+ * produced a durable snapshot. Token/workspace from env (CI) or ~/.config/luxor/config.yaml.
  * Exits non-zero on any failure; terminates the sandbox it created.
  */
-import { TenkiSandbox } from "@tenkicloud/sandbox";
-import { readFileSync } from "node:fs";
+import { LuxorSandbox } from "@luxorai/sandbox";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/tenki/config.yaml`, "utf8");
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
@@ -20,11 +20,11 @@ const cfg = (key) => {
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
+	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 
-const tenki = new TenkiSandbox({ authToken });
+const luxor = new LuxorSandbox({ authToken });
 const marker = `persist-${Date.now()}`;
 let sandbox;
 // pause()/resume() resolve as the transition begins; poll refresh() until it settles.
@@ -38,7 +38,7 @@ const waitState = async (want) => {
 };
 
 try {
-	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
+	sandbox = await luxor.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
 	await sandbox.writeFile("marker.txt", marker);
 
 	// pause() snapshots memory + disk, then frees the VM. Capture the id now — it clears on resume.

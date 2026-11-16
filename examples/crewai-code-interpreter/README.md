@@ -1,18 +1,18 @@
 # CrewAI
 
-Give a [CrewAI](https://crewai.com) agent a `run_python` code-interpreter tool that runs in a Tenki sandbox. CrewAI removed its built-in [`CodeInterpreterTool`](https://docs.crewai.com/en/tools/ai-ml/codeinterpretertool) and points users to a sandbox service. `tenki_tool.py` is that tool on Tenki: a CrewAI `BaseTool` that runs the agent's Python in one sandbox shared for the crew run.
+Give a [CrewAI](https://crewai.com) agent a `run_python` code-interpreter tool that runs in a Luxor sandbox. CrewAI removed its built-in [`CodeInterpreterTool`](https://docs.crewai.com/en/tools/ai-ml/codeinterpretertool) and points users to a sandbox service. `luxor_tool.py` is that tool on Luxor Agent Cloud: a CrewAI `BaseTool` that runs the agent's Python in one sandbox shared for the crew run.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "CrewAI" example from https://github.com/LuxorLabs/cookbook.
+Set up the Luxor Agent Cloud "CrewAI" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/crewai-code-interpreter, create a .venv there on Python 3.10 to 3.13 (uv venv --python 3.12 if uv is installed), and install requirements.txt. The install takes a few minutes.
-2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs TENKI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (no model call, expects 55), then .venv/bin/python agent.py.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
-Then add tenki_tool.py to my own crew: one sandbox per run in a with block, and TenkiCodeInterpreter(sandbox=sandbox) in the agent's tools.
+Then add luxor_tool.py to my own crew: one sandbox per run in a with block, and LuxorCodeInterpreter(sandbox=sandbox) in the agent's tools.
 ```
 
 ## Quick start
@@ -20,7 +20,7 @@ Then add tenki_tool.py to my own crew: one sandbox per run in a with block, and 
 You need:
 
 - Python 3.10 to 3.13. CrewAI doesn't support 3.14. [uv](https://docs.astral.sh/uv/) is optional.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - An OpenAI API key (CrewAI's default model), for the crew run only.
 
 ### 1. Install
@@ -43,7 +43,7 @@ export TENKI_API_KEY=tk_...
 export OPENAI_API_KEY=sk-...
 ```
 
-`agent.py` needs the Tenki key in the environment (`TENKI_API_KEY` or `TENKI_AUTH_TOKEN`). `verify.py` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`agent.py` needs the Luxor Agent Cloud key in the environment (`TENKI_API_KEY` or `TENKI_AUTH_TOKEN`). `verify.py` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
 ### 3. Run the crew
 
@@ -60,7 +60,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
 ```
 
 ```
-✓ crewai-code-interpreter: CrewAI tool executed Python in a Tenki sandbox → 55
+✓ crewai-code-interpreter: CrewAI tool executed Python in a Luxor sandbox → 55
 ```
 
 `verify.py` calls the tool directly with `print(sum(range(11)))` and checks for `55`. It needs no OpenAI key. `verify.mjs` is a CI shim that runs it with `.venv/bin/python`, `$PYTHON`, or `python3`.
@@ -80,7 +80,7 @@ with Sandbox.create(**opts) as sandbox:
         role="Data analyst",
         goal="Answer questions by running Python in a sandbox instead of guessing.",
         backstory="You verify every numeric answer by executing code.",
-        tools=[TenkiCodeInterpreter(sandbox=sandbox)],
+        tools=[LuxorCodeInterpreter(sandbox=sandbox)],
         verbose=True,
     )
     task = Task(
@@ -95,7 +95,7 @@ The `with` block terminates the sandbox when the crew finishes.
 
 ## The tool
 
-`tenki_tool.py`:
+`luxor_tool.py`:
 
 ```python
 from typing import Type
@@ -109,7 +109,7 @@ class RunPythonInput(BaseModel):
     code: str = Field(..., description="The Python code to run.")
 
 
-class TenkiCodeInterpreter(BaseTool):
+class LuxorCodeInterpreter(BaseTool):
     name: str = "run_python"
     description: str = (
         "Execute Python code in a secure, disposable sandbox and return its stdout/stderr. "
@@ -141,9 +141,9 @@ Things to know:
 
 | Problem | Fix |
 | --- | --- |
-| ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.`` | Export `TENKI_API_KEY` or run `tenki login --api-key <key>`. |
-| `missing auth token: set TENKI_AUTH_TOKEN or TENKI_API_KEY` from `agent.py` | `agent.py` doesn't read the `tenki login` key. Export `TENKI_API_KEY`. |
-| `invalid auth token: expected an API key or service token starting with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| ``No API key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.`` | Export `TENKI_API_KEY` or run `luxor login --api-key <key>`. |
+| `missing auth token: set TENKI_AUTH_TOKEN or TENKI_API_KEY` from `agent.py` | `agent.py` doesn't read the `luxor login` key. Export `TENKI_API_KEY`. |
+| `invalid auth token: expected an API key or service token starting with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `ModuleNotFoundError: No module named 'tenki'` (or `'crewai'`) from `node verify.mjs` | There's no `.venv` here. Create it as in step 1, or set `PYTHON`. |
 | `crewai` won't resolve | Use Python 3.10 to 3.13, for example `uv venv --python 3.12`. |
 | `✗ AssertionError: tool returned '…'` | The quoted text is the sandbox's output. Read it for the error. |
@@ -153,4 +153,4 @@ Things to know:
 - [LangChain (Python)](../langchain-python/): the same tool for a LangChain agent
 - [Run code with Python](../run-code-python/): the bare SDK loop
 - [CrewAI docs](https://docs.crewai.com)
-- [`tenki` SDK docs](https://tenki.cloud/docs/sandbox/sdk) and [LuxorLabs/tenki-sdk-python](https://github.com/LuxorLabs/tenki-sdk-python)
+- [`tenki` SDK docs](https://luxor.ai/docs/sandbox/sdk) and [LuxorLabs/tenki-sdk-python](https://github.com/LuxorLabs/tenki-sdk-python)

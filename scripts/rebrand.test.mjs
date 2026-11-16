@@ -3,51 +3,53 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { classify, rewrite } from "./rebrand.mjs";
 
-test("phase 1 renames the brand in prose, comments and strings, not in code", () => {
-	const src = [
-		'// Runs against live Tenki.',
-		'import { Tenki } from "@tenkicloud/convex";',
-		'const tenki = new Tenki(components.tenki);',
-		'console.log("Hello from a Tenki sandbox!");',
-	].join("\n");
+const r = (file, src) => rewrite(file, src, "1");
+
+test("the SDK, its class and its client variable move to Luxor", () => {
 	assert.equal(
-		rewrite("x.mjs", src, "1"),
-		[
-			'// Runs against live Luxor Agent Cloud.',
-			'import { Tenki } from "@tenkicloud/convex";',
-			'const tenki = new Tenki(components.tenki);',
-			'console.log("Hello from a Luxor Agent Cloud sandbox!");',
-		].join("\n"),
+		r("x.mjs", 'import { TenkiSandbox } from "@tenkicloud/sandbox";\nconst tenki = new TenkiSandbox({ authToken });\nawait using sandbox = await tenki.createAndWait({});'),
+		'import { LuxorSandbox } from "@luxorai/sandbox";\nconst luxor = new LuxorSandbox({ authToken });\nawait using sandbox = await luxor.createAndWait({});',
 	);
 });
 
-test("phase 1 moves page links but leaves app links, inline code and env vars", () => {
-	const src = "A [Tenki account](https://tenki.cloud) and keys at [app.tenki.cloud](https://app.tenki.cloud). See https://tenki.cloud/docs/sandbox. Set `TENKI_API_KEY` and run `tenki login`.";
+test("prose, comments and strings say Luxor; the Convex class stays Tenki", () => {
 	assert.equal(
-		rewrite("README.md", src, "1"),
-		"A [Luxor Agent Cloud account](https://luxor.ai) and keys at [app.tenki.cloud](https://app.tenki.cloud). See https://luxor.ai/docs/sandbox. Set `TENKI_API_KEY` and run `tenki login`.",
+		r("examples/convex-tenki/x.ts", '// Runs against live Tenki.\nimport { Tenki } from "@tenkicloud/convex";\nconst tenki = new Tenki(components.tenki);\nconsole.log("Hello from a Tenki sandbox!");'),
+		'// Runs against live Luxor Agent Cloud.\nimport { Tenki } from "@luxorai/convex";\nconst tenki = new Tenki(components.tenki);\nconsole.log("Hello from a Luxor sandbox!");',
 	);
 });
 
-test("the coding-agent prompt fence is prose; a js fence is code", () => {
-	const src = "```text\nSet up the Tenki example.\n```\n\n```js\nconst tenki = new TenkiSandbox(); // Tenki client\n```\n";
-	assert.equal(rewrite("README.md", src, "1"), "```text\nSet up the Luxor Agent Cloud example.\n```\n\n```js\nconst tenki = new TenkiSandbox(); // Luxor Agent Cloud client\n```\n");
+test("domains, products and the CLI move; env vars and the sandbox user stay", () => {
+	assert.equal(
+		r("README.md", "A [Tenki account](https://tenki.cloud), keys at [app.tenki.cloud](https://app.tenki.cloud), [Tenki Code Reviewer](https://tenki.cloud/products/code-reviewer). Set `TENKI_API_KEY` or run `tenki login`, which writes `~/.config/tenki/config.yaml`. Files live in `/home/tenki`."),
+		"A [Luxor Agent Cloud account](https://luxor.ai), keys at [app.luxor.ai](https://app.luxor.ai), [Luxor Code Reviewer](https://luxor.ai/products/code-reviewer). Set `TENKI_API_KEY` or run `luxor login`, which writes `~/.config/luxor/config.yaml`. Files live in `/home/tenki`.",
+	);
 });
 
-test("protected names survive every phase", () => {
-	const src = "Files live in /home/tenki and previews on https://abc--8080.us.sb.tenki.sh. Use ag2.extensions.tenki with Tenki Code Reviewer.";
-	assert.equal(rewrite("README.md", src, "3"), src);
+test("the coding-agent prompt fence is prose; a js fence keeps identifiers apart", () => {
+	assert.equal(
+		r("README.md", "```text\nSet up the Tenki example.\n```\n\n```js\nconst tenki = new TenkiSandbox(); // Tenki client\n```\n"),
+		"```text\nSet up the Luxor Agent Cloud example.\n```\n\n```js\nconst luxor = new LuxorSandbox(); // Luxor Agent Cloud client\n```\n",
+	);
+});
+
+test("example folders become -luxor where they name the folder, not the upstream package", () => {
+	assert.equal(
+		r("README.md", "[AG2](examples/ag2-tenki/), [E2B](examples/e2b-to-tenki-migration/), [MCP](../mcp-tenki-sandbox/). Install `prefect-tenki` from [examples/prefect-tenki](examples/prefect-tenki/)."),
+		"[AG2](examples/ag2-luxor/), [E2B](examples/e2b-to-luxor-migration/), [MCP](../mcp-luxor-sandbox/). Install `prefect-tenki` from [examples/prefect-luxor](examples/prefect-luxor/).",
+	);
+});
+
+test("other projects' names and the Python SDK survive", () => {
+	const src = "Use ag2.extensions.tenki or @computesdk/tenki. `pip install tenki`, then `from tenki import Sandbox`. Previews on https://abc--8080.us.sb.tenki.sh.";
+	assert.equal(r("README.md", src), src);
 	assert.ok(classify("README.md", src).every((m) => m.by?.why));
 });
 
-test("phase 2a moves app links; pending names are classified but untouched", () => {
-	assert.equal(rewrite("README.md", "Keys: https://app.tenki.cloud", "2a"), "Keys: https://app.luxor.ai");
-	assert.equal(rewrite("x.mjs", 'import { TenkiSandbox } from "@tenkicloud/sandbox";', "3"), 'import { TenkiSandbox } from "@tenkicloud/sandbox";');
-	assert.ok(classify("x.mjs", 'import { TenkiSandbox } from "@tenkicloud/sandbox";').every((m) => m.by && m.by.replace === null));
-});
-
-test("phase 2c drops the -tenki folder suffix", () => {
-	assert.equal(rewrite("README.md", "[AG2](examples/ag2-tenki/) and [E2B](examples/e2b-to-tenki-migration/)", "2c"), "[AG2](examples/ag2/) and [E2B](examples/e2b-migration/)");
+test("the config read falls back to the old tenki CLI's file, and a second run changes nothing", () => {
+	const once = r("x.mjs", 'readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8")');
+	assert.equal(r("x.mjs", once), once);
+	assert.ok(classify("x.mjs", once).every((m) => m.by));
 });
 
 test("an unknown name is unclassified", () => {

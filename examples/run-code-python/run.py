@@ -1,10 +1,10 @@
 """
-Run code in a disposable Tenki sandbox: boot -> exec -> print -> dispose.
-The core Tenki loop, with the official `tenki` Python SDK.
+Run code in a disposable Luxor sandbox: boot -> exec -> print -> dispose.
+The core Luxor Agent Cloud loop, with the official `tenki` Python SDK.
 
 Needs Python 3.10+ and `pip install tenki`. API key/workspace from env
 (TENKI_API_KEY / TENKI_WORKSPACE_ID) or, if unset,
-~/.config/tenki/config.yaml (written by `tenki login --api-key`). Run: python run.py
+~/.config/luxor/config.yaml (written by `luxor login --api-key`). Run: python run.py
 """
 import os
 
@@ -12,9 +12,9 @@ from tenki import Sandbox
 
 
 def cfg(key):
-    """Read a key from ~/.config/tenki/config.yaml (written by `tenki login --api-key`)."""
+    """Read a key from ~/.config/luxor/config.yaml (written by `luxor login --api-key`)."""
     try:
-        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
+        with open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()

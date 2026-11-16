@@ -17,7 +17,7 @@ exclude = [
   '\{[^}]+\}',
   'example\.(com|org)',
   # Sign-in walls answer 401/403 to robots but work in a browser.
-  '^https://app\.tenki\.cloud',
+  '^https://app\.(tenki\.cloud|luxor\.ai)',
   '^https://(www\.)?(linkedin|x|twitter)\.com',
   '^https://platform\.openai\.com',
   '^https://console\.anthropic\.com',

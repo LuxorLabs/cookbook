@@ -1,48 +1,60 @@
-# Renaming Tenki to Luxor Agent Cloud
+# The Tenki to Luxor rename
 
-The company and product are being renamed from Tenki (tenki.cloud) to Luxor Agent Cloud (luxor.ai). The cookbook moves in phases, because many of its mentions name packages, environment variables, domains and other projects that change on their own schedules.
+Tenki is now **Luxor Agent Cloud**, at [luxor.ai](https://luxor.ai). The cookbook was renamed in one pass by `rebrand.mjs`. The rename covered:
 
-| Phase | What changes | Waits for |
-| --- | --- | --- |
-| 0 | This codemod and its CI checks. No visible change. | nothing |
-| 1 | Prose, log lines, and every `tenki.cloud` page link. | the house style; `luxor.ai` already redirects keeping the path |
-| 2a | `app.tenki.cloud` and `api.tenki.cloud` links | `app.luxor.ai` serving |
-| 2b | `@tenkicloud/*` packages, the `tenki` Python and Go SDKs, `TenkiSandbox`, `TENKI_*` variables, the `tenki` CLI and its config path, container images, our plugin repos | each release under its new name, still accepting the old one |
-| 2c | Example folders (`ag2-tenki` becomes `ag2`) and helper names inside examples | phase 2b |
-| 3 | Other projects' identifiers, such as `ag2.extensions.tenki` | each upstream adding a `luxor` alias |
+- Prose, log lines and page titles.
+- Every `tenki.cloud` link, including `app.` and `api.`.
+- The `@tenkicloud/*` packages, which became `@luxorai/*` at the same versions.
+- `TenkiSandbox`, which became `LuxorSandbox`.
+- The `tenki` CLI, which became `luxor`, and its config file, now `~/.config/luxor/config.yaml`.
+- The example folders: `examples/<name>-tenki` became `examples/<name>-luxor`.
+- The helper files and names the examples define themselves.
+
+## What still says tenki, and why
+
+`rebrand.rules.mjs` lists each kept name as a protect pattern with its reason:
+
+| Kept | Why |
+| --- | --- |
+| `TENKI_API_KEY`, `TENKI_AUTH_TOKEN`, `TENKI_WORKSPACE_ID` | `@luxorai/sandbox` 1.5.2 reads only these |
+| `~/.config/tenki/config.yaml` | Read as a fallback after `~/.config/luxor/config.yaml`, for keys saved by the old `tenki login` |
+| The `tenki` Python package and `tenki_sandbox` module, `tenki-sdk-go`, the `LuxorLabs/tenki-*` repos | Not renamed upstream yet |
+| `tenki_*` MCP tool names, the OpenClaw and AgentBox plugin id `tenki`, the Convex component's `Tenki` class | What the `@luxorai` packages still call them |
+| `/home/tenki`, `*.sb.tenki.sh`, `tenki/anchor` and `tenki/tinyfish` images, `tenki-standard-*` runner labels | Platform names |
+| `ag2.extensions.tenki`, `@computesdk/tenki`, PraisonAI's `compute.tenki`, `prefect-tenki`, `nemo-gym-tenki`, other providers named `tenki` | Other projects' identifiers |
+| `Copyright (c) 2026 Tenki Cloud` in `LICENSE` | Legal entity; change with counsel |
+
+When one of these is renamed upstream, move its pattern from `protect` to `rules` with the new name, then run the codemod again.
 
 ## The codemod
 
-`rebrand.rules.mjs` lists every kind of mention:
-
-- **Rules** say what a mention becomes in which phase. A rule with `replace: null` names something whose new name is not decided yet. It classifies the mention, but nothing rewrites it.
-- **Protect patterns** name what must stay "tenki" until something outside the cookbook changes. Examples are the sandbox user `/home/tenki`, the preview domain `*.sb.tenki.sh`, and other projects' provider names.
-
 Each rule has a scope:
 
-- **`text`** is Markdown prose. That includes untagged or `text` code fences, which is where the coding-agent prompts live.
-- **`comment`** is comments, including Python docstrings.
+- **`text`** is Markdown prose, including untagged or `text` code fences, which is where the coding-agent prompts live.
+- **`comment`** is comments.
+- **`string`** is string literals, including Python docstrings.
+- **`code`** is identifiers and inline code.
 - **`any`** is everywhere.
 
-`rebrand.mjs` applies the rules. Run it from the repo root:
+A small tokenizer tells these apart, so a prose rule never touches an identifier.
 
 ```bash
-node scripts/rebrand.mjs --check                # CI: fail on any mention no rule or protect pattern covers
-node scripts/rebrand.mjs --report               # counts by phase, rule and protect pattern
-node scripts/rebrand.mjs --dry-run --phase 1    # print every line phase 1 would change
-node scripts/rebrand.mjs --write --phase 1      # apply the decided rules up to phase 1
-node scripts/rebrand.mjs --write --phase 1 examples/vercel-ai-sdk   # limit to some paths
+node scripts/rebrand.mjs --check                # CI: fail on any "tenki" no rule or protect pattern covers
+node scripts/rebrand.mjs --report               # counts by rule and protect pattern
+node scripts/rebrand.mjs --dry-run --phase 1    # print every line the rules would change
+node scripts/rebrand.mjs --write --phase 1      # apply them; running it twice changes nothing
 node --test scripts/rebrand.test.mjs            # the codemod's own tests
 ```
 
-When `--check` fails on a new mention, decide what it is:
+An open pull request written before the rename can catch up after rebasing:
 
-- If the cookbook will rename it, add a rule, with `replace: null` until the name is decided.
-- If something else owns it, add a protect pattern that says who.
+1. Move its folder with `git mv examples/x-tenki examples/x-luxor`.
+2. Run `--write --phase 1`.
+3. Review the diff and run its `verify.mjs`.
 
-An open pull request that predates a phase can catch up after rebasing. Run `--write --phase <n>` on its branch, then review the diff and run its `verify.mjs`.
+When `--check` fails on a new mention, decide what it is. If the cookbook should say luxor, add a rule. If something outside the cookbook still owns the name, add a protect pattern that says who.
 
 ## Checks
 
-- **`.github/workflows/brand.yml`** runs the codemod's tests and `--check` on every push and pull request. It writes the `--report` counts to the job summary.
-- **`.github/workflows/links.yml`** runs [lychee](https://github.com/lycheeverse/lychee) over all Markdown, with the settings in `lychee.toml`. It runs on pull requests that touch Markdown and weekly. Use it to confirm that a URL change lands on a live page.
+- **`.github/workflows/brand.yml`** runs the tests and `--check` on every push and pull request.
+- **`.github/workflows/links.yml`** runs [lychee](https://github.com/lycheeverse/lychee) over all Markdown, with the settings in `lychee.toml`, on pull requests that touch Markdown and weekly.

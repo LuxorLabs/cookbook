@@ -2,10 +2,10 @@
   "name": "openai-agents-sdk",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — an OpenAI Agents SDK agent that runs code in a Tenki sandbox.",
+  "description": "Cookbook example — an OpenAI Agents SDK agent that runs code in a Luxor sandbox.",
   "dependencies": {
     "@openai/agents": "^0.13.5",
-    "@tenkicloud/sandbox": ">=1.4.1",
+    "@luxorai/sandbox": ">=1.4.1",
     "zod": "^4.4.3"
   }
 }

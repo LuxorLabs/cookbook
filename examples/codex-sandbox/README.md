@@ -1,15 +1,15 @@
 # Codex
 
-Run [OpenAI Codex](https://github.com/openai/codex) headless on a real repo inside a Tenki sandbox you throw away. The script clones [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) into the sandbox, runs one `codex exec` turn on a task, prints the diff, and closes the sandbox. Codex can edit, install, and run anything on that VM, and the diff is what you keep.
+Run [OpenAI Codex](https://github.com/openai/codex) headless on a real repo inside a Luxor sandbox you throw away. The script clones [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) into the sandbox, runs one `codex exec` turn on a task, prints the diff, and closes the sandbox. Codex can edit, install, and run anything on that VM, and the diff is what you keep.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "Codex" example from https://github.com/LuxorLabs/cookbook, which runs OpenAI Codex headless in a disposable Tenki sandbox and prints the diff.
+Set up the Luxor Agent Cloud "Codex" example from https://github.com/LuxorLabs/cookbook, which runs OpenAI Codex headless in a disposable Luxor sandbox and prints the diff.
 1. Clone the repo, cd into examples/codex-sandbox, check that Node.js is 24 or later, and run npm install.
-2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and CODEX_API_KEY (an OpenAI key; if only OPENAI_API_KEY is set, export CODEX_API_KEY=$OPENAI_API_KEY). If a key is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and CODEX_API_KEY (an OpenAI key; if only OPENAI_API_KEY is set, export CODEX_API_KEY=$OPENAI_API_KEY). If a key is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (no model turn), then node run.mjs, and show me the diff.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
 Then ask me which repo and task I want instead, change REPO and TASK in run.mjs, and run it again.
@@ -20,8 +20,8 @@ Then ask me which repo and task I want instead, change REPO and TASK in run.mjs,
 You need:
 
 - Node.js 24 or later for `run.mjs`, which uses top-level `await using`. `verify.mjs` runs on Node 20.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
-- An OpenAI API key. You don't need Codex installed locally; Tenki's default image has it.
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
+- An OpenAI API key. You don't need Codex installed locally; Luxor Agent Cloud's default image has it.
 
 ### 1. Install
 
@@ -40,11 +40,11 @@ export CODEX_API_KEY=sk-...      # an OpenAI API key
 
 `codex exec` reads `CODEX_API_KEY` and ignores `OPENAI_API_KEY`. If your key is in `OPENAI_API_KEY`, run `export CODEX_API_KEY=$OPENAI_API_KEY`.
 
-`run.mjs` reads the Tenki key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the Luxor Agent Cloud key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
 ### 3. Verify
 
-Check the Tenki side first; it needs no OpenAI key:
+Check the Luxor Agent Cloud side first; it needs no OpenAI key:
 
 ```bash
 node verify.mjs
@@ -69,19 +69,19 @@ Codex's output streams to your terminal, then the diff prints. The turn has up t
 `run.mjs`:
 
 ```js
-// OpenAI Codex, headless, on a real repo in a disposable Tenki sandbox:
+// OpenAI Codex, headless, on a real repo in a disposable Luxor sandbox:
 // clone -> let the agent edit the checkout -> read back the diff.
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { LuxorSandbox } from "@luxorai/sandbox";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
 const TASK = "Add a toArray() method to the Queue class in index.js that returns the queued values as an array, oldest first. Declare it in index.d.ts and add a test for it in test.js.";
 // codex exec reads its key from CODEX_API_KEY and ignores OPENAI_API_KEY.
 const PASSTHROUGH = ["CODEX_API_KEY"];
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
 
 // cloneRepoUrl checks the repo out to ./repo before createAndWait resolves.
-await using sandbox = await tenki.createAndWait({
+await using sandbox = await luxor.createAndWait({
   cpuCores: 2,
   memoryMb: 4096,
   cloneRepoUrl: REPO,
@@ -122,15 +122,15 @@ With the bypass flag, `codex exec` also skips its Git-repo check, so `--skip-git
 
 ## Codex version
 
-The sandbox runs the Codex CLI in Tenki's default image (codex-cli 0.154.0 as of October 2026), which changes when the image is rebuilt. To use a newer one, `npm i -g @openai/codex` in the sandbox and run it by full path from `npm prefix -g`/bin, since that directory isn't on `exec`'s PATH.
+The sandbox runs the Codex CLI in Luxor Agent Cloud's default image (codex-cli 0.154.0 as of October 2026), which changes when the image is rebuilt. To use a newer one, `npm i -g @openai/codex` in the sandbox and run it by full path from `npm prefix -g`/bin, since that directory isn't on `exec`'s PATH.
 
 ## Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
 | `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `SyntaxError` before anything runs | Use Node 24 or later for `run.mjs`. |
 | `codex exec --help no longer lists <flag>` | The image's Codex renamed a flag. Check the [Codex releases](https://github.com/openai/codex/releases) and update `args`. |
 | `codex exec never sent CODEX_API_KEY to OpenAI …` | Codex reads a different variable now. Update `PASSTHROUGH` in `run.mjs`. |
@@ -141,4 +141,4 @@ The sandbox runs the Codex CLI in Tenki's default image (codex-cli 0.154.0 as of
 - [Claude Code](../claude-code-sandbox/) and [OpenCode](../opencode-sandbox/): the same pattern with other coding agents
 - [OpenAI Agents SDK](../openai-agents-sdk/)
 - [OpenAI Codex](https://github.com/openai/codex) and [`@openai/codex`](https://www.npmjs.com/package/@openai/codex)
-- [Tenki Sandbox](https://tenki.cloud/products/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
+- [Luxor Sandbox](https://luxor.ai/products/sandbox) and the [Luxor Agent Cloud docs](https://luxor.ai/docs)
