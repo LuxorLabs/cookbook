@@ -7,7 +7,7 @@ const REPO = "https://github.com/sindresorhus/yocto-queue";
 const PORT = 4096;
 const PASSWORD = randomBytes(24).toString("hex"); // this URL is public; see the note below
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // enableOpenCode bakes the CLI into the guest — nothing to npm install.
 // No `await using` here: it would terminate the sandbox at the end of this scope and the
@@ -21,7 +21,7 @@ const sandbox = await luxor.createAndWait({
 	allowInbound: true,
 	cloneRepoUrl: REPO,
 	maxDurationMs: 2 * 60 * 60_000,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 }).catch(async (e) => {
 	if (e instanceof WaitReadyFailedError) await e.session[Symbol.asyncDispose]();
 	throw e;

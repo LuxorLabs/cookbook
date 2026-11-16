@@ -11,7 +11,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Help me move my Modal sandbox code to Luxor Agent Cloud, using the guide at https://github.com/LuxorLabs/cookbook/tree/main/examples/modal-to-luxor-migration.
 1. Clone https://github.com/LuxorLabs/cookbook and cd into examples/modal-to-luxor-migration. Create a Python 3.10+ virtualenv and install requirements.txt.
-2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run .venv/bin/python run.py and confirm it prints "42 · exit 0", then run node verify.mjs.
 4. Read the API map and "Other differences" in that README.md. Then find every Modal sandbox call in my project and port it to the tenki SDK: drop modal.App, replace stdout.read()/wait() with the finished result's stdout_text/exit_code (or sb.start() where I stream output), switch file calls to relative paths with (path, data) order, and replace idle_timeout with max_duration.
 5. Show me the diff before you change anything you're unsure about.
@@ -30,16 +30,16 @@ You need:
 git clone https://github.com/LuxorLabs/cookbook.git
 cd cookbook/examples/modal-to-luxor-migration
 uv venv --python 3.12                      # or: python3.11 -m venv .venv
-uv pip install -r requirements.txt         # tenki>=1.4.1
+uv pip install -r requirements.txt         # tenki>=1.5.2
 ```
 
 ### 2. Set your API key
 
 ```bash
-export TENKI_API_KEY=tk_...
+export LUXORAI_API_KEY=tk_...
 ```
 
-Or run `luxor login --api-key <key>`. The SDK reads `TENKI_AUTH_TOKEN` and `TENKI_API_KEY` itself but not the CLI's `~/.config/luxor/config.yaml`; `run.py` and `verify.py` read that file with a small `cfg()` helper. Keep a helper like it in your port if you rely on `luxor login`.
+Or run `luxor login --api-key <key>`. The SDK reads `LUXORAI_AUTH_TOKEN` and `LUXORAI_API_KEY` itself but not the CLI's `~/.config/luxor/config.yaml`; `run.py` and `verify.py` read that file with a small `cfg()` helper. Keep a helper like it in your port if you rely on `luxor login`.
 
 ### 3. Run the port
 
@@ -81,10 +81,10 @@ Luxor Agent Cloud, the end of `run.py`:
 ```python
 # Modal reads ~/.modal.toml (or MODAL_TOKEN_ID / MODAL_TOKEN_SECRET) implicitly.
 # Luxor Agent Cloud takes an explicit tk_ API key, here from env (CI) or the CLI's config (local).
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 if workspace_id:
     opts["workspace_id"] = workspace_id
 
@@ -107,7 +107,7 @@ Luxor Agent Cloud has no `App` object. A sandbox goes into the workspace your ke
 | --- | --- | --- |
 | Install | `pip install modal` | `pip install tenki` |
 | Import | `import modal` | `from tenki import Sandbox` (also `Client`) |
-| Auth | `modal token new` (`~/.modal.toml`), or `MODAL_TOKEN_ID` + `MODAL_TOKEN_SECRET` | `tk_` key in `TENKI_API_KEY` or `TENKI_AUTH_TOKEN`, or `Sandbox.create(auth_token=…)` |
+| Auth | `modal token new` (`~/.modal.toml`), or `MODAL_TOKEN_ID` + `MODAL_TOKEN_SECRET` | `tk_` key in `LUXORAI_API_KEY` or `LUXORAI_AUTH_TOKEN`, or `Sandbox.create(auth_token=…)` |
 | App handle | `modal.App.lookup("name", create_if_missing=True)` | None. `workspace_id=…` is optional. |
 | Create | `modal.Sandbox.create(app=app)` | `Sandbox.create(auth_token=…, cpu_cores=1, memory_mb=1024)` |
 | Run a command | `p = sb.exec("python", "-c", "…")` (live process) | `r = sb.exec("python3", "-c", "…")` (finished result) |
@@ -166,7 +166,7 @@ To read output while a command runs, use `sb.start(...)`, which returns a live p
 
 | Problem | Fix |
 | --- | --- |
-| ``No API key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.`` or `missing auth token` | Export `TENKI_API_KEY` or run `luxor login --api-key <key>`. |
+| ``No API key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.`` or `missing auth token` | Export `LUXORAI_API_KEY` or run `luxor login --api-key <key>`. |
 | `invalid auth token: expected an API key or service token starting with tk_` | That's not a Luxor Agent Cloud key (perhaps a Modal token ID). Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `permission_denied … path outside workdir` from `sb.fs` | Modal takes absolute paths; Luxor Agent Cloud SDK file calls need paths under `/home/tenki`. Use a relative path. |
 | `$HOME`, a pipe, or `&&` comes through literally | Wrap the command: `sb.exec("sh", "-c", "…")`. |

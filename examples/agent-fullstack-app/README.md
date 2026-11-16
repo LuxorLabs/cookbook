@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "Run a full-stack app" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/agent-fullstack-app, and run npm install (Node.js 20 or later).
-2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run node run.mjs from that directory. Give me the preview URL it prints and the "terminate now:" command, and remind me the sandbox runs until I terminate it or for 2 hours.
 4. Run node verify.mjs and confirm the ✓ line.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -34,10 +34,10 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -76,7 +76,7 @@ const sandbox = await luxor.createAndWait({
   memoryMb: 1024,
   allowInbound: true,
   maxDurationMs: 2 * 60 * 60_000,
-  workspaceId: process.env.TENKI_WORKSPACE_ID,
+  workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 ```
 
@@ -145,7 +145,7 @@ Each step has a matching Luxor Agent Cloud MCP tool:
 Add the server to Claude Code ([tenki-mcp README](https://github.com/LuxorLabs/tenki-mcp)):
 
 ```bash
-claude mcp add luxor --env TENKI_API_KEY=tk_your_key_here -- npx -y @luxorai/mcp
+claude mcp add luxor --env LUXORAI_API_KEY=tk_your_key_here -- npx -y @luxorai/mcp
 ```
 
 The local server needs Node 22 or later. For Claude Desktop and Cursor, see [MCP server](../mcp-luxor-sandbox/).
@@ -156,8 +156,8 @@ The local server needs Node 22 or later. For Claude Desktop and Cursor, see [MCP
 
 | Error | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `ENOENT: no such file or directory, open 'app/server.py'` | Run `run.mjs` from `examples/agent-fullstack-app`. |
 | `permission_denied … path outside workdir` | Keep SDK file paths under `/home/tenki`, or write with `exec`. |

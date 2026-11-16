@@ -16,13 +16,13 @@ const cfg = (key) => {
 	}
 };
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || cfg("auth_token") });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN || cfg("auth_token") });
 
 // One sandbox for the whole agent session, reused across every tool call.
 const sandbox = await luxor.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
-	workspaceId: process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id"),
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id"),
 });
 
 try {

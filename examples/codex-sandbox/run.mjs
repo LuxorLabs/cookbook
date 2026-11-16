@@ -7,14 +7,14 @@ const TASK = "Add a toArray() method to the Queue class in index.js that returns
 // codex exec reads its key from CODEX_API_KEY and ignores OPENAI_API_KEY.
 const PASSTHROUGH = ["CODEX_API_KEY"];
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // cloneRepoUrl checks the repo out to ./repo before createAndWait resolves.
 await using sandbox = await luxor.createAndWait({
 	cpuCores: 2,
 	memoryMb: 4096,
 	cloneRepoUrl: REPO,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 // The default image ships the Codex CLI on PATH, so there is nothing to install.

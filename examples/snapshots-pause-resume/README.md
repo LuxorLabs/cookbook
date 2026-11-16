@@ -10,7 +10,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 Set up the Luxor Agent Cloud "Pause, snapshot, and resume" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo and cd into examples/snapshots-pause-resume.
 2. Check that Node.js is 24 or later, then run npm install.
-3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 4. Run node run.mjs and confirm it prints "resumed -> still here after the pause" (the pause takes about 20 seconds), then run node verify.mjs.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
 Then show me how to pause a sandbox in one process and resume it later from another, waiting for PAUSED first.
@@ -34,10 +34,10 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -140,8 +140,8 @@ Snapshots don't restore volume attachments, so re-attach volumes yourself. The S
 | Problem | Fix |
 | --- | --- |
 | `SyntaxError` at `await using sandbox` | Use Node 24 or later, or run `verify.mjs`. |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `✗ expected PAUSED, got PAUSING` (or `RUNNING`/`RESUMING`) | `verify.mjs` waits about 20 seconds, close to the pause time. Run it again. In your code, use `waitPaused()`/`waitResumed()`. |
 | An old paused sandbox won't resume | Its snapshot expired. Set a longer `pauseRetentionMs` at create time. |

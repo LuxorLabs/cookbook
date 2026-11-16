@@ -11,7 +11,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "Vercel AI SDK" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/vercel-ai-sdk, check that Node.js is 22 or later, and run npm install.
-2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for example.mjs, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for example.mjs, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (no model call), then node example.mjs.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
 Then add luxor-sandbox.mjs to my own AI SDK project: pass createLuxorSandbox()'s sandbox as experimental_sandbox, read it in my tools' execute, and dispose it in a finally block. Ask me whether the sandbox needs outbound network.
@@ -33,16 +33,16 @@ cd cookbook/examples/vercel-ai-sdk
 npm install
 ```
 
-This installs `ai` 7, `@ai-sdk/openai` 4, `@luxorai/sandbox` 1.4.1 or later, and `zod`. `ai` 6 and earlier have no `experimental_sandbox`.
+This installs `ai` 7, `@ai-sdk/openai` 4, `@luxorai/sandbox` 1.5.2 or later, and `zod`. `ai` 6 and earlier have no `experimental_sandbox`.
 
 ### 2. Set your keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...
+export LUXORAI_AUTH_TOKEN=tk_...
 export OPENAI_API_KEY=sk-...
 ```
 
-`createLuxorSandbox()` uses the first key it finds: its `authToken` option, `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, then the key saved by `luxor login --api-key <key>`. For a specific workspace, pass `workspaceId` or set `TENKI_WORKSPACE_ID`.
+`createLuxorSandbox()` uses the first key it finds: its `authToken` option, `LUXORAI_AUTH_TOKEN`, `LUXORAI_API_KEY`, then the key saved by `luxor login --api-key <key>`. For a specific workspace, pass `workspaceId` or set `LUXORAI_WORKSPACE_ID`.
 
 ### 3. Run
 
@@ -159,9 +159,9 @@ To use another provider, install its AI SDK package and swap `openai("gpt-4o-min
 
 ```js
 export async function createLuxorSandbox(options = {}) {
-  const authToken = options.authToken || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+  const authToken = options.authToken || process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
   const workspaceId = options.workspaceId || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
-  if (!authToken) throw new Error("No Luxor Agent Cloud token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
+  if (!authToken) throw new Error("No Luxor Agent Cloud token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 
   const client = new LuxorSandbox({ authToken });
   const session = await client.createAndWait({
@@ -185,8 +185,8 @@ The adapter sets no lifetime cap, and Luxor sandboxes don't pause when idle, so 
 
 | Problem | Fix |
 | --- | --- |
-| ``No Luxor Agent Cloud token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | Export `TENKI_AUTH_TOKEN` or run `luxor login --api-key <key>`. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Use a `tk_` key from [app.luxor.ai](https://app.luxor.ai). A stale `TENKI_AUTH_TOKEN` hides a good `TENKI_API_KEY`. |
+| ``No Luxor Agent Cloud token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | Export `LUXORAI_AUTH_TOKEN` or run `luxor login --api-key <key>`. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Use a `tk_` key from [app.luxor.ai](https://app.luxor.ai). A stale `LUXORAI_AUTH_TOKEN` hides a good `LUXORAI_API_KEY`. |
 | `OpenAI API key is missing` | Export `OPENAI_API_KEY`. The sandbox is already disposed by the `finally` block. |
 | `pip install` or a download fails | Pass `createLuxorSandbox({ allowOutbound: true })`. Network can't be turned on after create. |
 | `permission_denied … path outside workdir` | Use a relative path under `/home/tenki`. |

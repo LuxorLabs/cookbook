@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example — OpenHermit agents on Luxor sandboxes: the sticky-session exec backend, verified.",
   "dependencies": {
-    "@luxorai/sandbox": ">=1.4.1"
+    "@luxorai/sandbox": ">=1.5.2"
   }
 }

@@ -17,9 +17,9 @@ const cfg = (key) => {
 		return "";
 	}
 };
-const token = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+const token = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 if (!token) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
+	console.error("No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 
@@ -31,7 +31,7 @@ try {
 		cpuCores: 1,
 		memoryMb: 1024,
 		allowInbound: true,
-		workspaceId: process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined,
+		workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined,
 	});
 
 	await sandbox.writeFile("server.py", readFileSync(new URL("app/server.py", import.meta.url), "utf8"));

@@ -5,7 +5,7 @@ import { LuxorSandbox } from "@luxorai/sandbox";
 const PORT = 8000;
 const BODY = "Hello from a Luxor sandbox!";
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // allowInbound: true lets the Luxor Agent Cloud gateway route public traffic to the sandbox port.
 // (Outbound isn't needed here — the host does the fetching, not the sandbox.)
@@ -13,7 +13,7 @@ await using sandbox = await luxor.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
 	allowInbound: true,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 // Write a one-file site, then start a detached HTTP server.

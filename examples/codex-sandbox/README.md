@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "Codex" example from https://github.com/LuxorLabs/cookbook, which runs OpenAI Codex headless in a disposable Luxor sandbox and prints the diff.
 1. Clone the repo, cd into examples/codex-sandbox, check that Node.js is 24 or later, and run npm install.
-2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and CODEX_API_KEY (an OpenAI key; if only OPENAI_API_KEY is set, export CODEX_API_KEY=$OPENAI_API_KEY). If a key is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and CODEX_API_KEY (an OpenAI key; if only OPENAI_API_KEY is set, export CODEX_API_KEY=$OPENAI_API_KEY). If a key is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (no model turn), then node run.mjs, and show me the diff.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
 Then ask me which repo and task I want instead, change REPO and TASK in run.mjs, and run it again.
@@ -34,13 +34,13 @@ npm install
 ### 2. Set your keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 export CODEX_API_KEY=sk-...      # an OpenAI API key
 ```
 
 `codex exec` reads `CODEX_API_KEY` and ignores `OPENAI_API_KEY`. If your key is in `OPENAI_API_KEY`, run `export CODEX_API_KEY=$OPENAI_API_KEY`.
 
-`run.mjs` reads the Luxor Agent Cloud key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the Luxor Agent Cloud key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Verify
 
@@ -78,14 +78,14 @@ const TASK = "Add a toArray() method to the Queue class in index.js that returns
 // codex exec reads its key from CODEX_API_KEY and ignores OPENAI_API_KEY.
 const PASSTHROUGH = ["CODEX_API_KEY"];
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // cloneRepoUrl checks the repo out to ./repo before createAndWait resolves.
 await using sandbox = await luxor.createAndWait({
   cpuCores: 2,
   memoryMb: 4096,
   cloneRepoUrl: REPO,
-  workspaceId: process.env.TENKI_WORKSPACE_ID,
+  workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 // The default image ships the Codex CLI on PATH, so there is nothing to install.
@@ -128,8 +128,8 @@ The sandbox runs the Codex CLI in Luxor Agent Cloud's default image (codex-cli 0
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `SyntaxError` before anything runs | Use Node 24 or later for `run.mjs`. |
 | `codex exec --help no longer lists <flag>` | The image's Codex renamed a flag. Check the [Codex releases](https://github.com/openai/codex/releases) and update `args`. |

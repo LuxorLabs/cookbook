@@ -181,7 +181,7 @@ Origin reviews appear on the **Reviews** tab of Code Reviewer alongside GitHub r
 
 `verify.mjs` checks the files this example ships, without Origin or a review. It confirms `AGENTS.md` has the membership rule and that `pr/app.mjs` differs from the starter only by the new route. Then, in a Luxor sandbox, it runs the tests at each stage and requests acme's totals as `gus`: 404 on main (no route), 200 on the PR (the leak), 403 after the fix.
 
-It needs a Luxor Agent Cloud API key (`tk_...`) in `TENKI_AUTH_TOKEN` or `TENKI_API_KEY`, or saved with `luxor login --api-key <key>`. The reviewer itself does not use a key.
+It needs a Luxor Agent Cloud API key (`tk_...`) in `LUXORAI_AUTH_TOKEN` or `LUXORAI_API_KEY`, or saved with `luxor login --api-key <key>`. The reviewer itself does not use a key.
 
 ```bash
 npm install
@@ -205,7 +205,7 @@ node verify.mjs
 | The link from Cursor to Luxor Agent Cloud expired | It lasts 2 hours. Start the install again. |
 | "Installed by a different account" | Sign in to Luxor Agent Cloud with your Cursor email and open the link again. |
 | "This workspace already uses Cursor Origin" | Disconnect the current namespace under **Connections**, or pick another workspace. |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
 | `✗ AGENTS.md is missing …` or `✗ <stage>: non-member read …` | `starter/` or `pr/` was edited. Run `git restore starter pr`. |
 
 ## Clean up

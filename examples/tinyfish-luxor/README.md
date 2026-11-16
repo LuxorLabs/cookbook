@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "TinyFish" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/tinyfish-luxor, check that Node.js is 24 or later, and run npm install.
-2. It needs TENKI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and TINYFISH_API_KEY (from https://agent.tinyfish.ai/api-keys). If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and TINYFISH_API_KEY (from https://agent.tinyfish.ai/api-keys). If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node run.mjs and confirm the fetch, search, and browser lines, then run node verify.mjs.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
 Then ask me which site and data I want, and change tinyfish.mjs to get it with the TinyFish agent API or the remote browser.
@@ -36,11 +36,11 @@ This installs only `@luxorai/sandbox` locally.
 ### 2. Set your keys
 
 ```bash
-export TENKI_API_KEY=tk_...
+export LUXORAI_API_KEY=tk_...
 export TINYFISH_API_KEY=sk-tinyfish-...
 ```
 
-`run.mjs` reads the Luxor Agent Cloud key from the environment only (`TENKI_API_KEY` or `TENKI_AUTH_TOKEN`). `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`.
+`run.mjs` reads the Luxor Agent Cloud key from the environment only (`LUXORAI_API_KEY` or `LUXORAI_AUTH_TOKEN`). `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`.
 
 ### 3. Run
 
@@ -77,7 +77,7 @@ import { readFileSync } from "node:fs";
 
 if (!process.env.TINYFISH_API_KEY) throw new Error("Set TINYFISH_API_KEY");
 
-const luxor = new LuxorSandbox(); // reads TENKI_API_KEY
+const luxor = new LuxorSandbox(); // reads LUXORAI_API_KEY
 
 // The key lives in this session's environment only, never in an image or template.
 // tenki/tinyfish:stable restores at 2 vCPU / 4096 MiB; a smaller size is rejected.
@@ -205,9 +205,9 @@ A sandbox with a secret policy can't open WebSockets, so `connectOverCDP` fails 
 | Problem | Fix |
 | --- | --- |
 | `Set TINYFISH_API_KEY` | Export a key from [agent.tinyfish.ai/api-keys](https://agent.tinyfish.ai/api-keys). |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export your `tk_` key. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export your `tk_` key. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
-| ``No token. Set TENKI_API_KEY, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| ``No token. Set LUXORAI_API_KEY, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
 | `SyntaxError` at `await using` | Use Node 24, or run `verify.mjs` with `TINYFISH_API_KEY` set. |
 | `snapshot restores with 2 vCPU / 4096 MiB` | Request at least 2 cores and 4096 MiB. |
 | `✗ tinyfish --version: …` | The sandbox didn't boot from `tenki/tinyfish:stable`. Check `image`. |

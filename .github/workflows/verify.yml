@@ -27,6 +27,8 @@ jobs:
           go-version-file: examples/ragflow-luxor/go.mod
       - name: Install + verify each example against Luxor Agent Cloud
         env:
+          # The SDKs read LUXORAI_* first; plugins built on other projects still read TENKI_*.
+          LUXORAI_API_KEY: ${{ secrets.TENKI_API_KEY }}
           TENKI_API_KEY: ${{ secrets.TENKI_API_KEY }}
           # Third-party keys some examples need. Unset → that example is skipped,
           # not failed (see .verify-requires below).

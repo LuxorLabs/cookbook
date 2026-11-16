@@ -24,7 +24,7 @@ def cfg(key):
 
 
 opts = {"cpu_cores": 1, "memory_mb": 1024}
-workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 if workspace_id:
     opts["workspace_id"] = workspace_id
 

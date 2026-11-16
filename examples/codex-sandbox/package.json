@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example — run OpenAI Codex headless against a real repo in a disposable Luxor sandbox.",
   "dependencies": {
-    "@luxorai/sandbox": ">=1.4.1"
+    "@luxorai/sandbox": ">=1.5.2"
   }
 }

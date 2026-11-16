@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "LangChain (Python)" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/langchain-python, create a .venv there on Python 3.10 or later (uv venv --python 3.12 if uv is installed), and install requirements.txt.
-2. It needs TENKI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (no model call, expects 55), then .venv/bin/python agent.py.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
 Then add luxor_tool.py to my own LangChain agent: one sandbox per session in a with block, make_code_tool(sandbox) in the tools list, and a timeout on exec.
@@ -39,11 +39,11 @@ Without uv: `python3.12 -m venv .venv && .venv/bin/pip install -r requirements.t
 ### 2. Set your keys
 
 ```bash
-export TENKI_API_KEY=tk_...
+export LUXORAI_API_KEY=tk_...
 export OPENAI_API_KEY=sk-...
 ```
 
-Both scripts check `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+Both scripts check `LUXORAI_AUTH_TOKEN`, then `LUXORAI_API_KEY`, then a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run the agent
 
@@ -71,10 +71,10 @@ The part of `agent.py` that builds the sandbox and the agent:
 
 ```python
 # A tk_ API key, from env or ~/.config/luxor/config.yaml (`luxor login --api-key`).
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 if workspace_id:
     opts["workspace_id"] = workspace_id
 
@@ -130,7 +130,7 @@ Things to know:
 
 | Problem | Fix |
 | --- | --- |
-| ``No API key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.`` or `missing auth token` | Export `TENKI_API_KEY` or run `luxor login --api-key <key>`. |
+| ``No API key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.`` or `missing auth token` | Export `LUXORAI_API_KEY` or run `luxor login --api-key <key>`. |
 | `invalid auth token: expected an API key or service token starting with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `ModuleNotFoundError: No module named 'tenki'` from `node verify.mjs` | There's no `.venv` here. Create it as in step 1, or set `PYTHON`. |
 | `✗ AssertionError: tool returned '…'` | The quoted text is the sandbox's output. Read it for the error. |

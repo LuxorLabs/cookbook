@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "LlamaIndex" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/llamaindex, create a .venv there on Python 3.10 or later (uv venv --python 3.12 .venv if uv is installed), and install requirements.txt.
-2. It needs TENKI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (no model call, expects 55), then .venv/bin/python agent.py.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
 Then add luxor_tool.py to my own LlamaIndex agent: one sandbox per session in a with block, and make_code_tool(sandbox) in the agent's tools.
@@ -39,11 +39,11 @@ Without uv: `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
 ### 2. Set your keys
 
 ```bash
-export TENKI_API_KEY=tk_...
+export LUXORAI_API_KEY=tk_...
 export OPENAI_API_KEY=sk-...
 ```
 
-Both scripts check `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+Both scripts check `LUXORAI_AUTH_TOKEN`, then `LUXORAI_API_KEY`, then a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run the agent
 
@@ -135,9 +135,9 @@ Things to know:
 
 | Problem | Fix |
 | --- | --- |
-| ``No API key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.`` | Export `TENKI_API_KEY` or run `luxor login --api-key <key>`. |
+| ``No API key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.`` | Export `LUXORAI_API_KEY` or run `luxor login --api-key <key>`. |
 | `ModuleNotFoundError: No module named 'tenki'` from `node verify.mjs` | There's no `.venv` here. Create it as in step 1, or set `PYTHON`. |
-| `tenki>=1.4.1` won't resolve | Your venv's Python is older than 3.10. Recreate it with `uv venv --clear --python 3.12 .venv`. |
+| `tenki>=1.5.2` won't resolve | Your venv's Python is older than 3.10. Recreate it with `uv venv --clear --python 3.12 .venv`. |
 | OpenAI API key error from `agent.py` | Export `OPENAI_API_KEY`, or swap in another LLM. |
 | `permission_denied … path outside workdir` | Use a relative path, or one under `/home/tenki`. |
 

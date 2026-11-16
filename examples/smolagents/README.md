@@ -11,7 +11,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "Hugging Face smolagents" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/smolagents, create a .venv there on Python 3.10 or later (uv venv --python 3.12 if uv is installed), and install requirements.txt. If I'm using OpenAI, also install 'smolagents[openai]'.
-2. It needs TENKI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for agent.py, either OPENAI_API_KEY or HF_TOKEN. If they're missing, stop and ask me to export them. Never print the keys or write them to a file.
+2. It needs LUXORAI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for agent.py, either OPENAI_API_KEY or HF_TOKEN. If they're missing, stop and ask me to export them. Never print the keys or write them to a file.
 3. Run node verify.mjs first (no model call), then .venv/bin/python agent.py.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
 Then wire luxor_executor.py into my own CodeAgent with executor=LuxorExecutor(...), keep outbound network on, and make sure executor.cleanup() always runs.
@@ -42,11 +42,11 @@ Without uv: `python3.11 -m venv .venv && .venv/bin/pip install -r requirements.t
 ### 2. Set your keys
 
 ```bash
-export TENKI_API_KEY=tk_...
+export LUXORAI_API_KEY=tk_...
 export OPENAI_API_KEY=sk-...    # or: export HF_TOKEN=hf_...
 ```
 
-Both scripts check `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+Both scripts check `LUXORAI_AUTH_TOKEN`, then `LUXORAI_API_KEY`, then a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 `agent.py` picks the model from the keys it finds:
 
@@ -86,7 +86,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
 
 ## Use it in your agent
 
-1. Copy `luxor_executor.py` and add `tenki>=1.4.1` and `smolagents>=1.25.0` to your dependencies.
+1. Copy `luxor_executor.py` and add `tenki>=1.5.2` and `smolagents>=1.25.0` to your dependencies.
 2. Build a `LuxorExecutor` with `additional_imports`, an `AgentLogger`, and keyword arguments for `Sandbox.create(...)`:
 
    ```python
@@ -94,7 +94,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
    # then pip-installs that tool's inferred requirements (numpy, pillow) into the
    # sandbox at send_tools time — which needs outbound network.
    opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024, "allow_outbound": True}
-   workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+   workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
    if workspace_id:
        opts["workspace_id"] = workspace_id
    ```
@@ -176,7 +176,7 @@ The step itself:
 
 | Problem | Fix |
 | --- | --- |
-| ``No API key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.`` | Export `TENKI_API_KEY` or run `luxor login --api-key <key>`. |
+| ``No API key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.`` | Export `LUXORAI_API_KEY` or run `luxor login --api-key <key>`. |
 | `ValueError: Unsupported executor type: tenki` | Pass `executor=LuxorExecutor(...)`, not `executor_type="tenki"`. |
 | ``ModuleNotFoundError: Please install 'openai' extra …`` | Run `uv pip install 'smolagents[openai]'`. |
 | `pip install failed (exit N). Create the sandbox with allow_outbound=True …` | Keep `allow_outbound=True`. If the network isn't the cause, pip's output follows the message. |

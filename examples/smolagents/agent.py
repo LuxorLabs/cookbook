@@ -27,13 +27,13 @@ def cfg(key):
 
 
 # A tk_ API key, from env or ~/.config/luxor/config.yaml (`luxor login --api-key`).
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 
 # allow_outbound=True: CodeAgent patches its final_answer tool, and smolagents
 # then pip-installs that tool's inferred requirements (numpy, pillow) into the
 # sandbox at send_tools time — which needs outbound network.
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024, "allow_outbound": True}
-workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 if workspace_id:
     opts["workspace_id"] = workspace_id
 

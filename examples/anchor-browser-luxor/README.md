@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Run the Anchor Browser on Luxor Agent Cloud example, following https://github.com/LuxorLabs/cookbook/tree/main/examples/anchor-browser-luxor.
 1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/anchor-browser-luxor, check that Node.js is 24 or later, and run npm install.
-2. It needs TENKI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and ANCHOR_API_KEY (from https://app.anchorbrowser.io/api-keys) exported in the shell. If either isn't set, stop and ask me to export it. Never print a key or write it to a file.
+2. It needs LUXORAI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and ANCHOR_API_KEY (from https://app.anchorbrowser.io/api-keys) exported in the shell. If either isn't set, stop and ask me to export it. Never print a key or write it to a file.
 3. Run node run.mjs and confirm it prints the Example Domain title, then run node verify.mjs and confirm the ✓ line.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
 ```
@@ -30,12 +30,12 @@ cd cookbook/examples/anchor-browser-luxor
 npm install
 ```
 
-This installs `@luxorai/sandbox` (`>=1.4.1`) only. `playwright-core` comes from the image.
+This installs `@luxorai/sandbox` (`>=1.5.2`) only. `playwright-core` comes from the image.
 
 ### 2. Set your API keys
 
 ```bash
-export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
+export LUXORAI_API_KEY=tk_...   # LUXORAI_AUTH_TOKEN also works
 export ANCHOR_API_KEY=...
 ```
 
@@ -77,7 +77,7 @@ import { readFileSync } from "node:fs";
 const anchorKey = process.env.ANCHOR_API_KEY;
 if (!anchorKey) throw new Error("Set ANCHOR_API_KEY");
 
-const luxor = new LuxorSandbox(); // reads TENKI_API_KEY or TENKI_AUTH_TOKEN
+const luxor = new LuxorSandbox(); // reads LUXORAI_API_KEY or LUXORAI_AUTH_TOKEN
 
 // tenki/anchor:stable is the base image plus playwright-core and anchor-smoke: no browser, no key.
 // No cpuCores / memoryMb: the image restores from a snapshot at its own size (2 vCPU, 4 GiB), and a
@@ -175,8 +175,8 @@ The request body in `anchor.mjs` is where Anchor's options go. With only the tim
 | Problem | Fix |
 | --- | --- |
 | `Set ANCHOR_API_KEY` | Export a key from [app.anchorbrowser.io/api-keys](https://app.anchorbrowser.io/api-keys). |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY …` from `run.mjs` | `run.mjs` doesn't read `luxor login`. Export your `tk_` key. |
-| ``No token. Set TENKI_API_KEY, or run `luxor login`.`` | `verify.mjs` found no Luxor Agent Cloud key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY …` from `run.mjs` | `run.mjs` doesn't read `luxor login`. Export your `tk_` key. |
+| ``No token. Set LUXORAI_API_KEY, or run `luxor login`.`` | `verify.mjs` found no Luxor Agent Cloud key. Export one or run `luxor login --api-key <key>`. |
 | `SyntaxError` at `await using` | Use Node 24, or run `node verify.mjs` with `ANCHOR_API_KEY` set. |
 | `Anchor returned HTTP 401: {"error":"Invalid API Key"}` | Check `ANCHOR_API_KEY` in this shell. |
 | `Anchor returned HTTP 429: …` | Anchor's session rate limit. Wait and retry, or check your plan. |

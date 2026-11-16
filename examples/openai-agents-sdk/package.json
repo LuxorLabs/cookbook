@@ -5,7 +5,7 @@
   "description": "Cookbook example — an OpenAI Agents SDK agent that runs code in a Luxor sandbox.",
   "dependencies": {
     "@openai/agents": "^0.13.5",
-    "@luxorai/sandbox": ">=1.4.1",
+    "@luxorai/sandbox": ">=1.5.2",
     "zod": "^4.4.3"
   }
 }

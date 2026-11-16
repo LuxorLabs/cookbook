@@ -8,13 +8,13 @@
 import { LuxorSandbox, stdoutText } from "@luxorai/sandbox";
 
 // E2B: auth is implicit via E2B_API_KEY. Luxor Agent Cloud: pass the token explicitly.
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // E2B: Sandbox.create(). Luxor Agent Cloud: createAndWait() boots the sandbox and waits until it's ready.
 const sandbox = await luxor.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 try {

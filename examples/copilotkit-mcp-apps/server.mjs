@@ -203,5 +203,5 @@ app.listen(PORT, HOST, (err) => {
 		process.exit(1);
 	}
 	console.log(`MCP App server on ${BASE}/mcp — sandboxes under ${APP_DIR}`);
-	if (!hasToken) console.error("No Luxor Agent Cloud token: set TENKI_AUTH_TOKEN or run `luxor login`. Tool calls will fail until you do.");
+	if (!hasToken) console.error("No Luxor Agent Cloud token: set LUXORAI_AUTH_TOKEN or run `luxor login`. Tool calls will fail until you do.");
 });

@@ -19,7 +19,7 @@ This is the examples/cookbook layer for Luxor Agent Cloud, and this is your play
 **Every example runs on Luxor Agent Cloud and proves it in CI.** A public example that doesn't work damages the brand more than a missing one helps.
 
 - Each example ships a **`verify.mjs`** that exercises it against the live Luxor Agent Cloud API and **exits non-zero on any failure**.
-- CI (`.github/workflows/verify.yml`) runs every `verify.mjs` with a `TENKI_API_KEY` secret. A red build blocks the merge.
+- CI (`.github/workflows/verify.yml`) runs every `verify.mjs` with the `TENKI_API_KEY` secret, exported as both `LUXORAI_API_KEY` and `TENKI_API_KEY`. A red build blocks the merge.
 - `verify.mjs` proves the *sandbox-facing* part. If an example needs an LLM (an agent turn), verify the tool/backend against Luxor Agent Cloud directly — don't require a model key in CI. (See `langchain-code-interpreter` for the pattern.)
 
 ## What to build
@@ -36,7 +36,7 @@ examples/<name>/
   <code>           # the example itself (a script, agent/, tool + agent, …)
 ```
 
-`verify.mjs` reads the token from `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` (CI) or `~/.config/luxor/config.yaml` (local), drives the sandbox-facing code, asserts the result, and cleans up any sandbox it created. Keep it under ~60 lines. Copy one from a shipped example.
+`verify.mjs` reads the token from `LUXORAI_AUTH_TOKEN` / `LUXORAI_API_KEY`, then the old `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` (CI sets both), or `~/.config/luxor/config.yaml` (local), drives the sandbox-facing code, asserts the result, and cleans up any sandbox it created. Keep it under ~60 lines. Copy one from a shipped example.
 
 **Which template to copy:**
 - Direct SDK use → **`run-code-in-a-sandbox`**

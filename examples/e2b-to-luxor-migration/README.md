@@ -11,7 +11,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Help me move my E2B sandbox code to Luxor Agent Cloud, using the guide at https://github.com/LuxorLabs/cookbook/tree/main/examples/e2b-to-luxor-migration.
 1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/e2b-to-luxor-migration, and run npm install (Node.js 20 or later).
-2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run node run.mjs and confirm it prints "hello from luxor · exit 0", then run node verify.mjs.
 4. Read the API map and "Other differences" in that README.md. Then find every E2B call in my project and port it to @luxorai/sandbox. Wrap any command string that relies on a shell (pipes, &&, globs, $VARS) in sh -c, decode stdout/stderr with stdoutText/stderrText, check exitCode instead of catching CommandExitError, and make sure every sandbox is closed.
 5. Show me the diff before you change anything you're unsure about.
@@ -32,15 +32,15 @@ cd cookbook/examples/e2b-to-luxor-migration
 npm install
 ```
 
-This installs `@luxorai/sandbox` 1.4.1 or later. It does not install `e2b`; the E2B code here is for comparison.
+This installs `@luxorai/sandbox` 1.5.2 or later. It does not install `e2b`; the E2B code here is for comparison.
 
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run the port
 
@@ -79,13 +79,13 @@ The characters in parentheses start your sandbox's ID. `verify.mjs` runs `echo h
 import { LuxorSandbox, stdoutText } from "@luxorai/sandbox";
 
 // E2B: auth is implicit via E2B_API_KEY. Luxor Agent Cloud: pass the token explicitly.
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // E2B: Sandbox.create(). Luxor Agent Cloud: createAndWait() boots the sandbox and waits until it's ready.
 const sandbox = await luxor.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
-  workspaceId: process.env.TENKI_WORKSPACE_ID,
+  workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 try {
@@ -109,7 +109,7 @@ The E2B column matches the `e2b` 2.56.0 JavaScript SDK.
 | --- | --- | --- |
 | Install | `npm i e2b` | `npm i @luxorai/sandbox` |
 | Import | `import { Sandbox } from "e2b"` | `import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox"` |
-| Auth | `E2B_API_KEY`, read implicitly | `new LuxorSandbox({ authToken })`; without it, the SDK reads `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY` |
+| Auth | `E2B_API_KEY`, read implicitly | `new LuxorSandbox({ authToken })`; without it, the SDK reads `LUXORAI_AUTH_TOKEN`, then `LUXORAI_API_KEY` |
 | Create | `await Sandbox.create()` | `await luxor.createAndWait({ cpuCores, memoryMb })` (`workspaceId` optional) |
 | Run a command | `await sandbox.commands.run("ls -la")` (shell) | `await sandbox.exec("ls", { args: ["-la"] })` (no shell) |
 | stdout / stderr | `r.stdout` / `r.stderr` (strings) | `stdoutText(r)` / `stderrText(r)` (decode bytes) |
@@ -151,8 +151,8 @@ await sandbox.exec("python3", { args: ["-c", "print(6 * 7)"] });
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `TypeError: r.stdout.trim is not a function` | Decode with `stdoutText(r)`. |
 | A ported shell command doesn't run | Wrap it: `sandbox.exec("sh", { args: ["-c", "<command>"] })`. |

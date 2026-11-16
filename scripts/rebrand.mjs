@@ -44,7 +44,7 @@ function scan(src, from, to, lang, cat) {
 }
 
 // One category per character: "text" (Markdown prose), "comment", "string", or "code".
-function categories(file, src) {
+export function categories(file, src) {
 	const cat = new Array(src.length).fill("code");
 	const ext = extname(file).toLowerCase();
 	const mark = (from, to, c) => { for (let i = from; i < to; i++) cat[i] = c; };

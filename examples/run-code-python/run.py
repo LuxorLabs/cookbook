@@ -3,7 +3,7 @@ Run code in a disposable Luxor sandbox: boot -> exec -> print -> dispose.
 The core Luxor Agent Cloud loop, with the official `tenki` Python SDK.
 
 Needs Python 3.10+ and `pip install tenki`. API key/workspace from env
-(TENKI_API_KEY / TENKI_WORKSPACE_ID) or, if unset,
+(LUXORAI_API_KEY / LUXORAI_WORKSPACE_ID) or, if unset,
 ~/.config/luxor/config.yaml (written by `luxor login --api-key`). Run: python run.py
 """
 import os
@@ -25,10 +25,10 @@ def cfg(key):
 
 # A tk_ API key — the only credential the SDK accepts — from env (CI) or the
 # CLI's config file (local).
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 if workspace_id:
     opts["workspace_id"] = workspace_id
 

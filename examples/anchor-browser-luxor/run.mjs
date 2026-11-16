@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 const anchorKey = process.env.ANCHOR_API_KEY;
 if (!anchorKey) throw new Error("Set ANCHOR_API_KEY");
 
-const luxor = new LuxorSandbox(); // reads TENKI_API_KEY or TENKI_AUTH_TOKEN
+const luxor = new LuxorSandbox(); // reads LUXORAI_API_KEY or LUXORAI_AUTH_TOKEN
 
 // tenki/anchor:stable is the base image plus playwright-core and anchor-smoke: no browser, no key.
 // No cpuCores / memoryMb: the image restores from a snapshot at its own size (2 vCPU, 4 GiB), and a

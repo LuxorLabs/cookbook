@@ -10,7 +10,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 Set up the Luxor Agent Cloud "Work with files" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo and cd into examples/files-in-a-sandbox.
 2. Check that Node.js is 24 or later, then run npm install.
-3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 4. Run node run.mjs and confirm it reads back "hello from luxor" and lists notes.txt, then run node verify.mjs.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
 Then show me how to upload a local file into the sandbox and download a result back.
@@ -34,10 +34,10 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -109,8 +109,8 @@ Things to know:
 | Error | Fix |
 | --- | --- |
 | `SyntaxError: Unexpected identifier 'sandbox'` from `run.mjs` | Use Node 24 or later. |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export `TENKI_AUTH_TOKEN` or `TENKI_API_KEY`. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export `LUXORAI_AUTH_TOKEN` or `LUXORAI_API_KEY`. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `permission_denied … path outside workdir` | Use a path under `/home/tenki`, or write it with a shell command through `exec`. |
 | `TypeError: Cannot mix BigInt and other types` | Convert `FileInfo.size` with `Number()` first. |

@@ -24,8 +24,8 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Add the Luxor Agent Cloud MCP server to this coding agent so you can run code in Luxor sandboxes, following https://github.com/LuxorLabs/cookbook/tree/main/examples/mcp-luxor-sandbox.
 1. Check that Node.js is 22 or later.
-2. I need a Luxor Agent Cloud API key (starts with tk_). If TENKI_API_KEY isn't set in my shell, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key.
-3. Register the server the way this client expects. For Claude Code: claude mcp add luxor --env TENKI_API_KEY="$TENKI_API_KEY" -- npx -y @luxorai/mcp. For Cursor or Claude Desktop, add the mcpServers block from the README, and tell me which file you edited, since it will contain my key.
+2. I need a Luxor Agent Cloud API key (starts with tk_). If LUXORAI_API_KEY isn't set in my shell, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key.
+3. Register the server the way this client expects. For Claude Code: claude mcp add luxor --env LUXORAI_API_KEY="$LUXORAI_API_KEY" -- npx -y @luxorai/mcp. For Cursor or Claude Desktop, add the mcpServers block from the README, and tell me which file you edited, since it will contain my key.
 4. Tell me to restart the session, then call tenki_auth_status, then use tenki_run_code to run print(sum(range(100))) in Python and show me the output.
 ```
 
@@ -44,7 +44,7 @@ You need:
 Claude Code:
 
 ```bash
-claude mcp add luxor --env TENKI_API_KEY=tk_your_key_here -- npx -y @luxorai/mcp
+claude mcp add luxor --env LUXORAI_API_KEY=tk_your_key_here -- npx -y @luxorai/mcp
 ```
 
 This registers the server for the current project. Add `--scope user` to register it for every project.
@@ -57,13 +57,13 @@ Claude Desktop (`claude_desktop_config.json`) or Cursor (`.cursor/mcp.json` for 
     "tenki": {
       "command": "npx",
       "args": ["-y", "@luxorai/mcp"],
-      "env": { "TENKI_API_KEY": "tk_your_key_here" }
+      "env": { "LUXORAI_API_KEY": "tk_your_key_here" }
     }
   }
 }
 ```
 
-The server reads its key only from its environment: `TENKI_API_KEY` or `TENKI_AUTH_TOKEN` (which wins if both are set). The [tenki-mcp README](https://github.com/LuxorLabs/tenki-mcp#use-it-in-claude-code) also covers the hosted endpoint, the Claude Code plugin, and Codex.
+The server reads its key only from its environment: `LUXORAI_API_KEY` or `LUXORAI_AUTH_TOKEN` (which wins if both are set). The [tenki-mcp README](https://github.com/LuxorLabs/tenki-mcp#use-it-in-claude-code) also covers the hosted endpoint, the Claude Code plugin, and Codex.
 
 ### 2. Check the connection
 
@@ -87,7 +87,7 @@ The agent calls `tenki_run_code`, which boots a sandbox, runs the snippet, retur
 git clone https://github.com/LuxorLabs/cookbook.git
 cd cookbook/examples/mcp-luxor-sandbox
 npm install
-export TENKI_API_KEY=tk_...      # or: luxor login --api-key <key>
+export LUXORAI_API_KEY=tk_...      # or: luxor login --api-key <key>
 node verify.mjs
 ```
 
@@ -114,7 +114,7 @@ const serverEntry = require.resolve("@luxorai/mcp/dist/index.js"); // the packag
 const transport = new StdioClientTransport({
   command: process.execPath,
   args: [serverEntry],
-  env: { ...process.env, TENKI_API_KEY: token },
+  env: { ...process.env, LUXORAI_API_KEY: token },
 });
 const client = new Client({ name: "cookbook-verify", version: "1.0.0" });
 ```
@@ -134,8 +134,8 @@ const client = new Client({ name: "cookbook-verify", version: "1.0.0" });
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_API_KEY, or run `luxor login`.`` | `verify.mjs` found no key. Export `TENKI_API_KEY` or run `luxor login --api-key <key>`. |
-| The agent sees only `tenki_auth_status` | The server started without a key. Put `TENKI_API_KEY` in the client's `env` block (or `--env`) and restart. The server doesn't read `~/.config/luxor/config.yaml`. |
+| ``No token. Set LUXORAI_API_KEY, or run `luxor login`.`` | `verify.mjs` found no key. Export `LUXORAI_API_KEY` or run `luxor login --api-key <key>`. |
+| The agent sees only `tenki_auth_status` | The server started without a key. Put `LUXORAI_API_KEY` in the client's `env` block (or `--env`) and restart. The server doesn't read `~/.config/luxor/config.yaml`. |
 | No `tenki_*` tools at all | Restart the client or start a new session. |
 | `✗ server did not advertise tenki_create_sandbox` | Unset `TENKI_MCP_READONLY` and `TENKI_MCP_DISABLED_TOOLS` in your shell. |
 | `tenki_run_code skipped`, or `tenki_exec` returns `captureError` with `ok: false` | Your network can't reach the data plane. Run from one that can. |

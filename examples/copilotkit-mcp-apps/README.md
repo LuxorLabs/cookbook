@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Run the CopilotKit MCP Apps example on Luxor Agent Cloud, following https://github.com/LuxorLabs/cookbook/tree/main/examples/copilotkit-mcp-apps.
 1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/copilotkit-mcp-apps, check that Node.js is 20.11 or later, and run npm install.
-2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+2. It needs LUXORAI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
 3. Run node verify.mjs and confirm it prints the ✓ line.
 4. Copy chat/.env.example to chat/.env and ask me to fill in LLM_API_KEY myself. Then start the server with npm start, and in a second terminal run npm install && npm run dev in chat/, and tell me to open http://localhost:3000.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -34,7 +34,7 @@ npm install
 ### 2. Set your API keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY or a `luxor login` key also work
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY or a `luxor login` key also work
 ```
 
 Only the MCP server needs the Luxor Agent Cloud key. The chat never sees it. For the chat, copy its env file:
@@ -271,7 +271,7 @@ export function createAgent(): BuiltInAgent {
 
 | Problem | Fix |
 | --- | --- |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY …` | Export a key or run `luxor login --api-key <key>` before `npm start` or `verify.mjs`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY …` | Export a key or run `luxor login --api-key <key>` before `npm start` or `verify.mjs`. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | The agent answers in text and the chat logs `MCP tool discovery failed` | Start the server with `npm start`, and check `MCP_URL` in `chat/.env`. |
 | `Sandbox <id> was created without inbound access …` | Ask the agent to launch the app without a `sandbox_id`. |

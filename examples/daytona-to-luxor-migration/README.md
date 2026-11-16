@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Help me move my Daytona sandbox code to Luxor Agent Cloud, using the guide at https://github.com/LuxorLabs/cookbook/tree/main/examples/daytona-to-luxor-migration.
 1. Clone https://github.com/LuxorLabs/cookbook, cd into examples/daytona-to-luxor-migration, and run npm install (Node.js 20 or later).
-2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run node run.mjs and confirm it prints "hello from luxor · exit 0", then run node verify.mjs.
 4. Read the API map and "Other differences" in that README.md. Then find every Daytona SDK call in my project and port it to @luxorai/sandbox: wrap shell command strings in sh -c, replace codeRun with a direct interpreter exec, decode output with stdoutText/stderrText, and close every sandbox.
 5. Show me the diff before you change anything you're unsure about.
@@ -30,15 +30,15 @@ cd cookbook/examples/daytona-to-luxor-migration
 npm install
 ```
 
-This installs `@luxorai/sandbox` 1.4.1 or later. The Daytona code here is for comparison and isn't installed.
+This installs `@luxorai/sandbox` 1.5.2 or later. The Daytona code here is for comparison and isn't installed.
 
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run the port
 
@@ -78,13 +78,13 @@ node verify.mjs
 import { LuxorSandbox, stdoutText } from "@luxorai/sandbox";
 
 // Daytona: new Daytona({ apiKey }) (or implicit DAYTONA_API_KEY). Luxor Agent Cloud: pass the token explicitly.
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // Daytona: daytona.create(). Luxor Agent Cloud: createAndWait() boots the sandbox and waits until it's ready.
 const sandbox = await luxor.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
-  workspaceId: process.env.TENKI_WORKSPACE_ID,
+  workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 try {
@@ -108,7 +108,7 @@ Checked against `@daytonaio/sdk` 0.224.1 and `@luxorai/sandbox` 1.4.1. Daytona's
 | --- | --- | --- |
 | Install | `npm i @daytonaio/sdk` | `npm i @luxorai/sandbox` |
 | Import | `import { Daytona } from "@daytonaio/sdk"` | `import { LuxorSandbox, stdoutText } from "@luxorai/sandbox"` |
-| Auth | `new Daytona({ apiKey })` (or implicit `DAYTONA_API_KEY`) | `new LuxorSandbox({ authToken })` (or implicit `TENKI_AUTH_TOKEN` / `TENKI_API_KEY`) |
+| Auth | `new Daytona({ apiKey })` (or implicit `DAYTONA_API_KEY`) | `new LuxorSandbox({ authToken })` (or implicit `LUXORAI_AUTH_TOKEN` / `LUXORAI_API_KEY`) |
 | Create | `await daytona.create()` | `await luxor.createAndWait({ cpuCores, memoryMb, workspaceId })` (`workspaceId` optional) |
 | Run a command | `await sandbox.process.executeCommand("ls -la")` (shell) | `await sandbox.exec("ls", { args: ["-la"] })` (no shell, see below) |
 | Run a code snippet | `await sandbox.process.codeRun("print(6 * 7)")` | `await sandbox.exec("python3", { args: ["-c", "print(6 * 7)"] })` |
@@ -142,7 +142,7 @@ Daytona's `process.executeCommand("echo $HOME && ls")` runs through a shell. Lux
 ## Other differences
 
 - **Output is bytes.** `stdout` and `stderr` are `Uint8Array`, and there is no `result` field. Use `stdoutText(r)` / `stderrText(r)`.
-- **Keys start with `tk_`.** Pass `authToken` to the client, or let the SDK read `TENKI_AUTH_TOKEN` / `TENKI_API_KEY`.
+- **Keys start with `tk_`.** Pass `authToken` to the client, or let the SDK read `LUXORAI_AUTH_TOKEN` / `LUXORAI_API_KEY`.
 - **Close every sandbox.** `sandbox.close()` replaces `daytona.delete(sandbox)`. Sandboxes are [billed per second](https://luxor.ai/docs/pricing) and run until closed or until their lifetime cap (sticky sandboxes have none). Pass `maxDurationMs` to `createAndWait` to set a cap. To clean up a leaked sandbox, find it with `await luxor.list()` or `await luxor.get(id)` and call `close()`.
 - **File methods are confined to `/home/tenki`.** Relative paths resolve there. Commands run with `exec` can write anywhere.
 - **Outbound network is on by default.** Pass `allowOutbound: false` to isolate a sandbox.
@@ -152,8 +152,8 @@ Daytona's `process.executeCommand("echo $HOME && ls")` runs through a shell. Lux
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | Pipes, `&&`, globs, or `$VARS` don't work | Wrap the command in `sh -c`. |
 | `r.result` is `undefined` | Use `stdoutText(r)` / `stderrText(r)`. |

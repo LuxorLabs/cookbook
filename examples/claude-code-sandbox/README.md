@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "Claude Code" example from https://github.com/LuxorLabs/cookbook, which runs Claude Code headless in a disposable Luxor sandbox and hands back a patch.
 1. Clone the repo, cd into examples/claude-code-sandbox, check that Node.js is 24 or later, and run npm install.
-2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and ANTHROPIC_API_KEY in the environment. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and ANTHROPIC_API_KEY in the environment. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (no model call), then node run.mjs, and show me agent.patch.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
 Then ask me which repo and task I want instead, change REPO and TASK in run.mjs, and run it again. Don't apply any patch to my code without asking.
@@ -34,11 +34,11 @@ npm install
 ### 2. Set your keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 export ANTHROPIC_API_KEY=...     # ANTHROPIC_BASE_URL and ANTHROPIC_MODEL pass through if set
 ```
 
-`run.mjs` reads the Luxor Agent Cloud key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the Luxor Agent Cloud key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Verify
 
@@ -76,7 +76,7 @@ const REPO = "https://github.com/sindresorhus/yocto-queue";
 const TASK = "Add a toArray() method to the Queue class in index.js that returns the queued values as an array, oldest first. Declare it in index.d.ts and add a test for it in test.js.";
 const PASSTHROUGH = ["ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL"];
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 ```
 
 Edit `TASK` or `REPO`. The example clones a public repo and passes no Git credentials.
@@ -91,7 +91,7 @@ await using sandbox = await luxor.createAndWait({
   cpuCores: 2,
   memoryMb: 4096,
   cloneRepoUrl: REPO,
-  workspaceId: process.env.TENKI_WORKSPACE_ID,
+  workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 // The default image ships the Claude Code CLI on PATH, so there is nothing to install.
@@ -143,9 +143,9 @@ The sandbox runs the Claude Code that ships in Luxor Agent Cloud's default image
 
 | Problem | Fix |
 | --- | --- |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
 | `SyntaxError` on Node 22 or older | Use Node 24 or later for `run.mjs`. |
 | `claude exited <n>` | The reason is in the streamed output above it. Check `ANTHROPIC_API_KEY`, and `ANTHROPIC_BASE_URL`/`ANTHROPIC_MODEL` if set. |
 | `the agent finished without changing anything` | Read the agent's reply and adjust `TASK`. |

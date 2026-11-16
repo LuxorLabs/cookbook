@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 
 if (!process.env.TINYFISH_API_KEY) throw new Error("Set TINYFISH_API_KEY");
 
-const luxor = new LuxorSandbox(); // reads TENKI_API_KEY
+const luxor = new LuxorSandbox(); // reads LUXORAI_API_KEY
 
 // The key lives in this session's environment only, never in an image or template.
 // tenki/tinyfish:stable restores at 2 vCPU / 4096 MiB; a smaller size is rejected.

@@ -11,7 +11,7 @@ You need:
 - A [Luxor Agent Cloud account](https://luxor.ai) and a `tk_` API key. Create keys at [app.luxor.ai](https://app.luxor.ai).
 - Node.js 24 or later for the JavaScript demos. Several `run.mjs` scripts, including the first example, use top-level `await using`, which Node 22 cannot parse. The verify scripts also run on Node 20. CI runs them on Node 24.
 - Python 3.12 and [uv](https://docs.astral.sh/uv/) for the Python examples. They run on Python 3.10 or later. CI uses 3.12. The Covalent example needs your local minor version to match the sandbox image (3.12 on the default image).
-- Optional: the [Luxor CLI](https://luxor.ai/docs/sandbox/cli), if you want `luxor login` to store the key.
+- Optional: the [Luxor CLI](https://luxor.ai/docs/sandbox/cli), if you want `luxor login` to store the key. Install it with `curl -fsSL https://luxor.ai/install.sh | bash` or `npm install -g @luxorai/cli`.
 
 ### 1. Clone
 
@@ -25,14 +25,14 @@ Each example is self-contained: its own README, source, and dependencies. Nothin
 ### 2. Set your API key
 
 ```bash
-export TENKI_API_KEY="tk_..."
+export LUXORAI_API_KEY="tk_..."
 ```
 
-The JavaScript SDK also reads `TENKI_AUTH_TOKEN`. Python examples and CI use `TENKI_API_KEY`. Each example README names the variable it expects.
+The SDKs (`@luxorai/sandbox` and the `tenki` Python package, 1.5.2 or later) read `LUXORAI_AUTH_TOKEN` or `LUXORAI_API_KEY`, and still accept the old `TENKI_AUTH_TOKEN` and `TENKI_API_KEY`. The scripts here read them in that order. Examples that run through another project's plugin, such as AG2, Harbor or RAGFlow, still use `TENKI_API_KEY`, because those plugins read it themselves. Each example README names the variable it expects.
 
 To store the key, run `luxor login --api-key <key>`. That writes `~/.config/luxor/config.yaml`, and every verify script reads it from there. Some demos, including `examples/run-code-in-a-sandbox/run.mjs`, read the environment only, so export the key before you run those.
 
-Luxor Agent Cloud infers the workspace from the API key. If you set `TENKI_WORKSPACE_ID`, most scripts pass it through. Most verify and agent scripts also read `current_workspace_id` from `~/.config/luxor/config.yaml`. DeerFlow's provider is the exception: when the account has more than one workspace, set `workspace_id` in the `sandbox:` block of its config ([DeerFlow example](examples/deerflow-luxor/)). Authentication and client setup are in the [Sandbox SDK guide](https://luxor.ai/docs/sandbox/sdk).
+Luxor Agent Cloud infers the workspace from the API key. If you set `LUXORAI_WORKSPACE_ID` (or the old `TENKI_WORKSPACE_ID`), most scripts pass it through. Most verify and agent scripts also read `current_workspace_id` from `~/.config/luxor/config.yaml`. DeerFlow's provider is the exception: when the account has more than one workspace, set `workspace_id` in the `sandbox:` block of its config ([DeerFlow example](examples/deerflow-luxor/)). Authentication and client setup are in the [Sandbox SDK guide](https://luxor.ai/docs/sandbox/sdk).
 
 ### 3. Run the first example
 
@@ -206,10 +206,10 @@ These projects ship a Luxor Agent Cloud provider or backend:
 
 ## Troubleshooting
 
-- **`missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY or use authToken option`.** The SDK found no key. `run.mjs` reads the environment only. Export `TENKI_AUTH_TOKEN` or `TENKI_API_KEY` in the shell you run it from.
+- **`missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY (or TENKI_AUTH_TOKEN or TENKI_API_KEY) or use authToken option`.** The SDK found no key. `run.mjs` reads the environment only. Export `LUXORAI_API_KEY` in the shell you run it from.
 - **`invalid auth token - API keys and service tokens must start with tk_`.** The SDK accepts `tk_` API keys. Create one at [app.luxor.ai](https://app.luxor.ai).
-- **`No token. Set TENKI_AUTH_TOKEN, or run luxor login`.** A JavaScript `verify.mjs` found no key in `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or `~/.config/luxor/config.yaml`. `composio-luxor` and `vercel-ai-sdk` print `No Luxor Agent Cloud token. …`. `mcp-luxor-sandbox` prints `No token. Set TENKI_API_KEY, …`. Export one of the variables, or run `luxor login --api-key <key>`.
-- **`No API key. Set TENKI_API_KEY, or run luxor login --api-key <key>`.** A Python `verify.py` found no key in those same places. Export `TENKI_API_KEY`, or run `luxor login --api-key <key>`.
+- **`No token. Set LUXORAI_AUTH_TOKEN, or run luxor login`.** A JavaScript `verify.mjs` found no key in `LUXORAI_AUTH_TOKEN`, `LUXORAI_API_KEY`, the old `TENKI_*` names, or `~/.config/luxor/config.yaml`. `composio-luxor` and `vercel-ai-sdk` print `No Luxor Agent Cloud token. …`. `mcp-luxor-sandbox` prints `No token. Set LUXORAI_API_KEY, …`. Export `LUXORAI_API_KEY`, or run `luxor login --api-key <key>`.
+- **`No API key. Set LUXORAI_API_KEY, or run luxor login --api-key <key>`.** A Python `verify.py` found no key in those same places. Export `LUXORAI_API_KEY`, or run `luxor login --api-key <key>`. Plugin examples that print `Set TENKI_API_KEY` want the old name.
 - **`node run.mjs` fails with a `SyntaxError` at `await using`.** Top-level `await using` needs Node 24. Node 22 cannot parse it. `node verify.mjs` still runs on Node 20.
 - **`node verify.mjs` at the repository root prints `FAILED: <example>` for an example you have not set up.** The root script expects that example's dependencies to be installed already. Install them in the example folder, or run that folder's own `node verify.mjs`.
 - **`FAILED: composio-luxor` or `FAILED: covalent-luxor` from `node verify.mjs` at the repository root.** CI skips both. `composio-luxor` also needs a `COMPOSIO_API_KEY` from [app.composio.dev](https://app.composio.dev). `covalent-luxor` needs `covalent-tenki-plugin` 0.1.1 or later, because 0.1.0 depends on the renamed `tenki-sandbox` package and no longer installs. Until 0.1.1 is published, run `node verify.mjs` inside the examples you use.

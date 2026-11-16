@@ -6,13 +6,13 @@ import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
 import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
 import { makeLuxorTools } from "./luxor-tools.mjs";
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // One sandbox for the whole agent session, reused across every tool call.
 await using sandbox = await luxor.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 for await (const message of query({

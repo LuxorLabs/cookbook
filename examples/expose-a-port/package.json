@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example — expose a sandbox port and get a public preview URL from Luxor Agent Cloud.",
   "dependencies": {
-    "@luxorai/sandbox": ">=1.4.1"
+    "@luxorai/sandbox": ">=1.5.2"
   }
 }

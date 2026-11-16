@@ -86,7 +86,7 @@ export const protect = [
 	{ why: "platform: Code Reviewer bot", find: /@tenki-reviewer\b/g },
 	{ why: "platform: container images", find: /\btenki\/(anchor|tinyfish)\b(:[a-z0-9.-]+)?/g },
 	// What the SDKs and packages still call themselves.
-	{ why: "SDK: environment variables (the SDK reads only TENKI_*)", find: /\bTENKI_[A-Z0-9_]+\b/g },
+	{ why: "SDK: TENKI_* environment variables, the fallback the SDKs and plugins still read", find: /\bTENKI_[A-Z0-9_]+\b/g },
 	{ why: "SDK: the Python package", find: /(?:^|;|`)\s*(from|import) tenki\b|\bpip install tenki\b|pypi\.org\/project\/tenki\b|\btenki(?=\[|\s*[><=~]=?\s*[0-9])|\btenki_sandbox\b|`tenki`|\btenki`?(?=`?\s+(\d\.x\s+)?(Python |Go )?(SDK|package|client)\b)|(?<=(#|\band|\bONLY|\bonly|\bdatasets|\bswebench|\brequirements),?\s)tenki\b|\btenki(?=\s\+\s)/gm },
 	{ why: "SDK: the Go module and SDK repos", find: /tenki-sdk-(go|python|es)|\btenkisdk\b/g },
 	{ why: "SDK: plugin and integration repos", find: /\b(LuxorLabs|TenkiCloud|opencolin)\/[\w.-]*tenki[\w.-]*|\btenki-[a-z0-9-]+#\d+|\bTenkiCloud\b/g },

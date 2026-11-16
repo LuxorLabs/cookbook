@@ -15,10 +15,10 @@ const cfg = (key) => {
 	}
 };
 
-const authToken = process.env.TENKI_API_KEY || process.env.TENKI_AUTH_TOKEN || cfg("auth_token");
-const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
+const authToken = process.env.LUXORAI_API_KEY || process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_API_KEY || process.env.TENKI_AUTH_TOKEN || cfg("auth_token");
+const workspaceId = process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
 if (!authToken) {
-	console.error("No token. Set TENKI_API_KEY, or run `luxor login`.");
+	console.error("No token. Set LUXORAI_API_KEY, or run `luxor login`.");
 	process.exit(1);
 }
 const tfKey = process.env.TINYFISH_API_KEY;

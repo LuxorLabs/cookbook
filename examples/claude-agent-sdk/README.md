@@ -11,7 +11,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "Claude Agent SDK" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/claude-agent-sdk, check that Node.js is 24 or later, and run npm install.
-2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and ANTHROPIC_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and ANTHROPIC_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (it doesn't call the model), then node agent.mjs, and confirm the agent answers 832040 and the final ls shows fib.py in the sandbox.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
 Then show me how to add luxor-tools.mjs to my own Agent SDK project with tools: [] so no tool runs on my machine.
@@ -38,11 +38,11 @@ This installs `@anthropic-ai/claude-agent-sdk`, `@luxorai/sandbox`, and `zod`. T
 ### 2. Set your keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 export ANTHROPIC_API_KEY=...
 ```
 
-`agent.mjs` reads both from the environment only. `verify.mjs` also accepts a Luxor Agent Cloud key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`agent.mjs` reads both from the environment only. `verify.mjs` also accepts a Luxor Agent Cloud key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run the agent
 
@@ -84,13 +84,13 @@ import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
 import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
 import { makeLuxorTools } from "./luxor-tools.mjs";
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // One sandbox for the whole agent session, reused across every tool call.
 await using sandbox = await luxor.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
-  workspaceId: process.env.TENKI_WORKSPACE_ID,
+  workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 for await (const message of query({
@@ -175,8 +175,8 @@ Things to know:
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `agent.mjs` reads only the environment. Export the key. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `agent.mjs` reads only the environment. Export the key. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `SyntaxError` at `await using` | Use Node 24 or later. |
 | The agent asks for permission on every call | `allowedTools` must list the full `mcp__luxor__*` names. Update it if you rename the server or add tools. |
