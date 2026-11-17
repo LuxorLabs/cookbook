@@ -65,8 +65,8 @@ export async function down(luxor, { slug, workspaceId }) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
-  const opts = { slug: process.env.MCP_SLUG || "remote-mcp", workspaceId: process.env.TENKI_WORKSPACE_ID };
+  const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
+  const opts = { slug: process.env.MCP_SLUG || "remote-mcp", workspaceId: (process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID) };
   if (process.argv[2] === "down") {
     console.log((await down(luxor, opts)) ? `deleted ${opts.slug} and its sandbox` : `no preview URL named ${opts.slug}`);
   } else {

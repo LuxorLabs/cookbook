@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "Remote MCP server" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/remote-mcp-server, and run npm install (Node.js 20 or later).
-2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run node verify.mjs and confirm the ✓ line.
 4. Run node deploy.mjs and give me the MCP endpoint, the export MCP_TOKEN line, and the claude mcp add command it prints.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -34,10 +34,10 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`deploy.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`deploy.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Deploy
 
@@ -103,7 +103,7 @@ To add your own tools, call `server.registerTool(...)` in `buildServer()` and ru
 TENKI_MCP_TRANSPORT=http TENKI_MCP_HTTP_HOST=0.0.0.0 PORT=3000 \
   TENKI_MCP_HTTP_TOKEN=<random token> \
   TENKI_MCP_ALLOWED_HOSTS=<preview-host> \
-  TENKI_API_KEY=tk_... npx -y @luxorai/mcp@0.3.1
+  LUXORAI_API_KEY=tk_... npx -y @luxorai/mcp@0.3.1
 ```
 
 It refuses to bind `0.0.0.0` without `TENKI_MCP_HTTP_TOKEN`. Without `TENKI_MCP_ALLOWED_HOSTS`, its DNS-rebinding check rejects the preview hostname with `403 Invalid Host header`. A named preview URL knows its hostname before the server starts, which makes that setting easy to fill in. That server holds a Luxor Agent Cloud API key and can create sandboxes and spend credits, so treat its token like the key.
@@ -112,8 +112,8 @@ It refuses to bind `0.0.0.0` without `TENKI_MCP_HTTP_TOKEN`. Without `TENKI_MCP_
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `deploy.mjs` reads only the environment. Export the key in this shell. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `deploy.mjs` reads only the environment. Export the key in this shell. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `npm install failed: ...` | The sandbox couldn't reach the npm registry. Keep outbound network on (the default). |
 | `.../health never answered; see /tmp/mcp.log in the sandbox` | The server crashed on start. The new sandbox was terminated; rerun, or start it by hand and read the log. |
