@@ -1,16 +1,16 @@
 # Fine-tune a Laya decision model
 
-Fine-tune [Laya](https://github.com/NandhaKishorM/laya), a 421M-parameter decision model that scores typed questions in one forward pass, on your own labelled data inside a Tenki sandbox. `run.mjs` uploads 60 labelled support tickets, installs CPU PyTorch and `laya`, runs `laya-train` to fine-tune the base checkpoint, scores the base and tuned checkpoints on 20 held-out tickets, and routes four new tickets with the result. It needs no GPU: on an 8-core sandbox the install takes about 10 seconds and the training about a minute. The sandbox is terminated when the script ends; pass `--keep` to snapshot it first so the checkpoint outlives it.
+Fine-tune [Laya](https://github.com/NandhaKishorM/laya), a 421M-parameter decision model that scores typed questions in one forward pass, on your own labelled data inside a Luxor sandbox. `run.mjs` uploads 60 labelled support tickets, installs CPU PyTorch and `laya`, runs `laya-train` to fine-tune the base checkpoint, scores the base and tuned checkpoints on 20 held-out tickets, and routes four new tickets with the result. It needs no GPU: on an 8-core sandbox the install takes about 10 seconds and the training about a minute. The sandbox is terminated when the script ends; pass `--keep` to snapshot it first so the checkpoint outlives it.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "Fine-tune a Laya decision model" example from https://github.com/LuxorLabs/cookbook.
-1. Clone the repo and cd into examples/laya-finetune-tenki.
+Set up the Luxor Agent Cloud "Fine-tune a Laya decision model" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo and cd into examples/laya-finetune-luxor.
 2. Check that Node.js is 24 or later, then run npm install.
-3. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 4. Run node run.mjs and confirm the held-out accuracy goes from 0.7000 to 0.8500, then run node verify.mjs.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
 Then help me replace data/train.csv and data/eval.csv with my own labelled examples (a text column and a label column) and rerun it.
@@ -21,7 +21,7 @@ Then help me replace data/train.csv and data/eval.csv with my own labelled examp
 You need:
 
 - Node.js 24 or later for `run.mjs`, which uses top-level `await using`. `verify.mjs` runs on Node 20.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 
 Nothing installs on your machine besides the SDK. PyTorch, `laya` and the 843 MB checkpoint download inside the sandbox.
 
@@ -29,7 +29,7 @@ Nothing installs on your machine besides the SDK. PyTorch, `laya` and the 843 MB
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
-cd cookbook/examples/laya-finetune-tenki
+cd cookbook/examples/laya-finetune-luxor
 npm install
 ```
 
@@ -39,7 +39,7 @@ npm install
 export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`.
 
 ### 3. Run
 
@@ -75,7 +75,7 @@ node verify.mjs
 ```
 
 ```
-✓ laya-finetune-tenki: install → fine-tune on CPU → held-out accuracy 0.7 → 0.85 → 4/4 new tickets routed
+✓ laya-finetune-luxor: install → fine-tune on CPU → held-out accuracy 0.7 → 0.85 → 4/4 new tickets routed
 ```
 
 `verify.mjs` runs the same training, then fails unless the report says the evaluation was held out, the tuned accuracy is at least 0.7 and no lower than the base, and at least three of the four new tickets go to the right team. It terminates the sandbox in a `finally` block.
@@ -98,7 +98,7 @@ uv pip install -q --python .venv/bin/python "laya>=0.4.21"
 `run.mjs` uploads the files, starts `train.sh` detached, and polls a sentinel file for its exit code, because a training run can outlast a single `exec`:
 
 ```js
-await using sandbox = await tenki.createAndWait({ cpuCores: 8, memoryMb: 16384, diskSizeGb: 20 });
+await using sandbox = await luxor.createAndWait({ cpuCores: 8, memoryMb: 16384, diskSizeGb: 20 });
 for (const f of ["data/train.csv", "data/eval.csv", "train.sh", "predict.py"]) {
   await sandbox.writeFile(`/home/tenki/laya/${f}`, readFileSync(new URL(f, import.meta.url)));
 }
@@ -133,13 +133,13 @@ node run.mjs --keep
 kept: snapshot a50ba54e-8b8a-4aad-a932-7546ba3334ef (READY) holds ~/laya/ckpt; create a sandbox with { snapshotId } to serve it
 ```
 
-The snapshot holds the virtual environment and the 1.6 GB checkpoint directory. A sandbox created from it with `tenki.createAndWait({ snapshotId, cpuCores: 8, memoryMb: 16384 })` can run `predict.py` straight away, or serve the model with `pip install "laya[serve]"`. Delete the snapshot with `tenki.deleteSnapshot(id)` when you no longer need it. To publish the checkpoint instead, push `~/laya/ckpt` to the Hugging Face Hub from inside the sandbox.
+The snapshot holds the virtual environment and the 1.6 GB checkpoint directory. A sandbox created from it with `luxor.createAndWait({ snapshotId, cpuCores: 8, memoryMb: 16384 })` can run `predict.py` straight away, or serve the model with `pip install "laya[serve]"`. Delete the snapshot with `luxor.deleteSnapshot(id)` when you no longer need it. To publish the checkpoint instead, push `~/laya/ckpt` to the Hugging Face Hub from inside the sandbox.
 
 ## Things to know
 
 - **The probabilities are not calibrated with this little data.** `laya-train` holds back a tenth of the training rows to fit a temperature and needs at least 10 of them; with 6 it leaves the temperature at 1.0 and warns, which is why every new ticket above scores 1.000. Train on 100 rows or more and the confidences become usable thresholds.
 - **Accuracy is the number to watch, not loss.** Held-out loss rises here because the tuned model is confidently wrong on the three tickets it misses.
-- **CPU only.** Tenki sandboxes have no GPU. A 421M-parameter encoder fine-tunes on CPU in minutes for hundreds of rows; for the authors' 30,000-question benchmark run, use their Kaggle notebook on GPUs.
+- **CPU only.** Luxor sandboxes have no GPU. A 421M-parameter encoder fine-tunes on CPU in minutes for hundreds of rows; for the authors' 30,000-question benchmark run, use their Kaggle notebook on GPUs.
 - Outbound network is required: the sandbox downloads PyTorch, `laya` and the checkpoint from PyPI, download.pytorch.org and Hugging Face.
 
 ## Troubleshooting

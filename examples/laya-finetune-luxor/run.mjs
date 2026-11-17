@@ -1,10 +1,10 @@
-// Fine-tune the Laya decision model on 60 labelled support tickets in a Tenki sandbox, score it
+// Fine-tune the Laya decision model on 60 labelled support tickets in a Luxor sandbox, score it
 // against 20 held-out tickets before and after, and route a few new ones with the result.
 // Pass --keep to snapshot the sandbox so the fine-tuned checkpoint outlives it.
-import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
+import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
 import { readFileSync } from "node:fs";
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
+const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 const keep = process.argv.includes("--keep");
 const sh = async (sandbox, cmd) => {
 	const r = await sandbox.exec(["sh", "-lc", cmd]);
@@ -12,7 +12,7 @@ const sh = async (sandbox, cmd) => {
 };
 
 // 8 cores and 16 GiB: the 421M-parameter checkpoint trains in about a minute on CPU.
-await using sandbox = await tenki.createAndWait({ cpuCores: 8, memoryMb: 16384, diskSizeGb: 20 });
+await using sandbox = await luxor.createAndWait({ cpuCores: 8, memoryMb: 16384, diskSizeGb: 20 });
 console.log(`sandbox ${sandbox.id}`);
 
 for (const f of ["data/train.csv", "data/eval.csv", "train.sh", "predict.py"]) {
@@ -45,6 +45,6 @@ for (const line of p.out.split("\n")) {
 
 if (keep) {
 	await sh(sandbox, "rm -f ~/laya/DONE ~/laya/train.log && sync");
-	const snap = await tenki.createSnapshotAndWait(sandbox.id, { name: "laya-finetuned" });
+	const snap = await luxor.createSnapshotAndWait(sandbox.id, { name: "laya-finetuned" });
 	console.log(`kept: snapshot ${snap.id} (${snap.state}) holds ~/laya/ckpt; create a sandbox with { snapshotId } to serve it`);
 }
