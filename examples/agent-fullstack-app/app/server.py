@@ -22,14 +22,14 @@ DB = "/home/tenki/app.db"
 PORT = 8000
 
 INDEX = """<!doctype html>
-<title>Tasks — running in a Tenki sandbox</title>
+<title>Tasks — running in a Luxor sandbox</title>
 <style>
  body{font:16px system-ui;margin:40px auto;max-width:640px;background:#0b1020;color:#e6ebff}
  h1{font-size:20px} li{margin:8px 0;display:flex;gap:10px;align-items:center}
  .s{font-size:12px;padding:2px 8px;border-radius:99px;background:#1e2a4a}
  .done{background:#14532d} .doing{background:#78350f}
 </style>
-<h1>Tasks <small style="color:#7c8db5">— served from a Tenki sandbox</small></h1>
+<h1>Tasks <small style="color:#7c8db5">— served from a Luxor sandbox</small></h1>
 <ul id="list">loading…</ul>
 <script>
 fetch('/api/tasks').then(r=>r.json()).then(tasks=>{
