@@ -1,15 +1,15 @@
-"""Proves the Tenki-facing half of this benchmark, with NO model key.
+"""Proves the sandbox-facing half of this benchmark, with NO model key.
 
-Oracle one real SWE-bench Lite instance on a live Tenki sandbox: boot a sandbox,
+Oracle one real SWE-bench Lite instance on a live Luxor sandbox: boot a sandbox,
 run the canonical per-instance Docker image inside it, apply the gold patch, and
 grade with swebench's own eval script. The gold patch MUST resolve — if it does,
-the whole pipeline (VM -> docker-in-VM -> official grading) works on Tenki.
+the whole pipeline (VM -> docker-in-VM -> official grading) works on Luxor Agent Cloud.
 
 A model run (harness.py --model ...) is the same pipeline with an agent in place
 of the gold patch; that needs a model key and time, so it stays out of CI.
 
 Needs: swebench, datasets, tenki (requirements.txt). Token/workspace from
-env (CI: TENKI_API_KEY) or ~/.config/tenki/config.yaml (local `tenki login`).
+env (CI: TENKI_API_KEY) or ~/.config/luxor/config.yaml (local `luxor login`).
 """
 import sys
 
@@ -26,7 +26,7 @@ try:
     r = run_one(instance, oracle=True)
     if r.get("resolved") is not True:
         raise AssertionError(f"gold patch did not resolve {INSTANCE}: {r}")
-    print(f"✓ swe-bench: oracle {INSTANCE} on Tenki → resolved "
+    print(f"✓ swe-bench: oracle {INSTANCE} on Luxor Agent Cloud → resolved "
           f"(F2P {r['fail_to_pass']}, P2P {r['pass_to_pass']}, {r['seconds']}s)")
 except Exception as e:  # noqa: BLE001
     print(f"✗ {type(e).__name__}: {e}")
