@@ -70,7 +70,7 @@ node verify.mjs
 [`verify.mjs`](verify.mjs) needs no GitHub or Luxor Agent Cloud credentials. It reads the label tables from the [live Luxor Agent Cloud docs](https://luxor.ai/docs/runners/sizes), then checks that every job in `workflow.yml` has exactly one documented Luxor Agent Cloud label as its `runs-on`. It also checks that it rejects a `[self-hosted, …]` array, `ubuntu-latest`, and a size that doesn't exist. Running the jobs themselves needs a repository connected to Luxor Agent Cloud.
 
 ```
-✓ luxor-runners: 3 jobs in workflow.yml → runs-on luxor-ubuntu-small-2c-4g, luxor-ubuntu-medium-4c-8g → each is one of 12 labels in the Luxor Agent Cloud docs
+✓ luxor-runners: 3 jobs in workflow.yml → runs-on luxor-ubuntu-small-2c-4g, luxor-ubuntu-medium-4c-8g → each is one of 13 labels in the Luxor Agent Cloud docs
 ```
 
 ## Labels
