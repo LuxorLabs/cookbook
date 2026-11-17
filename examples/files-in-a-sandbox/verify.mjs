@@ -1,36 +1,36 @@
 /**
  * Proves this example works: boot a sandbox, write a text file, read it back,
  * list the directory, assert the round-trip, dispose.
- * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+ * Token/workspace from env (CI) or ~/.config/luxor/config.yaml (local `luxor login`).
  * Exits non-zero on any failure.
  */
-import { TenkiSandbox } from "@tenkicloud/sandbox";
-import { readFileSync } from "node:fs";
+import { LuxorSandbox } from "@luxorai/sandbox";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/tenki/config.yaml`, "utf8");
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
 	}
 };
 
-const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
+const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+const workspaceId = process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
+	console.error("No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 
 const path = "notes.txt";
-const text = "hello from tenki\n";
+const text = "hello from luxor\n";
 
-const tenki = new TenkiSandbox({ authToken });
+const luxor = new LuxorSandbox({ authToken });
 let sandbox;
 try {
-	sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
+	sandbox = await luxor.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId });
 
 	// write -> read back -> assert the bytes survive the round-trip.
 	await sandbox.writeFile(path, text);

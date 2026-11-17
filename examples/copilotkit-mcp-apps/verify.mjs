@@ -1,9 +1,9 @@
 /**
- * Proves the Tenki-facing part of this example: the MCP App server's tools,
+ * Proves the sandbox-facing part of this example: the MCP App server's tools,
  * driven by an MCP client exactly as CopilotKit's middleware drives them, against
- * LIVE Tenki. No LLM needed — the chat (which needs a model key) is in chat/.
+ * LIVE Luxor Agent Cloud. No LLM needed — the chat (which needs a model key) is in chat/.
  *
- * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+ * Token/workspace from env (CI) or ~/.config/luxor/config.yaml (local `luxor login`).
  */
 import { spawn } from "node:child_process";
 
