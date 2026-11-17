@@ -1,11 +1,11 @@
 """
-Proves the Tenki-facing half of this example: the `TenkiExecutor` runs
-CodeAgent-style Python in a live Tenki sandbox, keeps state across steps, and
+Proves the sandbox-facing half of this example: the `LuxorExecutor` runs
+CodeAgent-style Python in a live Luxor sandbox, keeps state across steps, and
 detects `final_answer(...)` — the whole `RemotePythonExecutor` seam, asserted
 with no LLM. (The full `CodeAgent`, which needs a model key, is in agent.py.)
 
 Needs Python 3.10+ and the deps in requirements.txt. API key/workspace from env (CI)
-or ~/.config/tenki/config.yaml (local `tenki login --api-key`). Exits non-zero on failure.
+or ~/.config/luxor/config.yaml (local `luxor login --api-key`). Exits non-zero on failure.
 """
 import os
 import sys
@@ -13,12 +13,12 @@ import sys
 from smolagents.monitoring import AgentLogger, LogLevel
 from smolagents.utils import AgentError
 
-from tenki_executor import TenkiExecutor
+from luxor_executor import LuxorExecutor
 
 
 def cfg(key):
     try:
-        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
+        with open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()
@@ -27,20 +27,20 @@ def cfg(key):
     return ""
 
 
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 if not token:
-    print("No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.")
+    print("No API key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.")
     sys.exit(1)
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-if os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id"):
-    opts["workspace_id"] = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+if os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id"):
+    opts["workspace_id"] = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 
 executor = None
 try:
     # Build the executor exactly as `CodeAgent(executor=...)` would.
     # LogLevel.OFF keeps CI output to just the ✓/✗ line (step 4 raises on purpose).
-    executor = TenkiExecutor(additional_imports=[], logger=AgentLogger(LogLevel.OFF), **opts)
+    executor = LuxorExecutor(additional_imports=[], logger=AgentLogger(LogLevel.OFF), **opts)
 
     # 1) Real execution in the sandbox.
     out = executor.run_code_raise_errors("print(6 * 7)")
@@ -76,7 +76,7 @@ try:
         if "boom" not in str(e):
             raise AssertionError(f"error path: unexpected message {e!r}")
 
-    print("✓ smolagents: TenkiExecutor ran CodeAgent Python in a Tenki sandbox (42), "
+    print("✓ smolagents: LuxorExecutor ran CodeAgent Python in a Luxor sandbox (42), "
           "kept state across steps (55), caught final_answer (42), surfaced errors")
 except Exception as e:  # noqa: BLE001
     print(f"✗ {type(e).__name__}: {e}")
