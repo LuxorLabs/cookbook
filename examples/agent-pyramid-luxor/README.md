@@ -1,6 +1,6 @@
 # Agent pyramid
 
-Give a prompt to one agent. It splits the prompt into up to four self-contained prompts and hands each to a sub-agent. Each sub-agent does the same. The bottom agents answer, and every agent combines its sub-agents' answers into an answer to its own prompt. Three levels of splitting by four makes up to 1 + 4 + 16 + 64 = 85 agents. Every agent that runs code gets its own Tenki sandbox, and the sandbox is terminated when the agent finishes. `run.mjs` serves a live 3D view of the pyramid while it works.
+Give a prompt to one agent. It splits the prompt into up to four self-contained prompts and hands each to a sub-agent. Each sub-agent does the same. The bottom agents answer, and every agent combines its sub-agents' answers into an answer to its own prompt. Three levels of splitting by four makes up to 1 + 4 + 16 + 64 = 85 agents. Every agent that runs code gets its own Luxor sandbox, and the sandbox is terminated when the agent finishes. `run.mjs` serves a live 3D view of the pyramid while it works.
 
 ![85 agents counting the primes below 10,000,000, all passed](pyramid.png)
 
@@ -9,10 +9,10 @@ Give a prompt to one agent. It splits the prompt into up to four self-contained 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "Agent pyramid" example from https://github.com/LuxorLabs/cookbook.
-1. Clone the repo and cd into examples/agent-pyramid-tenki.
+Set up the Luxor Agent Cloud "Agent pyramid" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo and cd into examples/agent-pyramid-luxor.
 2. Check that Node.js is 20 or later, then run npm install.
-3. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 4. Run node run.mjs --offline, open http://localhost:4321, and confirm the answer is 664579. Then run node verify.mjs.
 5. If I have OPENAI_API_KEY or OPENROUTER_API_KEY set, run node run.mjs "<a prompt of mine>" so a model does the splitting.
 If a step fails, use the Troubleshooting table in the example's README.md.
@@ -23,21 +23,21 @@ If a step fails, use the Troubleshooting table in the example's README.md.
 You need:
 
 - Node.js 20 or later.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud), in a workspace that allows about 64 active sessions at once. Set `FANOUT=2` for a workspace with fewer; the pyramid then has at most 15 agents.
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai), in a workspace that allows about 64 active sessions at once. Set `FANOUT=2` for a workspace with fewer; the pyramid then has at most 15 agents.
 - For your own prompts, a model key: `OPENAI_API_KEY` (with `OPENAI_BASE_URL` for any OpenAI-compatible endpoint) or `OPENROUTER_API_KEY`. `MODEL` picks the model; the default is `gpt-4.1-mini`. Without a key, the scripted brain runs.
 
 ### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
-cd cookbook/examples/agent-pyramid-tenki
+cd cookbook/examples/agent-pyramid-luxor
 npm install
 ```
 
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works, or a key saved with `tenki login`
+export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works, or a key saved with `luxor login`
 ```
 
 ### 3. Run it with no model
@@ -82,7 +82,7 @@ node verify.mjs
 ```
 
 ```
-✓ agent-pyramid-tenki: 85 agents, 85 sandboxes, root answer 664579, all terminated (20 s)
+✓ agent-pyramid-luxor: 85 agents, 85 sandboxes, root answer 664579, all terminated (20 s)
 ```
 
 `verify.mjs` runs the scripted pyramid on Node 20 and needs no model key. It fails unless all of these hold:
@@ -104,7 +104,7 @@ async function agent(id, title, prompt, level) {
   for (;;) {
     const step = await brain.step({ prompt, results, transcript, runsLeft });
     if (step.answer !== undefined) return { id, title, prompt, children, answer: step.answer };
-    sandbox ??= await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, tags: ["agent-pyramid"], metadata: { agent: id } });
+    sandbox ??= await luxor.createAndWait({ cpuCores: 1, memoryMb: 1024, tags: ["agent-pyramid"], metadata: { agent: id } });
     await sandbox.writeFile("/home/tenki/step.py", step.run);
     transcript.push({ run: step.run, output: await sandbox.exec(["python3", "/home/tenki/step.py"]) });
   }
@@ -133,8 +133,8 @@ The brain answers two questions:
 
 | Problem | Fix |
 | --- | --- |
-| `No Tenki key` | Export `TENKI_AUTH_TOKEN`, or run `tenki login`. |
-| `[failed_precondition] workspace balance is empty` | Top up the workspace at [app.tenki.cloud](https://app.tenki.cloud). |
+| `No Tenki key` | Export `TENKI_AUTH_TOKEN`, or run `luxor login`. |
+| `[failed_precondition] workspace balance is empty` | Top up the workspace at [app.luxor.ai](https://app.luxor.ai). |
 | `[resource_exhausted]` while sandboxes boot | The workspace's active-session limit is below what the pyramid needs. Run with `FANOUT=2`, or `DEPTH=2` for 21 agents. |
 | `the scripted brain only answers "Count the primes in [a, b)"` | You gave a prompt without a model key. Set `OPENAI_API_KEY` or `OPENROUTER_API_KEY`, or use `--offline` with no prompt. |
 | `model 401` or `model 404` | Check the key, and that `MODEL` names a model your endpoint serves. |
@@ -144,5 +144,5 @@ The brain answers two questions:
 ## Related
 
 - [Run code in a sandbox](../run-code-in-a-sandbox/): the single-sandbox version of each agent's code run
-- [PraisonAI](../praisonai-tenki/): one shared sandbox for a whole agent team, the opposite trade-off
+- [PraisonAI](../praisonai-luxor/): one shared sandbox for a whole agent team, the opposite trade-off
 - [OpenAI Agents SDK](../openai-agents-sdk/) and [Claude Agent SDK](../claude-agent-sdk/): give a framework's agents a sandbox tool

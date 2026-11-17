@@ -5,7 +5,7 @@
 //   node run.mjs --offline       the scripted brain counts primes below 10,000,000, no model key
 //   node run.mjs --replay        replay the last run in the viewer without creating sandboxes
 //   node run.mjs --no-viz        no viewer; exit when done
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { LuxorSandbox } from "@luxorai/sandbox";
 import { createServer } from "node:http";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -50,12 +50,12 @@ if (replay) {
 } else {
 	const cfg = (k) => {
 		try {
-			return readFileSync(`${homedir()}/.config/tenki/config.yaml`, "utf8").match(new RegExp(`^${k}:\\s*(.+)$`, "m"))?.[1].trim();
+			return readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8").match(new RegExp(`^${k}:\\s*(.+)$`, "m"))?.[1].trim();
 		} catch {}
 	};
 	const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-	if (!authToken) throw new Error("No Tenki key. Export TENKI_AUTH_TOKEN, or run `tenki login`.");
-	const tenki = new TenkiSandbox({ authToken });
+	if (!authToken) throw new Error("No Luxor Agent Cloud key. Export TENKI_AUTH_TOKEN, or run `luxor login`.");
+	const luxor = new LuxorSandbox({ authToken });
 	const brain = await pickBrain({ offline: has("--offline") });
 	const prompt = args.find((a) => !a.startsWith("--")) || "Count the primes in [0, 10000000).";
 	const most = Array.from({ length: depth + 1 }, (_, i) => fanout ** i).reduce((a, b) => a + b);
@@ -65,7 +65,7 @@ if (replay) {
 	const live = new Map();
 	process.once("SIGINT", async () => {
 		console.log(`\nstopping: terminating ${live.size} sandboxes`);
-		await Promise.allSettled([...live.keys()].map(async (id) => (await tenki.get(id))[Symbol.asyncDispose]()));
+		await Promise.allSettled([...live.keys()].map(async (id) => (await luxor.get(id))[Symbol.asyncDispose]()));
 		process.exit(130);
 	});
 
@@ -84,7 +84,7 @@ if (replay) {
 	const started = Date.now();
 	let root;
 	try {
-		root = await runPyramid({ tenki, brain, prompt, fanout, depth, workspaceId: process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id"), emit });
+		root = await runPyramid({ luxor, brain, prompt, fanout, depth, workspaceId: process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id"), emit });
 	} catch (e) {
 		console.error(`✗ ${e?.message ?? e}`);
 		process.exit(1);

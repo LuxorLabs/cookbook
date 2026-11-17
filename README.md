@@ -90,10 +90,10 @@ Give an agent a sandbox to run the code it writes.
 | [OpenAI Agents SDK](examples/openai-agents-sdk/) | Sandboxed execution as an agent tool |
 | [LlamaIndex](examples/llamaindex/) | Sandboxed execution as a `FunctionTool` |
 | [Hugging Face smolagents](examples/smolagents/) | Remote Python executor for a `CodeAgent` |
-| [Pi Durable](examples/pi-durable-tenki/) | Remote execution env. Every tool call runs in a sandbox |
-| [AG2](examples/ag2-tenki/) | Native sandbox backend for shell and code tools |
-| [PraisonAI](examples/praisonai-tenki/) | One shared sandbox for a whole agent team |
-| [Agent pyramid](examples/agent-pyramid-tenki/) | Each agent splits its prompt into up to 4 for sub-agents, 85 agents with a sandbox each, in a live 3D view |
+| [Pi Durable](examples/pi-durable-luxor/) | Remote execution env. Every tool call runs in a sandbox |
+| [AG2](examples/ag2-luxor/) | Native sandbox backend for shell and code tools |
+| [PraisonAI](examples/praisonai-luxor/) | One shared sandbox for a whole agent team |
+| [Agent pyramid](examples/agent-pyramid-luxor/) | Each agent splits its prompt into up to 4 for sub-agents, 85 agents with a sandbox each, in a live 3D view |
 
 ### Developer tools
 

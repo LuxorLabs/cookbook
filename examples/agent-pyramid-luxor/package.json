@@ -1,0 +1,9 @@
+{
+  "name": "agent-pyramid-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — an architect agent, four lead agents and sixteen engineer agents, each in its own Luxor sandbox, drawn as a live 3D pyramid.",
+  "dependencies": {
+    "@luxorai/sandbox": ">=1.4.1"
+  }
+}

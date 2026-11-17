@@ -1,11 +1,11 @@
-// A recursive agent pyramid on Tenki. Every agent runs the same loop:
+// A recursive agent pyramid on Luxor Agent Cloud. Every agent runs the same loop:
 //   1. Take a prompt. Either answer it, or split it into up to 4 self-contained sub-prompts.
 //   2. Hand each sub-prompt to a sub-agent, which runs this same loop, all in parallel.
 //   3. Combine the sub-agents' answers into an answer to its own prompt.
 // Any agent can run Python while it answers, in a sandbox of its own that boots on its first
 // run and is terminated when the agent finishes. Three levels of splitting by 4 is
 // 1 + 4 + 16 + 64 = 85 agents.
-import { stdoutText, stderrText } from "@tenkicloud/sandbox";
+import { stdoutText, stderrText } from "@luxorai/sandbox";
 
 const tail = (s, n = 1500) => (s.length > n ? "…" + s.slice(-n) : s);
 
@@ -14,7 +14,7 @@ const tail = (s, n = 1500) => (s.length > n ? "…" + s.slice(-n) : s);
  * step at a time towards an answer (`step`); `emit` receives every state change, which is what
  * the 3D viewer draws. Returns the root node: { id, title, prompt, answer, children, runs }.
  */
-export async function runPyramid({ tenki, brain, prompt, fanout = 4, depth = 3, maxRuns = 4, workspaceId, emit = () => {} }) {
+export async function runPyramid({ luxor, brain, prompt, fanout = 4, depth = 3, maxRuns = 4, workspaceId, emit = () => {} }) {
 	const say = (id, patch) => emit({ id, t: Date.now(), ...patch });
 
 	async function agent(id, title, prompt, level) {
@@ -45,7 +45,7 @@ export async function runPyramid({ tenki, brain, prompt, fanout = 4, depth = 3, 
 				}
 				if (!sandbox) {
 					say(id, { box: "booting" });
-					sandbox = await tenki.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId, tags: ["agent-pyramid"], metadata: { agent: id } });
+					sandbox = await luxor.createAndWait({ cpuCores: 1, memoryMb: 1024, workspaceId, tags: ["agent-pyramid"], metadata: { agent: id } });
 					say(id, { box: "ready", sandboxId: sandbox.id });
 				}
 				node.runs++;
