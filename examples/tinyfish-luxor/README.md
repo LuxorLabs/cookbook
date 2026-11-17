@@ -198,7 +198,7 @@ A sandbox with a secret policy can't open WebSockets, so `connectOverCDP` fails 
 
 ## Image versions
 
-`tenki/tinyfish:stable` currently pins the CLI at 0.59.0 and the SDK at 0.11.0, and moves when Tenki publishes a new build. To pin the build you tested, run `tenki sandbox registry resolve tenki/tinyfish:stable` and pass `image: "tenki/tinyfish@<snapshot-id>"`. See [Tenki's TinyFish image](https://tenki.cloud/docs/sandbox/tinyfish).
+`tenki/tinyfish:stable` currently pins the CLI at 0.59.0 and the SDK at 0.11.0, and moves when Luxor Agent Cloud publishes a new build. To pin the build you tested, run `luxor sandbox registry resolve tenki/tinyfish:stable` and pass `image: "tenki/tinyfish@<snapshot-id>"`. See [Luxor Agent Cloud's TinyFish image](https://luxor.ai/docs/sandbox/tinyfish).
 
 ## Troubleshooting
 
