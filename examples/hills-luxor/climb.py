@@ -10,7 +10,7 @@ Run a hills optimization loop across two Luxor sandboxes:
   python climb.py status     the agent's log tail and the scores so far
   python climb.py down       download journal.html + reports/, then terminate both
 
-Needs Python 3.12+ and requirements.txt. Luxor Agent Cloud key from TENKI_API_KEY or
+Needs Python 3.12+ and requirements.txt. Luxor Agent Cloud key from LUXORAI_API_KEY or
 ~/.config/luxor/config.yaml (`luxor login --api-key`). The agent's model key
 (ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENCODE_API_KEY or OPENROUTER_API_KEY) is
 read from your environment and handed to the climber only.
@@ -39,7 +39,7 @@ OPENCODE_DEFAULTS = {"ANTHROPIC_API_KEY": "anthropic/claude-sonnet-5-5",
 
 def cfg(key):
     try:
-        with open(os.path.expanduser("~/.config/luxor/config.yaml")) as f:
+        with open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()
@@ -49,8 +49,8 @@ def cfg(key):
 
 
 def auth():
-    opts = {"auth_token": os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")}
-    workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+    opts = {"auth_token": os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")}
+    workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
     if workspace_id:
         opts["workspace_id"] = workspace_id
     return opts
@@ -205,7 +205,7 @@ def down(_args):
 
 if __name__ == "__main__":
     if not auth()["auth_token"]:
-        sys.exit("No Luxor Agent Cloud key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.")
+        sys.exit("No Luxor Agent Cloud key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.")
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
     u = sub.add_parser("up")

@@ -54,7 +54,7 @@ That installs the Luxor Agent Cloud Python SDK (`tenki>=1.4.1`). Nothing else ru
 ## Step 3 — Authenticate
 
 ```bash
-export TENKI_API_KEY=tk_...
+export LUXORAI_API_KEY=tk_...
 ```
 
 Or run `luxor login --api-key <key>` once. The scripts read the key from `~/.config/luxor/config.yaml` when the variable isn't set.

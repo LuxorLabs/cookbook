@@ -18,7 +18,7 @@ import urllib.request
 from climb import HILL, auth, create, seed_climber, start_judge
 
 if not auth()["auth_token"]:
-    print("No API key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.")
+    print("No API key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.")
     sys.exit(1)
 
 
