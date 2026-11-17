@@ -1,20 +1,20 @@
-// Claude Code, headless, on a real repo in a disposable Tenki sandbox:
+// Claude Code, headless, on a real repo in a disposable Luxor sandbox:
 // clone -> let the agent edit the checkout -> save its diff as a patch.
 import { writeFileSync } from "node:fs";
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { LuxorSandbox } from "@luxorai/sandbox";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
 const TASK = "Add a toArray() method to the Queue class in index.js that returns the queued values as an array, oldest first. Declare it in index.d.ts and add a test for it in test.js.";
 const PASSTHROUGH = ["ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL"];
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // cloneRepoUrl checks the repo out to ./repo before createAndWait resolves.
-await using sandbox = await tenki.createAndWait({
+await using sandbox = await luxor.createAndWait({
 	cpuCores: 2,
 	memoryMb: 4096,
 	cloneRepoUrl: REPO,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 // The default image ships the Claude Code CLI on PATH, so there is nothing to install.
