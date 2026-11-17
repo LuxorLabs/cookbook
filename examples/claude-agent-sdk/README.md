@@ -11,12 +11,12 @@ You ask the agent to write a Python script that computes the 30th Fibonacci numb
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "Claude Agent SDK" example from https://github.com/LuxorLabs/cookbook.
+Set up the Luxor Agent Cloud "Claude Agent SDK" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/claude-agent-sdk, check that Node.js is 24 or later, and run npm install.
-2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and ANTHROPIC_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and ANTHROPIC_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (it doesn't call the model), then node agent.mjs, and confirm the agent answers 832040 and the final ls shows fib.py in the sandbox.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
-Then show me how to add tenki-tools.mjs to my own Agent SDK project with tools: [] so no tool runs on my machine.
+Then show me how to add luxor-tools.mjs to my own Agent SDK project with tools: [] so no tool runs on my machine.
 ```
 
 ## Quick start
@@ -40,7 +40,7 @@ This installs the Claude Agent SDK, the Tenki sandbox client (`@tenkicloud/sandb
 ### 2. Set your API keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 export ANTHROPIC_API_KEY=...
 ```
 
@@ -53,8 +53,8 @@ node agent.mjs
 ```
 
 ```
-→ mcp__tenki__write_file {"path":"fib.py","content":"def fib(n):\n    a, b = 0, 1\n    for _ in
-→ mcp__tenki__bash {"command":"python3 fib.py"}
+→ mcp__luxor__write_file {"path":"fib.py","content":"def fib(n):\n    a, b = 0, 1\n    for _ in
+→ mcp__luxor__bash {"command":"python3 fib.py"}
 The 30th Fibonacci number is **832040**.
 -rw-r--r-- 1 tenki tenki 136 … fib.py
 ```
@@ -100,17 +100,17 @@ A few terms you'll see in the code:
 //
 // Needs a model key: export ANTHROPIC_API_KEY=...
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
-import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
-import { makeTenkiTools } from "./tenki-tools.mjs";
+import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
+import { makeLuxorTools } from "./luxor-tools.mjs";
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // Start one sandbox and reuse it for every tool call, so files persist between steps.
 // `await using` deletes the sandbox automatically when the script ends.
 await using sandbox = await tenki.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
-  workspaceId: process.env.TENKI_WORKSPACE_ID,
+  workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 for await (const message of query({
@@ -147,19 +147,19 @@ console.log(proof.exitCode === 0 ? stdoutText(proof) : `fib.py is not in the san
 Each tool is made with the SDK's `tool()` function, which takes four things: a name, a description Claude reads to decide when to use it, the inputs it accepts (described with `zod`), and the function that does the work. Whatever that function returns is what Claude sees.
 
 ```js
-// Claude Agent SDK tools backed by a Tenki sandbox.
+// Claude Agent SDK tools backed by a Luxor sandbox.
 //
 // The SDK's built-in Bash, Read, and Write tools act on the computer that runs
 // query(). These three do the same jobs inside a Tenki sandbox instead, so
 // everything the agent runs or writes stays on a machine you can throw away.
 import { tool } from "@anthropic-ai/claude-agent-sdk";
-import { stdoutText, stderrText } from "@tenkicloud/sandbox";
+import { stdoutText, stderrText } from "@luxorai/sandbox";
 import { z } from "zod";
 
 // Tools return their result to Claude as a list of content blocks; these return plain text.
 const say = (text) => ({ content: [{ type: "text", text }] });
 
-export function makeTenkiTools(sandbox) {
+export function makeLuxorTools(sandbox) {
   return [
     // The inputs are a plain object of fields ({ command: z.string() }), not z.object({...}).
     tool("bash", "Run a shell command in the sandbox and return its stdout and stderr.", { command: z.string() }, async ({ command }) => {
