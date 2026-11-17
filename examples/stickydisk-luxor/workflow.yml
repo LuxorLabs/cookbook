@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: tenki-standard-medium-4c-8g
+    runs-on: luxor-ubuntu-medium-4c-8g
     steps:
       - uses: actions/checkout@v6
       # Mount before anything writes to ~/.npm.
@@ -28,7 +28,7 @@ jobs:
           CACHE_GENERATION: ${{ steps.npm-cache.outputs.generation }}
 
   lint:
-    runs-on: tenki-standard-medium-4c-8g
+    runs-on: luxor-ubuntu-medium-4c-8g
     steps:
       - uses: actions/checkout@v6
       - uses: LuxorLabs/stickydisk@v1
