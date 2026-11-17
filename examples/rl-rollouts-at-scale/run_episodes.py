@@ -43,7 +43,7 @@ def resolve_token() -> str:
             token = re.search(r"^auth_token:\s*(.+)$", text, re.M).group(1).strip()
         except (OSError, AttributeError):
             sys.exit("No token. Set LUXORAI_API_KEY, or run `luxor login`.")
-    (os.environ.get("LUXORAI_API_KEY") or os.environ["TENKI_API_KEY"]) = token
+    os.environ["LUXORAI_API_KEY"] = token
     return token
 
 
