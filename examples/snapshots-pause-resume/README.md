@@ -7,10 +7,10 @@ Write a file into a Tenki sandbox, pause it, resume it, and read the file back. 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "Pause, snapshot, and resume" example from https://github.com/LuxorLabs/cookbook.
+Set up the Luxor Agent Cloud "Pause, snapshot, and resume" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo and cd into examples/snapshots-pause-resume.
 2. Check that Node.js is 24 or later, then run npm install.
-3. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 4. Run node run.mjs and confirm it prints "resumed -> still here after the pause" (the pause takes about 20 seconds), then run node verify.mjs.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
 Then show me how to pause a sandbox in one process and resume it later from another, waiting for PAUSED first.
@@ -21,7 +21,7 @@ Then show me how to pause a sandbox in one process and resume it later from anot
 You need:
 
 - Node.js 24 or later for `run.mjs`, which uses top-level `await using`. `verify.mjs` runs on Node 20.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 
 ### 1. Install
 
@@ -34,10 +34,10 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -79,7 +79,7 @@ const marker = new TextDecoder().decode(await sandbox.readFile("marker.txt"));
 console.log(`resumed -> ${marker}`); // resumed -> still here after the pause
 ```
 
-`sandbox` comes from `tenki.createAndWait({ cpuCores: 1, memoryMb: 1024 })` with `await using`.
+`sandbox` comes from `luxor.createAndWait({ cpuCores: 1, memoryMb: 1024 })` with `await using`.
 
 ## Wait for the state to settle
 
@@ -127,11 +127,11 @@ Pause and resume revive the same sandbox. To start a different sandbox from save
 
 | Call | What it does |
 | --- | --- |
-| `tenki.createSnapshotAndWait(sandbox.id, { name })` | Snapshot a running sandbox. `expiresAt` is optional. |
-| `tenki.createAndWait({ snapshotId: snap.id, ... })` | Boot a new sandbox, with a new id, from the snapshot. |
-| `tenki.listSnapshots()`, `tenki.listSessionSnapshots(id)` | List snapshots. |
-| `tenki.getSnapshotDownloadURL(snap.id)` | Export a snapshot. |
-| `tenki.deleteSnapshot(snap.id)` | Delete it. |
+| `luxor.createSnapshotAndWait(sandbox.id, { name })` | Snapshot a running sandbox. `expiresAt` is optional. |
+| `luxor.createAndWait({ snapshotId: snap.id, ... })` | Boot a new sandbox, with a new id, from the snapshot. |
+| `luxor.listSnapshots()`, `luxor.listSessionSnapshots(id)` | List snapshots. |
+| `luxor.getSnapshotDownloadURL(snap.id)` | Export a snapshot. |
+| `luxor.deleteSnapshot(snap.id)` | Delete it. |
 
 Snapshots don't restore volume attachments, so re-attach volumes yourself. The SDK README's "Snapshots" section has an example.
 
@@ -140,9 +140,9 @@ Snapshots don't restore volume attachments, so re-attach volumes yourself. The S
 | Problem | Fix |
 | --- | --- |
 | `SyntaxError` at `await using sandbox` | Use Node 24 or later, or run `verify.mjs`. |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `✗ expected PAUSED, got PAUSING` (or `RUNNING`/`RESUMING`) | `verify.mjs` waits about 20 seconds, close to the pause time. Run it again. In your code, use `waitPaused()`/`waitResumed()`. |
 | An old paused sandbox won't resume | Its snapshot expired. Set a longer `pauseRetentionMs` at create time. |
 | A file in `/tmp` is gone after resume | Keep state under `/home/tenki`. |
@@ -150,7 +150,7 @@ Snapshots don't restore volume attachments, so re-attach volumes yourself. The S
 
 ## Related
 
-- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox): see "Durable pause", "What survives a pause", and "Snapshots"
+- [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox): see "Durable pause", "What survives a pause", and "Snapshots"
 - [Work with files](../files-in-a-sandbox/)
 - [Run code in a sandbox](../run-code-in-a-sandbox/)
-- [Tenki docs](https://tenki.cloud/docs)
+- [Luxor Agent Cloud docs](https://luxor.ai/docs)

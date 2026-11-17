@@ -1,9 +1,9 @@
 """
-Proves this example works against live Tenki: boot a sandbox, exec python3,
+Proves this example works against live Luxor Agent Cloud: boot a sandbox, exec python3,
 assert "42", dispose. No LLM needed — this is the whole example, asserted.
 
 Needs Python 3.10+ and the dep in requirements.txt. API key/workspace from env (CI)
-or ~/.config/tenki/config.yaml (local `tenki login --api-key`). Exits non-zero on failure.
+or ~/.config/luxor/config.yaml (local `luxor login --api-key`). Exits non-zero on failure.
 """
 import os
 import sys
@@ -13,7 +13,7 @@ from tenki import Sandbox
 
 def cfg(key):
     try:
-        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
+        with open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()
@@ -22,13 +22,13 @@ def cfg(key):
     return ""
 
 
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 if not token:
-    print("No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.")
+    print("No API key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.")
     sys.exit(1)
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 if workspace_id:
     opts["workspace_id"] = workspace_id
 

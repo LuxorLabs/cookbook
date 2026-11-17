@@ -1,15 +1,15 @@
 # Run a full-stack app
 
-Run a task-list app in one Tenki sandbox: a JSON API, an HTML frontend, and a SQLite database seeded with 5 tasks. The script ships the code in, seeds the data, starts the server, calls the API, and exposes the frontend on a public HTTPS URL. Each step maps to a tool in the [Tenki MCP server](https://www.npmjs.com/package/@tenkicloud/mcp), so an agent such as Claude Code can run the same loop itself.
+Run a task-list app in one Luxor sandbox: a JSON API, an HTML frontend, and a SQLite database seeded with 5 tasks. The script ships the code in, seeds the data, starts the server, calls the API, and exposes the frontend on a public HTTPS URL. Each step maps to a tool in the [Luxor Agent Cloud MCP server](https://www.npmjs.com/package/@luxorai/mcp), so an agent such as Claude Code can run the same loop itself.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "Run a full-stack app" example from https://github.com/LuxorLabs/cookbook.
+Set up the Luxor Agent Cloud "Run a full-stack app" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/agent-fullstack-app, and run npm install (Node.js 20 or later).
-2. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run node run.mjs from that directory. Give me the preview URL it prints and the "terminate now:" command, and remind me the sandbox runs until I terminate it or for 2 hours.
 4. Run node verify.mjs and confirm the ✓ line.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -21,7 +21,7 @@ Then show me how to swap app/server.py for my own app and keep the same flow.
 You need:
 
 - Node.js 20 or later. The app runs on the sandbox's own `python3`, so you don't need Python locally.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 
 ### 1. Install
 
@@ -34,10 +34,10 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -71,12 +71,12 @@ Create the sandbox with inbound traffic allowed and a lifetime cap:
 // allowInbound: the gateway routes public traffic to the sandbox (for the preview URL).
 // This script deliberately leaves the sandbox running so you can open the URL, so
 // set a billing guard: it self-terminates after 2 hours.
-const sandbox = await tenki.createAndWait({
+const sandbox = await luxor.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
   allowInbound: true,
   maxDurationMs: 2 * 60 * 60_000,
-  workspaceId: process.env.TENKI_WORKSPACE_ID,
+  workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 ```
 
@@ -123,7 +123,7 @@ Stdlib-only Python (`http.server` and `sqlite3`), so there's no install step. `a
 | `PATCH /api/tasks/<id>` | Update its status: `{"status": "done"}` |
 | `GET /api/health` | `{"ok": true, "tasks": N}` |
 
-`POST` and `PATCH` are accepted only from `127.0.0.1`, inside the sandbox. Writes through the preview URL arrive from Tenki's gateway and get `403`. A body that isn't a JSON object gets `400`. The frontend renders titles as text. `app/seed.py` creates `/home/tenki/app.db` with 5 tasks.
+`POST` and `PATCH` are accepted only from `127.0.0.1`, inside the sandbox. Writes through the preview URL arrive from Luxor Agent Cloud's gateway and get `403`. A body that isn't a JSON object gets `400`. The frontend renders titles as text. `app/seed.py` creates `/home/tenki/app.db` with 5 tasks.
 
 The app has no auth, so anyone with the URL can read every task. The SQLite file is gone when the sandbox terminates unless you [snapshot it](../snapshots-pause-resume/) first.
 
@@ -131,7 +131,7 @@ Swap in FastAPI, Express, or Next with Postgres and the shape stays the same. To
 
 ## Let an agent run it
 
-Each step has a matching Tenki MCP tool:
+Each step has a matching Luxor Agent Cloud MCP tool:
 
 | Step | This example | Agent does it with |
 | --- | --- | --- |
@@ -145,10 +145,10 @@ Each step has a matching Tenki MCP tool:
 Add the server to Claude Code ([tenki-mcp README](https://github.com/LuxorLabs/tenki-mcp)):
 
 ```bash
-claude mcp add tenki --env TENKI_API_KEY=tk_your_key_here -- npx -y @tenkicloud/mcp
+claude mcp add luxor --env LUXORAI_API_KEY=tk_your_key_here -- npx -y @luxorai/mcp
 ```
 
-The local server needs Node 22 or later. For Claude Desktop and Cursor, see [MCP server](../mcp-tenki-sandbox/).
+The local server needs Node 22 or later. For Claude Desktop and Cursor, see [MCP server](../mcp-luxor-sandbox/).
 
 `tenki_create_sandbox` treats inbound networking as off unless the agent passes `allow_inbound: true`, which the preview URL needs. Have it pass `max_duration_seconds` too, for the same lifetime cap.
 
@@ -165,8 +165,8 @@ The local server needs Node 22 or later. For Claude Desktop and Cursor, see [MCP
 
 ## Related
 
-- [tenki-mcp](https://github.com/LuxorLabs/tenki-mcp) and [`@tenkicloud/mcp`](https://www.npmjs.com/package/@tenkicloud/mcp)
+- [tenki-mcp](https://github.com/LuxorLabs/tenki-mcp) and [`@luxorai/mcp`](https://www.npmjs.com/package/@luxorai/mcp)
 - [Expose a port](../expose-a-port/)
 - [Pause, snapshot, and resume](../snapshots-pause-resume/)
-- [MCP server](../mcp-tenki-sandbox/)
-- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
+- [MCP server](../mcp-luxor-sandbox/)
+- [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox) and the [Luxor Agent Cloud docs](https://luxor.ai/docs)
