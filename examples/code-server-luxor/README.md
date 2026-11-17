@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "code-server" example from https://github.com/LuxorLabs/cookbook, which runs VS Code in the browser on a persistent Luxor sandbox with a password-protected URL.
 1. Clone the repo, cd into examples/code-server-luxor, and run npm install (Node.js 20 or later).
-2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) in the environment. If it is missing, stop and ask me to export it. Never print the key or write it to a file.
+2. It needs LUXORAI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) in the environment. If it is missing, stop and ask me to export it. Never print the key or write it to a file.
 3. Run node verify.mjs and confirm the ✓ line.
 4. Run node run.mjs (add a git URL as the argument if I named a repo), then give me the URL and the password it prints.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -34,10 +34,10 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -98,8 +98,8 @@ The password is 48 hex characters from `crypto.randomBytes`, saved once at `/hom
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `setup failed (exit <n>) ...` | The download or the clone failed; the error follows. The box is still running: fix it and run again, or `node run.mjs stop`. |
 | `code-server never answered; see /tmp/code-server.log in the sandbox ...` | If you changed the start command, keep `--bind-addr 0.0.0.0:8080`. |

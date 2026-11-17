@@ -14,8 +14,8 @@ const WORK = "/home/tenki/workspace"; // the volume's mount point; everything el
 const BOX = (process.env.BOX || `code-server-${userInfo().username}`).toLowerCase().replace(/[^a-z0-9-]+/g, "-");
 const [cmd = "up", repo] = /^(up|stop|delete)$/.test(process.argv[2] ?? "up") ? process.argv.slice(2) : ["up", process.argv[2]];
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
-const workspaceId = process.env.TENKI_WORKSPACE_ID;
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
+const workspaceId = (process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const findUrl = async () => (await luxor.previewUrls.list({ workspaceId })).find((u) => u.slug === BOX);
 const findVolume = async () => (await luxor.listVolumes({ workspaceId })).find((v) => v.name === BOX);
