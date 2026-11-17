@@ -7,6 +7,7 @@ Tenki is now **Luxor Agent Cloud**, at [luxor.ai](https://luxor.ai). The cookboo
 - The `@tenkicloud/*` packages, which became `@luxorai/*` at the same versions.
 - `TenkiSandbox`, which became `LuxorSandbox`.
 - The `tenki` CLI, which became `luxor`, and its config file, now `~/.config/luxor/config.yaml`.
+- Runner labels: `tenki-standard-*` became `luxor-ubuntu-*` and `tenki-macos-*` became `luxor-macos-*`, as on [luxor.ai/docs/runners](https://luxor.ai/docs/runners/sizes). The old labels keep working.
 - The example folders: `examples/<name>-tenki` became `examples/<name>-luxor`.
 - The helper files and names the examples define themselves.
 
@@ -20,7 +21,7 @@ Tenki is now **Luxor Agent Cloud**, at [luxor.ai](https://luxor.ai). The cookboo
 | `~/.config/tenki/config.yaml` | Read as a fallback after `~/.config/luxor/config.yaml`, for keys saved by the old `tenki login` |
 | The `tenki` Python package and `tenki_sandbox` module, `tenki-sdk-go`, the `LuxorLabs/tenki-*` repos | Not renamed upstream yet |
 | `tenki_*` MCP tool names, the OpenClaw and AgentBox plugin id `tenki`, the Convex component's `Tenki` class | What the `@luxorai` packages still call them |
-| `/home/tenki`, `*.sb.tenki.sh`, `tenki/anchor` and `tenki/tinyfish` images, `tenki-standard-*` runner labels | Platform names |
+| `/home/tenki`, `*.sb.tenki.sh`, `tenki/anchor` and `tenki/tinyfish` images | Platform names |
 | `ag2.extensions.tenki`, `@computesdk/tenki`, PraisonAI's `compute.tenki`, `prefect-tenki`, `nemo-gym-tenki`, other providers named `tenki` | Other projects' identifiers |
 | `Copyright (c) 2026 Tenki Cloud` in `LICENSE` | Legal entity; change with counsel |
 
