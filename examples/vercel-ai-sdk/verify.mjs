@@ -1,20 +1,20 @@
 /**
- * Proves the adapter works against live Tenki — no LLM key needed.
- * Boots a Tenki sandbox through the adapter, then drives the exact
+ * Proves the adapter works against live Luxor Agent Cloud — no LLM key needed.
+ * Boots a Luxor sandbox through the adapter, then drives the exact
  * Experimental_SandboxSession surface the AI SDK calls: run (assert stdout),
  * writeTextFile + readTextFile (assert round-trip), a missing file (assert null),
  * and spawn (assert streamed output + exit code). Cleans up the sandbox.
- * Token/workspace from env (CI) or ~/.config/tenki/config.yaml (local `tenki login`).
+ * Token/workspace from env (CI) or ~/.config/luxor/config.yaml (local `luxor login`).
  * Exits non-zero on any failure.
  */
-import { createTenkiSandbox } from "./tenki-sandbox.mjs";
+import { createLuxorSandbox } from "./luxor-sandbox.mjs";
 
 // The members the AI SDK's Experimental_SandboxSession requires.
 const REQUIRED = ["description", "readFile", "readBinaryFile", "readTextFile", "writeFile", "writeBinaryFile", "writeTextFile", "spawn", "run"];
 
 let handle;
 try {
-	handle = await createTenkiSandbox(); // reads creds; throws if none
+	handle = await createLuxorSandbox(); // reads creds; throws if none
 	const { sandbox } = handle;
 
 	// 0) structural — the adapter satisfies the AI SDK sandbox shape
@@ -47,7 +47,7 @@ try {
 		throw new Error(`spawn: exit ${exitCode}, stdout ${JSON.stringify(streamed)}`);
 	}
 
-	console.log("✓ vercel-ai-sdk: run (42) → file round-trip → missing→null → spawn, on live Tenki");
+	console.log("✓ vercel-ai-sdk: run (42) → file round-trip → missing→null → spawn, on live Luxor Agent Cloud");
 } catch (e) {
 	console.error("✗ " + (e?.message ?? e));
 	process.exitCode = 1;
