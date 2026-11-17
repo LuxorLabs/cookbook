@@ -38,7 +38,7 @@ export const rules = [
 	{ phase: "1", scope: "code", files: /\.(m?[jt]s|tsx?|md)$/, find: /\btenki(?=\.[a-z]\w*\.[a-z]\w*\()/g, replace: "luxor" },
 	// Domains. tenki.cloud, app.tenki.cloud and api.tenki.cloud all moved to luxor.ai.
 	{ phase: "1", scope: "any", find: /https?:\/\/(www\.)?tenki\.cloud(?=[\/\s)"'`>\]#?]|$)/gm, replace: "https://luxor.ai" },
-	{ phase: "1", scope: "any", find: /\b(app|api)\.tenki\.cloud\b/g, replace: "$1.luxor.ai" },
+	{ phase: "1", scope: "any", find: /\b(app|api|mcp)\.tenki\.cloud\b/g, replace: "$1.luxor.ai" },
 	{ phase: "1", scope: "any", find: /(?<![.\w/])tenki\.cloud\b/g, replace: "luxor.ai" },
 
 	// Product names, as luxor.ai names them.
@@ -72,7 +72,7 @@ export const rules = [
 	{ phase: "1", scope: "any", files: /smolagents\//, find: /\bTenkiExecutor\b/g, replace: "LuxorExecutor" },
 	{ phase: "1", scope: "any", find: /\btenki_client\b/g, replace: "luxor_client" },
 	{ phase: "1", scope: "any", find: /\bmcp__tenki__/g, replace: "mcp__luxor__" },
-	{ phase: "1", scope: "any", find: /\b(mcpServers: \{ |claude mcp add |name: ")tenki\b/g, replace: "$1luxor" },
+	{ phase: "1", scope: "any", find: /\b(mcpServers: \{ |claude mcp add |claude mcp add --transport http |claude mcp login |claude mcp get |name: ")tenki\b/g, replace: "$1luxor" },
 	{ phase: "1", scope: "any", find: /\btenki-(sandboxes|orca|example|verify|cookbook-verify|pool|remote-mcp-server|remote)\b/g, replace: "luxor-$1" },
 	{ phase: "1", scope: "any", find: /\b(ragflow|prefect)-tenki-verify\b/g, replace: "$1-luxor-verify" },
 	// Strings the examples print and check, and names they give things.
@@ -119,7 +119,7 @@ export const protect = [
 	{ why: "upstream: DeerFlow's sandbox names", find: /deer-flow-tenki-/g },
 	{ why: "legal: copyright holder", find: /Copyright \(c\) \d{4} Tenki Cloud/g },
 	// Other projects' identifiers: renamed only after each upstream adds a luxor alias.
-	{ why: "upstream: links into other projects", find: /https?:\/\/(?!(app\.|api\.)?tenki\.cloud)(?!github\.com\/LuxorLabs\/)(?!www\.npmjs\.com\/package\/@tenkicloud\/)[^\s)\]>"'`]*tenki[^\s)\]>"'`]*/gi },
+	{ why: "upstream: links into other projects", find: /https?:\/\/(?!(app\.|api\.|mcp\.)?tenki\.cloud)(?!github\.com\/LuxorLabs\/)(?!www\.npmjs\.com\/package\/@tenkicloud\/)[^\s)\]>"'`]*tenki[^\s)\]>"'`]*/gi },
 	{ why: "upstream: AG2, PraisonAI, ComputeSDK, Prefect, agentenv, Harbor, Covalent, Hermes, NeMo Gym, OpenHermit", find: /\{ ?tenki ?\}(?= from "@computesdk)|(?<!examples\/|\.\.\/|✓ |FAILED: )@computesdk\/tenki\b|\bcomputesdk[./]tenki\b|\bag2\.extensions\.tenki\b|\bag2\[tenki\]|\bpraisonai[a-z_.]*\.tenki\b|\bpraisonai\[tenki\]|\bTenki(Environment|Compute|ComputeLegacy|Worker|WorkerJobConfiguration|Credentials|Resources|SandboxProvider|ExecBackend|Session)\b|(?<!examples\/|\.\.\/|✓ |FAILED: |\/path\/to\/)\b(covalent[-_]tenki[-_]plugin|tenki_harbor|tenki-harbor|nemo-gym-tenki|hermes-tenki|prefect_tenki|prefect-tenki|tenki-prefect|langchain-tenki|praisonai-tenki|openhermit-tenki|tenki-plugin)\b|\btenki_snapshots\b|\btools\.environments\.tenki\b|\benvironments\/tenki\.py\b/g },
 	{ why: "upstream: provider names in other tools' CLIs and configs", find: /(--provider|--sandbox|--type|--extra|UV_EXTRAS=|provider[=:]|tools_run_on=|default\s*=|sandbox_providers\/|providers\/|providers\.)\s*["'`]{0,2}tenki\b|\[tenki\]|\bagentbox( plugin list[^\n]*?| [a-z]+ --provider)? tenki\b|(?<!name: )["'`]{1,2}tenki["'`]{1,2}|\b(the|a|built-in|its|SDK v2) [`"]?tenki[`"]? (provider|backend|worker|exec backend|extension|group|sandbox provider)\b|\b(selecting|runtime as) tenki\b|\btenki(?=\s+sandbox\s+01)|prints: tenki\b|\btenki is required\b|\bsandbox\/tenki(_test)?\.go\b|backends\/tenki\.ts\b|\bpackages\/tenki\b|\bcommunity\.tenki\b|tenki-backend\.test\.ts|\bextensions\/tenki\.mdx\b|compute\/tenki\.py\b|\bprovider=tenki\b|\btoolkit: "TENKI"/g },
 	{ why: "upstream: names other tools give their Tenki provider", find: /--(env-|agent-)?sandbox tenki\b|\btenki\(\)|,tenki\b|test_tenki_provider\.py|tenki-harness-evals|TERMINAL_ENV=tenki|\bterminal\.tenki\b|"tenki\.py"|tenki_\*|owui_tenki_out|\.\/tenki-openclaw|(STATE_DIR|\.openclaw)\/tenki\b|\btenki-default\b|"type":"tenki"|sandbox type: tenki|SANDBOX_PROVIDER_TYPE=tenki|`tenki: [a-zA-Z][^`]*`|executor type: tenki|\btenki(?=\.(diskGB|image)\b)|crabbox-provider-tenki|\/tenki-prepared\.json|\btenki:(?=\s+cpus)|\btarget: linux\b/g },
