@@ -1,12 +1,12 @@
-"""Snapshot once, one sandbox per episode: the rollout pattern for RL on Tenki.
+"""Snapshot once, one sandbox per episode: the rollout pattern for RL on Luxor Agent Cloud.
 
 prepare()  builds the golden environment once (clone a repo, install deps) and snapshots it.
 episode(i) creates a NEW sandbox from that snapshot, runs a scripted policy, scores it,
            and always terminates the sandbox.
 main()     fans out N episodes under a semaphore, retries 429/503, and prints latency and cost.
 
-Auth: TENKI_API_KEY (or TENKI_AUTH_TOKEN), else the token `tenki login` saved in
-~/.config/tenki/config.yaml.
+Auth: TENKI_API_KEY (or TENKI_AUTH_TOKEN), else the token `luxor login` saved in
+~/.config/luxor/config.yaml.
 """
 
 from __future__ import annotations
@@ -39,10 +39,10 @@ def resolve_token() -> str:
     token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN")
     if not token:
         try:
-            text = open(os.path.expanduser("~/.config/tenki/config.yaml")).read()
+            text = open(os.path.expanduser("~/.config/luxor/config.yaml")).read()
             token = re.search(r"^auth_token:\s*(.+)$", text, re.M).group(1).strip()
         except (OSError, AttributeError):
-            sys.exit("No token. Set TENKI_API_KEY, or run `tenki login`.")
+            sys.exit("No token. Set TENKI_API_KEY, or run `luxor login`.")
     os.environ["TENKI_API_KEY"] = token
     return token
 
@@ -169,7 +169,7 @@ def report(results: list[Result], g: Golden, wall: float, conc: int, rates: tupl
         print(f"cost at the rates you passed: ${(sb_s + prep_s) * per_s:.4f} total, "
               f"${sb_s / max(1, len(results)) * per_s:.5f} per episode (excludes snapshot storage)")
     else:
-        print("cost: pass --vcpu-rate/--mem-rate/--disk-rate (see https://tenki.cloud/pricing)")
+        print("cost: pass --vcpu-rate/--mem-rate/--disk-rate (see https://luxor.ai/pricing)")
 
 
 async def main() -> int:

@@ -1,5 +1,5 @@
 """
-Verify the snapshot-once, sandbox-per-episode pattern on live Tenki, with no model key:
+Verify the snapshot-once, sandbox-per-episode pattern on live Luxor Agent Cloud, with no model key:
   1. prepare() builds the golden environment and snapshots it,
   2. three episodes each start a NEW sandbox from the snapshot and are scored,
   3. every sandbox (the golden one and the three episodes) is terminated afterwards, and
