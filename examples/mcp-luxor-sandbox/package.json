@@ -1,0 +1,13 @@
+{
+  "name": "mcp-luxor-sandbox",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — give Claude / Cursor a Luxor sandbox via the @luxorai/mcp MCP server.",
+  "scripts": {
+    "verify": "node verify.mjs"
+  },
+  "dependencies": {
+    "@luxorai/mcp": "^0.4.3",
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}
