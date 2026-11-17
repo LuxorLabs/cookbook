@@ -1,17 +1,17 @@
-// Tenki sandbox module for Grok AI Teammates. It exports the functions the app
+// Luxor sandbox module for Grok AI Teammates. It exports the functions the app
 // imports for its bot computers, plus a Sandbox class with the methods
 // lib/sandbox-tools.ts calls, so that file only changes its imports.
 import { randomBytes } from "node:crypto"
 
 import {
   SessionNotFoundError,
-  TenkiSandbox,
+  LuxorSandbox,
   WaitReadyFailedError,
   stderrText,
   stdoutText,
   type ExecResult,
   type Session,
-} from "@tenkicloud/sandbox"
+} from "@luxorai/sandbox"
 
 // Every bot sandbox carries this tag, which is how the meter finds them
 const TAG = "ai-teammates"
@@ -21,8 +21,8 @@ const DISPLAY = ":1"
 
 // Reads TENKI_API_KEY (or TENKI_AUTH_TOKEN). Made on first use, so importing
 // this module during `next build` needs no key.
-let client: TenkiSandbox | undefined
-const tenki = () => (client ??= new TenkiSandbox())
+let client: LuxorSandbox | undefined
+const luxor = () => (client ??= new LuxorSandbox())
 
 export const MEMORY_FILE = "MEMORY.md"
 
@@ -271,7 +271,7 @@ export class Sandbox {
 }
 
 // Every bot owns one sandbox. Sticky, so it runs until it is paused or
-// deleted rather than for Tenki's default two hours; tagged with the bot.
+// deleted rather than for Luxor Agent Cloud's default two hours; tagged with the bot.
 export async function createBotSandbox(botId: string) {
   const session = await tenki()
     .createAndWait({
@@ -380,7 +380,7 @@ export async function deleteBotSandbox(sandboxId: string) {
   await session.close()
 }
 
-// The IDs of every bot sandbox that holds a VM, which is when Tenki bills it
+// The IDs of every bot sandbox that holds a VM, which is when Luxor Agent Cloud bills it
 export async function listRunningSandboxIds() {
   const sessions = await tenki().list({
     tags: [TAG],
@@ -400,7 +400,7 @@ export async function stopBotSandbox(sandboxId: string) {
   if (session.state === "RUNNING") await session.pause()
 }
 
-// Tenki leaves a sticky sandbox running until it is paused or deleted. This pauses
+// Luxor Agent Cloud leaves a sticky sandbox running until it is paused or deleted. This pauses
 // the bot sandboxes no command has touched for idleMinutes, and returns their IDs.
 // Run it on a schedule (trigger/pause-idle.ts).
 export async function stopIdleSandboxes(idleMinutes = 15) {

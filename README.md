@@ -125,13 +125,13 @@ Run a self-hosted agent platform's sandboxes on Luxor Agent Cloud.
 
 | Example | What it covers |
 | --- | --- |
-| [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
-| [RAGFlow](examples/ragflow-tenki/) | Ephemeral sandboxes for the RAG engine's code components |
-| [Open WebUI](examples/open-webui-tenki/) | Sandboxed code interpreter for the self-hosted chat platform |
-| [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
-| [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent sandboxes for an agent fleet |
-| [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
-| [Grok AI Teammates](examples/grok-ai-teammates-tenki/) | A sticky sandbox per chat bot, with a noVNC desktop and idle pause, for the Trigger.dev app |
+| [DeerFlow](examples/deerflow-luxor/) | Community sandbox provider for ByteDance's SuperAgent harness |
+| [RAGFlow](examples/ragflow-luxor/) | Ephemeral sandboxes for the RAG engine's code components |
+| [Open WebUI](examples/open-webui-luxor/) | Sandboxed code interpreter for the self-hosted chat platform |
+| [AgentEnv](examples/agentenv-luxor/) | Built-in sandbox backend for Scale AI's RL environment framework |
+| [OpenHermit](examples/openhermit-luxor/) | Sticky per-agent sandboxes for an agent fleet |
+| [Omnara](examples/omnara-luxor/) | Machine pool provider for the open-source managed agent platform |
+| [Grok AI Teammates](examples/grok-ai-teammates-luxor/) | A sticky sandbox per chat bot, with a noVNC desktop and idle pause, for the Trigger.dev app |
 
 ### Migrating from another provider
 
