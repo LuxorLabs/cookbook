@@ -156,6 +156,5 @@ The snapshot holds the virtual environment and the 1.6 GB checkpoint directory. 
 ## Related
 
 - [Laya](https://github.com/NandhaKishorM/laya) on GitHub, the [`convaiinnovations/laya`](https://huggingface.co/convaiinnovations/laya) checkpoint, and the [demo Space](https://huggingface.co/spaces/convaiinnovations/laya-demo)
-- [Golden image](../golden-image/): bake the PyTorch install into a snapshot so every training sandbox starts with it
 - [Pause, snapshot, and resume](../snapshots-pause-resume/)
 - [Run code with Python](../run-code-python/)
