@@ -32,10 +32,10 @@ const NEW_PREFIX = [...new Set(onDisk.map((n) => n.match(/^luxor-(.+)$/)?.[1]).f
 const AS_FOLDER = new RegExp(`(?<=\\/|\\[|✓ |"name": "|FAILED: |\`)(${FOLDER})(?![\\w-])`, "g");
 
 export const rules = [
-	...(NEW.length ? [{ phase: "1", scope: "any", find: new RegExp(`(?<![\\w-])(${NEW.join("|")})-tenki(?![\\w-])`, "g"), replace: "$1-luxor" }] : []),
+	...(NEW.length ? [{ phase: "1", scope: "any", find: new RegExp(`(?<![\\w-])(${NEW.join("|")})-tenki(?!\\w)`, "g"), replace: "$1-luxor" }] : []),
 	...(NEW_PREFIX.length ? [{ phase: "1", scope: "any", find: new RegExp(`(?<![\\w-])tenki-(${NEW_PREFIX.join("|")})(?![\\w-])`, "g"), replace: "luxor-$1" }] : []),
 	// The JS client reaching a sub-API: tenki.previewUrls.bind(...).
-	{ phase: "1", scope: "code", files: /\.(m?[jt]s|tsx?)$/, find: /\btenki(?=\.[a-z]\w*\.[a-z]\w*\()/g, replace: "luxor" },
+	{ phase: "1", scope: "code", files: /\.(m?[jt]s|tsx?|md)$/, find: /\btenki(?=\.[a-z]\w*\.[a-z]\w*\()/g, replace: "luxor" },
 	// Domains. tenki.cloud, app.tenki.cloud and api.tenki.cloud all moved to luxor.ai.
 	{ phase: "1", scope: "any", find: /https?:\/\/(www\.)?tenki\.cloud(?=[\/\s)"'`>\]#?]|$)/gm, replace: "https://luxor.ai" },
 	{ phase: "1", scope: "any", find: /\b(app|api)\.tenki\.cloud\b/g, replace: "$1.luxor.ai" },
@@ -73,7 +73,7 @@ export const rules = [
 	{ phase: "1", scope: "any", find: /\btenki_client\b/g, replace: "luxor_client" },
 	{ phase: "1", scope: "any", find: /\bmcp__tenki__/g, replace: "mcp__luxor__" },
 	{ phase: "1", scope: "any", find: /\b(mcpServers: \{ |claude mcp add |name: ")tenki\b/g, replace: "$1luxor" },
-	{ phase: "1", scope: "any", find: /\btenki-(sandboxes|orca|example|verify|cookbook-verify|pool)\b/g, replace: "luxor-$1" },
+	{ phase: "1", scope: "any", find: /\btenki-(sandboxes|orca|example|verify|cookbook-verify|pool|remote-mcp-server|remote)\b/g, replace: "luxor-$1" },
 	{ phase: "1", scope: "any", find: /\b(ragflow|prefect)-tenki-verify\b/g, replace: "$1-luxor-verify" },
 	// Strings the examples print and check, and names they give things.
 	{ phase: "1", scope: "any", find: /\bhello-from-tenki\b|\bhello from tenki\b|\bmodal->tenki\b|\bhello-tenki\b|\bpi-env:tenki:|\bpi-durable-tenki(?= \$)|\btenki-\$\{|reconcile tenki sandboxes|ui:\/\/tenki\//g, replace: (m) => m.replace("tenki", "luxor") },
@@ -92,11 +92,12 @@ export const protect = [
 	// The platform.
 	{ why: "platform: sandbox user", find: /\/home\/tenki\b|\buser(name)? `?tenki`?|\btenki@|\btenki tenki\b|x86_64\s+tenki\b/g },
 	{ why: "platform: preview domain", find: /\b[a-z0-9.-]*sb\.tenki\.sh\b/g },
-	{ why: "platform: Runners labels", find: /\btenki-(standard|large|small|medium|xlarge)[a-z0-9-]*/g },
+	{ why: "platform: Runners labels", find: /\btenki-(standard|large|small|medium|xlarge|macos)[a-z0-9-]*|\btenki-\[a-z0-9-\]|\btenki-\.\.\./g },
 	{ why: "platform: Code Reviewer bot", find: /@tenki-reviewer\b/g },
 	{ why: "platform: container images", find: /\btenki\/(anchor|tinyfish)\b(:[a-z0-9.-]+)?/g },
 	// What the SDKs and packages still call themselves.
 	{ why: "SDK: TENKI_* environment variables, the fallback the SDKs and plugins still read", find: /\bTENKI_[A-Z0-9_]+\b/g },
+	{ why: "SDK: the Python package's classes", files: /\.py$/, find: /\btenki(?=\.[A-Z]\w*)/g },
 	{ why: "SDK: the Python package", find: /(?:^|;|`)\s*(from|import) tenki\b|\bpip install tenki\b|pypi\.org\/project\/tenki\b|\btenki(?=\[|\s*[><=~]=?\s*[0-9])|\btenki_sandbox\b|`tenki`|\btenki`?(?=`?\s+(\d\.x\s+)?(Python |Go )?(SDK|package|client)\b)|(?<=(#|\band|\bONLY|\bonly|\bdatasets|\bswebench|\brequirements),?\s)tenki\b|\btenki(?=\s\+\s)/gm },
 	{ why: "SDK: the Go module and SDK repos", find: /tenki-sdk-(go|python|es)|\btenkisdk\b/g },
 	{ why: "SDK: plugin and integration repos", find: /\b(LuxorLabs|TenkiCloud|opencolin)\/[\w.-]*tenki[\w.-]*|\btenki-[a-z0-9-]+#\d+|\bTenkiCloud\b/g },
