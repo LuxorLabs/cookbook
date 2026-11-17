@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example: a LiteLLM proxy in a sticky Luxor sandbox on a named preview URL, with provider keys injected at egress.",
   "dependencies": {
-    "@luxorai/sandbox": ">=1.4.1"
+    "@luxorai/sandbox": ">=1.5.2"
   }
 }

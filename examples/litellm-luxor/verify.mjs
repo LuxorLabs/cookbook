@@ -3,24 +3,24 @@
 // Asserts health, master-key auth, the model list, and that OpenAI received the stored value (its
 // 401 echoes the key's last 4 characters). Deletes URL, sandbox, policy, and secret in `finally`.
 import { LuxorSandbox, WorkspaceClient } from "@luxorai/sandbox";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { randomBytes } from "node:crypto";
 import { pointUrl, startProxy, upsertPolicy, upsertSecret } from "./proxy.mjs";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8");
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
 	}
 };
 
-const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
+const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+const workspaceId = process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
+	console.error("No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 

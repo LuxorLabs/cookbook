@@ -5,9 +5,9 @@ import { LuxorSandbox, WorkspaceClient } from "@luxorai/sandbox";
 import { randomBytes } from "node:crypto";
 import { PROVIDERS, findByName, pointUrl, startProxy, upsertPolicy, upsertSecret } from "./proxy.mjs";
 
-const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY;
-if (!authToken) throw new Error("missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY");
-const workspaceId = process.env.TENKI_WORKSPACE_ID;
+const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY;
+if (!authToken) throw new Error("missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY");
+const workspaceId = (process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID);
 const SLUG = process.env.LITELLM_SLUG || "litellm";
 const POLICY = `${SLUG}-providers`; // request policy name
 const secretName = (k) => `LITELLM_${k}`; // workspace secret name for each provider key

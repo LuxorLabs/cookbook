@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "LiteLLM proxy" example from https://github.com/LuxorLabs/cookbook, which runs a LiteLLM proxy in a long-lived Luxor sandbox on a named URL, with provider keys held as Luxor Agent Cloud workspace secrets.
 1. Clone the repo, cd into examples/litellm-luxor, and run npm install (Node.js 20 or later).
-2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and at least one of OPENAI_API_KEY or ANTHROPIC_API_KEY in the environment. If they are missing, stop and ask me to export them. Never print the keys or write them to a file.
+2. It needs LUXORAI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and at least one of OPENAI_API_KEY or ANTHROPIC_API_KEY in the environment. If they are missing, stop and ask me to export them. Never print the keys or write them to a file.
 3. Run node verify.mjs and confirm the ✓ line.
 4. Run node run.mjs and give me the proxy URL and the LITELLM_MASTER_KEY line it prints.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -35,11 +35,11 @@ npm install
 ### 2. Set your keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 export OPENAI_API_KEY=sk-...     # and/or ANTHROPIC_API_KEY
 ```
 
-`run.mjs` reads keys from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads keys from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -128,7 +128,7 @@ The proxy's master key is the only credential inside the sandbox. LiteLLM requir
 
 | Problem | Fix |
 | --- | --- |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY` | `run.mjs` reads only the environment. Export the key in this shell. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY` | `run.mjs` reads only the environment. Export the key in this shell. |
 | `set at least one of OPENAI_API_KEY, ANTHROPIC_API_KEY` | No provider key in the environment and none stored yet. Export one. |
 | `preview URL "litellm" is bound to sandbox …` | Something else in your workspace already uses that slug. Set `LITELLM_SLUG` to another name. |
 | `uv venv … exited 1` | The package install failed in the sandbox. The error shows the end of its stderr; rerun `node run.mjs`. |
