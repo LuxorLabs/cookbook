@@ -1,7 +1,7 @@
-// Host a long-running service on Tenki: a sticky sandbox runs app.py at boot, its data lives on
+// Host a long-running service on Luxor Agent Cloud: a sticky sandbox runs app.py at boot, its data lives on
 // a volume, and a named preview URL gives it a stable public address. Leaves the service running.
 // Run it again after `node down.mjs` and it comes back on the same URL with the same data.
-import { TenkiSandbox, TemplateSpec } from "@tenkicloud/sandbox";
+import { LuxorSandbox, TemplateSpec } from "@luxorai/sandbox";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 const PORT = 8000;
@@ -11,10 +11,10 @@ const state = existsSync(STATE) ? JSON.parse(readFileSync(STATE, "utf8")) : {};
 const save = () => writeFileSync(STATE, JSON.stringify(state, null, 2) + "\n");
 
 const workspaceId = process.env.TENKI_WORKSPACE_ID;
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN, workspaceId });
+const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN, workspaceId });
 
 if (state.sandboxId) {
-	const old = await tenki.get(state.sandboxId).catch(() => undefined);
+	const old = await luxor.get(state.sandboxId).catch(() => undefined);
 	if (old?.state === "RUNNING") {
 		console.log(`already running: ${state.url}\nstop it first with: node down.mjs`);
 		process.exit(0);
@@ -23,12 +23,12 @@ if (state.sandboxId) {
 
 // 1. A volume for the app's data. It outlives any one sandbox.
 if (!state.volumeId) {
-	const volume = await tenki.createVolume({ name: `visit-counter-${suffix()}`, sizeBytes: 1024 ** 3, workspaceId });
+	const volume = await luxor.createVolume({ name: `visit-counter-${suffix()}`, sizeBytes: 1024 ** 3, workspaceId });
 	Object.assign(state, { volumeId: volume.id });
 	save();
 }
 // A volume attaches to one sandbox at a time, and stays attached for a few seconds after it ends.
-for (let i = 0; (await tenki.getVolume(state.volumeId)).state !== "AVAILABLE"; i++) {
+for (let i = 0; (await luxor.getVolume(state.volumeId)).state !== "AVAILABLE"; i++) {
 	if (i === 30) throw new Error(`volume ${state.volumeId} is still attached to another sandbox`);
 	await new Promise((r) => setTimeout(r, 2000));
 }
@@ -39,7 +39,7 @@ const runtime = new TemplateSpec().start('exec python3 -c "$APP_PY"', {
 	restartPolicy: "always",
 	readyWhen: [{ port: PORT }],
 });
-const sandbox = await tenki.createAndWait({
+const sandbox = await luxor.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
 	allowInbound: true, // the preview URL needs inbound traffic
@@ -57,11 +57,11 @@ save();
 // If the old sandbox was terminated while still bound, the URL went with it: create it again.
 let url;
 if (state.urlId) {
-	url = await tenki.previewUrls.bind(state.urlId, sandbox.id, PORT).catch((e) => {
+	url = await luxor.previewUrls.bind(state.urlId, sandbox.id, PORT).catch((e) => {
 		if (!/not.found/i.test(String(e?.message))) throw e;
 	});
 }
-url ??= await tenki.previewUrls.create(state.slug ?? (state.slug = `visit-counter-${suffix()}`), {
+url ??= await luxor.previewUrls.create(state.slug ?? (state.slug = `visit-counter-${suffix()}`), {
 	sessionId: sandbox.id,
 	port: PORT,
 	workspaceId,

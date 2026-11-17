@@ -1,15 +1,15 @@
 # Host a long-running service
 
-Keep a small web app running on a [Tenki](https://tenki.cloud) sandbox at a stable public address. A `sticky` sandbox runs until you stop it, managed startup launches the app at boot and restarts it if it exits, the app's data lives on a volume, and a named preview URL points at the app's port. Replace the sandbox and its data stays on the volume, and the URL points at the new sandbox. The demo app is a stdlib Python visit counter.
+Keep a small web app running on a [Luxor Agent Cloud](https://luxor.ai) sandbox at a stable public address. A `sticky` sandbox runs until you stop it, managed startup launches the app at boot and restarts it if it exits, the app's data lives on a volume, and a named preview URL points at the app's port. Replace the sandbox and its data stays on the volume, and the URL points at the new sandbox. The demo app is a stdlib Python visit counter.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "Host a long-running service" example from https://github.com/LuxorLabs/cookbook.
+Set up the Luxor Agent Cloud "Host a long-running service" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/host-a-service, and run npm install (Node.js 20 or later).
-2. The scripts need a Tenki API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run node run.mjs from that directory. Give me the service URL it prints, and tell me the sandbox is sticky: it keeps running until I run node down.mjs.
 4. Run node verify.mjs and confirm the ✓ line.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -21,7 +21,7 @@ Then show me how to swap app.py for my own app, and add a password to it, since 
 You need:
 
 - Node.js 20 or later. The app runs on the sandbox's own `python3`, so you don't need Python locally.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 
 ### 1. Install
 
@@ -37,7 +37,7 @@ npm install
 export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
 ```
 
-`run.mjs` and `down.mjs` read the key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` and `down.mjs` read the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -79,7 +79,7 @@ node verify.mjs
 **1. A volume for the data.** It exists apart from any sandbox. The app writes its count to `/home/tenki/data/visits`, which is on the volume.
 
 ```js
-const volume = await tenki.createVolume({ name: "visit-counter-…", sizeBytes: 1024 ** 3, workspaceId });
+const volume = await luxor.createVolume({ name: "visit-counter-…", sizeBytes: 1024 ** 3, workspaceId });
 ```
 
 **2. A sticky sandbox that starts the app itself.** `directRuntime` takes a runtime-only `TemplateSpec`: the start command runs at boot, `restartPolicy: "always"` starts it again if it exits, and `readyWhen` with `waitForRuntime` makes `createAndWait` return once the port is open. The app's source travels in an env var, so nothing is copied in after boot.
@@ -89,7 +89,7 @@ const runtime = new TemplateSpec().start('exec python3 -c "$APP_PY"', {
   restartPolicy: "always",
   readyWhen: [{ port: PORT }],
 });
-const sandbox = await tenki.createAndWait({
+const sandbox = await luxor.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
   allowInbound: true, // the preview URL needs inbound traffic
@@ -102,28 +102,28 @@ const sandbox = await tenki.createAndWait({
 });
 ```
 
-**3. A named preview URL.** `tenki.previewUrls.create(slug, { sessionId, port })` gives the port a public HTTPS address named after `slug`, which must be unique in the workspace. Unlike `sandbox.exposePort()`, the URL is its own resource with its own id, so you can point it at another sandbox.
+**3. A named preview URL.** `luxor.previewUrls.create(slug, { sessionId, port })` gives the port a public HTTPS address named after `slug`, which must be unique in the workspace. Unlike `sandbox.exposePort()`, the URL is its own resource with its own id, so you can point it at another sandbox.
 
 ```js
-const url = await tenki.previewUrls.create("visit-counter-…", { sessionId: sandbox.id, port: PORT, workspaceId });
+const url = await luxor.previewUrls.create("visit-counter-…", { sessionId: sandbox.id, port: PORT, workspaceId });
 ```
 
 **4. Replace the sandbox, keep the address.** To ship a new version or recover a broken sandbox, unbind the URL, terminate the sandbox, boot a new one on the same volume, and bind the URL to it. This is what `down.mjs` followed by `run.mjs` does:
 
 ```js
-await tenki.previewUrls.unbind(urlId);   // first: terminating a bound sandbox deletes the URL
+await luxor.previewUrls.unbind(urlId);   // first: terminating a bound sandbox deletes the URL
 await oldSandbox.close();
 // wait for the volume to show AVAILABLE, then boot the new sandbox as in step 2
-await tenki.previewUrls.bind(urlId, newSandbox.id, PORT);
+await luxor.previewUrls.bind(urlId, newSandbox.id, PORT);
 ```
 
-The same pattern works for any app you host yourself: put its start command in `TemplateSpec().start()`, its data on the volume, and bind the URL to its port. Preview URLs are public, with no Tenki login in front, so the app needs its own auth (a password, token or login).
+The same pattern works for any app you host yourself: put its start command in `TemplateSpec().start()`, its data on the volume, and bind the URL to its port. Preview URLs are public, with no Luxor Agent Cloud login in front, so the app needs its own auth (a password, token or login).
 
 ## Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
 | `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` and `down.mjs` read only the environment. Export the key in this shell. |
 | `VolumeInUseError: … volume is attached to a session` | A volume attaches to one sandbox at a time, and stays attached for a few seconds after that sandbox ends. Wait for `getVolume(id).state` to be `AVAILABLE`. `run.mjs` waits up to a minute. |
 | `already running: https://…` | `.service.json` points at a running sandbox. Run `node down.mjs` first. |
@@ -146,4 +146,4 @@ The same pattern works for any app you host yourself: put its start command in `
 - [Expose a port](../expose-a-port/): a preview URL that lives as long as one sandbox
 - [Run a full-stack app](../agent-fullstack-app/): an API, frontend and database in one sandbox
 - [Pause, snapshot, and resume](../snapshots-pause-resume/)
-- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
+- [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox) and the [Luxor Agent Cloud docs](https://luxor.ai/docs)
