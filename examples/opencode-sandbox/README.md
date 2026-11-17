@@ -1,15 +1,15 @@
 # OpenCode
 
-Run [OpenCode](https://opencode.ai)'s headless server in a Tenki sandbox and expose it on a password-protected public HTTPS URL. The sandbox boots with OpenCode installed and [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) cloned. One URL serves OpenCode's web UI at `/app` and its JSON API, so a person or a script can drive the agent. The sandbox and URL end when you press Ctrl-C, or after two hours.
+Run [OpenCode](https://opencode.ai)'s headless server in a Luxor sandbox and expose it on a password-protected public HTTPS URL. The sandbox boots with OpenCode installed and [sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue) cloned. One URL serves OpenCode's web UI at `/app` and its JSON API, so a person or a script can drive the agent. The sandbox and URL end when you press Ctrl-C, or after two hours.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "OpenCode" example from https://github.com/LuxorLabs/cookbook, which serves OpenCode's web UI from a disposable Tenki sandbox on a password-protected URL.
+Set up the Luxor Agent Cloud "OpenCode" example from https://github.com/LuxorLabs/cookbook, which serves OpenCode's web UI from a disposable Luxor sandbox on a password-protected URL.
 1. Clone the repo, cd into examples/opencode-sandbox, and run npm install (Node.js 20 or later).
-2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and OPENAI_API_KEY in the environment. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and OPENAI_API_KEY in the environment. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs and confirm the ✓ line.
 4. Start node run.mjs in the background (it stays running until Ctrl-C), then give me the /app URL, the username opencode, and the password it prints.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -21,7 +21,7 @@ Remind me the sandbox stops on Ctrl-C or after two hours, and stop it for me whe
 You need:
 
 - Node.js 20 or later.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - An OpenAI API key, so the agent can call a model. You don't install OpenCode locally.
 
 ### 1. Install
@@ -35,11 +35,11 @@ npm install
 ### 2. Set your keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 export OPENAI_API_KEY=sk-...
 ```
 
-`run.mjs` reads the Tenki key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the Luxor Agent Cloud key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -72,30 +72,30 @@ node verify.mjs
 `run.mjs`:
 
 ```js
-// A headless OpenCode server in a disposable Tenki sandbox, reachable over HTTPS:
+// A headless OpenCode server in a disposable Luxor sandbox, reachable over HTTPS:
 // boot with the agent and a repo already inside, serve, expose, then drive it from here.
-import { TenkiSandbox, WaitReadyFailedError } from "@tenkicloud/sandbox";
+import { LuxorSandbox, WaitReadyFailedError } from "@luxorai/sandbox";
 import { randomBytes } from "node:crypto";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
 const PORT = 4096;
 const PASSWORD = randomBytes(24).toString("hex"); // this URL is public; see the note below
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // enableOpenCode bakes the CLI into the guest — nothing to npm install.
 // No `await using` here: it would terminate the sandbox at the end of this scope and the
 // URL below would 404 before you could open it. maxDurationMs caps it instead.
 // createAndWait does not clean up after itself: a VM that is provisioned but never gets
 // ready comes back as WaitReadyFailedError, half-born and billing, with its session attached.
-const sandbox = await tenki.createAndWait({
+const sandbox = await luxor.createAndWait({
   cpuCores: 2,
   memoryMb: 4096,
   enableOpenCode: true,
   allowInbound: true,
   cloneRepoUrl: REPO,
   maxDurationMs: 2 * 60 * 60_000,
-  workspaceId: process.env.TENKI_WORKSPACE_ID,
+  workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 }).catch(async (e) => {
   if (e instanceof WaitReadyFailedError) await e.session[Symbol.asyncDispose]();
   throw e;
@@ -170,13 +170,13 @@ The URL is public, so always set `OPENCODE_SERVER_PASSWORD`. Without it, OpenCod
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `session <id> created but not ready within wait budget` | The sandbox was already disposed. Run again. |
 | `opencode serve never answered; see /tmp/opencode.log in the sandbox` | If you changed the serve command, keep `--hostname 0.0.0.0` and `cd repo`. |
 | The preview URL hangs | The server is on `127.0.0.1`. Pass `--hostname 0.0.0.0`. |
-| `port 7681 cannot be exposed as a preview` | 7681 is Tenki's console. Use another port. |
+| `port 7681 cannot be exposed as a preview` | 7681 is Luxor Agent Cloud's console. Use another port. |
 | The browser keeps asking for a password, or returns `401` | Use username `opencode` and this run's password. |
 | The URL returns `404` | The sandbox is gone. Run `node run.mjs` again. |
 | Exit code 13, `Detected unsettled top-level await` | Restore the `setInterval` at the end. |
@@ -191,4 +191,4 @@ The OpenCode version is whatever `enableOpenCode` installs (1.17.20 in CI).
 - [Claude Code](../claude-code-sandbox/) and [Codex](../codex-sandbox/): headless coding agents that return a diff
 - [Expose a port](../expose-a-port/): preview URLs on their own
 - [OpenCode](https://opencode.ai) and its [server docs](https://opencode.ai/docs/server)
-- [Tenki Sandbox](https://tenki.cloud/products/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
+- [Luxor Sandbox](https://luxor.ai/products/sandbox) and the [Luxor Agent Cloud docs](https://luxor.ai/docs)
