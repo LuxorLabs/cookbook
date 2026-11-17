@@ -1,6 +1,6 @@
 """Score three hand-written completions with the reward. No model, no GPU.
 
-    python reward_smoke.py      # needs TENKI_API_KEY or `tenki login`; prints [1.0, 0.0, 0.0]
+    python reward_smoke.py      # needs TENKI_API_KEY or `luxor login`; prints [1.0, 0.0, 0.0]
 """
 import asyncio
 import time

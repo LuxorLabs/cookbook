@@ -1,17 +1,17 @@
 # TRL GRPO with a sandboxed code reward
 
-Train a small model with reinforcement learning to write Python, with each completion graded in its own Tenki sandbox. [TRL](https://github.com/huggingface/trl)'s `GRPOTrainer` runs on your GPU: it samples several solutions to each [MBPP](https://github.com/google-research/google-research/tree/master/mbpp) problem and updates a LoRA adapter. The reward function, [`reward.py`](reward.py), sends every completion to a fresh sandbox with outbound networking off, runs it against the problem's tests, and returns `1.0` if they pass and `0.0` if they don't. The model's code never runs on the training machine.
+Train a small model with reinforcement learning to write Python, with each completion graded in its own Luxor sandbox. [TRL](https://github.com/huggingface/trl)'s `GRPOTrainer` runs on your GPU: it samples several solutions to each [MBPP](https://github.com/google-research/google-research/tree/master/mbpp) problem and updates a LoRA adapter. The reward function, [`reward.py`](reward.py), sends every completion to a fresh sandbox with outbound networking off, runs it against the problem's tests, and returns `1.0` if they pass and `0.0` if they don't. The model's code never runs on the training machine.
 
-**No reward curve yet.** The reward is verified live on Tenki (step 3), and `train.py` has been run through the real `GRPOTrainer` on CPU with a tiny random model, scoring on Tenki, to check the wiring. We have not run a full training run on a GPU, so there is no learning curve and no trained model to show.
+**No reward curve yet.** The reward is verified live on Luxor Agent Cloud (step 3), and `train.py` has been run through the real `GRPOTrainer` on CPU with a tiny random model, scoring on Luxor Agent Cloud, to check the wiring. We have not run a full training run on a GPU, so there is no learning curve and no trained model to show.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up GRPO training with a Tenki sandbox reward, following https://github.com/LuxorLabs/cookbook/tree/main/examples/trl-grpo-tenki.
+Set up GRPO training with a Luxor sandbox reward, following https://github.com/LuxorLabs/cookbook/tree/main/examples/trl-grpo-luxor.
 1. Check that Python 3.12+ and uv are installed. Create a venv in that folder and install requirements.txt.
-2. It needs TENKI_API_KEY (starts with tk_, from https://app.tenki.cloud) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+2. It needs TENKI_API_KEY (starts with tk_, from https://app.luxor.ai) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
 3. Run `node verify.mjs` and confirm it prints two check marks. It needs no model and no GPU.
 4. Run `python reward_smoke.py` and confirm it prints [1.0, 0.0, 0.0].
 5. Check whether this machine has an NVIDIA GPU. If it does, install requirements-train.txt (this pulls in PyTorch) and ask me before running train.py with --max-steps 2. If it doesn't, stop after step 4 and tell me to run training on a GPU machine.
@@ -23,19 +23,19 @@ Set up GRPO training with a Tenki sandbox reward, following https://github.com/L
 You need:
 
 - Python 3.12 or later and [uv](https://docs.astral.sh/uv/).
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - An NVIDIA GPU, for the training run in step 4 only. Steps 1 to 3 need none.
 
 ### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
-cd cookbook/examples/trl-grpo-tenki
+cd cookbook/examples/trl-grpo-luxor
 uv venv --python 3.12 && uv pip install -r requirements.txt
 source .venv/bin/activate
 ```
 
-This installs the Tenki SDK, which is all the reward and `verify.py` need. Step 4 adds TRL and PyTorch.
+This installs the Luxor Agent Cloud SDK, which is all the reward and `verify.py` need. Step 4 adds TRL and PyTorch.
 
 ### 2. Set your API key
 
@@ -102,16 +102,16 @@ The grader has to run where the policy can't reach it. Here the policy has no sh
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_API_KEY, or run `tenki login`.`` | `verify.py` found no key. Export one or run `tenki login --api-key <key>`. |
+| ``No token. Set TENKI_API_KEY, or run `luxor login`.`` | `verify.py` found no key. Export one or run `luxor login --api-key <key>`. |
 | `ModuleNotFoundError: No module named 'tenki'` from `node verify.mjs` | Create the `.venv` here and install `requirements.txt`, or set `PYTHON`. |
 | `ModuleNotFoundError: No module named 'trl'` from `train.py` | Install `requirements-train.txt`. |
 | `tenki_code_reward: RateLimitedError` or `QuotaExceededError` repeatedly | You are over your workspace's sandbox limit. Lower `TENKI_REWARD_CONCURRENCY`, or `--prompts-per-step`. |
 | Reward is `0` for every step | Run `python reward_smoke.py` first. If that passes, print one completion and its tests: the model may not be returning a code block, or `--max-completion-length` cuts it off. |
-| A sandbox is still running after an interrupted run | List them with `tenki sandbox list --tags trl-grpo --state running`, and end each with `tenki sandbox terminate <id>`. They also stop on their own after 120 seconds. |
+| A sandbox is still running after an interrupted run | List them with `luxor sandbox list --tags trl-grpo --state running`, and end each with `luxor sandbox terminate <id>`. They also stop on their own after 120 seconds. |
 
 ## Related
 
-- [Run code with Python](../run-code-python/) and [Harbor](../harbor-tenki/): the Tenki SDK on its own, and agent evals with a sandbox per trial.
+- [Run code with Python](../run-code-python/) and [Harbor](../harbor-luxor/): the Luxor Agent Cloud SDK on its own, and agent evals with a sandbox per trial.
 - [Pause, snapshot, and resume](../snapshots-pause-resume/): snapshots, the starting point for a warm pool.
 - [TRL's GRPO trainer](https://huggingface.co/docs/trl/grpo_trainer) and its [reward function docs](https://huggingface.co/docs/trl/grpo_trainer#using-a-custom-reward-function)
-- [Tenki Sandbox](https://tenki.cloud)
+- [Luxor Sandbox](https://luxor.ai)

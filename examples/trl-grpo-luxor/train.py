@@ -1,9 +1,9 @@
-"""GRPO on MBPP with TRL: the model writes Python, Tenki sandboxes run it against the tests.
+"""GRPO on MBPP with TRL: the model writes Python, Luxor sandboxes run it against the tests.
 
     python train.py                                   # Qwen2.5-0.5B-Instruct + LoRA, 50 steps
     python train.py --max-steps 2 --num-prompts 16    # a short first run
 
-The trainer runs wherever your GPU is. Only `tenki_code_reward` talks to Tenki, once per
+The trainer runs wherever your GPU is. Only `tenki_code_reward` talks to Luxor Agent Cloud, once per
 completion, so the training machine never executes generated code.
 """
 import argparse
