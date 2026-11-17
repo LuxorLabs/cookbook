@@ -142,13 +142,13 @@ Each guide shows the two APIs side by side.
 | Modal | [Modal to Luxor Agent Cloud](examples/modal-to-luxor-migration/) |
 | Daytona | [Daytona to Luxor Agent Cloud](examples/daytona-to-luxor-migration/) |
 
-## Tenki Runners
+## Luxor Runners
 
-Speed up GitHub Actions jobs on [Tenki Runners](https://tenki.cloud/products/runners).
+Speed up GitHub Actions jobs on [Luxor Runners](https://luxor.ai/products/runners).
 
 | Example | What it covers |
 | --- | --- |
-| [Move a workflow to Tenki Runners](examples/tenki-runners/) | Install the GitHub App, change `runs-on`, and what carries over from GitHub-hosted and self-hosted runners |
+| [Move a workflow to Luxor Runners](examples/luxor-runners/) | Install the GitHub App, change `runs-on`, and what carries over from GitHub-hosted and self-hosted runners |
 
 ## Check an example
 

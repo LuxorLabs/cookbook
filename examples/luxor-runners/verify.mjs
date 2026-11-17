@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { parse } from "yaml";
 
-const DOCS = "https://tenki.cloud/docs/runners";
+const DOCS = "https://luxor.ai/docs/runners";
 
 // The published labels: the Linux and macOS 26 tables on the sizes page, plus the
 // tenki-macos-15-{mini,small,medium,large} pattern on the macOS page.
@@ -17,11 +17,11 @@ for (const [, prefix, sizesList] of macos.matchAll(/`(tenki-macos-\d+)-\{([a-z,]
 	for (const s of sizesList.split(",")) labels.add(`${prefix}-${s}`);
 }
 
-// Tenki takes exactly one label as the whole runs-on value; arrays like
+// Luxor Agent Cloud takes exactly one label as the whole runs-on value; arrays like
 // [self-hosted, tenki-...] are cancelled, and an unknown label never gets a runner.
 const check = (runsOn) => {
 	if (typeof runsOn !== "string") return `runs-on must be one label, not ${JSON.stringify(runsOn)}`;
-	if (!labels.has(runsOn)) return `${runsOn} is not a documented Tenki label`;
+	if (!labels.has(runsOn)) return `${runsOn} is not a documented Luxor Agent Cloud label`;
 	return null;
 };
 
@@ -48,7 +48,7 @@ try {
 	if (!workflow.jobs.test?.services?.postgres) throw new Error("test job lost its postgres service");
 
 	const used = [...new Set(jobs.map(([, j]) => j["runs-on"]))].join(", ");
-	console.log(`✓ tenki-runners: ${jobs.length} jobs in workflow.yml → runs-on ${used} → each is one of ${labels.size} labels in the Tenki docs`);
+	console.log(`✓ luxor-runners: ${jobs.length} jobs in workflow.yml → runs-on ${used} → each is one of ${labels.size} labels in the Luxor Agent Cloud docs`);
 } catch (e) {
 	fail(e);
 }
