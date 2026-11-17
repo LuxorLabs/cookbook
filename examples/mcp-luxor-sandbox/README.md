@@ -54,7 +54,7 @@ Claude Desktop (`claude_desktop_config.json`) or Cursor (`.cursor/mcp.json` for 
 ```json
 {
   "mcpServers": {
-    "tenki": {
+    "luxor": {
       "command": "npx",
       "args": ["-y", "@luxorai/mcp"],
       "env": { "LUXORAI_API_KEY": "tk_your_key_here" }
@@ -121,7 +121,7 @@ const client = new Client({ name: "cookbook-verify", version: "1.0.0" });
 
 ## Versions
 
-`package.json` pins `@luxorai/mcp` `^0.4.3`, so `verify.mjs` tests 0.4.3 (82 tools). `@luxorai/mcp` is the same server as `@luxorai/mcp` under its new name, so it still names its tools `tenki_*` and logs as `tenki-mcp`. Release 0.2.0 removed the standalone image tools and the project-scoped list tools, and capped `tenki_exec` and `tenki_run_code` output at 64 KB per stream ([CHANGELOG](https://github.com/LuxorLabs/tenki-mcp/blob/main/CHANGELOG.md)).
+`package.json` pins `@luxorai/mcp` `^0.4.3`, so `verify.mjs` tests 0.4.3 (82 tools). `@luxorai/mcp` is the tenki-mcp server under its new name, so it still names its tools `tenki_*` and logs as `tenki-mcp`. Release 0.2.0 removed the standalone image tools and the project-scoped list tools, and capped `tenki_exec` and `tenki_run_code` output at 64 KB per stream ([CHANGELOG](https://github.com/LuxorLabs/tenki-mcp/blob/main/CHANGELOG.md)).
 
 ## Things to know
 
