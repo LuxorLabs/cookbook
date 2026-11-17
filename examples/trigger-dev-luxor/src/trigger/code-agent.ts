@@ -2,7 +2,7 @@ import { chat } from "@trigger.dev/sdk/ai";
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, streamText, tool } from "ai";
 import { z } from "zod";
-import { disposeSandbox, executeCode, warmSandbox } from "../tenki.mjs";
+import { disposeSandbox, executeCode, warmSandbox } from "../luxor.mjs";
 
 // Tool execute() functions don't receive hook payloads, so the run id travels in chat.local.
 const sandboxRun = chat.local<{ runId: string }>({ id: "sandboxRun" });

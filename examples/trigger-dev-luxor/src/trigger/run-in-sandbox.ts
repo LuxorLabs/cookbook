@@ -1,5 +1,5 @@
 import { task } from "@trigger.dev/sdk";
-import { createSandbox, runCommand } from "../tenki.mjs";
+import { createSandbox, runCommand } from "../luxor.mjs";
 
 // Runs an untrusted command in a Luxor Agent Cloud microVM instead of on the Trigger.dev worker.
 export const runInSandbox = task({

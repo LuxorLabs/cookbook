@@ -1,30 +1,30 @@
 // Proves the Luxor Agent Cloud side of the Trigger.dev tasks without a Trigger.dev account or model key:
-// typechecks src/trigger/*.ts against @trigger.dev/sdk, then drives src/tenki.mjs live:
+// typechecks src/trigger/*.ts against @trigger.dev/sdk, then drives src/luxor.mjs live:
 // the task's create → run → close, the chat agent's executeCode tool on a run-scoped sandbox,
 // and pause → resume by id. Exits non-zero on failure; closes every sandbox it created.
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8");
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
 	}
 };
 
-const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
+	console.error("No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
-process.env.TENKI_AUTH_TOKEN = authToken; // src/tenki.mjs lets the SDK read it from the environment
+(process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN) = authToken; // src/luxor.mjs lets the SDK read it from the environment
 
 const { createSandbox, runCommand, pauseSandbox, resumeSandbox, executeCode, warmSandbox, sandboxFor, disposeSandbox } =
-	await import("./src/tenki.mjs");
+	await import("./src/luxor.mjs");
 
 const runId = `run_verify_${Math.random().toString(36).slice(2, 8)}`;
 const opened = [];

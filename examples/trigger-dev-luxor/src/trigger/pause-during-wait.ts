@@ -1,5 +1,5 @@
 import { task, wait } from "@trigger.dev/sdk";
-import { createSandbox, pauseSandbox, resumeSandbox, runCommand } from "../tenki.mjs";
+import { createSandbox, pauseSandbox, resumeSandbox, runCommand } from "../luxor.mjs";
 
 // Build state in a sandbox, wait an hour for something external, then continue in the same sandbox.
 // The Trigger.dev run is checkpointed during wait.for(); pausing the sandbox stops Luxor Agent Cloud billing too.

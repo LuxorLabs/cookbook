@@ -3,7 +3,7 @@
 import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
 
 // Created on first use: Trigger.dev imports task files to index them, before env vars matter.
-// Reads TENKI_API_KEY (or TENKI_AUTH_TOKEN) from the Trigger.dev environment.
+// Reads LUXORAI_API_KEY (or LUXORAI_AUTH_TOKEN) from the Trigger.dev environment.
 let client;
 const luxor = () => (client ??= new LuxorSandbox());
 
@@ -17,7 +17,7 @@ export function createSandbox({ maxDurationMs = 15 * 60_000, pauseRetentionMs = 
 		memoryMb: 1024,
 		maxDurationMs,
 		pauseRetentionMs,
-		workspaceId: process.env.TENKI_WORKSPACE_ID,
+		workspaceId: (process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID),
 	});
 }
 

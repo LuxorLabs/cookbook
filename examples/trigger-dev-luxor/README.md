@@ -15,9 +15,9 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "Trigger.dev" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/trigger-dev-luxor, and run npm install (Node.js 22 or later).
-2. node verify.mjs needs a Luxor Agent Cloud API key (starts with tk_) in TENKI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+2. node verify.mjs needs a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run node verify.mjs and confirm the ✓ line.
-4. To run the tasks on Trigger.dev, ask me for my Trigger.dev project ref and put it in trigger.config.ts, then ask me to add TENKI_API_KEY (and OPENAI_API_KEY for code-agent) to a .env file myself. Run npm run dev and trigger run-in-sandbox with the command in the README.
+4. To run the tasks on Trigger.dev, ask me for my Trigger.dev project ref and put it in trigger.config.ts, then ask me to add LUXORAI_API_KEY (and OPENAI_API_KEY for code-agent) to a .env file myself. Run npm run dev and trigger run-in-sandbox with the command in the README.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
 ```
 
@@ -44,11 +44,11 @@ This installs `@trigger.dev/sdk` and the `trigger.dev` CLI (both `4.8.2`), `@lux
 Tasks read the key from the Trigger.dev environment, not from your app. For `npm run dev`, the CLI loads `.env` from the project directory:
 
 ```bash
-TENKI_API_KEY=tk_...
+LUXORAI_API_KEY=tk_...
 OPENAI_API_KEY=sk-...   # code-agent only
 ```
 
-For `verify.mjs`, export the key in your shell instead: `export TENKI_API_KEY=tk_...` (`TENKI_AUTH_TOKEN` and a `luxor login --api-key <key>` key also work). `TENKI_WORKSPACE_ID` is optional.
+For `verify.mjs`, export the key in your shell instead: `export LUXORAI_API_KEY=tk_...` (`LUXORAI_AUTH_TOKEN` and a `luxor login --api-key <key>` key also work). `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -78,7 +78,7 @@ node verify.mjs
 ✓ trigger-dev-luxor: tsc → task exec (42) → executeCode ×2 on one run sandbox (12) → dispose → pause → resume (marker kept)
 ```
 
-`verify.mjs` typechecks the task files against the installed `@trigger.dev/sdk` types (`tsc --noEmit`), then calls the helpers in [`src/tenki.mjs`](src/tenki.mjs) that the tasks call, against live Luxor Agent Cloud: the `run-in-sandbox` body, two `executeCode` calls sharing one run-scoped sandbox followed by the `onChatSuspend` dispose, and pause, then resume by id with a file kept in `/home/tenki`. It needs no Trigger.dev account and no model key, and it closes every sandbox it opens. It does not run the Trigger.dev runtime, `wait.for()`, or a model.
+`verify.mjs` typechecks the task files against the installed `@trigger.dev/sdk` types (`tsc --noEmit`), then calls the helpers in [`src/luxor.mjs`](src/luxor.mjs) that the tasks call, against live Luxor Agent Cloud: the `run-in-sandbox` body, two `executeCode` calls sharing one run-scoped sandbox followed by the `onChatSuspend` dispose, and pause, then resume by id with a file kept in `/home/tenki`. It needs no Trigger.dev account and no model key, and it closes every sandbox it opens. It does not run the Trigger.dev runtime, `wait.for()`, or a model.
 
 ## The code
 
@@ -109,7 +109,7 @@ export function createSandbox({ maxDurationMs = 15 * 60_000, pauseRetentionMs = 
     memoryMb: 1024,
     maxDurationMs,
     pauseRetentionMs,
-    workspaceId: process.env.TENKI_WORKSPACE_ID,
+    workspaceId: (process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID),
   });
 }
 ```
@@ -159,7 +159,7 @@ export const codeAgent = chat.agent({
 - `warmSandbox` stores the `createAndWait` promise in a `Map` keyed by run id and returns without awaiting it, so the sandbox boots while the model generates. `executeCode` awaits that promise, so every tool call in the run uses the same sandbox and sees files from earlier calls.
 - Tool `execute` functions don't receive hook payloads, so `chat.local` carries the run id to the tool.
 - `onChatSuspend` fires right before the run suspends to wait for the next message. Closing the sandbox there, not in `onTurnComplete`, keeps it available during the idle window after a turn. The next turn's `onTurnStart` boots a new one. `onComplete` covers runs that end without suspending.
-- Keep this file and `src/tenki.mjs` in task code. Your web app should import only the task type.
+- Keep this file and `src/luxor.mjs` in task code. Your web app should import only the task type.
 
 To keep sandbox files across turns, pause in `onChatSuspend` and resume in `onTurnStart` instead, as `pause-during-wait` does.
 
@@ -185,7 +185,7 @@ During a `wait.for()` longer than a minute, Trigger.dev checkpoints the run and 
 ## Deploy
 
 ```bash
-npx trigger env set TENKI_API_KEY tk_... --secret --env prod
+npx trigger env set LUXORAI_API_KEY tk_... --secret --env prod
 npx trigger env set OPENAI_API_KEY sk-... --secret --env prod
 npm run deploy
 ```
@@ -196,8 +196,8 @@ You can also add the variables on the project's Environment Variables page, or s
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export `TENKI_API_KEY` or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` in a run | The Trigger.dev environment has no key. Add `TENKI_API_KEY` to `.env` for dev, or to the deployed environment. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export `LUXORAI_API_KEY` or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` in a run | The Trigger.dev environment has no key. Add `LUXORAI_API_KEY` to `.env` for dev, or to the deployed environment. |
 | `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `Project not found: <your project ref>` | Set `project` in `trigger.config.ts` to the ref from your project settings. |
 | `tsc --noEmit failed` from `verify.mjs` | The task files don't match the installed `@trigger.dev/sdk` types. Run `npm run typecheck` to see the errors. |
