@@ -1,10 +1,10 @@
-// An orca Cloud VM recipe backed by Tenki sandboxes: each orca workspace gets its own
+// An orca Cloud VM recipe backed by Luxor sandboxes: each orca workspace gets its own
 // disposable machine, instead of every agent sharing your laptop.
 //
 // orca calls this script with a mode: create, suspend, resume, or destroy. `create` prints
 // one JSON object telling orca how to SSH in; the other modes get that same JSON back on
 // stdin as `recipeResult`.
-import { TenkiSandbox, isReady } from "@tenkicloud/sandbox";
+import { LuxorSandbox, isReady } from "@luxorai/sandbox";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
@@ -45,11 +45,11 @@ if (mode === "create") {
 		writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
 
 		// ssh checks that the server it reaches is the one it saw before (its "host key").
-		// Here that key belongs to Tenki's SSH gateway, not to the sandbox, and orca gives ssh
+		// Here that key belongs to Luxor Agent Cloud's SSH gateway, not to the sandbox, and orca gives ssh
 		// no way to say which name to check it under. So connect once now, save the key under
 		// a name unique to this sandbox, and later connections are checked against it.
 		// Sandbox ids start with a timestamp, so build that name from the random end of the id.
-		alias = `tenki-${sandbox.id.replaceAll("-", "").slice(-12)}`;
+		alias = `luxor-${sandbox.id.replaceAll("-", "").slice(-12)}`;
 		mkdirSync(`${homedir()}/.ssh`, { recursive: true });
 		if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
 		execFileSync("ssh", ["-o", `ProxyCommand=node "${proxy}" ${sandbox.id}`, "-o", "StrictHostKeyChecking=accept-new",

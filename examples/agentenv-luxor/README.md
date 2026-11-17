@@ -4,9 +4,9 @@ Give every AI agent task you test or train on its own disposable cloud machine.
 
 [AgentEnv Framework](https://www.agentenvframework.com), from Scale AI, is an open-source (Apache-2.0) tool for building **environments**: reproducible setups where an AI agent attempts a job and gets a score. A coding environment might start a web app, ask an agent to fix a bug in it, then run the app's tests to grade the fix. Teams use these scores to evaluate agents and to train models with **reinforcement learning (RL)**, where the score is the signal the model learns from.
 
-In AgentEnv, a **task** is a list of steps that run in order: deploy the environment, bring in the agent, and grade the result. Each environment and each agent runs inside a **sandbox**, a machine AgentEnv starts for that run. The built-in `tenki` sandbox backend makes each of those a Tenki VM, with Docker installed and a public HTTPS URL for every port the task opens. Nothing runs on your computer, and you can run many tasks side by side.
+In AgentEnv, a **task** is a list of steps that run in order: deploy the environment, bring in the agent, and grade the result. Each environment and each agent runs inside a **sandbox**, a machine AgentEnv starts for that run. The built-in `tenki` sandbox backend makes each of those a Luxor Agent Cloud VM, with Docker installed and a public HTTPS URL for every port the task opens. Nothing runs on your computer, and you can run many tasks side by side.
 
-This example runs AgentEnv's bundled `hello` task on Tenki. It needs no model key.
+This example runs AgentEnv's bundled `hello` task on Luxor Agent Cloud. It needs no model key.
 
 ## Set it up with a coding agent
 
@@ -46,7 +46,7 @@ Run every command from this folder. `agent-env` reads its settings from `.agente
 export TENKI_API_KEY=tk_...
 ```
 
-AgentEnv only reads the key through its config file. This folder's [`.agentenv/config.toml`](.agentenv/config.toml) makes Tenki the default and tells it to read the key from that variable:
+AgentEnv only reads the key through its config file. This folder's [`.agentenv/config.toml`](.agentenv/config.toml) makes Luxor Agent Cloud the default and tells it to read the key from that variable:
 
 ```toml
 [sandbox]
@@ -57,7 +57,7 @@ agent_default = "tenki"
 api_key = "env:TENKI_API_KEY"
 ```
 
-`default` sets where environments run and `agent_default` sets where agents run. A `tenki login` key isn't enough for `agent-env`. For a shared deployment, use `api_key = "secret:tenki_api_key"`, and never put the key itself in the file. `.venv/bin/agent-env config show` prints the config in effect with the key masked.
+`default` sets where environments run and `agent_default` sets where agents run. A `luxor login` key isn't enough for `agent-env`. For a shared deployment, use `api_key = "secret:tenki_api_key"`, and never put the key itself in the file. `.venv/bin/agent-env config show` prints the config in effect with the key masked.
 
 ### 3. Run
 
@@ -79,7 +79,7 @@ node verify.mjs        # or: .venv/bin/python verify.py
 ✓ agentenv-luxor: `tenki` provider from config.toml → create_vm + exposed port → root exec (42) → terminate
 ```
 
-[`verify.py`](verify.py) is a faster check of the Tenki side. It asks AgentEnv for the `tenki` backend named in this folder's config, then uses it directly: it starts a VM with port 8080 open, runs a command as root, and deletes the VM.
+[`verify.py`](verify.py) is a faster check of the Luxor Agent Cloud side. It asks AgentEnv for the `tenki` backend named in this folder's config, then uses it directly: it starts a VM with port 8080 open, runs a command as root, and deletes the VM.
 
 ```python
 async def main():
@@ -134,7 +134,7 @@ Then set `snapshot_id = "<id>"` in the provider config (`luxor sandbox snapshot 
 - **One VM per sandbox.** Inside it, the environment's own services run under Docker Compose, the agent runs in its own Docker container, and output files are collected for grading. Commands run as root.
 - **Ports:** each exposed port gets a public HTTPS URL under `sb.tenki.sh` (HTTP and WebSocket), with no authentication in front of it.
 - **Outbound network:** allow-all, or an allowlist of up to 256 hostnames and 64 IPv4 CIDRs, applied outside the VM. `*.sb.tenki.sh` and `*.us.sb.tenki.sh` are always allowed. A wildcard covers one label.
-- **Sizing:** whole vCPUs, at least 2 vCPU / 4 GiB. A request beyond Tenki's limits is refused, not shrunk.
+- **Sizing:** whole vCPUs, at least 2 vCPU / 4 GiB. A request beyond Luxor Agent Cloud's limits is refused, not shrunk.
 - **Lifetime:** the task's `timeout` is the VM's hard maximum lifetime and every command's time budget. A VM whose setup fails is terminated.
 - **Tags:** every VM is tagged `agentenv`, so `luxor sandbox list --tags agentenv` lists them.
 

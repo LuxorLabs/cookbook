@@ -1,8 +1,8 @@
 # Claude Agent SDK
 
-Build a Claude agent whose commands and files live in a Tenki sandbox instead of on your computer.
+Build a Claude agent whose commands and files live in a Luxor sandbox instead of on your computer.
 
-The [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) is a library for building agents: programs where Claude works through a task step by step, using **tools** (functions it can call) to run commands and read or write files. Out of the box, those tools act on the machine running your code. This example swaps them for three tools of its own, `bash`, `write_file`, and `read_file`, that do the same jobs inside a **sandbox**: a disposable cloud machine that Tenki creates for the session and deletes afterwards.
+The [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) is a library for building agents: programs where Claude works through a task step by step, using **tools** (functions it can call) to run commands and read or write files. Out of the box, those tools act on the machine running your code. This example swaps them for three tools of its own, `bash`, `write_file`, and `read_file`, that do the same jobs inside a **sandbox**: a disposable cloud machine that Luxor Agent Cloud creates for the session and deletes afterwards.
 
 You ask the agent to write a Python script that computes the 30th Fibonacci number and run it. It writes `fib.py` in the sandbox, runs it there, and answers `832040`. Your own files are never touched.
 
@@ -24,7 +24,7 @@ Then show me how to add luxor-tools.mjs to my own Agent SDK project with tools: 
 You need:
 
 - Node.js 24 or later. `verify.mjs` also runs on Node 20.
-- A Tenki API key (starts with `tk_`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (starts with `tk_`) from [app.luxor.ai](https://app.luxor.ai).
 - An Anthropic API key from [the Claude Console](https://platform.claude.com). Only `agent.mjs` uses it.
 
 ### 1. Install
@@ -35,7 +35,7 @@ cd cookbook/examples/claude-agent-sdk
 npm install
 ```
 
-This installs the Claude Agent SDK, the Tenki sandbox client (`@tenkicloud/sandbox`), and `zod`, a small library for describing what inputs a tool accepts. The Agent SDK downloads a platform package of about 250 MB, so the first install takes a while.
+This installs the Claude Agent SDK, the Luxor sandbox client (`@luxorai/sandbox`), and `zod`, a small library for describing what inputs a tool accepts. The Agent SDK downloads a platform package of about 250 MB, so the first install takes a while.
 
 ### 2. Set your API keys
 
@@ -44,7 +44,7 @@ export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 export ANTHROPIC_API_KEY=...
 ```
 
-`agent.mjs` reads both keys from the environment. `verify.mjs` also accepts a Tenki key saved with `tenki login --api-key <key>`. Set `TENKI_WORKSPACE_ID` if you want the sandbox in a specific workspace.
+`agent.mjs` reads both keys from the environment. `verify.mjs` also accepts a Luxor Agent Cloud key saved with `luxor login --api-key <key>`. Set `TENKI_WORKSPACE_ID` if you want the sandbox in a specific workspace.
 
 ### 3. Run the agent
 
@@ -77,7 +77,7 @@ node verify.mjs
 
 There are three moving parts.
 
-1. **Your script** runs on your computer. It starts a Tenki sandbox, then hands Claude a task and the list of tools it may use.
+1. **Your script** runs on your computer. It starts a Luxor sandbox, then hands Claude a task and the list of tools it may use.
 2. **Claude** decides what to do next. When it wants to run a command or write a file, it asks for a tool call, for example `bash` with `python3 fib.py`.
 3. **The tool** carries out that request. Here every tool forwards the request to the sandbox and sends the result back to Claude as text. Claude reads it and decides the next step, until it has an answer.
 
@@ -87,7 +87,7 @@ A few terms you'll see in the code:
 
 - **`query()`** is the SDK function that runs this loop. You give it a prompt and options, and it streams back each message: Claude's text, its tool calls, and the final result.
 - **Built-in tools** are the SDK's own `Bash`, `Read`, `Write`, and `Edit` tools. They act on your computer, so the example turns them all off with `tools: []`.
-- **MCP** (Model Context Protocol) is the standard format the SDK uses for custom tools. `createSdkMcpServer()` bundles the three Tenki tools so the SDK can offer them to Claude. It runs inside your script; there's no separate server to start. The SDK names each tool `mcp__<bundle name>__<tool name>`, which is why the output shows `mcp__tenki__bash`.
+- **MCP** (Model Context Protocol) is the standard format the SDK uses for custom tools. `createSdkMcpServer()` bundles the three Luxor Agent Cloud tools so the SDK can offer them to Claude. It runs inside your script; there's no separate server to start. The SDK names each tool `mcp__<bundle name>__<tool name>`, which is why the output shows `mcp__luxor__bash`.
 - **`allowedTools`** lists the tools Claude may use without asking you for permission first. Leave a tool out and the SDK pauses to ask every time Claude calls it.
 
 ## The agent
@@ -95,8 +95,8 @@ A few terms you'll see in the code:
 `agent.mjs` starts the sandbox, runs the agent, and prints what happened:
 
 ```js
-// The Claude Agent SDK with Tenki as its execution backend: every command the
-// agent runs and every file it writes lands in a Tenki sandbox, not on this computer.
+// The Claude Agent SDK with Luxor Agent Cloud as its execution backend: every command the
+// agent runs and every file it writes lands in a Luxor sandbox, not on this computer.
 //
 // Needs a model key: export ANTHROPIC_API_KEY=...
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
@@ -107,7 +107,7 @@ const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || pr
 
 // Start one sandbox and reuse it for every tool call, so files persist between steps.
 // `await using` deletes the sandbox automatically when the script ends.
-await using sandbox = await tenki.createAndWait({
+await using sandbox = await luxor.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
   workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
@@ -118,9 +118,9 @@ for await (const message of query({
   options: {
     tools: [], // turn off the SDK's built-in tools, which would run on this computer
     // Offer Claude the three sandbox tools, bundled as an in-process MCP server named "tenki".
-    mcpServers: { tenki: createSdkMcpServer({ name: "tenki", version: "1.0.0", tools: makeTenkiTools(sandbox) }) },
+    mcpServers: { luxor: createSdkMcpServer({ name: "luxor", version: "1.0.0", tools: makeLuxorTools(sandbox) }) },
     // Let Claude call them without a permission prompt. The SDK names them mcp__<server>__<tool>.
-    allowedTools: ["mcp__tenki__bash", "mcp__tenki__write_file", "mcp__tenki__read_file"],
+    allowedTools: ["mcp__luxor__bash", "mcp__luxor__write_file", "mcp__luxor__read_file"],
     maxTurns: 12, // stop after 12 rounds of back-and-forth
   },
 })) {
@@ -142,7 +142,7 @@ console.log(proof.exitCode === 0 ? stdoutText(proof) : `fib.py is not in the san
 
 ## The tools
 
-`tenki-tools.mjs` defines the three tools. Copy this file into your own project to give any Agent SDK agent the same sandbox tools.
+`luxor-tools.mjs` defines the three tools. Copy this file into your own project to give any Agent SDK agent the same sandbox tools.
 
 Each tool is made with the SDK's `tool()` function, which takes four things: a name, a description Claude reads to decide when to use it, the inputs it accepts (described with `zod`), and the function that does the work. Whatever that function returns is what Claude sees.
 
@@ -150,7 +150,7 @@ Each tool is made with the SDK's `tool()` function, which takes four things: a n
 // Claude Agent SDK tools backed by a Luxor sandbox.
 //
 // The SDK's built-in Bash, Read, and Write tools act on the computer that runs
-// query(). These three do the same jobs inside a Tenki sandbox instead, so
+// query(). These three do the same jobs inside a Luxor sandbox instead, so
 // everything the agent runs or writes stays on a machine you can throw away.
 import { tool } from "@anthropic-ai/claude-agent-sdk";
 import { stdoutText, stderrText } from "@luxorai/sandbox";
@@ -188,7 +188,7 @@ export function makeLuxorTools(sandbox) {
 Things to know when you adapt it:
 
 - **Keep `tools: []`.** Without it, Claude also gets the built-in tools, and those run on your computer.
-- **Add new tools to `allowedTools` by their full name**, such as `mcp__tenki__my_tool`. If you rename the `tenki` server, update the names to match.
+- **Add new tools to `allowedTools` by their full name**, such as `mcp__luxor__my_tool`. If you rename the `tenki` server, update the names to match.
 - **Tell Claude when something fails.** Claude only sees the text a tool returns, so `bash` starts its reply with `exit N` when a command fails, and with `timed out after 120s` when it runs too long.
 - **Errors are fine to throw.** If a tool throws, the SDK reports the error to Claude instead of crashing, so Claude can recover. For example, reading a missing file shows Claude a `[not_found]` error.
 - **`write_file` and `read_file` work under `/home/tenki` and handle text only.** Commands run through `bash` can reach any path in the sandbox.
@@ -198,12 +198,12 @@ Things to know when you adapt it:
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no Tenki key. Export one or run `tenki login --api-key <key>`. |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no Luxor Agent Cloud key. Export one or run `luxor login --api-key <key>`. |
 | `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `agent.mjs` only reads the environment. Export the key in the same terminal. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `SyntaxError` at `await using` | Upgrade to Node 24 or later. |
-| The agent asks for permission on every call | `allowedTools` must list the full `mcp__tenki__*` names. Update it if you rename the server or add tools. |
-| `timed out after 120s` | The command ran longer than 2 minutes. Raise `timeoutMs` in `tenki-tools.mjs`. |
+| The agent asks for permission on every call | `allowedTools` must list the full `mcp__luxor__*` names. Update it if you rename the server or add tools. |
+| `timed out after 120s` | The command ran longer than 2 minutes. Raise `timeoutMs` in `luxor-tools.mjs`. |
 | `permission_denied … path outside workdir` | `write_file` and `read_file` only work under `/home/tenki`. Use a path there, or write the file with `bash`. |
 
 ## Related
@@ -211,4 +211,4 @@ Things to know when you adapt it:
 - [Claude Code](../claude-code-sandbox/): run Claude Code itself inside a sandbox
 - [OpenAI Agents SDK](../openai-agents-sdk/): the same one-sandbox-per-session pattern with OpenAI's SDK
 - [Claude Agent SDK docs](https://code.claude.com/docs/en/agent-sdk/overview) and [`@anthropic-ai/claude-agent-sdk` on npm](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk)
-- [Tenki Sandbox](https://tenki.cloud/products/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
+- [Luxor Sandbox](https://luxor.ai/products/sandbox) and the [Luxor Agent Cloud docs](https://luxor.ai/docs)

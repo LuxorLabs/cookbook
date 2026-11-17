@@ -1,12 +1,12 @@
 # AG2
 
-Let an AG2 agent run shell commands and code on a Tenki cloud machine instead of your computer.
+Let an AG2 agent run shell commands and code on a Luxor Agent Cloud cloud machine instead of your computer.
 
-[AG2](https://github.com/ag2ai/ag2) (formerly AutoGen) is an open-source Python framework for building AI agents. It has two built-in tools for running things: `SandboxShellTool` runs shell commands, and `SandboxCodeTool` runs code. Both run inside an **environment** you choose, and AG2 includes a Tenki one, `TenkiEnvironment` in `ag2.extensions.tenki`.
+[AG2](https://github.com/ag2ai/ag2) (formerly AutoGen) is an open-source Python framework for building AI agents. It has two built-in tools for running things: `SandboxShellTool` runs shell commands, and `SandboxCodeTool` runs code. Both run inside an **environment** you choose, and AG2 includes a Luxor Agent Cloud one, `TenkiEnvironment` in `ag2.extensions.tenki`.
 
-One `TenkiEnvironment` is one Tenki sandbox. Give it to both tools and they share it, so a file one tool writes is there for the other. The sandbox is deleted when the environment closes.
+One `TenkiEnvironment` is one Luxor sandbox. Give it to both tools and they share it, so a file one tool writes is there for the other. The sandbox is deleted when the environment closes.
 
-This is for AG2 1.x (`from ag2 import Agent`). The older `import autogen` API is now [AG2 Classic](https://github.com/ag2ai/ag2-classic) and doesn't include the Tenki environment.
+This is for AG2 1.x (`from ag2 import Agent`). The older `import autogen` API is now [AG2 Classic](https://github.com/ag2ai/ag2-classic) and doesn't include the Luxor Agent Cloud environment.
 
 ## Set it up with a coding agent
 

@@ -6,7 +6,7 @@ Give each of your orca coding agents its own cloud machine with your repo on it,
 
 orca has an experimental **Cloud VM** setting that puts each workspace on a remote machine instead. You give orca a **recipe**: a command it runs with one of four modes, `create`, `suspend`, `resume`, or `destroy`, to manage that machine. `create` prints JSON telling orca how to reach the machine over SSH, and orca connects there to run the agent.
 
-This folder is a recipe for Tenki. `create` starts a sandbox with your repo cloned and prints SSH details, `suspend` pauses it for free, `resume` brings it back, and `destroy` deletes it.
+This folder is a recipe for Luxor Agent Cloud. `create` starts a sandbox with your repo cloned and prints SSH details, `suspend` pauses it for free, `resume` brings it back, and `destroy` deletes it.
 
 > **Status:** orca v1.4.224 doesn't fully accept the machine yet. orca expects the repo to be checked out on the workspace's branch and commit, and expects `resume` to print fresh connection details. `recipe.mjs` doesn't do either yet ([Troubleshooting](#troubleshooting) has the errors), so you can run each mode by hand but not a full orca session.
 
@@ -95,7 +95,7 @@ orca runs `create` from your checkout and sets `ORCA_REPO_URL`. The recipe clone
 
 ## How the recipe works
 
-`create` makes an SSH key pair under `~/.tenki-orca/`, starts a sandbox with the repo cloned and the public key installed, and asks Tenki for a short-lived SSH certificate that lets that key log in:
+`create` makes an SSH key pair under `~/.luxor-orca/`, starts a sandbox with the repo cloned and the public key installed, and asks Luxor Agent Cloud for a short-lived SSH certificate that lets that key log in:
 
 ```js
     sandbox = await luxor.createAndWait({
@@ -132,13 +132,13 @@ It prints the one JSON object orca expects: where to SSH, as whom, with which ke
   }));
 ```
 
-Tenki carries SSH over a WebSocket rather than a plain network port, so a normal `ssh` client can't connect on its own. `ssh-proxy.mjs` fills the gap. It's a `ProxyCommand`, a program `ssh` runs and talks through instead of opening its own connection:
+Luxor Agent Cloud carries SSH over a WebSocket rather than a plain network port, so a normal `ssh` client can't connect on its own. `ssh-proxy.mjs` fills the gap. It's a `ProxyCommand`, a program `ssh` runs and talks through instead of opening its own connection:
 
 ```js
 // An ssh ProxyCommand: ssh runs this script and talks through its input and output
-// instead of opening a network connection itself. Tenki carries SSH over a WebSocket
+// instead of opening a network connection itself. Luxor Agent Cloud carries SSH over a WebSocket
 // (ws(s)://.../v1/ssh/<id>), so this script relays bytes between ssh and that WebSocket.
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { LuxorSandbox } from "@luxorai/sandbox";
 
 const sessionId = process.argv[2];
 const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
@@ -180,15 +180,15 @@ process.exit(0);
 - `resume` waits until the sandbox is running (up to 120 seconds), gets a fresh SSH certificate, saves the server's key again, and prints `{"ok":true,"mode":"resume"}`.
 - `destroy` terminates the sandbox and removes its key directory and `known_hosts` entry.
 
-ssh normally checks that a server's **host key** matches the one it saw last time. Here that key belongs to Tenki's SSH gateway rather than the sandbox, and orca's connection settings can't say which name to check it under, so `create` saves it once under a name unique to the sandbox:
+ssh normally checks that a server's **host key** matches the one it saw last time. Here that key belongs to Luxor Agent Cloud's SSH gateway rather than the sandbox, and orca's connection settings can't say which name to check it under, so `create` saves it once under a name unique to the sandbox:
 
 ```js
   // ssh checks that the server it reaches is the one it saw before (its "host key").
-  // Here that key belongs to Tenki's SSH gateway, not to the sandbox, and orca gives ssh
+  // Here that key belongs to Luxor Agent Cloud's SSH gateway, not to the sandbox, and orca gives ssh
   // no way to say which name to check it under. So connect once now, save the key under
   // a name unique to this sandbox, and later connections are checked against it.
   // Sandbox ids start with a timestamp, so build that name from the random end of the id.
-  alias = `tenki-${sandbox.id.replaceAll("-", "").slice(-12)}`;
+  alias = `luxor-${sandbox.id.replaceAll("-", "").slice(-12)}`;
   mkdirSync(`${homedir()}/.ssh`, { recursive: true });
   if (existsSync(knownHosts)) execFileSync("ssh-keygen", ["-R", alias, "-f", knownHosts], { stdio: "ignore" });
   execFileSync("ssh", ["-o", `ProxyCommand=node "${proxy}" ${sandbox.id}`, "-o", "StrictHostKeyChecking=accept-new",

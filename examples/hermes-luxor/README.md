@@ -4,14 +4,14 @@ Let the Hermes agent run shell commands on a cloud machine instead of your compu
 
 [Hermes Agent](https://github.com/NousResearch/hermes-agent) is an open-source AI agent from Nous Research. One of its tools is a terminal: when Hermes decides to run a shell command, it hands the command to a **terminal backend**, the piece that actually runs it. The default backend runs commands on your own machine, and Hermes lets you swap in others.
 
-This example uses a Tenki backend, `TenkiEnvironment`, so every command runs in a Tenki sandbox. It supports two kinds of **session** (one run of the agent on a task):
+This example uses a Luxor Agent Cloud backend, `TenkiEnvironment`, so every command runs in a Luxor sandbox. It supports two kinds of **session** (one run of the agent on a task):
 
 - An **ephemeral** session deletes the sandbox when it ends.
 - A **persistent** session saves a **snapshot** of the sandbox (a copy of its disk) when it ends, then deletes it. The next session for the same task starts a new sandbox from that snapshot, so the agent's files are still there.
 
-The demo calls the backend directly, the same way Hermes's terminal tool would, so it needs a Tenki key and no model key.
+The demo calls the backend directly, the same way Hermes's terminal tool would, so it needs a Luxor Agent Cloud key and no model key.
 
-> **Status:** the Tenki backend isn't in a Hermes release yet. This example installs it from a fork, [`opencolin/hermes-tenki`](https://github.com/opencolin/hermes-tenki), at a fixed commit ([opencolin/hermes-tenki#6](https://github.com/opencolin/hermes-tenki/pull/6)). Once a Hermes release supports plugin backends, it can ship as a plugin instead.
+> **Status:** the Luxor Agent Cloud backend isn't in a Hermes release yet. This example installs it from a fork, [`opencolin/hermes-tenki`](https://github.com/opencolin/hermes-tenki), at a fixed commit ([opencolin/hermes-tenki#6](https://github.com/opencolin/hermes-tenki/pull/6)). Once a Hermes release supports plugin backends, it can ship as a plugin instead.
 
 ## Set it up with a coding agent
 

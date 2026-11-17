@@ -4,9 +4,9 @@ Give each of your OpenHermit agents its own cloud machine that keeps its files b
 
 [OpenHermit](https://github.com/HCF-STUDIOS/openhermit) runs AI agents as always-on services. A server called the **gateway** manages them and stores their settings and history in PostgreSQL. Each agent gets a **sandbox**, the machine where its shell commands run, its file tools read and write, and its **skills** (instruction files it can load) live. By default that's a Docker container on the gateway's machine.
 
-OpenHermit's `tenki` sandbox type makes it a Tenki VM instead. Each agent keeps one VM for its whole life: OpenHermit pauses it when the agent goes quiet and resumes it on the next command, and it reconnects to the same VM after a gateway restart, so the agent's files are always where it left them.
+OpenHermit's `tenki` sandbox type makes it a Luxor Agent Cloud VM instead. Each agent keeps one VM for its whole life: OpenHermit pauses it when the agent goes quiet and resumes it on the next command, and it reconnects to the same VM after a gateway restart, so the agent's files are always where it left them.
 
-The steps below set up OpenHermit with a Tenki-backed agent. This folder's `verify.mjs` is a quicker check that your Tenki key works and the backend's Tenki calls succeed, without installing OpenHermit.
+The steps below set up OpenHermit with a sandbox-backed agent. This folder's `verify.mjs` is a quicker check that your Luxor Agent Cloud key works and the backend's Luxor Agent Cloud calls succeed, without installing OpenHermit.
 
 ## Set it up with a coding agent
 
@@ -31,7 +31,7 @@ You need:
 - PostgreSQL, or Docker so the setup wizard can start one.
 - An [OpenRouter](https://openrouter.ai) API key for the agent's model (`google/gemini-3-flash-preview` by default).
 
-The Tenki backend was added after OpenHermit's latest npm release (`0.10.0`), so run OpenHermit from source until the next release.
+The Luxor Agent Cloud backend was added after OpenHermit's latest npm release (`0.10.0`), so run OpenHermit from source until the next release.
 
 ### 1. Install OpenHermit from source
 
@@ -43,7 +43,7 @@ The checkout already depends on `@luxorai/sandbox` `^1.4.0`. `npm run dev:cli --
 
 ### 2. Set your API key
 
-The gateway reads the key from its own settings file, not your shell or `tenki login`:
+The gateway reads the key from its own settings file, not your shell or `luxor login`:
 
 ```bash
 npm run dev:cli -- setup                            # DATABASE_URL, tokens
@@ -65,7 +65,7 @@ npm run dev:cli -- agents start main
 npm run dev:cli -- chat --agent main                # the agent's shell now runs on Luxor Agent Cloud
 ```
 
-- `--no-sandbox` skips the default Docker sandbox, so the Tenki one becomes the agent's `default`.
+- `--no-sandbox` skips the default Docker sandbox, so the Luxor Agent Cloud one becomes the agent's `default`.
 - Without a model key the agent can't reply. You can put `OPENROUTER_API_KEY` in the gateway's `.env` instead.
 - `agents start` prints a `[deprecated]` warning and can be skipped; the agent starts on its first message anyway.
 
@@ -77,7 +77,7 @@ npm run dev:cli -- sandbox list --agent main
 
 You see one sandbox named `default` with type `tenki`. Its status reads `pending` until the agent runs its first command, which creates the VM, then `provisioned`.
 
-To check your Tenki key and the backend's Tenki calls without a gateway, database, or model key, run this folder's check:
+To check your Luxor Agent Cloud key and the backend's Luxor Agent Cloud calls without a gateway, database, or model key, run this folder's check:
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
@@ -100,14 +100,14 @@ Pass these to `sandbox add --config`. All are optional.
 | `cpu_cores` / `memory_mb` / `disk_size_gb` | `2` / `4096` / `10` | sandbox size |
 | `agent_home` | `/home/tenki` | where the agent's files go, and the folder commands start in |
 | `timeout_ms` | `300000` | time limit for each command, enforced inside the sandbox; a command that runs over exits with code 137 and keeps the output it printed |
-| `workspace_id` | inferred from the key | explicit Tenki workspace |
-| `base_url` | Tenki cloud | a different Tenki API endpoint |
+| `workspace_id` | inferred from the key | explicit Luxor Agent Cloud workspace |
+| `base_url` | Luxor Agent Cloud cloud | a different Luxor Agent Cloud API endpoint |
 
 Keep `agent_home` under `/home/tenki`, where Luxor Agent Cloud confines the SDK's file I/O. OpenHermit can't change an existing sandbox's config, so set `timeout_ms` when you add it.
 
 ### Put every new agent on Luxor Agent Cloud
 
-Save the Tenki settings as a named **preset** on the gateway, make it the default for new agents, then restart:
+Save the Luxor Agent Cloud settings as a named **preset** on the gateway, make it the default for new agents, then restart:
 
 ```bash
 npm run dev:cli -- gateway config set sandboxPresets.tenki-default \
@@ -120,12 +120,12 @@ Set the preset before `autoProvisionSandbox`, which must name a known preset. To
 
 ## How the backend works
 
-- **One long-lived sandbox per agent.** The backend creates the sandbox with Tenki's `sticky: true` option, which keeps it able to pause and resume, and saves its id. After a gateway restart it reconnects with `client.get(id)` and resumes it if paused. It creates a new, empty sandbox only when the old one has expired or been deleted.
+- **One long-lived sandbox per agent.** The backend creates the sandbox with Luxor Agent Cloud's `sticky: true` option, which keeps it able to pause and resume, and saves its id. After a gateway restart it reconnects with `client.get(id)` and resumes it if paused. It creates a new, empty sandbox only when the old one has expired or been deleted.
 - **Commands run through `sh -c`** in `agent_home`, with the secrets you've given the agent as environment variables. A command that runs past `timeout_ms` exits with code 137 and keeps the output it printed.
 - **Skills are uploaded as files** and swapped in all at once. If skills change while the sandbox is paused, the backend uploads them the next time the sandbox is used.
 - **Pause, not delete.** Pausing is free, and the next command resumes the VM. OpenHermit pauses the sandbox 5 minutes after the agent's last command (`exec.lifecycle`), when the gateway unloads an idle agent (after 30 minutes, `OPENHERMIT_EVICTION_TTL_MINUTES`), when you disable the agent, or when it stops.
 
-`verify.mjs` makes the same Tenki calls. It starts a long-lived sandbox and runs a command the way the backend does:
+`verify.mjs` makes the same Luxor Agent Cloud calls. It starts a long-lived sandbox and runs a command the way the backend does:
 
 ```js
 const client = new LuxorSandbox({ authToken });

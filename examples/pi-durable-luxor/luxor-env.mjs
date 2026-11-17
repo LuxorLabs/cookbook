@@ -1,4 +1,4 @@
-// Start a Tenki sandbox and connect it to Pi Durable as the place where agent tools run.
+// Start a Luxor sandbox and connect it to Pi Durable as the place where agent tools run.
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";

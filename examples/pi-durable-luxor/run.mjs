@@ -1,4 +1,4 @@
-// Run commands and write a file in a Tenki sandbox through Pi Durable's env
+// Run commands and write a file in a Luxor sandbox through Pi Durable's env
 // interface, pause the sandbox, and show the next call picks up where it left off.
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { getOrThrow } from "@earendil-works/pi-durable/env";

@@ -4,9 +4,9 @@ Run Claude Code, Codex, or OpenCode on a copy of your project in a cloud VM, wit
 
 [AgentBox](https://github.com/madarco/agentbox) is a command-line tool that gives each coding agent its own isolated machine, which it calls a **box**. It copies your project into the box (including changes you haven't committed), installs the agents with your settings, and lets you attach to any box to watch or take over. Because each agent has its own box, several can work at once without stepping on each other or on your computer.
 
-Where boxes run is up to a **provider** plugin. With [`@tenkicloud/agentbox-provider`](https://www.npmjs.com/package/@tenkicloud/agentbox-provider), every box is a Tenki VM, with Docker inside, public URLs for previewing apps the agent runs, and free pause and resume. You don't need Docker on your machine.
+Where boxes run is up to a **provider** plugin. With [`@luxorai/agentbox-provider`](https://www.npmjs.com/package/@luxorai/agentbox-provider), every box is a Luxor Agent Cloud VM, with Docker inside, public URLs for previewing apps the agent runs, and free pause and resume. You don't need Docker on your machine.
 
-> **Use AgentBox 0.29.2.** The Tenki plugin (0.1.1) is built for AgentBox's older plugin interface, provider SDK v2, which versions 0.27.1 through 0.29.2 support. AgentBox 0.30.0 and later accept only v4 and won't load it. Support for the newer interface is in progress in [tenki-agentbox-provider#6](https://github.com/LuxorLabs/tenki-agentbox-provider/pull/6).
+> **Use AgentBox 0.29.2.** The Luxor Agent Cloud plugin (0.1.1) is built for AgentBox's older plugin interface, provider SDK v2, which versions 0.27.1 through 0.29.2 support. AgentBox 0.30.0 and later accept only v4 and won't load it. Support for the newer interface is in progress in [tenki-agentbox-provider#6](https://github.com/LuxorLabs/tenki-agentbox-provider/pull/6).
 
 ## Set it up with a coding agent
 
@@ -58,7 +58,7 @@ New boxes start from a prepared image, so they don't reinstall everything each t
 agentbox prepare --provider tenki
 ```
 
-This starts a temporary VM from Tenki's `sandbox` image, installs tmux, AgentBox's own tools, the coding agents, your agent settings, and MCP servers (extra tools for the agents), then saves it as a snapshot and records the id in `~/.agentbox/tenki-prepared.json`. It takes 8 to 12 minutes, billed as a normal 20 GB VM. Tail `~/.agentbox/logs/latest.log` to watch. Your credentials are added to each box when it's created, never saved in the image. If the snapshot is deleted or your key points at another workspace, the next `prepare` builds it again.
+This starts a temporary VM from Luxor Agent Cloud's `sandbox` image, installs tmux, AgentBox's own tools, the coding agents, your agent settings, and MCP servers (extra tools for the agents), then saves it as a snapshot and records the id in `~/.agentbox/tenki-prepared.json`. It takes 8 to 12 minutes, billed as a normal 20 GB VM. Tail `~/.agentbox/logs/latest.log` to watch. Your credentials are added to each box when it's created, never saved in the image. If the snapshot is deleted or your key points at another workspace, the next `prepare` builds it again.
 
 ### 4. Create a box and start an agent
 
@@ -86,14 +86,14 @@ node verify.mjs
 ✓ agentbox-luxor: plugin exposes the SDK v2 tenki provider → live boot → exec (box 42) → file round-trip → dispose
 ```
 
-`verify.mjs` checks that the published plugin has every function AgentBox 0.29.2 expects from a provider (`create`, `start`, `reconnect`, `pause`, `resume`, `stop`, `destroy`, `exec`, `buildAttach`, `checkpoint.create`), then boots a small VM, runs a command, round-trips a file, and disposes of it. It doesn't need the AgentBox CLI and doesn't run `prepare` or `create`. It reads `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or a `tenki login` key. You can run it before the bake to confirm your key works.
+`verify.mjs` checks that the published plugin has every function AgentBox 0.29.2 expects from a provider (`create`, `start`, `reconnect`, `pause`, `resume`, `stop`, `destroy`, `exec`, `buildAttach`, `checkpoint.create`), then boots a small VM, runs a command, round-trips a file, and disposes of it. It doesn't need the AgentBox CLI and doesn't run `prepare` or `create`. It reads `TENKI_AUTH_TOKEN`, `TENKI_API_KEY`, or a `luxor login` key. You can run it before the bake to confirm your key works.
 
 ## Working with boxes
 
 - **Push from a box** with `agentbox-ctl git push`. The push is relayed through your machine, which holds your git credentials, so keys never enter the box.
 - **Preview URLs.** Every exposed port gets a public HTTPS URL; `expose:` in `agentbox.yaml` and `agentbox open` work as on other providers. The in-box web proxy listens on 8080. Anyone with a URL can reach that port, so use a signed, expiring URL for anything that shouldn't stay public.
 - **Checkpoints.** From the project root, `agentbox checkpoint create --name setup` snapshots a warm box live, and `agentbox create --provider tenki --snapshot setup` boots new boxes from it.
-- **Pause.** `agentbox pause <box>` and `agentbox start <box>` use Tenki pause/resume: free while paused, processes intact.
+- **Pause.** `agentbox pause <box>` and `agentbox start <box>` use Luxor Agent Cloud pause/resume: free while paused, processes intact.
 - **Lifetime.** A box shuts down after 45 minutes unless you set `AGENTBOX_TENKI_TIMEOUT_MS`. While you're using a box, AgentBox keeps extending that deadline.
 
 | Setting | Where | Notes |

@@ -4,7 +4,7 @@ Run your test suite (or any command) on a Linux machine in the cloud, using the 
 
 [Crabbox](https://crabbox.sh) is an open-source command-line tool from the [OpenClaw](https://github.com/openclaw/crabbox) project. You run `crabbox` in your repo, and it copies your current files to a remote Linux machine, including edits you haven't committed and leaving out files Git ignores, like `.env`. It then runs your command there and exits with that command's result, so it works in scripts and git hooks the same way running the command locally would. You start the machine once with `crabbox warmup` and each `crabbox run` reuses it while it's "warm", so later runs only copy what changed and start fast.
 
-With `provider: tenki`, that machine is a Tenki sandbox. Crabbox creates it with the `tenki` CLI and connects through Tenki's SSH gateway, so there are no SSH keys or IP addresses to manage.
+With `provider: tenki`, that machine is a Luxor sandbox. Crabbox creates it with the `tenki` CLI and connects through Luxor Agent Cloud's SSH gateway, so there are no SSH keys or IP addresses to manage.
 
 ## Set it up with a coding agent
 

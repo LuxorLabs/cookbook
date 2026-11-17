@@ -1,7 +1,7 @@
 // An ssh ProxyCommand: ssh runs this script and talks through its input and output
-// instead of opening a network connection itself. Tenki carries SSH over a WebSocket
+// instead of opening a network connection itself. Luxor Agent Cloud carries SSH over a WebSocket
 // (ws(s)://.../v1/ssh/<id>), so this script relays bytes between ssh and that WebSocket.
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { LuxorSandbox } from "@luxorai/sandbox";
 
 const sessionId = process.argv[2];
 const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });

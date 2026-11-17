@@ -8,11 +8,11 @@ Run and score the code a model writes during training, each attempt on its own d
 - The **reward** is that attempt's score. Here it's `1.0` if the model's code passes the task's tests and `0.0` if it doesn't.
 - A **sandbox provider** is where NeMo Gym runs the code it needs to score. It ships providers for Docker, E2B, and others.
 
-Model-written code shouldn't run on your training machines, and you may run thousands of rollouts at once. [`nemo-gym-tenki`](https://github.com/opencolin/nemo-gym-tenki) adds a `tenki` provider, so each rollout's code runs in its own Tenki VM that's deleted afterwards. Once it's installed, NeMo Gym finds it by name, with no change to NeMo Gym itself.
+Model-written code shouldn't run on your training machines, and you may run thousands of rollouts at once. [`nemo-gym-tenki`](https://github.com/opencolin/nemo-gym-tenki) adds a `tenki` provider, so each rollout's code runs in its own Luxor Agent Cloud VM that's deleted afterwards. Once it's installed, NeMo Gym finds it by name, with no change to NeMo Gym itself.
 
 This example scores one rollout: it puts a solution file in a sandbox, runs its tests, and prints the reward.
 
-> **Status:** `nemo-gym-tenki` isn't on PyPI yet, so this example installs it from GitHub at a fixed commit. A built-in Tenki provider is proposed in NeMo Gym itself ([NVIDIA-NeMo/Gym#2346](https://github.com/NVIDIA-NeMo/Gym/pull/2346)).
+> **Status:** `nemo-gym-tenki` isn't on PyPI yet, so this example installs it from GitHub at a fixed commit. A built-in Luxor Agent Cloud provider is proposed in NeMo Gym itself ([NVIDIA-NeMo/Gym#2346](https://github.com/NVIDIA-NeMo/Gym/pull/2346)).
 
 ## Set it up with a coding agent
 
@@ -49,7 +49,7 @@ uv sync                 # NeMo Gym 0.7.0, nemo-gym-tenki, and tenki, into ./.ven
 export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
 ```
 
-Sandboxes are created in the key's Tenki workspace. Set `connection.workspace_id` in the provider config to pick another.
+Sandboxes are created in the key's Luxor Agent Cloud workspace. Set `connection.workspace_id` in the provider config to pick another.
 
 ### 3. Run
 
@@ -86,7 +86,7 @@ The provider has three calls: `create` starts a sandbox from a `SandboxSpec` (th
 from nemo_gym.sandbox.providers.base import SandboxSpec
 from nemo_gym.sandbox.providers.registry import create_provider
 
-# Pick the Tenki provider and size its VMs. In a NeMo Gym config file, the same
+# Pick the Luxor Agent Cloud provider and size its VMs. In a NeMo Gym config file, the same
 # settings go under `sandbox_provider:`.
 provider = create_provider({"tenki": {"create": {"cpu_cores": 1, "memory_mb": 1024, "max_duration_s": 600}}})
 # Start a sandbox with the model's solution copied into /home/tenki/task.
@@ -112,7 +112,7 @@ sandbox_provider:
 
 ## How it works
 
-- **Spec fields.** Each `SandboxSpec` field becomes a Tenki setting: `resources` sets the VM's `cpu_cores`, `memory_mb`, and `disk_size_gb`; `image` picks a Tenki image; `env` and `metadata` pass through; `ttl_s` becomes the VM's maximum lifetime; `files` are written into `workdir` after the VM starts.
+- **Spec fields.** Each `SandboxSpec` field becomes a Luxor Agent Cloud setting: `resources` sets the VM's `cpu_cores`, `memory_mb`, and `disk_size_gb`; `image` picks a Luxor Agent Cloud image; `env` and `metadata` pass through; `ttl_s` becomes the VM's maximum lifetime; `files` are written into `workdir` after the VM starts.
 - **Network.** Outbound access is on, so rollouts can `pip install` or `git clone`. Set `create.allow_outbound: false` to lock a rollout down.
 - **Reconnect from another process.** A sandbox handle can be saved and reopened by sandbox ID in a different process or on another machine (the provider implements NeMo Gym's `ConnectableProvider`). That lets you spread rollouts across many workers.
 - **CPU only.** A spec that asks for `resources.gpu` is rejected.

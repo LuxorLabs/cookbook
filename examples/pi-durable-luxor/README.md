@@ -7,7 +7,7 @@ Give a long-running AI agent a cloud machine for its commands and files, and pau
 - **Pi Durable** (`@earendil-works/pi-durable`) runs agents that survive crashes and restarts. It saves every conversation, model reply, and tool call to storage as it happens, so if the process dies mid-task, reopening the storage picks up where it stopped.
 - **pi-env** (`@earendil-works/pi-env`) lets that agent's tools (running commands, reading and writing files) act on another machine instead of yours. It copies a small helper program, the **daemon**, to that machine and talks to it, normally over SSH.
 
-This example makes the other machine a Tenki sandbox and replaces SSH with Tenki's own API. Pi keeps the agent's memory safe in storage, and Tenki can pause the sandbox between tasks, which saves its memory and disk and stops billing. The next time the agent touches the sandbox, it resumes on its own.
+This example makes the other machine a Luxor sandbox and replaces SSH with Luxor Agent Cloud's own API. Pi keeps the agent's memory safe in storage, and Luxor Agent Cloud can pause the sandbox between tasks, which saves its memory and disk and stops billing. The next time the agent touches the sandbox, it resumes on its own.
 
 The demo needs no model key: it runs a command and writes a file the way an agent's tools would, pauses the sandbox, and reads the file back.
 
@@ -80,9 +80,9 @@ node verify.mjs
 
 ## How it works
 
-1. **`tenki-env.mjs`** starts a sandbox, copies the pi-env daemon into it, and returns an **env**: the object Pi's tools call to run commands and read or write files.
-2. **pi-env** talks to the daemon by starting a local command and sending messages through that command's input and output. Normally the command is `ssh`. Here it's **`bridge.mjs`**, which starts the daemon inside the sandbox through Tenki's API and passes the messages back and forth.
-3. Before each connection, `tenki-env.mjs` checks whether the sandbox is paused and resumes it if so. That's why a call after a pause just works.
+1. **`luxor-env.mjs`** starts a sandbox, copies the pi-env daemon into it, and returns an **env**: the object Pi's tools call to run commands and read or write files.
+2. **pi-env** talks to the daemon by starting a local command and sending messages through that command's input and output. Normally the command is `ssh`. Here it's **`bridge.mjs`**, which starts the daemon inside the sandbox through Luxor Agent Cloud's API and passes the messages back and forth.
+3. Before each connection, `luxor-env.mjs` checks whether the sandbox is paused and resumes it if so. That's why a call after a pause just works.
 
 A few terms you'll see in the code:
 
@@ -95,7 +95,7 @@ A few terms you'll see in the code:
 `run.mjs`:
 
 ```js
-// Run commands and write a file in a Tenki sandbox through Pi Durable's env
+// Run commands and write a file in a Luxor sandbox through Pi Durable's env
 // interface, pause the sandbox, and show the next call picks up where it left off.
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { getOrThrow } from "@earendil-works/pi-durable/env";
@@ -144,20 +144,20 @@ const harness = await Harness.open(storage, {
 
 `storage`, `models`, `registry`, and `context` come from your Pi Durable setup ([quick start](https://github.com/earendil-works/pi/tree/main/packages/durable#quick-start)). Running an agent turn needs a model provider and key.
 
-- Copy `tenki-env.mjs` and `bridge.mjs` into the same directory. The connection starts the bridge from there.
-- `createTenkiEnv()` takes `{ cpuCores, memoryMb, onLog }` (defaults: 1 core, 1024 MB). `onLog` receives daemon and bridge diagnostics.
+- Copy `luxor-env.mjs` and `bridge.mjs` into the same directory. The connection starts the bridge from there.
+- `createLuxorEnv()` takes `{ cpuCores, memoryMb, onLog }` (defaults: 1 core, 1024 MB). `onLog` receives daemon and bridge diagnostics.
 - Use one env id and one `Connection` per sandbox. Pi assumes two envs with the same id share files, and it orders `edit` and `write` calls by env id and path.
 - Check a custom env against Pi's expectations with `registerEnvConformance()` from `@earendil-works/pi-durable/testing`.
 
 ## How the bridge works
 
-pi-env's `Connection` starts a local command and exchanges messages with the daemon through that command's standard input and output. Normally the command is `ssh`. Here it's `bridge.mjs`, which starts the daemon in the sandbox with Tenki's command API and connects the two streams:
+pi-env's `Connection` starts a local command and exchanges messages with the daemon through that command's standard input and output. Normally the command is `ssh`. Here it's `bridge.mjs`, which starts the daemon in the sandbox with Luxor Agent Cloud's command API and connects the two streams:
 
 ```js
 #!/usr/bin/env node
 // pi-env starts this script as: node bridge.mjs <sessionId> serve --token <hex>
-// It starts the pi-env daemon inside the Tenki sandbox and connects the daemon's
-// input and output to this process's, using Tenki's command API instead of SSH.
+// It starts the pi-env daemon inside the Luxor sandbox and connects the daemon's
+// input and output to this process's, using Luxor Agent Cloud's command API instead of SSH.
 import { Readable, Writable } from "node:stream";
 import { LuxorSandbox } from "@luxorai/sandbox";
 
@@ -170,7 +170,7 @@ try {
   const handle = session.run(["/home/tenki/pi-env", ...daemonArgs], {
     stdin: Readable.toWeb(process.stdin),
   });
-  // Tenki keeps this exec stream open while another client pauses the sandbox, so
+  // Luxor Agent Cloud keeps this exec stream open while another client pauses the sandbox, so
   // watch the state and exit once it leaves RUNNING: pi-env then respawns the
   // bridge, resuming the sandbox, on the next request.
   setInterval(async () => {
@@ -196,7 +196,7 @@ try {
 }
 ```
 
-`tenki-env.mjs` uploads the daemon (a 2.4 MB Linux program that ships inside the pi-env package) and creates a `RemoteExecutionEnv` that connects through the bridge. pi-env calls the `command` option on every reconnect, so a paused sandbox is resumed before the bridge starts:
+`luxor-env.mjs` uploads the daemon (a 2.4 MB Linux program that ships inside the pi-env package) and creates a `RemoteExecutionEnv` that connects through the bridge. pi-env calls the `command` option on every reconnect, so a paused sandbox is resumed before the bridge starts:
 
 ```js
   // The pi-env package ships a static linux-x64 daemon that runs on Luxor Agent Cloud's stock image.

@@ -1,4 +1,4 @@
-"""Score one NeMo Gym rollout (one attempt by a model at a task) in a Tenki sandbox.
+"""Score one NeMo Gym rollout (one attempt by a model at a task) in a Luxor sandbox.
 
     uv sync && uv run python run.py
 """
@@ -21,7 +21,7 @@ print("tests passed")
 async def main() -> None:
     print("providers:", ", ".join(list_providers()))
 
-    # Pick the Tenki provider and size its VMs. In a NeMo Gym config file, the same
+    # Pick the Luxor Agent Cloud provider and size its VMs. In a NeMo Gym config file, the same
     # settings go under `sandbox_provider:`.
     provider = create_provider({"tenki": {"create": {"cpu_cores": 1, "memory_mb": 1024, "max_duration_s": 600}}})
     # Start a sandbox with the model's solution copied into /home/tenki/task.

@@ -4,7 +4,7 @@ Give the tools in your Vercel AI SDK app a cloud machine to run commands and han
 
 The [Vercel AI SDK](https://ai-sdk.dev) is a TypeScript library for building apps on language models. You give a model **tools**, functions it can call, such as one that runs a shell command. AI SDK 7 adds an experimental **sandbox** option: you pass `generateText()` a sandbox object as `experimental_sandbox`, and the SDK hands it to every tool, so tools run commands and read or write files there instead of on the machine running your app.
 
-The SDK defines what a sandbox object must look like (`Experimental_SandboxSession`) but doesn't supply one. `tenki-sandbox.mjs` is a small adapter that turns a Tenki sandbox into one. Copy that one file into your project. In this example, a model uses a `runCommand` tool to compute the 20th Fibonacci number with Python in the sandbox.
+The SDK defines what a sandbox object must look like (`Experimental_SandboxSession`) but doesn't supply one. `luxor-sandbox.mjs` is a small adapter that turns a Luxor sandbox into one. Copy that one file into your project. In this example, a model uses a `runCommand` tool to compute the 20th Fibonacci number with Python in the sandbox.
 
 The adapter boots sandboxes with outbound network off. Pass `createLuxorSandbox({ allowOutbound: true })` if tools need `pip install` or downloads.
 

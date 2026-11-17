@@ -1,10 +1,10 @@
 # OpenClaw
 
-Keep your OpenClaw agents' commands and file edits off your computer by running them on a Tenki cloud machine.
+Keep your OpenClaw agents' commands and file edits off your computer by running them on a Luxor Agent Cloud cloud machine.
 
 [OpenClaw](https://github.com/openclaw/openclaw) is an open-source AI assistant you run yourself. A background service called the **Gateway** runs your agents, and those agents use **tools** to act: running shell commands, reading and editing files, and opening interactive terminal sessions. OpenClaw can **sandbox** those tools, so they run somewhere other than the Gateway's machine, and it lets plugins supply that somewhere.
 
-The [`@tenkicloud/openclaw`](https://www.npmjs.com/package/@tenkicloud/openclaw) plugin makes it a Tenki sandbox. With `sandbox.mode: "all"`, every agent's tools run in its own Tenki sandbox instead of on your machine. The plugin is published on [ClawHub](https://clawhub.ai), OpenClaw's plugin directory, with source at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
+The [`@luxorai/openclaw`](https://www.npmjs.com/package/@luxorai/openclaw) plugin makes it a Luxor sandbox. With `sandbox.mode: "all"`, every agent's tools run in its own Luxor sandbox instead of on your machine. The plugin is published on [ClawHub](https://clawhub.ai), OpenClaw's plugin directory, with source at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
 
 > **Status:** plugin 0.2.0 works only with OpenClaw 2026.7.x (tested on 2026.7.34). OpenClaw 2026.8.1 and later, including `latest`, removed something the plugin imports, so it fails to load there even though the install reports success.
 
@@ -27,7 +27,7 @@ Make my OpenClaw agents run their tools in Luxor sandboxes, following https://gi
 You need:
 
 - A machine running OpenClaw 2026.7.x. That release needs Node.js `>=22.22.3 <23`, `>=24.15.0 <25`, or `>=25.9.0`.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - `ssh`, `ssh-keygen`, and `tar` on the machine that runs OpenClaw.
 
 ### 1. Install
@@ -55,11 +55,11 @@ The plugin runs inside the Gateway, so the Gateway needs the key in its environm
 TENKI_AUTH_TOKEN=tk_...
 ```
 
-`TENKI_API_KEY` also works, as does `authToken` in the plugin config. The plugin doesn't read the `tenki login` key. Sandboxes are created in the key's Tenki workspace. (In the Tenki API and in this README, a running sandbox is also called a **session**.)
+`TENKI_API_KEY` also works, as does `authToken` in the plugin config. The plugin doesn't read the `luxor login` key. Sandboxes are created in the key's Luxor Agent Cloud workspace. (In the Luxor Agent Cloud API and in this README, a running sandbox is also called a **session**.)
 
 ### 3. Run
 
-Add this to `~/.openclaw/openclaw.json` to turn on the plugin and make Tenki the place every agent's tools run (`mode: "all"` sandboxes every agent, and `backend: "tenki"` picks this plugin):
+Add this to `~/.openclaw/openclaw.json` to turn on the plugin and make Luxor Agent Cloud the place every agent's tools run (`mode: "all"` sandboxes every agent, and `backend: "tenki"` picks this plugin):
 
 ```jsonc
 {
@@ -92,7 +92,7 @@ openclaw gateway restart
 openclaw gateway status
 ```
 
-Agent tool calls now run in Tenki sandboxes tagged `openclaw`. Ask an agent to run `uname -a` and it reports a Linux VM, not your machine.
+Agent tool calls now run in Luxor sandboxes tagged `openclaw`. Ask an agent to run `uname -a` and it reports a Linux VM, not your machine.
 
 ### 4. Verify
 
@@ -110,7 +110,7 @@ node verify.mjs
 ✓ openclaw-luxor: plugin contract → live find-by-tag → sh positional args → stdin staging → SSH cert + gateway → dispose
 ```
 
-`verify.mjs` doesn't need OpenClaw installed. It checks the published plugin's manifest (its id, config schema, and supported OpenClaw versions), then makes the same Tenki calls the plugin relies on against a live sandbox: find a sandbox by tag, run a command with arguments, pass a command its input, open an SSH connection, and delete the sandbox. It uses SDK 1.4.1 or later; the published plugin pins `@tenkicloud/sandbox` 0.5.2. The backend's own tests run at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
+`verify.mjs` doesn't need OpenClaw installed. It checks the published plugin's manifest (its id, config schema, and supported OpenClaw versions), then makes the same Luxor Agent Cloud calls the plugin relies on against a live sandbox: find a sandbox by tag, run a command with arguments, pass a command its input, open an SSH connection, and delete the sandbox. It uses SDK 1.4.1 or later; the published plugin pins `@luxorai/sandbox` 0.5.2. The backend's own tests run at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
 
 ## Plugin config
 
@@ -118,12 +118,12 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
 
 | Key | What it sets |
 | --- | --- |
-| `authToken` | Tenki API key. Prefer `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` (Step 4). |
-| `baseUrl` | Tenki API endpoint override. Defaults to the SDK's `TENKI_API_ENDPOINT` / `TENKI_API_URL` fallback. |
-| `workspaceId` | Tenki workspace the sessions are created in. Optional. |
-| `image` | Base image id for created sessions. Omit for the Tenki default image. |
+| `authToken` | Luxor Agent Cloud API key. Prefer `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` (Step 4). |
+| `baseUrl` | Luxor Agent Cloud API endpoint override. Defaults to the SDK's `TENKI_API_ENDPOINT` / `TENKI_API_URL` fallback. |
+| `workspaceId` | Luxor Agent Cloud workspace the sessions are created in. Optional. |
+| `image` | Base image id for created sessions. Omit for the Luxor Agent Cloud default image. |
 | `workspaceRoot` | Absolute path inside the sandbox where each agent's copy of its workspace goes. Defaults to `/tmp/openclaw-sandboxes`. |
-| `idleTimeoutMinutes` | Passed to Tenki when creating a sandbox. Don't rely on it to stop one (see [Things to know](#things-to-know)). |
+| `idleTimeoutMinutes` | Passed to Luxor Agent Cloud when creating a sandbox. Don't rely on it to stop one (see [Things to know](#things-to-know)). |
 | `cpuCores` / `memoryMb` / `diskSizeGb` | Resources per session. |
 | `tags` | Extra tags attached to created sessions, after `openclaw` and the runtime tag. |
 
@@ -131,7 +131,7 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
 
 - **One sandbox per OpenClaw sandbox scope** (by default, per agent). The plugin tags each sandbox (`oc-tenki-<slug>-<hash>`), finds it by that tag, and creates one only if none exists. A paused one is resumed.
 - **Workspace upload.** On first use the plugin uploads the agent's workspace (its working files) and skills as one archive. After that, tools work on the sandbox's copy, and changes don't sync back to your machine.
-- **Commands** run through `/bin/sh -c`. The plugin passes a script's arguments (`$1`, `$2`, …) with a `set --` prefix. Tenki's command call has no input stream, so when a command needs input, the plugin writes it to a file in the sandbox and the command reads it from there. From `verify.mjs`:
+- **Commands** run through `/bin/sh -c`. The plugin passes a script's arguments (`$1`, `$2`, …) with a `set --` prefix. Luxor Agent Cloud's command call has no input stream, so when a command needs input, the plugin writes it to a file in the sandbox and the command reads it from there. From `verify.mjs`:
 
 ```js
   // Shell scripts run as `/bin/sh -c`, with a `set --` prefix that sets their arguments $1..$n.
@@ -148,11 +148,11 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
   assert(r2.exitCode === 0 && stdoutText(r2).trim() === "stdin staged as a session file", `stdin staging: ${JSON.stringify(stdoutText(r2))}`);
 ```
 
-- **Interactive terminals** (what OpenClaw calls PTY sessions) use plain `ssh`. The plugin connects it to Tenki's SSH gateway over a WebSocket. It keeps an SSH key under `$OPENCLAW_STATE_DIR/tenki` (or `~/.openclaw/tenki`) and gets a short-lived certificate for each sandbox, so there are no passwords or keys to manage. No `tenki` CLI is needed.
+- **Interactive terminals** (what OpenClaw calls PTY sessions) use plain `ssh`. The plugin connects it to Luxor Agent Cloud's SSH gateway over a WebSocket. It keeps an SSH key under `$OPENCLAW_STATE_DIR/tenki` (or `~/.openclaw/tenki`) and gets a short-lived certificate for each sandbox, so there are no passwords or keys to manage. No `tenki` CLI is needed.
 
 ## Things to know
 
-- **Sandboxes don't stop on their own.** The plugin never pauses a sandbox and sets no lifetime cap, and Tenki doesn't pause idle sandboxes, so `idleTimeoutMinutes` doesn't stop anything. A sandbox closes when OpenClaw removes the agent's sandbox. Find leftovers by the `openclaw` tag.
+- **Sandboxes don't stop on their own.** The plugin never pauses a sandbox and sets no lifetime cap, and Luxor Agent Cloud doesn't pause idle sandboxes, so `idleTimeoutMinutes` doesn't stop anything. A sandbox closes when OpenClaw removes the agent's sandbox. Find leftovers by the `openclaw` tag.
 - **Outbound network is always on.** The config has no option to turn it off.
 - `sandbox.docker.binds` isn't supported.
 - Large workspaces are buffered in memory during upload.

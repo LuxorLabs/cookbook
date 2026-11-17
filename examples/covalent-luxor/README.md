@@ -9,7 +9,7 @@ Run each step of a Python workflow on its own fresh cloud machine, created when 
 - An **executor** decides where an electron runs. The default runs it on your machine.
 - The **dispatcher** is a local Covalent server, started with `covalent start`, that runs your workflows and hands each electron to its executor.
 
-The [`covalent-tenki-plugin`](https://github.com/LuxorLabs/tenki-covalent-plugin) adds one more executor, `TenkiExecutor`. Every electron that uses it runs in a new Tenki sandbox, a disposable Linux VM with root access, so steps can't interfere with each other. That suits steps that run code you don't trust, and steps whose dependencies conflict.
+The [`covalent-tenki-plugin`](https://github.com/LuxorLabs/tenki-covalent-plugin) adds one more executor, `TenkiExecutor`. Every electron that uses it runs in a new Luxor sandbox, a disposable Linux VM with root access, so steps can't interfere with each other. That suits steps that run code you don't trust, and steps whose dependencies conflict.
 
 In this example, one electron installs `numpy` in a sandbox, computes √(0 + 1 + … + 99), and returns about 70.36.
 
@@ -35,7 +35,7 @@ Set up the Luxor Agent Cloud "Covalent" example from https://github.com/LuxorLab
 You need:
 
 - Python 3.12 for the workflow. The executor packs each step up on your machine and unpacks it in the sandbox (with `cloudpickle`), which only works when both sides run the same Python version, and the default sandbox image has 3.12. `verify.py` runs on 3.10 or later.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 
 ### 1. Install
 
@@ -57,7 +57,7 @@ Export it in the terminal where you'll run `covalent start`:
 export TENKI_API_KEY=tk_...
 ```
 
-The executor runs inside the dispatcher, so the dispatcher needs the key in its environment when it starts. It reads only `TENKI_API_KEY` or `TENKI_AUTH_TOKEN`. `verify.py` also accepts a key saved with `tenki login --api-key <key>`, but the executor doesn't.
+The executor runs inside the dispatcher, so the dispatcher needs the key in its environment when it starts. It reads only `TENKI_API_KEY` or `TENKI_AUTH_TOKEN`. `verify.py` also accepts a key saved with `luxor login --api-key <key>`, but the executor doesn't.
 
 ### 3. Verify
 
@@ -69,7 +69,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
 ✓ covalent-luxor: TenkiExecutor imports + a task-style command ran in a live Luxor sandbox → 42
 ```
 
-`verify.py` checks the Tenki side without starting Covalent: it creates a `TenkiExecutor`, starts a sandbox, runs `python3 -c "print(6 * 7)"`, and deletes the sandbox. `verify.mjs` is the wrapper CI runs; it calls `verify.py` with `.venv/bin/python`, `$PYTHON`, or `python3`.
+`verify.py` checks the Luxor Agent Cloud side without starting Covalent: it creates a `TenkiExecutor`, starts a sandbox, runs `python3 -c "print(6 * 7)"`, and deletes the sandbox. `verify.mjs` is the wrapper CI runs; it calls `verify.py` with `.venv/bin/python`, `$PYTHON`, or `python3`.
 
 ### 4. Run the workflow
 
@@ -82,7 +82,7 @@ python workflow.py
 
 ## The workflow
 
-`workflow.py` defines one electron, `sqrt_of_sum`, sends it to Tenki, and wraps it in a one-step lattice. This is the file without the bug workaround described [below](#covalent-422-workaround):
+`workflow.py` defines one electron, `sqrt_of_sum`, sends it to Luxor Agent Cloud, and wraps it in a one-step lattice. This is the file without the bug workaround described [below](#covalent-422-workaround):
 
 ```python
 import covalent as ct
@@ -91,7 +91,7 @@ import covalent as ct
 
 from covalent_tenki_plugin import TenkiExecutor  # noqa: E402 (after the patch)
 
-# Every electron that uses this executor runs in its own new Tenki sandbox.
+# Every electron that uses this executor runs in its own new Luxor sandbox.
 tenki = TenkiExecutor(cpu_cores=2, memory_mb=4096, sandbox_requirements="numpy")
 
 
@@ -113,22 +113,22 @@ if __name__ == "__main__":
     print("result:", result.result)  # sqrt(sum(0..99)) = sqrt(4950) ~= 70.36
 ```
 
-`TenkiExecutor` sets each step's VM size and `sandbox_requirements`, a space-separated list of pip packages to install in the VM before the step runs. Only electrons with `executor=tenki` run on Tenki; the rest use Covalent's default. See the [plugin README](https://github.com/LuxorLabs/tenki-covalent-plugin) for every argument. Its table on `main` predates 0.1.1: where it lists `project_id`, 0.1.1 takes an optional `workspace_id` (default: the first workspace on your key).
+`TenkiExecutor` sets each step's VM size and `sandbox_requirements`, a space-separated list of pip packages to install in the VM before the step runs. Only electrons with `executor=tenki` run on Luxor Agent Cloud; the rest use Covalent's default. See the [plugin README](https://github.com/LuxorLabs/tenki-covalent-plugin) for every argument. Its table on `main` predates 0.1.1: where it lists `project_id`, 0.1.1 takes an optional `workspace_id` (default: the first workspace on your key).
 
 ## How it works
 
 For each electron, the executor:
 
-1. Creates a sandbox named `covalent-<dispatch_id>-<node_id>`, tagged `covalent`. Tenki deletes it after `sandbox_max_duration_seconds` (default 3600) no matter what, so a crashed dispatcher can't leave a VM running and billing.
+1. Creates a sandbox named `covalent-<dispatch_id>-<node_id>`, tagged `covalent`. Luxor Agent Cloud deletes it after `sandbox_max_duration_seconds` (default 3600) no matter what, so a crashed dispatcher can't leave a VM running and billing.
 2. Sets up a Python virtual environment at `/home/tenki/.covalent-venv` with `cloudpickle`, the same `covalent` version you have locally, and your `sandbox_requirements`, and checks that the Python versions match. Passing `image` skips this.
-3. Packs up the function and its arguments with `cloudpickle`, sends them to the sandbox through Tenki's command API (no SSH or file storage needed), runs the function, and brings back its return value. If the function raised an exception, the same exception is raised on your side.
+3. Packs up the function and its arguments with `cloudpickle`, sends them to the sandbox through Luxor Agent Cloud's command API (no SSH or file storage needed), runs the function, and brings back its return value. If the function raised an exception, the same exception is raised on your side.
 4. Deletes the sandbox.
 
-The dispatcher keeps running other steps while one is in a sandbox, because the executor makes its Tenki calls on a separate thread.
+The dispatcher keeps running other steps while one is in a sandbox, because the executor makes its Luxor Agent Cloud calls on a separate thread.
 
 ## Covalent 422 workaround
 
-This is a Covalent bug, not a Tenki one. With `covalent` 0.240.0 and `requests>=2.34`, every `ct.dispatch()` fails with `422 Unprocessable Entity`, because Covalent sends the workflow to the dispatcher without a `Content-Type: application/json` header. `workflow.py` applies the [workaround from the plugin README](https://github.com/LuxorLabs/tenki-covalent-plugin#known-upstream-issue-unrelated-to-this-plugin) right after `import covalent`. Delete it once Covalent fixes the bug:
+This is a Covalent bug, not a Luxor Agent Cloud one. With `covalent` 0.240.0 and `requests>=2.34`, every `ct.dispatch()` fails with `422 Unprocessable Entity`, because Covalent sends the workflow to the dispatcher without a `Content-Type: application/json` header. `workflow.py` applies the [workaround from the plugin README](https://github.com/LuxorLabs/tenki-covalent-plugin#known-upstream-issue-unrelated-to-this-plugin) right after `import covalent`. Delete it once Covalent fixes the bug:
 
 ```python
 from covalent._dispatcher_plugins import local as ldisp
@@ -150,7 +150,7 @@ Setting up Python in each new sandbox (step 2 above) takes a couple of minutes a
 
 ## Limits
 
-- Arguments and results travel through Tenki's command API, so a result of tens of MB can hit message-size limits. Write large artifacts to external storage from inside the task.
+- Arguments and results travel through Luxor Agent Cloud's command API, so a result of tens of MB can hit message-size limits. Write large artifacts to external storage from inside the task.
 - Covalent's cancel API isn't wired up. `task_timeout_seconds` (default 1800) stops a runaway task, and `sandbox_max_duration_seconds` is the backstop.
 - Every task starts in a clean VM. The plugin doesn't use volumes or snapshots for shared caches.
 

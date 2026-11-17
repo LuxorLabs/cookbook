@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // pi-env starts this script as: node bridge.mjs <sessionId> serve --token <hex>
-// It starts the pi-env daemon inside the Tenki sandbox and connects the daemon's
-// input and output to this process's, using Tenki's command API instead of SSH.
+// It starts the pi-env daemon inside the Luxor sandbox and connects the daemon's
+// input and output to this process's, using Luxor Agent Cloud's command API instead of SSH.
 import { Readable, Writable } from "node:stream";
 import { LuxorSandbox } from "@luxorai/sandbox";
 
@@ -14,7 +14,7 @@ try {
 	const handle = session.run(["/home/tenki/pi-env", ...daemonArgs], {
 		stdin: Readable.toWeb(process.stdin),
 	});
-	// Tenki keeps this exec stream open while another client pauses the sandbox, so
+	// Luxor Agent Cloud keeps this exec stream open while another client pauses the sandbox, so
 	// watch the state and exit once it leaves RUNNING: pi-env then respawns the
 	// bridge, resuming the sandbox, on the next request.
 	setInterval(async () => {

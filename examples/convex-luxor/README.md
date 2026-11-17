@@ -1,10 +1,10 @@
 # Convex
 
-Give each signed-in user of your Convex app their own Tenki cloud machine, and show its status live in your UI.
+Give each signed-in user of your Convex app their own Luxor Agent Cloud cloud machine, and show its status live in your UI.
 
-[Convex](https://www.convex.dev) is a backend platform: you write server functions in TypeScript, store data in Convex's database, and your frontend updates automatically when that data changes. Functions that call outside services, like Tenki, are called **actions**. A **component** is a reusable package of Convex functions and tables you add to your app.
+[Convex](https://www.convex.dev) is a backend platform: you write server functions in TypeScript, store data in Convex's database, and your frontend updates automatically when that data changes. Functions that call outside services, like Luxor Agent Cloud, are called **actions**. A **component** is a reusable package of Convex functions and tables you add to your app.
 
-The [`@tenkicloud/convex`](https://www.npmjs.com/package/@tenkicloud/convex) component lets your actions create sandboxes, run commands in them, pause, resume, and delete them. It records each sandbox's state in a Convex table, so your UI can show whether a user's sandbox is running or paused without polling.
+The [`@luxorai/convex`](https://www.npmjs.com/package/@luxorai/convex) component lets your actions create sandboxes, run commands in them, pause, resume, and delete them. It records each sandbox's state in a Convex table, so your UI can show whether a user's sandbox is running or paused without polling.
 
 ## Set it up with a coding agent
 

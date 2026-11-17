@@ -1,12 +1,12 @@
 # RAGFlow
 
-Let RAGFlow agents run Python and JavaScript safely, each run on a fresh Tenki cloud machine.
+Let RAGFlow agents run Python and JavaScript safely, each run on a fresh Luxor Agent Cloud cloud machine.
 
 [RAGFlow](https://github.com/infiniflow/ragflow) is an open-source platform for building AI apps on top of your own documents. It's built around **RAG** (retrieval-augmented generation): finding the passages in your documents that answer a question and giving them to a model along with the question. RAGFlow also lets you build **agent workflows** by connecting blocks in a visual editor. One of those blocks, the **code component**, runs a short Python or JavaScript program, for example to clean up data or call an API.
 
-That code has to run somewhere isolated. RAGFlow's own option needs extra services on your server. Its `tenki` **sandbox provider** instead runs each execution in a new Tenki sandbox and deletes it afterwards, so there's nothing extra to install or run.
+That code has to run somewhere isolated. RAGFlow's own option needs extra services on your server. Its `tenki` **sandbox provider** instead runs each execution in a new Luxor sandbox and deletes it afterwards, so there's nothing extra to install or run.
 
-The steps below switch RAGFlow to Tenki. This folder's `main.go` is a quicker check that your Tenki key works and the provider's Tenki calls succeed, without RAGFlow.
+The steps below switch RAGFlow to Luxor Agent Cloud. This folder's `main.go` is a quicker check that your Luxor Agent Cloud key works and the provider's Luxor Agent Cloud calls succeed, without RAGFlow.
 
 ## Set it up with a coding agent
 
@@ -47,7 +47,7 @@ To configure it from the environment instead, save no sandbox settings and set `
 
 ### 3. Run
 
-Use the connection test on the same page. It creates a sandbox with your settings, runs a short Python program, and deletes it. Then run an agent workflow that has a code component; its code now runs on Tenki.
+Use the connection test on the same page. It creates a sandbox with your settings, runs a short Python program, and deletes it. Then run an agent workflow that has a code component; its code now runs on Luxor Agent Cloud.
 
 ### 4. Verify
 
@@ -90,7 +90,7 @@ It checks your key (`WhoAmI`), creates a sandbox with outbound network off, runs
 
 ## What each execution does
 
-- **Create, run, delete.** Nothing carries over between executions. Tenki deletes each sandbox after `max_lifetime` no matter what, so one RAGFlow fails to delete still goes away.
+- **Create, run, delete.** Nothing carries over between executions. Luxor Agent Cloud deletes each sandbox after `max_lifetime` no matter what, so one RAGFlow fails to delete still goes away.
 - **Python and JavaScript.** A code component defines a `main()` function. The provider wraps it so it receives the component's inputs and its return value comes back to RAGFlow, then runs it with `python3 -c` or `node -e` in `/home/tenki/ragflow-codeexec-<session id>`.
 - **One time limit.** `timeout` caps each execution. A component can ask for less but not more.
 - **Output files come back.** Files the code writes to `artifacts/` are collected if their extension is `.csv`, `.html`, `.jpeg`, `.jpg`, `.json`, `.pdf`, `.png`, or `.svg`, within the count and size caps, at most 16 directories deep, and not symlinks.

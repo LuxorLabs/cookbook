@@ -10,9 +10,9 @@ Run each of your Prefect workflows on a fresh cloud machine that's deleted when 
 - A **worker** is a process you start that watches a work pool and starts each flow run somewhere: as a local process, a Docker container, a Kubernetes job, and so on.
 - A **block** is a saved piece of configuration in Prefect, such as a credential.
 
-[`prefect-tenki`](https://github.com/luxorlabs/tenki-prefect) adds a `tenki` worker type. When the worker picks up a flow run, it creates a new Tenki sandbox, runs the flow there, and deletes the sandbox when the run ends. Each run gets a clean machine, and nothing runs on the worker's own machine. This example works with Prefect 3.x.
+[`prefect-tenki`](https://github.com/luxorlabs/tenki-prefect) adds a `tenki` worker type. When the worker picks up a flow run, it creates a new Luxor sandbox, runs the flow there, and deletes the sandbox when the run ends. Each run gets a clean machine, and nothing runs on the worker's own machine. This example works with Prefect 3.x.
 
-> **Status:** `prefect-tenki` is an early preview (`0.1.0.dev0`) and isn't on PyPI. `requirements.txt` installs it from GitHub at a fixed commit, from an open pull request ([LuxorLabs/tenki-prefect#7](https://github.com/LuxorLabs/tenki-prefect/pull/7)) that updates it to the current Tenki SDK.
+> **Status:** `prefect-tenki` is an early preview (`0.1.0.dev0`) and isn't on PyPI. `requirements.txt` installs it from GitHub at a fixed commit, from an open pull request ([LuxorLabs/tenki-prefect#7](https://github.com/LuxorLabs/tenki-prefect/pull/7)) that updates it to the current Luxor Agent Cloud SDK.
 
 ## Set it up with a coding agent
 
@@ -32,8 +32,8 @@ Set up a Prefect work pool that runs each flow run in its own Luxor sandbox, fol
 You need:
 
 - Python 3.10 or later, [uv](https://docs.astral.sh/uv/) (or `venv` and pip), and git.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
-- For real flow runs: Prefect Cloud, or a Prefect server the sandbox can reach over the internet; a Tenki image or snapshot with Prefect and your flow's dependencies installed; and a git repo with your flow code.
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
+- For real flow runs: Prefect Cloud, or a Prefect server the sandbox can reach over the internet; a Luxor Agent Cloud image or snapshot with Prefect and your flow's dependencies installed; and a git repo with your flow code.
 
 ### 1. Install
 
@@ -56,7 +56,7 @@ This is for `verify.mjs`. The worker reads its key from a Prefect block instead,
 
 ### 3. Run
 
-The flow runs inside the sandbox and reports its progress back to Prefect, so Prefect's API must be reachable from the internet. A local Prefect server at `http://localhost:4200` only exists on your machine, so use Prefect Cloud or a hosted server. Then create a work pool that uses the Tenki worker:
+The flow runs inside the sandbox and reports its progress back to Prefect, so Prefect's API must be reachable from the internet. A local Prefect server at `http://localhost:4200` only exists on your machine, so use Prefect Cloud or a hosted server. Then create a work pool that uses the Luxor Agent Cloud worker:
 
 ```bash
 prefect cloud login
@@ -64,7 +64,7 @@ prefect cloud login
 prefect work-pool create --type tenki my-luxor-pool
 ```
 
-Save your Tenki key as a block. Only the worker uses it to create sandboxes; it's never passed into the sandbox:
+Save your Luxor Agent Cloud key as a block. Only the worker uses it to create sandboxes; it's never passed into the sandbox:
 
 ```python
 from prefect_tenki import TenkiCredentials
@@ -72,7 +72,7 @@ from prefect_tenki import TenkiCredentials
 TenkiCredentials(api_key="tk_...").save("tenki-prod")
 ```
 
-Each work pool has **job variables**, the settings the worker uses for every run (listed [below](#job-variables)). Set `credentials` to `tenki-prod`, and `image` (or `snapshot_id`) to a Tenki image with Prefect installed. You can do this in the Prefect UI or with `prefect work-pool update my-tenki-pool --base-job-template <file>`. Then start a worker, and in another terminal, deploy a flow and run it:
+Each work pool has **job variables**, the settings the worker uses for every run (listed [below](#job-variables)). Set `credentials` to `tenki-prod`, and `image` (or `snapshot_id`) to a Luxor Agent Cloud image with Prefect installed. You can do this in the Prefect UI or with `prefect work-pool update my-luxor-pool --base-job-template <file>`. Then start a worker, and in another terminal, deploy a flow and run it:
 
 ```bash
 prefect worker start --pool my-luxor-pool
@@ -103,7 +103,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
 ✓ prefect-luxor: TenkiWorker.run() → live sandbox → flow command exit 0 → teardown
 ```
 
-`verify.py` checks the Tenki side without a Prefect server. It uses a temporary Prefect settings folder (`PREFECT_HOME`), checks the worker type is registered as `tenki`, and calls `TenkiWorker.run()` directly with a stand-in command in place of a real flow, with the sandbox's network off:
+`verify.py` checks the Luxor Agent Cloud side without a Prefect server. It uses a temporary Prefect settings folder (`PREFECT_HOME`), checks the worker type is registered as `tenki`, and calls `TenkiWorker.run()` directly with a stand-in command in place of a real flow, with the sandbox's network off:
 
 ```python
     # Same shape a `prefect worker start` builds per flow run, minus the

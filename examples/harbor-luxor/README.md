@@ -10,7 +10,7 @@ Measure how well a coding agent solves a benchmark, with every attempt running o
 - The **trajectory** is the record of everything the agent did during a trial, which you can browse afterwards.
 - An **environment** is where Harbor runs each trial. By default that's Docker on your machine.
 
-[`tenki-harbor`](https://github.com/LuxorLabs/tenki-harbor) adds Tenki as an environment. Each trial gets its own Tenki VM, with the task's Docker container running inside it, so you can run many trials at once without overloading your machine, and an agent can't affect anything outside its VM.
+[`tenki-harbor`](https://github.com/LuxorLabs/tenki-harbor) adds Luxor Agent Cloud as an environment. Each trial gets its own Luxor Agent Cloud VM, with the task's Docker container running inside it, so you can run many trials at once without overloading your machine, and an agent can't affect anything outside its VM.
 
 ## Set it up with a coding agent
 
@@ -60,7 +60,7 @@ source .venv/bin/activate
 export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
 ```
 
-`harbor run` reads the key from the environment only, and stops before starting any trial if it's missing. A `tenki login` key isn't enough, except for `verify.py`.
+`harbor run` reads the key from the environment only, and stops before starting any trial if it's missing. A `luxor login` key isn't enough, except for `verify.py`.
 
 ### 3. Run one trial with no model
 
@@ -103,7 +103,7 @@ datasets:
     n_tasks: 10 # remove to run all 89 tasks
 ```
 
-With the `oracle` agent on all 89 Terminal-Bench 2.0 tasks, 79 pass on Tenki. The other 10 fail because of problems in the tasks themselves; the [tenki-harbor README](https://github.com/LuxorLabs/tenki-harbor#terminal-bench-20-results) lists each reason.
+With the `oracle` agent on all 89 Terminal-Bench 2.0 tasks, 79 pass on Luxor Agent Cloud. The other 10 fail because of problems in the tasks themselves; the [tenki-harbor README](https://github.com/LuxorLabs/tenki-harbor#terminal-bench-20-results) lists each reason.
 
 ### 5. Verify
 
@@ -181,7 +181,7 @@ tenki-harbor cleanup    # terminate them
 | `Pass at most one of image and snapshot_id.` | Pass one. |
 | `Tenki session for <trial> is '<STATE>', expected terminated` | Check with `tenki-harbor sessions`; end it with `tenki-harbor cleanup`. |
 
-To run one model through several coding agents (harnesses) and compare them, see [`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals). If your tasks run fine in local Docker and you don't need a VM per trial, Harbor's default environment needs no Tenki key.
+To run one model through several coding agents (harnesses) and compare them, see [`tenki-harness-evals`](https://github.com/LuxorLabs/tenki-harness-evals). If your tasks run fine in local Docker and you don't need a VM per trial, Harbor's default environment needs no Luxor Agent Cloud key.
 
 ## Related
 

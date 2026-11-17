@@ -1,5 +1,5 @@
-// The Claude Agent SDK with Tenki as its execution backend: every command the
-// agent runs and every file it writes lands in a Tenki sandbox, not on this computer.
+// The Claude Agent SDK with Luxor Agent Cloud as its execution backend: every command the
+// agent runs and every file it writes lands in a Luxor sandbox, not on this computer.
 //
 // Needs a model key: export ANTHROPIC_API_KEY=...
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
@@ -10,7 +10,7 @@ const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || pr
 
 // Start one sandbox and reuse it for every tool call, so files persist between steps.
 // `await using` deletes the sandbox automatically when the script ends.
-await using sandbox = await tenki.createAndWait({
+await using sandbox = await luxor.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
 	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
@@ -21,9 +21,9 @@ for await (const message of query({
 	options: {
 		tools: [], // turn off the SDK's built-in tools, which would run on this computer
 		// Offer Claude the three sandbox tools, bundled as an in-process MCP server named "tenki".
-		mcpServers: { tenki: createSdkMcpServer({ name: "tenki", version: "1.0.0", tools: makeTenkiTools(sandbox) }) },
+		mcpServers: { luxor: createSdkMcpServer({ name: "luxor", version: "1.0.0", tools: makeLuxorTools(sandbox) }) },
 		// Let Claude call them without a permission prompt. The SDK names them mcp__<server>__<tool>.
-		allowedTools: ["mcp__tenki__bash", "mcp__tenki__write_file", "mcp__tenki__read_file"],
+		allowedTools: ["mcp__luxor__bash", "mcp__luxor__write_file", "mcp__luxor__read_file"],
 		maxTurns: 12, // stop after 12 rounds of back-and-forth
 	},
 })) {

@@ -1,7 +1,7 @@
 // Claude Agent SDK tools backed by a Luxor sandbox.
 //
 // The SDK's built-in Bash, Read, and Write tools act on the computer that runs
-// query(). These three do the same jobs inside a Tenki sandbox instead, so
+// query(). These three do the same jobs inside a Luxor sandbox instead, so
 // everything the agent runs or writes stays on a machine you can throw away.
 import { tool } from "@anthropic-ai/claude-agent-sdk";
 import { stdoutText, stderrText } from "@luxorai/sandbox";
