@@ -11,7 +11,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up GRPO training with a Luxor sandbox reward, following https://github.com/LuxorLabs/cookbook/tree/main/examples/trl-grpo-luxor.
 1. Check that Python 3.12+ and uv are installed. Create a venv in that folder and install requirements.txt.
-2. It needs TENKI_API_KEY (starts with tk_, from https://app.luxor.ai) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+2. It needs LUXORAI_API_KEY (starts with tk_, from https://app.luxor.ai) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
 3. Run `node verify.mjs` and confirm it prints two check marks. It needs no model and no GPU.
 4. Run `python reward_smoke.py` and confirm it prints [1.0, 0.0, 0.0].
 5. Check whether this machine has an NVIDIA GPU. If it does, install requirements-train.txt (this pulls in PyTorch) and ask me before running train.py with --max-steps 2. If it doesn't, stop after step 4 and tell me to run training on a GPU machine.
@@ -40,7 +40,7 @@ This installs the Luxor Agent Cloud SDK, which is all the reward and `verify.py`
 ### 2. Set your API key
 
 ```bash
-export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
+export LUXORAI_API_KEY=tk_...   # LUXORAI_AUTH_TOKEN also works
 ```
 
 ### 3. Check the reward with no model and no GPU
@@ -102,7 +102,7 @@ The grader has to run where the policy can't reach it. Here the policy has no sh
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_API_KEY, or run `luxor login`.`` | `verify.py` found no key. Export one or run `luxor login --api-key <key>`. |
+| ``No token. Set LUXORAI_API_KEY, or run `luxor login`.`` | `verify.py` found no key. Export one or run `luxor login --api-key <key>`. |
 | `ModuleNotFoundError: No module named 'tenki'` from `node verify.mjs` | Create the `.venv` here and install `requirements.txt`, or set `PYTHON`. |
 | `ModuleNotFoundError: No module named 'trl'` from `train.py` | Install `requirements-train.txt`. |
 | `tenki_code_reward: RateLimitedError` or `QuotaExceededError` repeatedly | You are over your workspace's sandbox limit. Lower `TENKI_REWARD_CONCURRENCY`, or `--prompts-per-step`. |

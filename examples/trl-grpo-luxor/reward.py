@@ -9,7 +9,7 @@ one sandbox per completion on that loop, bounded by a semaphore.
 The model's code never runs on the training machine. Each sandbox has outbound networking
 off, a hard timeout on the exec, and is always terminated, even on timeout or error.
 
-Auth comes from ``TENKI_API_KEY`` (or ``~/.config/luxor/config.yaml``).
+Auth comes from ``LUXORAI_API_KEY`` (or ``~/.config/luxor/config.yaml``).
 """
 
 from __future__ import annotations

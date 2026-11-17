@@ -9,17 +9,17 @@ import asyncio, os, re, sys  # noqa: E401
 
 def cfg(key):
     try:
-        text = open(os.path.expanduser("~/.config/luxor/config.yaml")).read()
+        text = open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")).read()
         return re.search(rf"^{key}:\s*(.+)$", text, re.M).group(1).strip()
     except (OSError, AttributeError):
         return ""
 
 
-token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
+token = os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
 if not token:
-    print("No token. Set TENKI_API_KEY, or run `luxor login`.")
+    print("No token. Set LUXORAI_API_KEY, or run `luxor login`.")
     sys.exit(1)
-os.environ["TENKI_API_KEY"] = token
+(os.environ.get("LUXORAI_API_KEY") or os.environ["TENKI_API_KEY"]) = token
 
 from tenki import AsyncClient  # noqa: E402
 
