@@ -1,0 +1,12 @@
+{
+  "name": "pi-durable-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — Pi Durable's remote execution env on a Luxor sandbox via the pi-env daemon.",
+  "dependencies": {
+    "@earendil-works/chord": "^1.2.0",
+    "@earendil-works/pi-durable": "^1.2.0",
+    "@earendil-works/pi-env": "^1.2.0",
+    "@luxorai/sandbox": ">=1.5.2"
+  }
+}

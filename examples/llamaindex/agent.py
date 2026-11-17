@@ -1,5 +1,5 @@
 """
-A LlamaIndex agent that runs code in a Tenki sandbox (the "code interpreter" pattern).
+A LlamaIndex agent that runs code in a Luxor sandbox (the "code interpreter" pattern).
 The agent writes Python; the run_python tool executes it in a disposable sandbox.
 
 Needs Python 3.10+, the deps in requirements.txt, and a model key:
@@ -12,12 +12,12 @@ from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.llms.openai import OpenAI
 from tenki import Sandbox
 
-from tenki_tool import make_code_tool
+from luxor_tool import make_code_tool
 
 
 def cfg(key):
     try:
-        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
+        with open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()
@@ -26,11 +26,11 @@ def cfg(key):
     return ""
 
 
-# A tk_ API key, from env or ~/.config/tenki/config.yaml (`tenki login --api-key`).
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+# A tk_ API key, from env or ~/.config/luxor/config.yaml (`luxor login --api-key`).
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-workspace = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+workspace = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 if workspace:
     opts["workspace_id"] = workspace
 
@@ -39,7 +39,7 @@ async def main():
     # One sandbox for the whole agent session, reused across every tool call.
     with Sandbox.create(**opts) as sandbox:
         agent = FunctionAgent(
-            tools=[make_code_tool(sandbox)],  # the tool runs the agent's code in Tenki
+            tools=[make_code_tool(sandbox)],  # the tool runs the agent's code in Luxor Agent Cloud
             llm=OpenAI(model="gpt-4o-mini"),  # needs OPENAI_API_KEY
             system_prompt="You answer questions by writing and running Python in a sandbox.",
         )
