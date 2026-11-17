@@ -21,6 +21,9 @@ concurrency:
   group: verify-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+permissions:
+  contents: read
+
 jobs:
   plan:
     name: key check and plan
@@ -83,7 +86,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24.22.3"
       - uses: actions/setup-python@v5
         if: hashFiles(format('{0}requirements.txt', matrix.dir), format('{0}pyproject.toml', matrix.dir), format('{0}verify.py', matrix.dir)) != ''
         with:
@@ -94,6 +97,8 @@ jobs:
           go-version-file: ${{ matrix.dir }}go.mod
       - name: Install and verify against Tenki
         env:
+          # The SDKs read LUXORAI_* first; plugins built on other projects still read TENKI_*.
+          LUXORAI_API_KEY: ${{ secrets.TENKI_API_KEY }}
           TENKI_API_KEY: ${{ secrets.TENKI_API_KEY }}
           # Third-party keys some examples declare in .verify-requires. Unset → skipped, not failed.
           COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
