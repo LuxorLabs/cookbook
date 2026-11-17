@@ -1,6 +1,6 @@
 """
-Verify the Tinker + Harbor example without a Tinker or model key. On a live Tenki VM:
-  1. TenkiSandbox builds a task's Dockerfile and satisfies tinker-cookbook's SandboxInterface,
+Verify the Tinker + Harbor example without a Tinker or model key. On a live Luxor Agent Cloud VM:
+  1. LuxorSandbox builds a task's Dockerfile and satisfies tinker-cookbook's SandboxInterface,
   2. commands, file writes and reads, exit codes and timeouts behave as the recipe expects, and
   3. the recipe's own HarborReward grades the task 0.0 before the fix and 1.0 after it,
 and the VM is terminated at the end.
@@ -17,7 +17,7 @@ from tinker_tenki import tenki_sandbox_factory
 
 def cfg(key):
     try:
-        text = open(os.path.expanduser("~/.config/tenki/config.yaml")).read()
+        text = open(os.path.expanduser("~/.config/luxor/config.yaml")).read()
         return re.search(rf"^{key}:\s*(.+)$", text, re.M).group(1).strip()
     except (OSError, AttributeError):
         return ""
@@ -25,7 +25,7 @@ def cfg(key):
 
 token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
 if not token:
-    print("No token. Set TENKI_API_KEY, or run `tenki login`.")
+    print("No token. Set TENKI_API_KEY, or run `luxor login`.")
     sys.exit(1)
 os.environ["TENKI_API_KEY"] = token
 

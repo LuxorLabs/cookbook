@@ -1,13 +1,13 @@
-"""Tenki backend for tinker-cookbook's Harbor RL recipe.
+"""Luxor Agent Cloud backend for tinker-cookbook's Harbor RL recipe.
 
-``TenkiSandbox`` implements tinker-cookbook's ``SandboxInterface``. The recipe hands
+``LuxorSandbox`` implements tinker-cookbook's ``SandboxInterface``. The recipe hands
 its sandbox factory a task's ``environment/`` directory (a Dockerfile plus build
-context), so each sandbox is one Tenki VM that runs the task's container under Docker:
+context), so each sandbox is one Luxor Agent Cloud VM that runs the task's container under Docker:
 the prebuilt ``docker_image`` from ``task.toml`` when there is one, otherwise the
 Dockerfile built in the VM. Commands, file reads and file writes all go to that
 container with ``docker exec``.
 
-Auth comes from ``TENKI_API_KEY`` (or ``~/.config/tenki/config.yaml``).
+Auth comes from ``TENKI_API_KEY`` (or ``~/.config/luxor/config.yaml``).
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from tenki import (
 from tinker_cookbook.sandbox.sandbox_interface import SandboxResult, SandboxTerminatedError
 
 CONTAINER = "main"
-WORK_DIR = "/home/tenki/.tinker"  # Tenki's file API only reaches /home/tenki
+WORK_DIR = "/home/tenki/.tinker"  # Luxor Agent Cloud's file API only reaches /home/tenki
 BUILD_DIR = f"{WORK_DIR}/build"
 TAG = "tinker-rl"
 
@@ -41,7 +41,7 @@ BUILD_TIMEOUT_SEC = 900
 # the image happen first, so the VM gets this much extra on top of it.
 SETUP_BUDGET_SEC = BOOTSTRAP_TIMEOUT_SEC + BUILD_TIMEOUT_SEC
 
-# Installs Docker on a bare Tenki VM and waits for the daemon.
+# Installs Docker on a bare Luxor Agent Cloud VM and waits for the daemon.
 # Same script as tenki-harbor (https://github.com/LuxorLabs/tenki-harbor).
 DOCKER_BOOTSTRAP = r"""
 set -e
@@ -76,8 +76,8 @@ def _prebuilt_image(env_dir: Path) -> str | None:
     return tomllib.loads(task_toml.read_text()).get("environment", {}).get("docker_image") or None
 
 
-class TenkiSandbox:
-    """One Tenki VM running one task container. Conforms to ``SandboxInterface``."""
+class LuxorSandbox:
+    """One Luxor Agent Cloud VM running one task container. Conforms to ``SandboxInterface``."""
 
     def __init__(self, sandbox: AsyncSandbox, max_stream_output_bytes: int = 128 * 1024) -> None:
         self._sandbox = sandbox
@@ -93,7 +93,7 @@ class TenkiSandbox:
         memory_mb: int = 4096,
         disk_size_gb: int = 50,
         max_stream_output_bytes: int = 128 * 1024,
-    ) -> TenkiSandbox:
+    ) -> LuxorSandbox:
         """Start a VM, build ``env_dir/Dockerfile`` in it, and start the container."""
         create_kwargs: dict = {
             "name": f"tinker-{uuid.uuid4().hex[:10]}",
@@ -207,6 +207,6 @@ class TenkiSandbox:
         )
 
 
-async def tenki_sandbox_factory(env_dir: Path, timeout: int) -> TenkiSandbox:
+async def tenki_sandbox_factory(env_dir: Path, timeout: int) -> LuxorSandbox:
     """Drop-in for tinker-cookbook's ``SandboxFactory``: ``(env_dir, timeout) -> sandbox``."""
-    return await TenkiSandbox.create(env_dir, timeout)
+    return await LuxorSandbox.create(env_dir, timeout)

@@ -1,5 +1,5 @@
 """
-Train on Terminal-Bench with tinker-cookbook's Harbor RL recipe, with every rollout in a Tenki sandbox.
+Train on Terminal-Bench with tinker-cookbook's Harbor RL recipe, with every rollout in a Luxor sandbox.
 
     uvx harbor datasets download terminal-bench@2.0 -o ~/.cache/harbor/tasks/terminal-bench-2.0/
     export TENKI_API_KEY=tk_... TINKER_API_KEY=...
@@ -27,5 +27,5 @@ if __name__ == "__main__":
         if missing:
             raise SystemExit(f"Unknown TB_TASKS: {sorted(missing)}")
         tasks = [t for t in tasks if t.task_name in names]
-    print(f"Training on {len(tasks)} task(s); rollouts run on Tenki.")
+    print(f"Training on {len(tasks)} task(s); rollouts run on Luxor Agent Cloud.")
     asyncio.run(cli_main(cli_config, tasks, sandbox_factory=tenki_sandbox_factory))

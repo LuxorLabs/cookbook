@@ -103,12 +103,12 @@ Give an agent a sandbox to run the code it writes.
 | [Claude Code](examples/claude-code-sandbox/) | Headless coding agent on a real repo checkout |
 | [Codex](examples/codex-sandbox/) | OpenAI's coding agent, headless, on a real repo checkout |
 | [OpenCode](examples/opencode-sandbox/) | Headless OpenCode server on a public preview URL |
-| [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
-| [Covalent](examples/covalent-tenki/) | Each workflow task in its own sandbox |
-| [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes on Tenki sandboxes |
-| [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
-| [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
-| [Convex](examples/convex-tenki/) | A sandbox per user from Convex actions, with live state in a Convex table |
+| [Composio](examples/composio-luxor/) | Luxor Agent Cloud tools in a Composio agent |
+| [Covalent](examples/covalent-luxor/) | Each workflow task in its own sandbox |
+| [AgentBox](examples/agentbox-luxor/) | Coding-agent boxes on Luxor sandboxes |
+| [ComputeSDK](examples/computesdk-luxor/) | Luxor Agent Cloud as a provider for the unified sandbox interface |
+| [TinyFish](examples/tinyfish-luxor/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
+| [Convex](examples/convex-luxor/) | A sandbox per user from Convex actions, with live state in a Convex table |
 
 ### Reinforcement learning
 
@@ -116,12 +116,12 @@ Run RL rollouts, environments, and evals with one disposable sandbox per episode
 
 | Example | What it covers |
 | --- | --- |
-| [Tinker RL](examples/tinker-harbor-rl-tenki/) | RL training on Terminal-Bench with Tinker's hosted GPUs and one Tenki sandbox per rollout |
-| [AgentEnv](examples/agentenv-tenki/) | Built-in sandbox backend for Scale AI's RL environment framework |
-| [NeMo Gym](examples/nemo-gym-tenki/) | A `tenki` sandbox provider for NVIDIA NeMo Gym rollouts |
-| [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
+| [Tinker RL](examples/tinker-harbor-rl-luxor/) | RL training on Terminal-Bench with Tinker's hosted GPUs and one Luxor sandbox per rollout |
+| [AgentEnv](examples/agentenv-luxor/) | Built-in sandbox backend for Scale AI's RL environment framework |
+| [NeMo Gym](examples/nemo-gym-luxor/) | A `tenki` sandbox provider for NVIDIA NeMo Gym rollouts |
+| [Harbor](examples/harbor-luxor/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
 
-### Tenki Code Reviewer
+### Luxor Code Reviewer
 
 Review pull requests with [Luxor Code Reviewer](https://luxor.ai/products/code-reviewer).
 
@@ -135,11 +135,11 @@ Run a self-hosted agent platform's sandboxes on Luxor Agent Cloud.
 
 | Example | What it covers |
 | --- | --- |
-| [DeerFlow](examples/deerflow-tenki/) | Community sandbox provider for ByteDance's SuperAgent harness |
-| [RAGFlow](examples/ragflow-tenki/) | Ephemeral sandboxes for the RAG engine's code components |
-| [Open WebUI](examples/open-webui-tenki/) | Sandboxed code interpreter for the self-hosted chat platform |
-| [OpenHermit](examples/openhermit-tenki/) | Sticky per-agent sandboxes for an agent fleet |
-| [Omnara](examples/omnara-tenki/) | Machine pool provider for the open-source managed agent platform |
+| [DeerFlow](examples/deerflow-luxor/) | Community sandbox provider for ByteDance's SuperAgent harness |
+| [RAGFlow](examples/ragflow-luxor/) | Ephemeral sandboxes for the RAG engine's code components |
+| [Open WebUI](examples/open-webui-luxor/) | Sandboxed code interpreter for the self-hosted chat platform |
+| [OpenHermit](examples/openhermit-luxor/) | Sticky per-agent sandboxes for an agent fleet |
+| [Omnara](examples/omnara-luxor/) | Machine pool provider for the open-source managed agent platform |
 
 ### Migrating from another provider
 
