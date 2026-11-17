@@ -2,10 +2,10 @@
   "name": "vercel-ai-sdk",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — use a Tenki sandbox as the Vercel AI SDK's experimental_sandbox.",
+  "description": "Cookbook example — use a Luxor sandbox as the Vercel AI SDK's experimental_sandbox.",
   "dependencies": {
     "@ai-sdk/openai": "^4.0.0",
-    "@tenkicloud/sandbox": ">=1.4.1",
+    "@luxorai/sandbox": ">=1.5.2",
     "ai": "^7.0.34",
     "zod": "^4.1.8"
   }

@@ -1,0 +1,12 @@
+{
+  "name": "composio-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — a Composio agent that runs code in a Luxor sandbox via @luxorai/composio-tools.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
+    "@composio/core": "^0.13.0",
+    "@luxorai/composio-tools": "^0.1.0",
+    "@luxorai/sandbox": ">=1.5.2"
+  }
+}
