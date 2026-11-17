@@ -11,7 +11,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Add a Luxor Agent Cloud sticky disk cache to my GitHub Actions workflow, following https://github.com/LuxorLabs/cookbook/tree/main/examples/stickydisk-luxor.
 1. Look at my repository's workflows and find the job that installs dependencies (npm, cargo, gradle, or Go modules).
-2. Change that job's runs-on to a Linux Luxor runner label such as tenki-standard-medium-4c-8g, if it isn't one already. Ask me first if I'm not already using Luxor Runners.
+2. Change that job's runs-on to a Linux Luxor runner label such as luxor-ubuntu-medium-4c-8g, if it isn't one already. Ask me first if I'm not already using Luxor Runners.
 3. Add a LuxorLabs/stickydisk@v1 step before anything writes to the cache path, with a stable key like npm-node22-v1 and the cache path (for example ~/.npm). Use commit: never in jobs that should only read.
 4. Make sure no credentials (for example an .npmrc with a token) are written into the cached path.
 5. Show me the diff before committing. Tell me to run the workflow twice on the default branch and check the job summary for source=hit.
@@ -31,7 +31,7 @@ Copy [`workflow.yml`](workflow.yml) to `.github/workflows/ci.yml` in a Node proj
 ```yaml
 jobs:
   test:
-    runs-on: tenki-standard-medium-4c-8g
+    runs-on: luxor-ubuntu-medium-4c-8g
     steps:
       - uses: actions/checkout@v6
       # Mount before anything writes to ~/.npm.
@@ -51,7 +51,7 @@ jobs:
           CACHE_GENERATION: ${{ steps.npm-cache.outputs.generation }}
 
   lint:
-    runs-on: tenki-standard-medium-4c-8g
+    runs-on: luxor-ubuntu-medium-4c-8g
     steps:
       - uses: actions/checkout@v6
       - uses: LuxorLabs/stickydisk@v1
