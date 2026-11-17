@@ -9,8 +9,8 @@ This runs the whole gateway on Luxor Agent Cloud. To keep OpenClaw on your machi
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Host an OpenClaw gateway on Luxor Agent Cloud, following https://github.com/LuxorLabs/cookbook/tree/main/examples/openclaw-gateway-tenki.
-1. Clone the repo, cd into examples/openclaw-gateway-tenki, and run npm install (Node.js 20 or later).
+Host an OpenClaw gateway on Luxor Agent Cloud, following https://github.com/LuxorLabs/cookbook/tree/main/examples/openclaw-gateway-luxor.
+1. Clone the repo, cd into examples/openclaw-gateway-luxor, and run npm install (Node.js 20 or later).
 2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai), OPENCLAW_GATEWAY_TOKEN, and optionally ANTHROPIC_API_KEY in the environment. If one is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs and confirm the ✓ line.
 4. Run node run.mjs and give me the dashboard URL and sandbox ID it prints.
@@ -32,7 +32,7 @@ You need:
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
-cd cookbook/examples/openclaw-gateway-tenki
+cd cookbook/examples/openclaw-gateway-luxor
 npm install
 ```
 
@@ -74,7 +74,7 @@ node verify.mjs
 
 ```text
   preview URL: https://openclaw-91ac22--<workspace>.us.sb.tenki.sh
-✓ openclaw-gateway-tenki: sticky sandbox → onboard 2026.10.8 → /healthz → dashboard 200 → wss wrong token rejected → hello-ok
+✓ openclaw-gateway-luxor: sticky sandbox → onboard 2026.10.8 → /healthz → dashboard 200 → wss wrong token rejected → hello-ok
 ```
 
 `verify.mjs` needs no model key. It runs `setup.sh` in a sticky sandbox behind a uniquely named preview URL, checks `/healthz` and the dashboard page over that URL, then opens a WebSocket through it: a wrong token gets `AUTH_TOKEN_MISMATCH` and a fresh random token gets `hello-ok`. It deletes the URL and the sandbox either way. It takes about 80 seconds.

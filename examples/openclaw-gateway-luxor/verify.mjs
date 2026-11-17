@@ -3,13 +3,13 @@
 // WebSocket that rejects a wrong token and accepts the right one. Deletes the URL and the sandbox.
 import { LuxorSandbox } from "@luxorai/sandbox";
 import { randomBytes } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import WebSocket from "ws";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8");
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
@@ -70,7 +70,7 @@ try {
 	const hello = await connect(url.previewUrl, gatewayToken);
 	assert(hello.ok && hello.payload?.type === "hello-ok", `right token: ${JSON.stringify(hello).slice(0, 300)}`);
 
-	console.log(`✓ openclaw-gateway-tenki: sticky sandbox → onboard ${hello.payload.server.version} → /healthz → dashboard 200 → wss wrong token rejected → hello-ok`);
+	console.log(`✓ openclaw-gateway-luxor: sticky sandbox → onboard ${hello.payload.server.version} → /healthz → dashboard 200 → wss wrong token rejected → hello-ok`);
 } catch (e) {
 	console.error("✗ " + (e?.message ?? e));
 	process.exitCode = 1;

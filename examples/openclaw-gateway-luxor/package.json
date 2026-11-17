@@ -1,10 +1,10 @@
 {
-  "name": "openclaw-gateway-tenki",
+  "name": "openclaw-gateway-luxor",
   "private": true,
   "type": "module",
   "description": "Cookbook example — host the OpenClaw gateway in a sticky Luxor sandbox behind a named preview URL.",
   "dependencies": {
-    "@luxorai/sandbox": ">=1.4.1",
+    "@luxorai/sandbox": ">=1.5.2",
     "ws": "^8.22.0"
   }
 }

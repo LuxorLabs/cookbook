@@ -171,4 +171,4 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
 - [OpenClaw](https://github.com/openclaw/openclaw) and [ClawHub](https://clawhub.ai)
 - [`@luxorai/openclaw` on npm](https://www.npmjs.com/package/@luxorai/openclaw) and [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw)
 - [DeerFlow](../deerflow-luxor/) and [Pause, snapshot, and resume](../snapshots-pause-resume/)
-- [OpenClaw gateway on Luxor Agent Cloud](../openclaw-gateway-tenki/): host the gateway itself in a sticky sandbox, with its dashboard on a named preview URL
+- [OpenClaw gateway on Luxor Agent Cloud](../openclaw-gateway-luxor/): host the gateway itself in a sticky sandbox, with its dashboard on a named preview URL
