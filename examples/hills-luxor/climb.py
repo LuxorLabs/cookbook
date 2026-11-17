@@ -1,5 +1,5 @@
 """
-Run a hills optimization loop across two Tenki sandboxes:
+Run a hills optimization loop across two Luxor sandboxes:
 
   judge    holds the frozen hill, its private/ data and the hills signing key,
            and serves judge.py on a preview URL.
@@ -10,8 +10,8 @@ Run a hills optimization loop across two Tenki sandboxes:
   python climb.py status     the agent's log tail and the scores so far
   python climb.py down       download journal.html + reports/, then terminate both
 
-Needs Python 3.12+ and requirements.txt. Tenki key from TENKI_API_KEY or
-~/.config/tenki/config.yaml (`tenki login --api-key`). The agent's model key
+Needs Python 3.12+ and requirements.txt. Luxor Agent Cloud key from TENKI_API_KEY or
+~/.config/luxor/config.yaml (`luxor login --api-key`). The agent's model key
 (ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENCODE_API_KEY or OPENROUTER_API_KEY) is
 read from your environment and handed to the climber only.
 """
@@ -29,7 +29,7 @@ from tenki import Client, Sandbox
 HILLS = "hills==0.12.1"
 HILL = "circle-packing"
 PORT = 8080
-TAG = "hills-tenki"
+TAG = "hills-luxor"
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL_KEYS = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPENCODE_API_KEY", "OPENROUTER_API_KEY"]
 # OpenCode's own default can be a model without tool use, so pick one when the key allows.
@@ -39,7 +39,7 @@ OPENCODE_DEFAULTS = {"ANTHROPIC_API_KEY": "anthropic/claude-sonnet-5-5",
 
 def cfg(key):
     try:
-        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
+        with open(os.path.expanduser("~/.config/luxor/config.yaml")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()
@@ -166,7 +166,7 @@ def find():
         role = "judge" if "judge" in (sb.info.tags or []) else "climber"
         found[role] = sb
     if not found:
-        sys.exit("No hills-tenki sandboxes running. Start with `python climb.py up`.")
+        sys.exit("No hills-luxor sandboxes running. Start with `python climb.py up`.")
     for sb in found.values():
         if sb.state in ("PAUSING", "PAUSED"):  # e.g. paused at the lifetime cap
             sb.resume()  # returns while the sandbox is still RESUMING
@@ -205,7 +205,7 @@ def down(_args):
 
 if __name__ == "__main__":
     if not auth()["auth_token"]:
-        sys.exit("No Tenki key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.")
+        sys.exit("No Luxor Agent Cloud key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.")
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
     u = sub.add_parser("up")

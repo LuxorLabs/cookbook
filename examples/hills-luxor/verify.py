@@ -1,5 +1,5 @@
 """
-Proves the two-sandbox setup against live Tenki, with no model key:
+Proves the two-sandbox setup against live Luxor Agent Cloud, with no model key:
   1. the judge installs hills, freezes circle-packing and serves judge.py on a preview URL;
   2. the climber has no hills install, state or key;
   3. an /eval without the bearer token is refused;
@@ -18,7 +18,7 @@ import urllib.request
 from climb import HILL, auth, create, seed_climber, start_judge
 
 if not auth()["auth_token"]:
-    print("No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.")
+    print("No API key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.")
     sys.exit(1)
 
 
@@ -64,7 +64,7 @@ try:
         status, bad = post(f"{url}/verify", json.dumps(report).encode(), token)
         assert status == 200 and not bad["valid"], f"edited report still verified: {bad}"
 
-    print(f"✓ hills-tenki: judge freezes {HILL} → climber has no key → no token: 401 → "
+    print(f"✓ hills-luxor: judge freezes {HILL} → climber has no key → no token: 401 → "
           f"submit.sh: PASSED sum_radii={score['sum_radii']} signed @ {tree_hash[:12]} → "
           "signature valid → edited score: invalid")
 except Exception as e:  # noqa: BLE001

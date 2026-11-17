@@ -2,7 +2,7 @@
 
 **Audience:** you want a coding agent to improve a measurable number for hours without you watching, and you want to trust the number when you come back. You know Python and have used Claude Code or OpenCode.
 **Time:** about 5 minutes to set up and run the check (the check takes about 15 seconds), plus however long you let the agent climb.
-**Outcome:** two Tenki sandboxes. A judge holds a frozen [hills](https://github.com/autolab-ai/hills) evaluation and the key that signs its scores. A climber runs an agent that improves a submission and can only get a score by sending its work to the judge. At the end you download a folder of signed reports, the submission's git history, and the agent's `journal.html`.
+**Outcome:** two Luxor sandboxes. A judge holds a frozen [hills](https://github.com/autolab-ai/hills) evaluation and the key that signs its scores. A climber runs an agent that improves a submission and can only get a score by sending its work to the judge. At the end you download a folder of signed reports, the submission's git history, and the agent's `journal.html`.
 
 > **Honesty note:** the judge runs `hills eval` on whatever the climber sends. In the hill used here (`circle-packing`) the evaluator only reads a JSON file. A hill whose evaluator *runs* the submitted code (the `nanogpt-10min` example runs `train.py`) would run that code on the judge, next to the signing key. For those, use hills' own container environment (`spec_version: 3`, `environment.image`) or a separate judge user.
 
@@ -14,12 +14,12 @@ hills is open about the limit of that. Its README says the tool defends against 
 
 Here the agent runs on a different machine. The climber sandbox has no hills install, no hill, no `private/` and no key. Its only route to a score is an HTTP request to the judge, which returns a report signed on the judge. The numbers the agent reports are numbers the judge measured.
 
-Tenki gives you both machines from one script and keeps them running while you are away. Every score comes from the same judge machine. For hills that measure on hardware, the hardware is recorded in the score's primary config, and hills won't rank scores from different machines against each other.
+Luxor Agent Cloud gives you both machines from one script and keeps them running while you are away. Every score comes from the same judge machine. For hills that measure on hardware, the hardware is recorded in the score's primary config, and hills won't rank scores from different machines against each other.
 
 ## Prerequisites
 
 - Python 3.12 or later and [uv](https://docs.astral.sh/uv/).
-- A Tenki API key (`tk_…`). Create one at https://app.tenki.cloud.
+- A Luxor Agent Cloud API key (`tk_…`). Create one at https://app.luxor.ai.
 - For Step 5 only: a model key for the agent. `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` works with the default OpenCode setup. `OPENAI_API_KEY` or `OPENCODE_API_KEY` works too if you pass `--model`.
 - Node.js, only if you run the check through the `node verify.mjs` shim.
 
@@ -29,7 +29,7 @@ You don't install hills locally. It is installed on the judge.
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
-cd cookbook/examples/hills-tenki
+cd cookbook/examples/hills-luxor
 ```
 
 Every later command runs from this directory. It holds:
@@ -49,7 +49,7 @@ uv venv --python 3.12
 uv pip install -r requirements.txt
 ```
 
-That installs the Tenki Python SDK (`tenki>=1.4.1`). Nothing else runs locally.
+That installs the Luxor Agent Cloud Python SDK (`tenki>=1.4.1`). Nothing else runs locally.
 
 ## Step 3 — Authenticate
 
@@ -57,7 +57,7 @@ That installs the Tenki Python SDK (`tenki>=1.4.1`). Nothing else runs locally.
 export TENKI_API_KEY=tk_...
 ```
 
-Or run `tenki login --api-key <key>` once. The scripts read the key from `~/.config/tenki/config.yaml` when the variable isn't set.
+Or run `luxor login --api-key <key>` once. The scripts read the key from `~/.config/luxor/config.yaml` when the variable isn't set.
 
 ## Step 4 — Check the judge and the wall between the machines
 
@@ -68,7 +68,7 @@ Or run `tenki login --api-key <key>` once. The scripts read the key from `~/.con
 ```
   judge: circle-packing @ 3d7315c5d8f6 on https://….us.sb.tenki.sh
   climber: submit.sh → PASSED sum_radii=2.5414  (master@3da6f1b)
-✓ hills-tenki: judge freezes circle-packing → climber has no key → no token: 401 → submit.sh: PASSED sum_radii=2.5414 signed @ 3d7315c5d8f6 → signature valid → edited score: invalid
+✓ hills-luxor: judge freezes circle-packing → climber has no key → no token: 401 → submit.sh: PASSED sum_radii=2.5414 signed @ 3d7315c5d8f6 → signature valid → edited score: invalid
 ```
 
 This creates both sandboxes and runs the whole path without a model. The judge installs `hills==0.12.1`, creates the `circle-packing` hill (pack 26 circles in the unit square, maximize the sum of the radii), freezes it, and serves `judge.py` on a preview URL. The climber gets the hill's example packing as its submission. The check then confirms that:
@@ -149,7 +149,7 @@ In a 20-minute test run, OpenCode with Claude Sonnet 5.5 (through OpenRouter) wr
 A report verifies only on the machine that signed it, which was the judge, and `down` terminates the judge. So check any report you doubt before running `down`. The judge's `/verify` endpoint runs `hills verify` for you:
 
 ```bash
-tenki sandbox exec --session hills-tenki-climber -c \
+luxor sandbox exec --session hills-luxor-climber -c \
   '. ~/judge.env && curl -sS -H "Authorization: Bearer $JUDGE_TOKEN" --data-binary @climb/reports/000-baseline.json "$JUDGE_URL/verify"'
 ```
 
@@ -171,18 +171,18 @@ tenki sandbox exec --session hills-tenki-climber -c \
 
 **Can the agent still cheat?** It can't edit the evaluator, read `private/`, or sign a report, because none of those are on its machine. It holds the judge's bearer token, which only lets it submit work for scoring. It can still overfit to whatever `eval.py` measures. Choosing a metric that matches what you want is still your job, and the hills README spends a section on it.
 
-**Why the bearer token, when the preview URL is already hard to guess?** A Tenki preview URL is public to anyone who has it. `judge.py` checks its own token on every `POST`, with a constant-time comparison. `GET /describe` is open because it returns only the task description.
+**Why the bearer token, when the preview URL is already hard to guess?** A Luxor Agent Cloud preview URL is public to anyone who has it. `judge.py` checks its own token on every `POST`, with a constant-time comparison. `GET /describe` is open because it returns only the task description.
 
 **Why one evaluation at a time?** `judge.py` uses a single-threaded server, so evaluations queue. Every score is then measured with the judge's CPU to itself, which keeps timed hills comparable.
 
 **When shouldn't I use this?**
-- When your hill needs a GPU. Tenki sandboxes are CPU only, so `nanogpt-10min` and other GPU hills are out.
+- When your hill needs a GPU. Luxor sandboxes are CPU only, so `nanogpt-10min` and other GPU hills are out.
 - When your hill runs the submitted code and you haven't isolated it from the key (see the honesty note).
 - When you want hills' whole guided flow, where your own agent agrees a plan with you and you run `hills commit` yourself. Use the hills skill on your machine for that (`npx skills add autolab-ai/hills`). This example starts after that step, with a hill that is already frozen.
 
 ## Related
 
 - [hills](https://github.com/autolab-ai/hills): the README, [SPEC](https://github.com/autolab-ai/hills/blob/main/docs/SPEC.md) and agent skill.
-- [Tenki Sandbox docs](https://tenki.cloud/docs/sandbox)
-- [Harbor](../harbor-tenki/): agent evals and benchmarks with one Tenki sandbox per trial.
+- [Luxor Sandbox docs](https://luxor.ai/docs/sandbox)
+- [Harbor](../harbor-luxor/): agent evals and benchmarks with one Luxor sandbox per trial.
 - [OpenCode](../opencode-sandbox/): OpenCode as a headless server in a sandbox.
