@@ -1,6 +1,10 @@
 # Composio
 
-Give a [Composio](https://composio.dev) agent Luxor sandboxes. [`@luxorai/composio-tools`](https://github.com/LuxorLabs/tenki-composio-tools) registers a Luxor Agent Cloud custom toolkit on a Composio session with six tools: `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX` (exposed as `LOCAL_TENKI_*`). The tools run in your process against the Luxor Agent Cloud SDK, so there's no backend to deploy. With an Anthropic key, `agent.mjs` has Claude boot a sandbox, run commands, and terminate it.
+Let an agent built on Composio start its own Luxor Agent Cloud cloud machines and run commands on them.
+
+[Composio](https://composio.dev) gives AI agents ready-made tools for hundreds of apps, grouped into **toolkits** (one per app). Your agent works with them through a **session**, which holds the tools it may use. You can also add your own **custom toolkits** to a session.
+
+[`@luxorai/composio-tools`](https://github.com/LuxorLabs/tenki-composio-tools) is a custom toolkit for Luxor Agent Cloud with six tools: `CREATE_SANDBOX`, `EXEC_COMMAND`, `LIST_SANDBOXES`, `GET_SANDBOX`, `CREATE_SNAPSHOT`, and `TERMINATE_SANDBOX`. Composio names custom tools with a `LOCAL_` prefix, so the agent sees them as `LOCAL_TENKI_CREATE_SANDBOX` and so on. The tools run in your own process and call Luxor Agent Cloud directly, so there's no server to deploy. With an Anthropic key, `agent.mjs` has Claude start a sandbox, run commands in it, and delete it.
 
 ## Set it up with a coding agent
 
