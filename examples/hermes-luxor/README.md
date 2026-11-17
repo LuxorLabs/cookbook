@@ -84,7 +84,7 @@ It ends with:
 OK: all 12 checks passed
 ```
 
-`verify.mjs` runs `setup.sh` if `./hermes-agent` is missing, then `verify.py`, which makes 12 checks against live Tenki:
+`verify.mjs` runs `setup.sh` if `./hermes-agent` is missing, then `verify.py`, which makes 12 checks against live Luxor Agent Cloud:
 
 | Checks | What they cover |
 |---|---|

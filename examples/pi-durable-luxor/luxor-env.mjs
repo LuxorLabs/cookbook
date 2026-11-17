@@ -65,17 +65,19 @@ export async function createLuxorEnv({ cpuCores = 1, memoryMb = 1024, onLog } = 
 }
 
 /**
- * Run `fn`, and run it once more if it fails with "pi-env connection lost".
- * Tenki can keep the old daemon's stream open for a while after a pause, so the
- * first request after it may reach the paused daemon and fail when that stream
- * closes. The retry reconnects, which resumes the sandbox. Use it only for
- * requests that are safe to repeat, such as reads.
+ * Run `call`, and run it once more if the daemon connection was lost mid-request.
+ * A pause can leave the old bridge open for a while, so the first request after it
+ * may ride a connection that is about to drop. The retry reconnects, which resumes
+ * the sandbox before the bridge spawns. Only wrap idempotent calls, such as reads:
+ * a call that failed this way may already have run in the sandbox.
  */
-export async function retryIfLost(fn) {
+export async function retryOnLostConnection(call) {
 	try {
-		return await fn();
+		return await call();
 	} catch (err) {
 		if (!String(err?.message ?? err).includes("connection lost")) throw err;
-		return await fn();
+		// Give the old bridge a moment to finish closing before reconnecting.
+		await new Promise((resolve) => setTimeout(resolve, 500));
+		return await call();
 	}
 }

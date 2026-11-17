@@ -59,7 +59,7 @@ node verify.mjs
 ```
 
 ```text
-✓ e2b-to-luxor-migration: create (01a13d9d…) → exec sh + python3 → "hello-from-luxor" / 42 → dispose
+✓ e2b-to-luxor-migration: create (<id>…) → exec sh + python3 → "hello-from-luxor" / 42 → dispose
 ```
 
 The characters in parentheses start your sandbox's ID. `verify.mjs` runs `echo hello-from-luxor` through `sh -c` and `python3 -c "print(6 * 7)"` as a bare binary, asserts both outputs and exit codes, then closes the sandbox.
