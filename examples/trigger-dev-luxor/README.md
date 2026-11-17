@@ -104,7 +104,7 @@ export const runInSandbox = task({
 
 ```js
 export function createSandbox({ maxDurationMs = 15 * 60_000, pauseRetentionMs = 60 * 60_000 } = {}) {
-  return tenki().createAndWait({
+  return luxor().createAndWait({
     cpuCores: 1,
     memoryMb: 1024,
     maxDurationMs,

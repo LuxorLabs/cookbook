@@ -12,7 +12,7 @@ const luxor = () => (client ??= new LuxorSandbox());
  * after maxDurationMs of running time, and drops a paused sandbox after pauseRetentionMs.
  */
 export function createSandbox({ maxDurationMs = 15 * 60_000, pauseRetentionMs = 60 * 60_000 } = {}) {
-	return tenki().createAndWait({
+	return luxor().createAndWait({
 		cpuCores: 1,
 		memoryMb: 1024,
 		maxDurationMs,
@@ -36,7 +36,7 @@ export async function pauseSandbox(sandbox) {
 
 /** Look a paused sandbox up by id and bring it back to RUNNING. */
 export async function resumeSandbox(id) {
-	const sandbox = await tenki().get(id);
+	const sandbox = await luxor().get(id);
 	await sandbox.resume();
 	await sandbox.waitResumed();
 	return sandbox;

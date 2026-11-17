@@ -21,7 +21,7 @@ if (!authToken) {
 	console.error("No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
-(process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN) = authToken; // src/luxor.mjs lets the SDK read it from the environment
+process.env.LUXORAI_AUTH_TOKEN = authToken; // src/luxor.mjs lets the SDK read it from the environment
 
 const { createSandbox, runCommand, pauseSandbox, resumeSandbox, executeCode, warmSandbox, sandboxFor, disposeSandbox } =
 	await import("./src/luxor.mjs");
