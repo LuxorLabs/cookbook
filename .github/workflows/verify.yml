@@ -1,6 +1,6 @@
 name: verify
 
-# Every example runs against the live Tenki API, one job per example, so one failure never
+# Every example runs against the live Luxor Agent Cloud API, one job per example, so one failure never
 # hides the others and `Re-run failed jobs` reruns only the red one. Pull requests verify the
 # examples they touch plus the smoke example; pushes to main, the nightly run and manual runs
 # verify everything. Requires the repo secret TENKI_API_KEY.
@@ -46,22 +46,22 @@ jobs:
         run: |
           npm install --no-audit --no-fund >/dev/null
           node --input-type=module -e '
-            import { TenkiSandbox } from "@tenkicloud/sandbox";
+            import { LuxorSandbox } from "@luxorai/sandbox";
             if (!process.env.TENKI_API_KEY) {
               console.log("::error title=TENKI_API_KEY missing::The repo secret TENKI_API_KEY is not set (forks do not receive it).");
               process.exit(1);
             }
             try {
-              const t = new TenkiSandbox({ authToken: process.env.TENKI_API_KEY });
+              const t = new LuxorSandbox({ authToken: process.env.TENKI_API_KEY });
               const s = await t.createAndWait({ cpuCores: 1, memoryMb: 1024 }); // Node 20: no `await using`
               await s[Symbol.asyncDispose]();
               console.log(`key ok: sandbox ${s.id} booted and was disposed`);
             } catch (e) {
               const m = String(e?.message ?? e);
               const hint = /unauthori[sz]ed|unauthenticated/i.test(m)
-                ? "Tenki rejected TENKI_API_KEY. Rotate the repo secret (Settings → Secrets → Actions) and re-run."
-                : "Tenki could not boot a sandbox with TENKI_API_KEY.";
-              console.log(`::error title=Tenki key check failed::${hint} (${m})`);
+                ? "Luxor Agent Cloud rejected TENKI_API_KEY. Rotate the repo secret (Settings → Secrets → Actions) and re-run."
+                : "Luxor Agent Cloud could not boot a sandbox with TENKI_API_KEY.";
+              console.log(`::error title=Luxor Agent Cloud key check failed::${hint} (${m})`);
               process.exit(1);
             }
           '
@@ -95,7 +95,7 @@ jobs:
         if: hashFiles(format('{0}go.mod', matrix.dir)) != ''
         with:
           go-version-file: ${{ matrix.dir }}go.mod
-      - name: Install and verify against Tenki
+      - name: Install and verify against Luxor Agent Cloud
         env:
           # The SDKs read LUXORAI_* first; plugins built on other projects still read TENKI_*.
           LUXORAI_API_KEY: ${{ secrets.TENKI_API_KEY }}
