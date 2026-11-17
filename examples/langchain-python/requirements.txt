@@ -1,4 +1,4 @@
-tenki>=1.4.1
+tenki>=1.5.2
 langchain-core>=1.0
 langgraph>=1.0
 langchain-openai>=1.0
