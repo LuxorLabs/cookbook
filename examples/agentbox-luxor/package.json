@@ -1,0 +1,10 @@
+{
+  "name": "agentbox-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — AgentBox coding-agent boxes on Luxor Agent Cloud VMs via @luxorai/agentbox-provider.",
+  "dependencies": {
+    "@luxorai/agentbox-provider": "^0.1.1",
+    "@luxorai/sandbox": ">=1.5.2"
+  }
+}

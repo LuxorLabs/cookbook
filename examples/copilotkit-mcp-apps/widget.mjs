@@ -42,7 +42,7 @@ const SCRIPT = `
 const bridgeBytes = Uint8Array.from(atob(BRIDGE_B64), (c) => c.charCodeAt(0));
 const { App } = await import(URL.createObjectURL(new Blob([bridgeBytes], { type: "text/javascript" })));
 
-const app = new App({ name: "Tenki sandbox", version: "1.0.0" }, {}, { autoResize: true });
+const app = new App({ name: "Luxor sandbox", version: "1.0.0" }, {}, { autoResize: true });
 const el = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
 let data = null;
@@ -63,7 +63,7 @@ async function callTool(name, args) {
 function render() {
 	if (!data) return;
 	if (data.error) {
-		el("#root").innerHTML = \`<div class="card"><header><b>Tenki</b></header><div class="err-box"><pre>\${esc(data.error)}</pre></div></div>\`;
+		el("#root").innerHTML = \`<div class="card"><header><b>Luxor</b></header><div class="err-box"><pre>\${esc(data.error)}</pre></div></div>\`;
 		return;
 	}
 	el("#root").innerHTML = VIEW === "preview" ? previewHtml() : consoleHtml();
@@ -71,7 +71,7 @@ function render() {
 }
 
 function head(extra = "") {
-	return \`<header><b>Tenki Sandbox</b><span class="id">\${esc(data.sandbox.name || data.sandbox.id)}</span>
+	return \`<header><b>Luxor Sandbox</b><span class="id">\${esc(data.sandbox.name || data.sandbox.id)}</span>
 	  <span class="id">\${data.sandbox.cpuCores} vCPU · \${Math.round(data.sandbox.memoryMb / 1024)} GB</span>
 	  <span class="spacer"></span>\${extra}</header>\`;
 }
@@ -141,8 +141,8 @@ function wire() {
 		const last = window.__runs[window.__runs.length - 1];
 		const text =
 			last.exitCode === 0
-				? \`Here is the output from Tenki sandbox \${data.sandbox.id}:\\n\\n\${last.stdout}\\n\\nWhat does it tell us?\`
-				: \`\\\`\${last.command}\\\` failed in Tenki sandbox \${data.sandbox.id}:\\n\\n\${last.stderr}\\n\\nPlease fix it and run it again in the same sandbox (sandbox_id: \${data.sandbox.id}).\`;
+				? \`Here is the output from Luxor sandbox \${data.sandbox.id}:\\n\\n\${last.stdout}\\n\\nWhat does it tell us?\`
+				: \`\\\`\${last.command}\\\` failed in Luxor sandbox \${data.sandbox.id}:\\n\\n\${last.stderr}\\n\\nPlease fix it and run it again in the same sandbox (sandbox_id: \${data.sandbox.id}).\`;
 		app.sendMessage({ role: "user", content: [{ type: "text", text }] });
 	});
 }
