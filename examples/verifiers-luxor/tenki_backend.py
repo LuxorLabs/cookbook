@@ -1,4 +1,4 @@
-"""Tenki runtime backend for Prime Intellect's ``verifiers``.
+"""Luxor Agent Cloud runtime backend for Prime Intellect's ``verifiers``.
 
 ``TenkiBackend`` is a ``RuntimeBackend`` that verifiers loads out of tree, with no fork:
 
@@ -6,14 +6,14 @@
     type = "custom"
     import_path = "tenki_backend.TenkiBackend"
 
-Every rollout gets its own Tenki sandbox. Tenki sandboxes can't boot a container image
+Every rollout gets its own Luxor sandbox. Luxor sandboxes can't boot a container image
 directly, so the sandbox installs Docker and runs the task image as one container under
 it; commands, file reads and file writes are ``docker exec`` calls into that container.
 The sandbox's own file API only reaches ``/home/tenki``, which is why files go through
 ``docker exec`` stdin instead.
 
 The model-traffic interception server runs on the evaluator host. The backend declares
-``is_local`` and forwards the host's loopback port into the sandbox with Tenki's
+``is_local`` and forwards the host's loopback port into the sandbox with Luxor Agent Cloud's
 host-port tunnel (``host_url``), so no Prime tunnel or Prime credentials are involved.
 
 Auth comes from ``TENKI_API_KEY`` (or ``TENKI_AUTH_TOKEN``).
@@ -55,14 +55,14 @@ from verifiers.v1.utils.aio import run_shielded
 
 logger = logging.getLogger(__name__)
 
-TAG = "verifiers-tenki"
+TAG = "verifiers-luxor"
 CONTAINER = "vf-task"
 READY_TIMEOUT_SEC = 300
 BOOTSTRAP_TIMEOUT_SEC = 600
 PULL_TIMEOUT_SEC = 900
 CHUNK_BYTES = 256 * 1024
 
-# Installs Docker on a bare Tenki sandbox and waits for the daemon.
+# Installs Docker on a bare Luxor sandbox and waits for the daemon.
 # Same script as tenki-harbor (https://github.com/LuxorLabs/tenki-harbor).
 DOCKER_BOOTSTRAP = r"""
 set -e
@@ -115,9 +115,9 @@ class TenkiConfig(CustomRuntimeConfig):
     disk: float = 20.0
     """Disk in GB. Holds Docker, the pulled image and everything the task writes."""
     max_duration: int = 7200
-    """Seconds before Tenki ends the sandbox on its own, if teardown never runs."""
+    """Seconds before Luxor Agent Cloud ends the sandbox on its own, if teardown never runs."""
     tags: list[str] = Field(default_factory=list)
-    """Extra tags on the sandbox, beside ``verifiers-tenki``."""
+    """Extra tags on the sandbox, beside ``verifiers-luxor``."""
 
 
 def _is_loopback(host: str) -> bool:
@@ -149,7 +149,7 @@ class TenkiProcess(RuntimeProcess):
         try:
             return await asyncio.shield(self._done)
         except (SessionNotFoundError, SessionTerminatedError) as e:
-            raise SandboxError(f"tenki sandbox is gone: {e}") from e
+            raise SandboxError(f"luxor sandbox is gone: {e}") from e
 
     async def wait(self) -> int:
         return (await self.result()).exit_code
@@ -178,7 +178,7 @@ class TenkiProcess(RuntimeProcess):
 
 
 class TenkiBackend(RuntimeBackend):
-    """One Tenki sandbox running one task container."""
+    """One Luxor sandbox running one task container."""
 
     config_class = TenkiConfig
     is_local: ClassVar[bool] = True
@@ -190,7 +190,7 @@ class TenkiBackend(RuntimeBackend):
     #   host and needs a DockerConfig, so it never reaches a custom backend.
     # - SUPPORTS_PORT_EXPOSURE: an `is_local` backend's `expose()` must return a
     #   host-reachable URL, which a sandbox does not have.
-    # - NetworkPolicyConfig: Tenki fixes a sandbox's egress rules when it is created.
+    # - NetworkPolicyConfig: Luxor Agent Cloud fixes a sandbox's egress rules when it is created.
 
     def __init__(self, config: TenkiConfig, name: str | None = None) -> None:
         super().__init__(name)
@@ -209,7 +209,7 @@ class TenkiBackend(RuntimeBackend):
         except SandboxError:
             raise
         except Exception as e:  # one rollout's problem, not the eval's
-            raise SandboxError(f"tenki sandbox provisioning failed: {e}") from e
+            raise SandboxError(f"luxor sandbox provisioning failed: {e}") from e
 
     async def _start(self) -> None:
         cfg = self.config
@@ -296,7 +296,7 @@ class TenkiBackend(RuntimeBackend):
                 *self._docker_cmd(env, user=user), *argv, env=env, privileged=True
             )
         except (SessionNotFoundError, SessionTerminatedError) as e:
-            raise SandboxError(f"tenki sandbox is gone: {e}") from e
+            raise SandboxError(f"luxor sandbox is gone: {e}") from e
 
     async def exec(self, runtime: Runtime, argv: list[str], env: dict[str, str]) -> RuntimeProcess:
         return await self._spawn(runtime, argv, env, stdin=True)
@@ -313,7 +313,7 @@ class TenkiBackend(RuntimeBackend):
         try:
             process = await self._sandbox.start(*command, env=values, privileged=True)
         except (SessionNotFoundError, SessionTerminatedError) as e:
-            raise SandboxError(f"tenki sandbox is gone: {e}") from e
+            raise SandboxError(f"luxor sandbox is gone: {e}") from e
         return TenkiProcess(self, process, pidfile, runtime.user)
 
     async def run(self, runtime: Runtime, argv: list[str], env: dict[str, str]) -> ProgramResult:
@@ -359,7 +359,7 @@ class TenkiBackend(RuntimeBackend):
             await process.close_stdin()
             result = await process.wait()
         except (SessionNotFoundError, SessionTerminatedError) as e:
-            raise SandboxError(f"tenki sandbox is gone: {e}") from e
+            raise SandboxError(f"luxor sandbox is gone: {e}") from e
         if result.exit_code != 0:
             raise SandboxError(f"write {path!r}: {result.stderr_text.strip()}")
 

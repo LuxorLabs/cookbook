@@ -1,11 +1,11 @@
 """
-Run a Prime Intellect Environments Hub environment on Tenki sandboxes through verifiers' custom runtime.
+Run a Prime Intellect Environments Hub environment on Luxor sandboxes through verifiers' custom runtime.
 
   python eval.py                         # no model: replay the task's reference answer (vf-validate, gold check)
   python eval.py --model openai/gpt-4o-mini --base-url https://openrouter.ai/api/v1 --api-key-var OPENROUTER_API_KEY
                                          # scored run: a model solves the tasks (vf-eval)
 
-Both put each rollout in its own Tenki sandbox, with the task image running under Docker inside it.
+Both put each rollout in its own Luxor sandbox, with the task image running under Docker inside it.
 """
 import argparse, json, os, re, subprocess, sys  # noqa: E401
 from pathlib import Path
@@ -16,7 +16,7 @@ RUNTIME = ["custom", "tenki_backend.TenkiBackend"]
 
 def cfg(key):
     try:
-        text = open(os.path.expanduser("~/.config/tenki/config.yaml")).read()
+        text = open(os.path.expanduser("~/.config/luxor/config.yaml")).read()
         return re.search(rf"^{key}:\s*(.+)$", text, re.M).group(1).strip()
     except (OSError, AttributeError):
         return ""
@@ -32,7 +32,7 @@ args = ap.parse_args()
 
 token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
 if not token:
-    sys.exit("No token. Set TENKI_API_KEY, or run `tenki login`.")
+    sys.exit("No token. Set TENKI_API_KEY, or run `luxor login`.")
 env = {**os.environ, "TENKI_API_KEY": token, "PYTHONPATH": f"{HERE}{os.pathsep}{os.environ.get('PYTHONPATH', '')}"}
 
 bin_dir = Path(sys.executable).parent

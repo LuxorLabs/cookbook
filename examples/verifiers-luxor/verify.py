@@ -1,5 +1,5 @@
 """
-Verify the verifiers + Tenki example without a model key. On a live Tenki sandbox:
+Verify the verifiers + Luxor Agent Cloud example without a model key. On a live Luxor sandbox:
   1. verifiers loads TenkiBackend from `type = "custom"` + `import_path` and reads its feature flags,
   2. run, exec, kill, files, user switching and host-port forwarding behave as the framework expects, and
   3. the sandbox is terminated after teardown (checked through the SDK list by tag).
@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 def cfg(key):
     try:
-        text = open(os.path.expanduser("~/.config/tenki/config.yaml")).read()
+        text = open(os.path.expanduser("~/.config/luxor/config.yaml")).read()
         return re.search(rf"^{key}:\s*(.+)$", text, re.M).group(1).strip()
     except (OSError, AttributeError):
         return ""
@@ -20,7 +20,7 @@ def cfg(key):
 
 token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
 if not token:
-    print("No token. Set TENKI_API_KEY, or run `tenki login`.")
+    print("No token. Set TENKI_API_KEY, or run `luxor login`.")
     sys.exit(1)
 os.environ["TENKI_API_KEY"] = token
 
@@ -30,7 +30,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed  # noqa: E402
 from verifiers.v1.errors import SandboxError  # noqa: E402
 from verifiers.v1.runtimes import RuntimeConfig, backend_cls, provision_runtime  # noqa: E402
 
-TAG = f"verifiers-tenki-verify-{uuid.uuid4().hex[:8]}"
+TAG = f"verifiers-luxor-verify-{uuid.uuid4().hex[:8]}"
 FETCH = "import sys, urllib.request; print(urllib.request.urlopen(sys.argv[1]).read().decode())"
 NO_SLEEPERS = "cat /proc/[0-9]*/cmdline | tr '\\0' ' ' | grep -c '[s]leep 600' || true"  # slim images have no pgrep
 
