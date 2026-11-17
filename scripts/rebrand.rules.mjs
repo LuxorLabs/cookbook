@@ -38,7 +38,7 @@ export const rules = [
 	{ phase: "1", scope: "code", files: /\.(m?[jt]s|tsx?|md)$/, find: /\btenki(?=\.[a-z]\w*\.[a-z]\w*\()/g, replace: "luxor" },
 	// Domains. tenki.cloud, app.tenki.cloud and api.tenki.cloud all moved to luxor.ai.
 	{ phase: "1", scope: "any", find: /https?:\/\/(www\.)?tenki\.cloud(?=[\/\s)"'`>\]#?]|$)/gm, replace: "https://luxor.ai" },
-	{ phase: "1", scope: "any", find: /\b(app|api)\.tenki\.cloud\b/g, replace: "$1.luxor.ai" },
+	{ phase: "1", scope: "any", find: /\b(app|api|mcp)\.tenki\.cloud\b/g, replace: "$1.luxor.ai" },
 	{ phase: "1", scope: "any", find: /(?<![.\w/])tenki\.cloud\b/g, replace: "luxor.ai" },
 
 	// Product names, as luxor.ai names them.
@@ -72,7 +72,7 @@ export const rules = [
 	{ phase: "1", scope: "any", files: /smolagents\//, find: /\bTenkiExecutor\b/g, replace: "LuxorExecutor" },
 	{ phase: "1", scope: "any", find: /\btenki_client\b/g, replace: "luxor_client" },
 	{ phase: "1", scope: "any", find: /\bmcp__tenki__/g, replace: "mcp__luxor__" },
-	{ phase: "1", scope: "any", find: /\b(mcpServers: \{ |claude mcp add |name: ")tenki\b/g, replace: "$1luxor" },
+	{ phase: "1", scope: "any", find: /\b(mcpServers: \{ |claude mcp add |claude mcp add --transport http |claude mcp login |claude mcp get |name: ")tenki\b/g, replace: "$1luxor" },
 	{ phase: "1", scope: "any", find: /\btenki-(sandboxes|orca|example|verify|cookbook-verify|pool|remote-mcp-server|remote)\b/g, replace: "luxor-$1" },
 	{ phase: "1", scope: "any", find: /\b(ragflow|prefect)-tenki-verify\b/g, replace: "$1-luxor-verify" },
 	// Strings the examples print and check, and names they give things.
