@@ -1,11 +1,11 @@
 /**
- * The Tenki half of the example: boot a sandbox, run a program in it, serve a
+ * The Luxor Agent Cloud half of the example: boot a sandbox, run a program in it, serve a
  * web app from it. Plain calls on the official SDK — no MCP in this file.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 
-import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
+import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
 
 /** Every sandbox this example creates carries this tag, and it refuses to touch anything without it. */
 export const DEMO_TAG = "cookbook-mcp-apps";
@@ -13,18 +13,18 @@ export const APP_DIR = "/home/tenki/app";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/tenki/config.yaml`, "utf8");
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
 	}
 };
 
-const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
+const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+const workspaceId = process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
 export const hasToken = Boolean(authToken);
 
-const tenki = new TenkiSandbox(authToken ? { authToken } : {});
+const luxor = new LuxorSandbox(authToken ? { authToken } : {});
 
 const FILE_FOR = {
 	python: { file: "main.py", command: "python3" },
@@ -41,12 +41,12 @@ const FILE_FOR = {
  */
 export async function acquire({ sandboxId, name, allowInbound = false, allowOutbound = false }) {
 	if (sandboxId) {
-		const existing = await tenki.get(sandboxId);
+		const existing = await luxor.get(sandboxId);
 		assertOurs(existing);
 		return { session: existing, bootMs: null, reused: true };
 	}
 	const started = Date.now();
-	const session = await tenki.createAndWait({
+	const session = await luxor.createAndWait({
 		name,
 		workspaceId,
 		cpuCores: 2,
@@ -147,7 +147,7 @@ export async function serveWebApp(session, { files, startCommand, port }) {
 }
 
 export async function destroy(sandboxId) {
-	const session = await tenki.get(sandboxId);
+	const session = await luxor.get(sandboxId);
 	assertOurs(session);
 	await session.close();
 }

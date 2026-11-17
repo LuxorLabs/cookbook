@@ -1,6 +1,6 @@
 """
-A HuggingFace smolagents `CodeAgent` whose generated Python runs in a Tenki
-sandbox, via `TenkiExecutor` (the `remote_executors.py` seam).
+A HuggingFace smolagents `CodeAgent` whose generated Python runs in a Luxor Agent Cloud
+sandbox, via `LuxorExecutor` (the `remote_executors.py` seam).
 
 Needs Python 3.10+, the deps in requirements.txt, and a model:
   - set OPENAI_API_KEY  → uses OpenAIServerModel (pip install 'smolagents[openai]'), or
@@ -12,12 +12,12 @@ import os
 from smolagents import CodeAgent
 from smolagents.monitoring import AgentLogger, LogLevel
 
-from tenki_executor import TenkiExecutor
+from luxor_executor import LuxorExecutor
 
 
 def cfg(key):
     try:
-        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
+        with open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()
@@ -26,14 +26,14 @@ def cfg(key):
     return ""
 
 
-# A tk_ API key, from env or ~/.config/tenki/config.yaml (`tenki login --api-key`).
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+# A tk_ API key, from env or ~/.config/luxor/config.yaml (`luxor login --api-key`).
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 
 # allow_outbound=True: CodeAgent patches its final_answer tool, and smolagents
 # then pip-installs that tool's inferred requirements (numpy, pillow) into the
 # sandbox at send_tools time — which needs outbound network.
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024, "allow_outbound": True}
-workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 if workspace_id:
     opts["workspace_id"] = workspace_id
 
@@ -51,7 +51,7 @@ def build_model():
 
 # The executor boots one sandbox and reuses it for every step of the agent's
 # reasoning; `CodeAgent(executor=...)` swaps it in for the default local one.
-executor = TenkiExecutor(additional_imports=[], logger=AgentLogger(LogLevel.INFO), **opts)
+executor = LuxorExecutor(additional_imports=[], logger=AgentLogger(LogLevel.INFO), **opts)
 try:
     agent = CodeAgent(tools=[], model=build_model(), executor=executor)
     answer = agent.run("What is the 20th Fibonacci number? Compute it in Python.")
