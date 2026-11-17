@@ -124,7 +124,7 @@ More in the [runners troubleshooting guide](https://luxor.ai/docs/runners/troubl
 ## Notes
 
 - `verify.mjs` checks labels against the docs, not against a live runner. Whether a job's steps pass on Luxor Agent Cloud only shows up when you run the workflow.
-- Lint Luxor Agent Cloud labels in your own repository with actionlint by listing them under `self-hosted-runner.labels` in `.github/actionlint.yaml`. actionlint accepts `[self-hosted, tenki-…]` arrays, so it won't catch that mistake. See [Luxor Agent Cloud's actionlint guide](https://luxor.ai/blog/lint-github-actions-workflows-actionlint).
+- Lint Luxor Agent Cloud labels in your own repository with actionlint by listing them under `self-hosted-runner.labels` in `.github/actionlint.yaml`. actionlint accepts `[self-hosted, tenki-...]` arrays, so it won't catch that mistake. See [Luxor Agent Cloud's actionlint guide](https://luxor.ai/blog/lint-github-actions-workflows-actionlint).
 
 ## Related
 
