@@ -130,7 +130,7 @@ const harness = await Harness.open(storage, {
 
 ## How the bridge works
 
-pi-env's `Connection` spawns a local command and speaks its framed protocol over that process's stdio. Normally that's `ssh`. Here it's `bridge.mjs`, which starts the daemon in the sandbox and pipes its stdio over Tenki's exec data plane. A pause from another client doesn't end that stream, so the bridge watches the session and exits when it leaves `RUNNING`:
+pi-env's `Connection` spawns a local command and speaks its framed protocol over that process's stdio. Normally that's `ssh`. Here it's `bridge.mjs`, which starts the daemon in the sandbox and pipes its stdio over Luxor Agent Cloud's exec data plane. A pause from another client doesn't end that stream, so the bridge watches the session and exits when it leaves `RUNNING`:
 
 ```js
 #!/usr/bin/env node
