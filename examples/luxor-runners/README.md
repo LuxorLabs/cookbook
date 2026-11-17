@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Move my GitHub Actions jobs to Luxor Runners, following https://github.com/LuxorLabs/cookbook/tree/main/examples/luxor-runners.
 1. List every job in .github/workflows/*.yml with its current runs-on value.
-2. Replace each ubuntu-latest (or ubuntu-24.04) runs-on with one Linux label from https://luxor.ai/docs/runners/sizes: tenki-standard-small-2c-4g for lint and scripts, tenki-standard-medium-4c-8g for tests. Replace macos-* with a tenki-macos-26-* or tenki-macos-15-* label. Replace a self-hosted label array with a single Luxor Agent Cloud label.
+2. Replace each ubuntu-latest (or ubuntu-24.04) runs-on with one Linux label from https://luxor.ai/docs/runners/sizes: luxor-ubuntu-small-2c-4g for lint and scripts, luxor-ubuntu-medium-4c-8g for tests. Replace macos-* with a luxor-macos-26-* or luxor-macos-15-* label. Replace a self-hosted label array with a single Luxor Agent Cloud label.
 3. Change nothing but runs-on. Leave windows-*, arm runners, and runs-on expressions like ${{ matrix.os }} alone and list them for me.
 4. Show me the diff before committing. Remind me that the Luxor Agent Cloud GitHub App must be installed on the organization first.
 ```
@@ -33,16 +33,16 @@ To do it by hand, edit `.github/workflows/*.yml`. [`workflow.yml`](workflow.yml)
 ```yaml
 jobs:
   lint:
-    runs-on: tenki-standard-small-2c-4g # was: ubuntu-latest
+    runs-on: luxor-ubuntu-small-2c-4g # was: ubuntu-latest
     ...
   test:
-    runs-on: tenki-standard-medium-4c-8g # was: ubuntu-latest
+    runs-on: luxor-ubuntu-medium-4c-8g # was: ubuntu-latest
     services:
       postgres:
         image: postgres:17
         ...
   image:
-    runs-on: tenki-standard-medium-4c-8g # was: ubuntu-latest
+    runs-on: luxor-ubuntu-medium-4c-8g # was: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - run: docker build -t app:${{ github.sha }} .
@@ -70,7 +70,7 @@ node verify.mjs
 [`verify.mjs`](verify.mjs) needs no GitHub or Luxor Agent Cloud credentials. It reads the label tables from the [live Luxor Agent Cloud docs](https://luxor.ai/docs/runners/sizes), then checks that every job in `workflow.yml` has exactly one documented Luxor Agent Cloud label as its `runs-on`. It also checks that it rejects a `[self-hosted, …]` array, `ubuntu-latest`, and a size that doesn't exist. Running the jobs themselves needs a repository connected to Luxor Agent Cloud.
 
 ```
-✓ luxor-runners: 3 jobs in workflow.yml → runs-on tenki-standard-small-2c-4g, tenki-standard-medium-4c-8g → each is one of 12 labels in the Luxor Agent Cloud docs
+✓ luxor-runners: 3 jobs in workflow.yml → runs-on luxor-ubuntu-small-2c-4g, luxor-ubuntu-medium-4c-8g → each is one of 12 labels in the Luxor Agent Cloud docs
 ```
 
 ## Labels
@@ -79,14 +79,14 @@ Use one label as the whole `runs-on` value.
 
 | Linux x64 label | vCPU | Memory |
 | --- | --- | --- |
-| `tenki-standard-small-2c-4g` | 2 | 4 GB |
-| `tenki-standard-medium-4c-8g` | 4 | 8 GB |
-| `tenki-standard-large-8c-16g` | 8 | 16 GB |
-| `tenki-standard-large-plus-16c-32g` | 16 | 32 GB |
+| `luxor-ubuntu-small-2c-4g` | 2 | 4 GB |
+| `luxor-ubuntu-medium-4c-8g` | 4 | 8 GB |
+| `luxor-ubuntu-large-8c-16g` | 8 | 16 GB |
+| `luxor-ubuntu-large-plus-16c-32g` | 16 | 32 GB |
 
-macOS runs on Apple Silicon: `tenki-macos-26-{mini,small,medium,large}` (macOS 26, Xcode 26 by default) and `tenki-macos-15-{mini,small,medium,large}` (macOS 15, Xcode 16 by default), from 2 to 8 vCPU. Disk sizes, the full table, and sizing advice are on [Runner Sizes & Labels](https://luxor.ai/docs/runners/sizes) and [Which runner should I use?](https://luxor.ai/docs/runners/which-runner-should-i-use). Rates are on the [pricing page](https://luxor.ai/pricing).
+macOS runs on Apple Silicon: `luxor-macos-26-{mini,small,medium,large,xlarge}` (macOS 26, Xcode 26 by default) and `luxor-macos-15-{mini,small,medium,large}` (macOS 15, Xcode 16 by default), from 2 to 14 vCPU. Labels that start with `tenki-`, from before the rename, keep working. Disk sizes, the full table, and sizing advice are on [Runner Sizes & Labels](https://luxor.ai/docs/runners/sizes) and [Which runner should I use?](https://luxor.ai/docs/runners/which-runner-should-i-use). Rates are on the [pricing page](https://luxor.ai/pricing).
 
-Your plan caps the size. Starter allows up to `tenki-standard-small-2c-4g`, or `tenki-standard-medium-4c-8g` with a payment method on file; Team allows up to 16 vCPU / 32 GB. A job above the cap is cancelled, not queued. See [Limits & Concurrency](https://luxor.ai/docs/runners/limits-and-concurrency).
+Your plan caps the size. Starter allows up to `luxor-ubuntu-small-2c-4g`, or `luxor-ubuntu-medium-4c-8g` with a payment method on file; Team allows up to 16 vCPU / 32 GB. A job above the cap is cancelled, not queued. See [Limits & Concurrency](https://luxor.ai/docs/runners/limits-and-concurrency).
 
 ## What carries over from GitHub-hosted runners
 
@@ -105,7 +105,7 @@ Your plan caps the size. Starter allows up to `tenki-standard-small-2c-4g`, or `
 
 ## Moving off self-hosted runners
 
-- **Replace the whole `runs-on` value.** `runs-on: [self-hosted, linux, x64]` becomes `runs-on: tenki-standard-medium-4c-8g`. Luxor Agent Cloud cancels a job whose `runs-on` mixes a Luxor Agent Cloud label with others.
+- **Replace the whole `runs-on` value.** `runs-on: [self-hosted, linux, x64]` becomes `runs-on: luxor-ubuntu-medium-4c-8g`. Luxor Agent Cloud cancels a job whose `runs-on` mixes a Luxor Agent Cloud label with others.
 - **Nothing persists between jobs.** Each job gets a fresh VM, so tools you installed once on your own machines and files left on their disks aren't there. Install tools in a step or rely on the image, and keep caches in `actions/cache`. For large caches that change a little each run, use a [sticky disk](../stickydisk-luxor/). Custom images are an Enterprise plan option.
 - **Private network access.** Luxor Agent Cloud has no PrivateLink or VPC peering today. Allowlist Luxor Agent Cloud's egress CIDR, or email hello@luxor.ai to scope private connectivity.
 - **No runner fleet to run.** The Luxor Agent Cloud GitHub App registers and removes runners on your organization, which is why it asks for the **Administration** permission. See [GitHub App access levels](https://luxor.ai/docs/github/gh-app-access-level).
@@ -124,7 +124,7 @@ More in the [runners troubleshooting guide](https://luxor.ai/docs/runners/troubl
 ## Notes
 
 - `verify.mjs` checks labels against the docs, not against a live runner. Whether a job's steps pass on Luxor Agent Cloud only shows up when you run the workflow.
-- Lint Luxor Agent Cloud labels in your own repository with actionlint by listing them under `self-hosted-runner.labels` in `.github/actionlint.yaml`. actionlint accepts `[self-hosted, tenki-...]` arrays, so it won't catch that mistake. See [Luxor Agent Cloud's actionlint guide](https://luxor.ai/blog/lint-github-actions-workflows-actionlint).
+- Lint Luxor Agent Cloud labels in your own repository with actionlint by listing them under `self-hosted-runner.labels` in `.github/actionlint.yaml`. actionlint accepts `[self-hosted, luxor-...]` arrays, so it won't catch that mistake. See [Luxor Agent Cloud's actionlint guide](https://luxor.ai/blog/lint-github-actions-workflows-actionlint).
 
 ## Related
 

@@ -9,7 +9,7 @@ on:
 
 jobs:
   lint:
-    runs-on: tenki-standard-small-2c-4g # was: ubuntu-latest
+    runs-on: luxor-ubuntu-small-2c-4g # was: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -20,7 +20,7 @@ jobs:
       - run: npm run lint
 
   test:
-    runs-on: tenki-standard-medium-4c-8g # was: ubuntu-latest
+    runs-on: luxor-ubuntu-medium-4c-8g # was: ubuntu-latest
     services:
       postgres:
         image: postgres:17
@@ -45,7 +45,7 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
 
   image:
-    runs-on: tenki-standard-medium-4c-8g # was: ubuntu-latest
+    runs-on: luxor-ubuntu-medium-4c-8g # was: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - run: docker build -t app:${{ github.sha }} .
