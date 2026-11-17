@@ -2,12 +2,12 @@
   "name": "langchain-code-interpreter",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — a LangChain agent that runs code in a Tenki sandbox.",
+  "description": "Cookbook example — a LangChain agent that runs code in a Luxor sandbox.",
   "dependencies": {
     "@langchain/core": "^1.2.3",
     "@langchain/langgraph": "^1.4.8",
     "@langchain/openai": "^1.5.5",
-    "@tenkicloud/sandbox": ">=1.4.1",
+    "@luxorai/sandbox": ">=1.5.2",
     "zod": "^4.4.3"
   }
 }

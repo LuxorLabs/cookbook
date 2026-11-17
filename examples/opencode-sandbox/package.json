@@ -2,8 +2,8 @@
   "name": "opencode-sandbox",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — a browser-accessible OpenCode session in a disposable Tenki sandbox.",
+  "description": "Cookbook example — a browser-accessible OpenCode session in a disposable Luxor sandbox.",
   "dependencies": {
-    "@tenkicloud/sandbox": ">=1.4.1"
+    "@luxorai/sandbox": ">=1.5.2"
   }
 }
