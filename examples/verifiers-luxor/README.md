@@ -1,6 +1,6 @@
 # verifiers on Luxor Agent Cloud
 
-Run an [Environments Hub](https://app.primeintellect.ai/dashboard/environments) environment's rollouts in Luxor sandboxes instead of Prime sandboxes, with no fork of [verifiers](https://github.com/PrimeIntellect-ai/verifiers). verifiers loads out-of-tree runtimes from your own package, and [`tenki_backend.py`](tenki_backend.py) is that package for Luxor Agent Cloud: every rollout gets its own sandbox, the task's container image runs under Docker inside it, and the evaluator (your machine) keeps running the model interception server and the scoring. The model traffic reaches the sandbox through a Luxor Agent Cloud host-port tunnel, so a run needs a Luxor Agent Cloud key and a model key and no Prime account.
+Run an [Environments Hub](https://app.primeintellect.ai/dashboard/environments) environment's rollouts in Luxor sandboxes instead of Prime sandboxes, with no fork of [verifiers](https://github.com/PrimeIntellect-ai/verifiers). verifiers loads out-of-tree runtimes from your own package, and [`luxor_backend.py`](luxor_backend.py) is that package for Luxor Agent Cloud: every rollout gets its own sandbox, the task's container image runs under Docker inside it, and the evaluator (your machine) keeps running the model interception server and the scoring. The model traffic reaches the sandbox through a Luxor Agent Cloud host-port tunnel, so a run needs a Luxor Agent Cloud key and a model key and no Prime account.
 
 ## Set it up with a coding agent
 
@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up verifiers on Luxor sandboxes, following https://github.com/LuxorLabs/cookbook/tree/main/examples/verifiers-luxor.
 1. Check that Python 3.12+ and uv are installed. Create a venv in that folder and install requirements.txt (this pulls in transformers and datasets, so it takes a minute).
-2. It needs TENKI_API_KEY (starts with tk_, from https://app.luxor.ai) exported in the shell. If it isn't set, stop and ask me to export it. Never print a key or write it to a file.
+2. It needs LUXORAI_API_KEY (starts with tk_, from https://app.luxor.ai) exported in the shell. If it isn't set, stop and ask me to export it. Never print a key or write it to a file.
 3. Run `node verify.mjs` and confirm it prints two check marks. It needs no model key.
 4. Run `python eval.py` with no flags (replays the reference answer on 2 gsm8k tasks) and confirm 2 valid.
 5. For a scored run, ask me which OpenAI-compatible endpoint and model to use and the name of the env var that holds its key (never read the key). Then run eval.py with --model, --base-url and --api-key-var, and tell me the rewards.
@@ -38,7 +38,7 @@ This installs the Luxor Agent Cloud SDK, verifiers at an exact build (see "What 
 ### 2. Set your API key
 
 ```bash
-export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
+export LUXORAI_API_KEY=tk_...   # LUXORAI_AUTH_TOKEN also works
 ```
 
 `verify.py` and `eval.py` also read the key that `luxor login` saved. The `vf-eval` and `vf-validate` commands read it from the environment only.
@@ -82,12 +82,12 @@ This is `vf-eval` with the Luxor Agent Cloud runtime: each rollout starts a sand
 
 Five sandboxes ran at once. Five easy questions say the plumbing works, not how good a model is.
 
-To use the runtime from your own config, set this under the agent in a `vf-eval` TOML file or as `--env.agent.runtime.*` flags (run from this folder, or put it on `PYTHONPATH`, so `tenki_backend` imports):
+To use the runtime from your own config, set this under the agent in a `vf-eval` TOML file or as `--env.agent.runtime.*` flags (run from this folder, or put it on `PYTHONPATH`, so `luxor_backend` imports):
 
 ```toml
 [env.agent.runtime]
 type = "custom"
-import_path = "tenki_backend.TenkiBackend"
+import_path = "luxor_backend.LuxorBackend"
 cpu = 2        # vCPUs
 memory = 4     # GB
 disk = 20      # GB
@@ -95,7 +95,7 @@ disk = 20      # GB
 
 ## How a rollout runs
 
-For each rollout, verifiers builds the backend from that config and calls it like any runtime. [`tenki_backend.py`](tenki_backend.py) does this:
+For each rollout, verifiers builds the backend from that config and calls it like any runtime. [`luxor_backend.py`](luxor_backend.py) does this:
 
 1. `start()` creates a Luxor sandbox with your `cpu`, `memory` and `disk`, tagged `verifiers-luxor`, ending on its own after `max_duration` (two hours) if nothing tears it down.
 2. Installs Docker in it. Luxor sandboxes can't boot a container image directly, so the task's image runs as a container under Docker inside the sandbox, started with host networking so it shares the sandbox's loopback.
@@ -129,10 +129,10 @@ A grader that runs in the same sandbox as the agent can be tampered with by the 
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_API_KEY, or run `luxor login`.`` | `verify.py` or `eval.py` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token: set TENKI_AUTH_TOKEN or TENKI_API_KEY` from `vf-eval` or `vf-validate` | Those commands read only the environment. Export `TENKI_API_KEY`, or use `eval.py`, which also reads the `luxor login` key. |
+| ``No token. Set LUXORAI_API_KEY, or run `luxor login`.`` | `verify.py` or `eval.py` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token: set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY` from `vf-eval` or `vf-validate` | Those commands read only the environment. Export `LUXORAI_API_KEY`, or use `eval.py`, which also reads the `luxor login` key. |
 | `ModuleNotFoundError: No module named 'verifiers'` from `node verify.mjs` | Create the `.venv` here and install `requirements.txt`, or set `PYTHON`. |
-| `ValueError: cannot import custom runtime 'tenki_backend.TenkiBackend'` | `tenki_backend` isn't on the Python path. Run from this folder with `eval.py`, or set `PYTHONPATH=.` for `vf-eval`. |
+| `ValueError: cannot import custom runtime 'luxor_backend.LuxorBackend'` | `luxor_backend` isn't on the Python path. Run from this folder with `eval.py`, or set `PYTHONPATH=.` for `vf-eval`. |
 | `the custom runtime cannot run Compose services` | See "No Compose support" above. |
 | `requires a network policy, but the custom runtime does not enforce network policies` | The task sets `network.allow`. Luxor Agent Cloud can't change a sandbox's egress after creation; run that task on Prime or Docker. |
 | `luxor sandbox provisioning failed: Received http2 header with status: 503` | The Luxor Agent Cloud API was briefly unavailable. Creating a sandbox already retries a few times; run again. |

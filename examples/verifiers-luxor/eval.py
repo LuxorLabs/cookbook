@@ -11,12 +11,12 @@ import argparse, json, os, re, subprocess, sys  # noqa: E401
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-RUNTIME = ["custom", "tenki_backend.TenkiBackend"]
+RUNTIME = ["custom", "luxor_backend.LuxorBackend"]
 
 
 def cfg(key):
     try:
-        text = open(os.path.expanduser("~/.config/luxor/config.yaml")).read()
+        text = open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")).read()
         return re.search(rf"^{key}:\s*(.+)$", text, re.M).group(1).strip()
     except (OSError, AttributeError):
         return ""
@@ -30,10 +30,10 @@ ap.add_argument("--base-url", help="OpenAI-compatible endpoint for --model")
 ap.add_argument("--api-key-var", help="name of the env var holding that endpoint's key")
 args = ap.parse_args()
 
-token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
+token = os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
 if not token:
-    sys.exit("No token. Set TENKI_API_KEY, or run `luxor login`.")
-env = {**os.environ, "TENKI_API_KEY": token, "PYTHONPATH": f"{HERE}{os.pathsep}{os.environ.get('PYTHONPATH', '')}"}
+    sys.exit("No token. Set LUXORAI_API_KEY, or run `luxor login`.")
+env = {**os.environ, "LUXORAI_API_KEY": token, "PYTHONPATH": f"{HERE}{os.pathsep}{os.environ.get('PYTHONPATH', '')}"}
 
 bin_dir = Path(sys.executable).parent
 if args.model:

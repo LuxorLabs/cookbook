@@ -1,6 +1,6 @@
 """
 Verify the verifiers + Luxor Agent Cloud example without a model key. On a live Luxor sandbox:
-  1. verifiers loads TenkiBackend from `type = "custom"` + `import_path` and reads its feature flags,
+  1. verifiers loads LuxorBackend from `type = "custom"` + `import_path` and reads its feature flags,
   2. run, exec, kill, files, user switching and host-port forwarding behave as the framework expects, and
   3. the sandbox is terminated after teardown (checked through the SDK list by tag).
 """
@@ -12,17 +12,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 def cfg(key):
     try:
-        text = open(os.path.expanduser("~/.config/luxor/config.yaml")).read()
+        text = open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")).read()
         return re.search(rf"^{key}:\s*(.+)$", text, re.M).group(1).strip()
     except (OSError, AttributeError):
         return ""
 
 
-token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
+token = os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
 if not token:
-    print("No token. Set TENKI_API_KEY, or run `luxor login`.")
+    print("No token. Set LUXORAI_API_KEY, or run `luxor login`.")
     sys.exit(1)
-os.environ["TENKI_API_KEY"] = token
+(os.environ.get("LUXORAI_API_KEY") or os.environ["TENKI_API_KEY"]) = token
 
 from pydantic import TypeAdapter  # noqa: E402
 import tenki  # noqa: E402
@@ -37,7 +37,7 @@ NO_SLEEPERS = "cat /proc/[0-9]*/cmdline | tr '\\0' ' ' | grep -c '[s]leep 600' |
 
 async def main():
     config = TypeAdapter(RuntimeConfig).validate_python(
-        {"type": "custom", "import_path": "tenki_backend.TenkiBackend", "tags": [TAG]}
+        {"type": "custom", "import_path": "luxor_backend.LuxorBackend", "tags": [TAG]}
     )
     cls = backend_cls(config)  # compose stays off: verifiers' compose path can't reach a custom backend (see README)
     assert (cls.SUPPORTS_TASK_IMAGES, cls.SUPPORTS_USER_SWITCHING, cls.is_local, cls.SUPPORTS_COMPOSE) == (True, True, True, False)

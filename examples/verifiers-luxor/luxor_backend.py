@@ -1,10 +1,10 @@
 """Luxor Agent Cloud runtime backend for Prime Intellect's ``verifiers``.
 
-``TenkiBackend`` is a ``RuntimeBackend`` that verifiers loads out of tree, with no fork:
+``LuxorBackend`` is a ``RuntimeBackend`` that verifiers loads out of tree, with no fork:
 
     [env.agent.runtime]
     type = "custom"
-    import_path = "tenki_backend.TenkiBackend"
+    import_path = "luxor_backend.LuxorBackend"
 
 Every rollout gets its own Luxor sandbox. Luxor sandboxes can't boot a container image
 directly, so the sandbox installs Docker and runs the task image as one container under
@@ -16,7 +16,7 @@ The model-traffic interception server runs on the evaluator host. The backend de
 ``is_local`` and forwards the host's loopback port into the sandbox with Luxor Agent Cloud's
 host-port tunnel (``host_url``), so no Prime tunnel or Prime credentials are involved.
 
-Auth comes from ``TENKI_API_KEY`` (or ``TENKI_AUTH_TOKEN``).
+Auth comes from ``LUXORAI_API_KEY`` (or ``LUXORAI_AUTH_TOKEN``).
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ from tenki import (
     AsyncSandbox,
     Client,
     RateLimitedError,
-    SandboxError as TenkiError,
+    SandboxError as LuxorError,
     SessionNotFoundError,
     SessionTerminatedError,
 )
@@ -100,7 +100,7 @@ _SIGNAL = (
 )
 
 
-class TenkiConfig(CustomRuntimeConfig):
+class LuxorConfig(CustomRuntimeConfig):
     """Validated next to ``import_path``; every field is settable under ``[env.agent.runtime]``."""
 
     image: str = "python:3.11-slim"
@@ -128,10 +128,10 @@ def _is_loopback(host: str) -> bool:
     return False
 
 
-class TenkiProcess(RuntimeProcess):
+class LuxorProcess(RuntimeProcess):
     """A ``docker exec`` client running in the sandbox, whose stdio streams to us."""
 
-    def __init__(self, backend: TenkiBackend, process, pidfile: str, user: str | None):
+    def __init__(self, backend: LuxorBackend, process, pidfile: str, user: str | None):
         self._backend = backend
         self._process = process
         self._pidfile = pidfile
@@ -177,10 +177,10 @@ class TenkiProcess(RuntimeProcess):
                 await self._process.kill()
 
 
-class TenkiBackend(RuntimeBackend):
+class LuxorBackend(RuntimeBackend):
     """One Luxor sandbox running one task container."""
 
-    config_class = TenkiConfig
+    config_class = LuxorConfig
     is_local: ClassVar[bool] = True
     """Host loopback URLs reach the sandbox through `host_url`, not a public tunnel."""
     SUPPORTS_TASK_IMAGES: ClassVar[bool] = True
@@ -192,7 +192,7 @@ class TenkiBackend(RuntimeBackend):
     #   host-reachable URL, which a sandbox does not have.
     # - NetworkPolicyConfig: Luxor Agent Cloud fixes a sandbox's egress rules when it is created.
 
-    def __init__(self, config: TenkiConfig, name: str | None = None) -> None:
+    def __init__(self, config: LuxorConfig, name: str | None = None) -> None:
         super().__init__(name)
         self.config = config.model_copy(update={"workdir": config.workdir or "/app"})
         self.info = CustomRuntimeInfo(**self.config.model_dump())
@@ -230,7 +230,7 @@ class TenkiBackend(RuntimeBackend):
                     )
                     break
                 except Exception as e:  # a 429, or the API answering 503 for a moment
-                    if attempt == 3 or not (isinstance(e, RateLimitedError) or type(e) is TenkiError):
+                    if attempt == 3 or not (isinstance(e, RateLimitedError) or type(e) is LuxorError):
                         raise
                     await asyncio.sleep(2**attempt)
             self._sandbox = sandbox
@@ -260,7 +260,7 @@ class TenkiBackend(RuntimeBackend):
             "vf-workdir", cfg.workdir, container.get("User") or "0",
             timeout=60, what="workdir setup",
         )
-        logger.info("tenki: sandbox %s up (image=%s)", self.info.id, cfg.image)
+        logger.info("luxor: sandbox %s up (image=%s)", self.info.id, cfg.image)
 
     async def _host(self, *argv: str, timeout: int, what: str, env: dict[str, str] | None = None):
         """Run a command on the sandbox itself (not in the container); it must succeed."""
@@ -301,7 +301,7 @@ class TenkiBackend(RuntimeBackend):
     async def exec(self, runtime: Runtime, argv: list[str], env: dict[str, str]) -> RuntimeProcess:
         return await self._spawn(runtime, argv, env, stdin=True)
 
-    async def _spawn(self, runtime: Runtime, argv: list[str], env: dict[str, str], *, stdin: bool) -> TenkiProcess:
+    async def _spawn(self, runtime: Runtime, argv: list[str], env: dict[str, str], *, stdin: bool) -> LuxorProcess:
         await self._forwarded()
         assert self._sandbox is not None
         values = runtime.process_env(env)
@@ -314,7 +314,7 @@ class TenkiBackend(RuntimeBackend):
             process = await self._sandbox.start(*command, env=values, privileged=True)
         except (SessionNotFoundError, SessionTerminatedError) as e:
             raise SandboxError(f"luxor sandbox is gone: {e}") from e
-        return TenkiProcess(self, process, pidfile, runtime.user)
+        return LuxorProcess(self, process, pidfile, runtime.user)
 
     async def run(self, runtime: Runtime, argv: list[str], env: dict[str, str]) -> ProgramResult:
         process = await self._spawn(runtime, argv, env, stdin=False)
@@ -338,7 +338,7 @@ class TenkiBackend(RuntimeBackend):
             "sh", "-c", script, log, *argv, env=values, privileged=True,
         )
         if result.exit_code != 0:
-            raise SandboxError(f"tenki background process failed: {result.stderr_text.strip()}")
+            raise SandboxError(f"sandbox background process failed: {result.stderr_text.strip()}")
 
     async def read(self, runtime: Runtime, path: str, max_bytes: int | None = None) -> bytes:
         reader = ["cat"] if max_bytes is None else ["head", "-c", str(max_bytes)]
@@ -391,7 +391,7 @@ class TenkiBackend(RuntimeBackend):
             try:
                 await asyncio.gather(*self._forwards.values())
             except Exception as e:
-                raise SandboxError(f"tenki host-port forward failed: {e}") from e
+                raise SandboxError(f"sandbox host-port forward failed: {e}") from e
 
     # -- teardown ---------------------------------------------------------------------
 
@@ -407,7 +407,7 @@ class TenkiBackend(RuntimeBackend):
         try:
             await sandbox.close_if_open()
         except Exception as e:  # noqa: BLE001 - best-effort; max_duration is the backstop
-            logger.warning("tenki: failed to terminate sandbox %s: %s", self.info.id, e)
+            logger.warning("luxor: failed to terminate sandbox %s: %s", self.info.id, e)
         finally:
             self._terminated = True
 
