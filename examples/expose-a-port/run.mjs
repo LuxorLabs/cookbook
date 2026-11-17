@@ -1,19 +1,19 @@
-// Expose a port from a Tenki sandbox and get a public preview URL.
+// Expose a port from a Luxor sandbox and get a public preview URL.
 // Start a tiny HTTP server in the sandbox, expose its port, fetch the URL from the host.
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { LuxorSandbox } from "@luxorai/sandbox";
 
 const PORT = 8000;
-const BODY = "Hello from a Tenki sandbox!";
+const BODY = "Hello from a Luxor sandbox!";
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
-// allowInbound: true lets the Tenki gateway route public traffic to the sandbox port.
+// allowInbound: true lets the Luxor Agent Cloud gateway route public traffic to the sandbox port.
 // (Outbound isn't needed here — the host does the fetching, not the sandbox.)
-await using sandbox = await tenki.createAndWait({
+await using sandbox = await luxor.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
 	allowInbound: true,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 // Write a one-file site, then start a detached HTTP server.
@@ -32,4 +32,4 @@ console.log(`preview URL: ${previewUrl}`);
 
 // Fetch it from the host (the public internet), just like a browser would.
 const res = await fetch(previewUrl);
-console.log(`GET ${res.status} -> ${(await res.text()).trim()}`); // 200 -> Hello from a Tenki sandbox!
+console.log(`GET ${res.status} -> ${(await res.text()).trim()}`); // 200 -> Hello from a Luxor sandbox!
