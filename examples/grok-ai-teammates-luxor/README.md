@@ -141,6 +141,5 @@ The build takes about 90 seconds. Bots created from the image start their deskto
 
 ## Related
 
-- [Trigger.dev](../trigger-dev-luxor/): run code in a Luxor sandbox from a Trigger.dev task
 - [Pause, snapshot, and resume](../snapshots-pause-resume/)
 - [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox)
