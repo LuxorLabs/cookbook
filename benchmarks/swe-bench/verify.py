@@ -42,5 +42,5 @@ finally:
         ok = False
 if not ok:
     sys.exit(1)
-print(f"✓ swe-bench: oracle {INSTANCE} on Tenki → resolved "
+print(f"✓ swe-bench: oracle {INSTANCE} on Luxor Agent Cloud → resolved "
       f"(F2P {r['fail_to_pass']}, P2P {r['pass_to_pass']}, {r['seconds']}s)")

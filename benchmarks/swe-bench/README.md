@@ -75,7 +75,7 @@ export OPENAI_API_KEY=sk-...
 
 Each instance gets its own sandbox, so `--workers N` runs them in parallel. Results, with per-instance `resolved`, F2P/P2P counts, and a `resolvedRate`, go to `swebench-luxor.json` (`--out` to change). `--keep` leaves VMs running for debugging.
 
-Without `--keep`, every sandbox is terminated when an instance finishes, fails, or on Ctrl-C (or SIGTERM), and each is tagged with the run's id so one caught mid-create is found too. If a terminate fails twice, the harness prints a `WARNING` with the sandbox id and a `tenki sandbox terminate` command, and exits non-zero.
+Without `--keep`, every sandbox is terminated when an instance finishes, fails, or on Ctrl-C (or SIGTERM), and each is tagged with the run's id so one caught mid-create is found too. If a terminate fails twice, the harness prints a `WARNING` with the sandbox id and a `luxor sandbox terminate` command, and exits non-zero.
 
 First run the same instances with neither `--oracle` nor `--model`. That is the no-edit control (`mode=empty`): every instance must come back `resolved=False`; if one resolves, the grader is getting the wrong tests.
 

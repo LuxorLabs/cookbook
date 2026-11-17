@@ -307,7 +307,7 @@ def _terminate(sb) -> str | None:
             log(f"  WARNING: terminate {sb.id} failed (attempt {attempt}/2): {err}")
             if attempt == 1:
                 time.sleep(3)
-    log(f"  WARNING: sandbox {sb.id} may still be RUNNING. Stop it: tenki sandbox terminate {sb.id}")
+    log(f"  WARNING: sandbox {sb.id} may still be RUNNING. Stop it: luxor sandbox terminate {sb.id}")
     return err
 
 
@@ -318,7 +318,7 @@ def cleanup() -> list[str]:
         pending = list(_live.values())
     failed = [sb.id for sb in pending if _terminate(sb)]
     try:
-        client, wid = tenki_client()
+        client, wid = luxor_client()
         for sb in client.list(workspace_id=wid, tags=[RUN_TAG]):
             if sb.state not in _DONE and sb.id not in failed:
                 log(f"  terminating leftover sandbox {sb.id} ({sb.name})")
