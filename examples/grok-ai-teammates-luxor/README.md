@@ -11,7 +11,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Run my clone of https://github.com/code-with-antonio/ai-teammates on Luxor sandboxes, using the "Grok AI Teammates on Luxor Agent Cloud" example from https://github.com/LuxorLabs/cookbook (examples/grok-ai-teammates-luxor).
 1. Clone the cookbook next to my app, cd into examples/grok-ai-teammates-luxor, and run npm install.
-2. The verify script needs a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it anywhere except my app's .env.local.
+2. The verify script needs a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it anywhere except my app's .env.local.
 3. Run node verify.mjs and confirm it prints a line starting with ✓.
 4. Apply the steps under "Swap it into the app" in the example's README.md to my app, then run npm run typecheck there.
 5. If a step fails, use the Troubleshooting table in the README.
@@ -37,10 +37,10 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Verify
 
@@ -52,7 +52,7 @@ node verify.mjs
 ✓ grok-ai-teammates-luxor: bot sandbox → shell, files, remember/recall → desktop: keyboard, mouse, 5778-byte PNG → noVNC 200, websocket RFB 003.008 with token, 502 without → metered → pause → resume keeps file + desktop → delete
 ```
 
-`verify.mjs` imports `lib/tenki.ts` and calls it the way the app does: it creates a bot sandbox, writes and lists files, appends a memory note and reads it back, starts the desktop (installing it, about a minute), types and clicks into an xterm, and checks the screenshot is a 1024-wide PNG. It then opens noVNC through the preview URL, checks the websocket reaches the VNC server with the token and is refused without it, pauses the sandbox, resumes it, and checks the file and desktop survived. It deletes the sandbox and its preview URL either way, and fails if either is left. It takes about 70 seconds.
+`verify.mjs` imports `lib/luxor.ts` and calls it the way the app does: it creates a bot sandbox, writes and lists files, appends a memory note and reads it back, starts the desktop (installing it, about a minute), types and clicks into an xterm, and checks the screenshot is a 1024-wide PNG. It then opens noVNC through the preview URL, checks the websocket reaches the VNC server with the token and is refused without it, pauses the sandbox, resumes it, and checks the file and desktop survived. It deletes the sandbox and its preview URL either way, and fails if either is left. It takes about 70 seconds.
 
 ### 4. Swap it into the app
 
@@ -60,11 +60,11 @@ From your clone of the app, with the cookbook cloned next to it:
 
 ```bash
 EX=../cookbook/examples/grok-ai-teammates-luxor
-cp $EX/lib/tenki.ts lib/
+cp $EX/lib/luxor.ts lib/
 cp $EX/trigger/pause-idle.ts trigger/
 mkdir -p scripts && cp $EX/build-desktop-image.mjs scripts/
 rm lib/daytona.ts
-perl -pi -e 's#"\@/lib/daytona"#"\@/lib/tenki"#; s#"\@daytona/sdk"#"\@/lib/tenki"#' \
+perl -pi -e 's#"\@/lib/daytona"#"\@/lib/luxor"#; s#"\@daytona/sdk"#"\@/lib/luxor"#' \
   lib/sandbox-tools.ts trigger/chat.ts trigger/usage.ts actions/bot.ts actions/chat.ts
 npm uninstall @daytona/sdk
 npm install '@luxorai/sandbox@>=1.4.1'
@@ -73,16 +73,16 @@ npm run typecheck
 
 | File | Change |
 | --- | --- |
-| The app's original sandbox module | Removed; `lib/tenki.ts` exports the same functions |
-| `lib/sandbox-tools.ts` | Imports `Sandbox` and the helpers from `@/lib/tenki`; the tools are unchanged |
-| `trigger/usage.ts`, `trigger/chat.ts`, `actions/bot.ts`, `actions/chat.ts` | Import from `@/lib/tenki` |
+| The app's original sandbox module | Removed; `lib/luxor.ts` exports the same functions |
+| `lib/sandbox-tools.ts` | Imports `Sandbox` and the helpers from `@/lib/luxor`; the tools are unchanged |
+| `trigger/usage.ts`, `trigger/chat.ts`, `actions/bot.ts`, `actions/chat.ts` | Import from `@/lib/luxor` |
 | `trigger/pause-idle.ts` | New: pauses bot sandboxes idle for 15 minutes |
 | `scripts/build-desktop-image.mjs` | New, optional: bakes the desktop packages into an image |
 
 In `.env.local`, replace the old sandbox provider's key with your Luxor Agent Cloud key:
 
 ```bash
-TENKI_API_KEY=tk_...
+LUXORAI_API_KEY=tk_...
 TENKI_DESKTOP_IMAGE=   # optional, see below
 ```
 
@@ -91,7 +91,7 @@ The chat agent's tools and both scheduled tasks call Luxor Agent Cloud from Trig
 Without `TENKI_DESKTOP_IMAGE`, a bot installs the desktop packages the first time its desktop opens, which takes about a minute. To skip that, build an image once and set the variable to the ref it prints:
 
 ```bash
-TENKI_API_KEY=tk_... node scripts/build-desktop-image.mjs
+LUXORAI_API_KEY=tk_... node scripts/build-desktop-image.mjs
 ```
 
 ```text
@@ -102,7 +102,7 @@ The build takes about 90 seconds. Bots created from the image start their deskto
 
 ## How it works
 
-| What the app does | How `lib/tenki.ts` does it |
+| What the app does | How `lib/luxor.ts` does it |
 | --- | --- |
 | Create a bot's computer | `createAndWait({ sticky: true, tags: ["ai-teammates", "bot-<id>"], allowInbound: true })` |
 | Start / stop it | `session.resume()` / `session.pause()` |
@@ -125,8 +125,8 @@ The build takes about 90 seconds. Bots created from the image start their deskto
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY` in the app or a Trigger.dev run | Add `TENKI_API_KEY` to `.env.local` and to the Trigger.dev environment the task runs in. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY` in the app or a Trigger.dev run | Add `LUXORAI_API_KEY` to `.env.local` and to the Trigger.dev environment the task runs in. |
 | `The desktop did not start:` followed by apt output | The package install failed. The tail of `~/.desktop/desktop.log` in the sandbox is in the error; run it again, or build `TENKI_DESKTOP_IMAGE`. |
 | The desktop panel shows "disconnected" right away | The token was replaced by a newer call, or the sandbox was paused. Reconnect: the app asks for a new URL each time. |
 | `Sandbox … is TERMINATED` | The sandbox was deleted outside the app. Delete the bot and create it again. |
@@ -134,13 +134,13 @@ The build takes about 90 seconds. Bots created from the image start their deskto
 
 ## Notes
 
-- The full app was not part of `verify.mjs`: it needs Clerk, Neon and Trigger.dev accounts and a model. `verify.mjs` covers every call the app makes into `lib/tenki.ts`.
+- The full app was not part of `verify.mjs`: it needs Clerk, Neon and Trigger.dev accounts and a model. `verify.mjs` covers every call the app makes into `lib/luxor.ts`.
 - Screenshots carry no cursor (`showCursor` is ignored), and the desktop has openbox and xterm only. A bot can `sudo apt-get install` more; add it to `build-desktop-image.mjs` to keep it in the image.
 - `lastActivityAt` moves on commands and tool calls, not on noVNC traffic, so a desktop someone is only watching pauses after 15 minutes without a tool call.
-- `listRunningSandboxIds()` and `stopIdleSandboxes()` act on every sandbox tagged `ai-teammates` in the workspace. Use a separate workspace (`TENKI_WORKSPACE_ID`) per deployment.
+- `listRunningSandboxIds()` and `stopIdleSandboxes()` act on every sandbox tagged `ai-teammates` in the workspace. Use a separate workspace (`LUXORAI_WORKSPACE_ID`) per deployment.
 
 ## Related
 
-- [Trigger.dev](../trigger-dev-tenki/): run code in a Luxor sandbox from a Trigger.dev task
+- [Trigger.dev](../trigger-dev-luxor/): run code in a Luxor sandbox from a Trigger.dev task
 - [Pause, snapshot, and resume](../snapshots-pause-resume/)
 - [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox)

@@ -5,7 +5,7 @@ import { TemplateSpec, LuxorSandbox } from "@luxorai/sandbox";
 
 const luxor = new LuxorSandbox();
 const name = process.env.TEMPLATE_NAME || "ai-teammates-desktop";
-// The same packages lib/tenki.ts installs when they are missing. One run step:
+// The same packages lib/luxor.ts installs when they are missing. One run step:
 // the builder takes a spec without a Git context only in that shape.
 const spec = new TemplateSpec().run(
 	"S=$([ $(id -u) = 0 ] || echo sudo); $S apt-get update -qq && DEBIAN_FRONTEND=noninteractive $S apt-get install -y -qq --no-install-recommends " +

@@ -1,6 +1,6 @@
 import { logger, schedules } from "@trigger.dev/sdk"
 
-import { stopIdleSandboxes } from "@/lib/tenki"
+import { stopIdleSandboxes } from "@/lib/luxor"
 
 // Luxor Agent Cloud does not stop idle sandboxes by itself, so this pauses every bot
 // sandbox that has been idle for 15 minutes.

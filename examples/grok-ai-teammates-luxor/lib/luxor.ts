@@ -19,7 +19,7 @@ const TAG = "ai-teammates"
 const VNC_PORT = 6080
 const DISPLAY = ":1"
 
-// Reads TENKI_API_KEY (or TENKI_AUTH_TOKEN). Made on first use, so importing
+// Reads LUXORAI_API_KEY (or LUXORAI_AUTH_TOKEN). Made on first use, so importing
 // this module during `next build` needs no key.
 let client: LuxorSandbox | undefined
 const luxor = () => (client ??= new LuxorSandbox())
@@ -283,7 +283,7 @@ export async function createBotSandbox(botId: string) {
       memoryMb: 2048,
       diskSizeGb: 10,
       image: process.env.TENKI_DESKTOP_IMAGE || undefined,
-      workspaceId: process.env.TENKI_WORKSPACE_ID || undefined,
+      workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || undefined,
     })
     .catch(async (error) => {
       if (error instanceof WaitReadyFailedError)
@@ -384,7 +384,7 @@ export async function deleteBotSandbox(sandboxId: string) {
 export async function listRunningSandboxIds() {
   const sessions = await tenki().list({
     tags: [TAG],
-    workspaceId: process.env.TENKI_WORKSPACE_ID || undefined,
+    workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || undefined,
   })
   return sessions
     .filter((s) =>
@@ -407,7 +407,7 @@ export async function stopIdleSandboxes(idleMinutes = 15) {
   const cutoff = Date.now() - idleMinutes * 60_000
   const sessions = await tenki().list({
     tags: [TAG],
-    workspaceId: process.env.TENKI_WORKSPACE_ID || undefined,
+    workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || undefined,
   })
   const idle = sessions.filter(
     (s) => s.state === "RUNNING" && (s.lastActivityAt?.getTime() ?? 0) < cutoff

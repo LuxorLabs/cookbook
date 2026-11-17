@@ -1,30 +1,30 @@
-// Drives lib/tenki.ts, the app's Luxor sandbox module, against live Luxor Agent Cloud:
+// Drives lib/luxor.ts, the app's Luxor sandbox module, against live Luxor Agent Cloud:
 // create a bot sandbox, shell + files + memory, the desktop (install, keyboard, mouse, PNG
 // screenshot), noVNC over the preview URL with and without the token, metering, pause →
 // resume keeps files and desktop, delete. Token/workspace from env or ~/.config/luxor/config.yaml.
 import { randomBytes } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { request } from "node:https";
 import { homedir } from "node:os";
 import { register } from "tsx/esm/api";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8");
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
 	}
 };
-process.env.TENKI_API_KEY = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-process.env.TENKI_WORKSPACE_ID ||= cfg("current_workspace_id");
-if (!process.env.TENKI_API_KEY) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
+(process.env.LUXORAI_API_KEY || process.env.TENKI_API_KEY) = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID ||= cfg("current_workspace_id");
+if (!(process.env.LUXORAI_API_KEY || process.env.TENKI_API_KEY)) {
+	console.error("No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 
 register();
-const bot = await import("./lib/tenki.ts");
+const bot = await import("./lib/luxor.ts");
 const { LuxorSandbox } = await import("@luxorai/sandbox");
 const check = (ok, msg) => { if (!ok) throw new Error(msg); };
 // A raw websocket handshake (Node 20 has no global WebSocket); resolves to the RFB banner or the HTTP status
@@ -77,7 +77,7 @@ try {
 } finally {
 	if (id) await bot.deleteBotSandbox(id).catch((e) => { console.error("✗ cleanup: " + e.message); process.exitCode = 1; });
 	const luxor = new LuxorSandbox();
-	const ws = process.env.TENKI_WORKSPACE_ID || undefined;
+	const ws = process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || undefined;
 	const left = (await luxor.list({ tags: [`bot-${botId}`], workspaceId: ws })).filter((s) => !["TERMINATED", "TERMINATING"].includes(s.state));
 	if (id) left.push(...(await luxor.previewUrls.list({ workspaceId: ws })).filter((u) => u.sessionId === id));
 	if (left.length) { console.error(`✗ left behind: ${left.map((x) => x.id).join(", ")}`); process.exitCode = 1; }
