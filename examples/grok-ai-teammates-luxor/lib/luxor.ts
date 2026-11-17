@@ -273,7 +273,7 @@ export class Sandbox {
 // Every bot owns one sandbox. Sticky, so it runs until it is paused or
 // deleted rather than for Luxor Agent Cloud's default two hours; tagged with the bot.
 export async function createBotSandbox(botId: string) {
-  const session = await tenki()
+  const session = await luxor()
     .createAndWait({
       name: `bot-${botId}`,
       tags: [TAG, `bot-${botId}`],
@@ -304,7 +304,7 @@ export async function createBotSandbox(botId: string) {
 
 // A running sandbox; paused ones are resumed here
 export async function getBotSandbox(sandboxId: string) {
-  const session = await tenki().get(sandboxId)
+  const session = await luxor().get(sandboxId)
   if (session.state === "PAUSING") await session.waitPaused()
   if (session.state === "PAUSING" || session.state === "PAUSED")
     await session.resume()
@@ -342,13 +342,13 @@ export async function getBotDesktopUrl(sandboxId: string) {
   // A named preview URL bound to this sandbox and port. Created with the
   // session: an unbound one gets an address that never routes.
   const session = sandbox.session
-  const urls = await tenki().previewUrls.list({
+  const urls = await luxor().previewUrls.list({
     sessionId: session.id,
     workspaceId: session.workspaceId,
   })
   const preview =
     urls.find((u) => u.port === VNC_PORT) ??
-    (await tenki().previewUrls.create(
+    (await luxor().previewUrls.create(
       `desk-${session.id.replace(/-/g, "").slice(-16)}`,
       {
         sessionId: session.id,
@@ -366,23 +366,23 @@ export async function getBotDesktopUrl(sandboxId: string) {
 export async function deleteBotSandbox(sandboxId: string) {
   let session: Session
   try {
-    session = await tenki().get(sandboxId)
+    session = await luxor().get(sandboxId)
   } catch (error) {
     // Already gone is as good as deleted
     if (error instanceof SessionNotFoundError) return
     throw error
   }
-  for (const url of await tenki().previewUrls.list({
+  for (const url of await luxor().previewUrls.list({
     sessionId: sandboxId,
     workspaceId: session.workspaceId,
   }))
-    await tenki().previewUrls.delete(url.id)
+    await luxor().previewUrls.delete(url.id)
   await session.close()
 }
 
 // The IDs of every bot sandbox that holds a VM, which is when Luxor Agent Cloud bills it
 export async function listRunningSandboxIds() {
-  const sessions = await tenki().list({
+  const sessions = await luxor().list({
     tags: [TAG],
     workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || undefined,
   })
@@ -396,7 +396,7 @@ export async function listRunningSandboxIds() {
 // Pausing keeps memory and files, releases the VM and stops billing; the next
 // getBotSandbox resumes it
 export async function stopBotSandbox(sandboxId: string) {
-  const session = await tenki().get(sandboxId)
+  const session = await luxor().get(sandboxId)
   if (session.state === "RUNNING") await session.pause()
 }
 
@@ -405,7 +405,7 @@ export async function stopBotSandbox(sandboxId: string) {
 // Run it on a schedule (trigger/pause-idle.ts).
 export async function stopIdleSandboxes(idleMinutes = 15) {
   const cutoff = Date.now() - idleMinutes * 60_000
-  const sessions = await tenki().list({
+  const sessions = await luxor().list({
     tags: [TAG],
     workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || undefined,
   })

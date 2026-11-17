@@ -16,8 +16,8 @@ const cfg = (key) => {
 		return "";
 	}
 };
-(process.env.LUXORAI_API_KEY || process.env.TENKI_API_KEY) = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID ||= cfg("current_workspace_id");
+process.env.LUXORAI_API_KEY = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+process.env.LUXORAI_WORKSPACE_ID ||= process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
 if (!(process.env.LUXORAI_API_KEY || process.env.TENKI_API_KEY)) {
 	console.error("No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
