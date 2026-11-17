@@ -103,14 +103,14 @@ Give an agent a sandbox to run the code it writes.
 | [Claude Code](examples/claude-code-sandbox/) | Headless coding agent on a real repo checkout |
 | [Codex](examples/codex-sandbox/) | OpenAI's coding agent, headless, on a real repo checkout |
 | [OpenCode](examples/opencode-sandbox/) | Headless OpenCode server on a public preview URL |
-| [marimo](examples/marimo-tenki/) | Reactive Python notebook on a public preview URL, behind marimo's access token |
-| [Composio](examples/composio-tenki/) | Tenki tools in a Composio agent |
-| [Covalent](examples/covalent-tenki/) | Each workflow task in its own sandbox |
-| [AgentBox](examples/agentbox-tenki/) | Coding-agent boxes on Tenki sandboxes |
-| [ComputeSDK](examples/computesdk-tenki/) | Tenki as a provider for the unified sandbox interface |
-| [TinyFish](examples/tinyfish-tenki/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
-| [Harbor](examples/harbor-tenki/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
-| [Convex](examples/convex-tenki/) | A sandbox per user from Convex actions, with live state in a Convex table |
+| [marimo](examples/marimo-luxor/) | Reactive Python notebook on a public preview URL, behind marimo's access token |
+| [Composio](examples/composio-luxor/) | Luxor Agent Cloud tools in a Composio agent |
+| [Covalent](examples/covalent-luxor/) | Each workflow task in its own sandbox |
+| [AgentBox](examples/agentbox-luxor/) | Coding-agent boxes on Luxor sandboxes |
+| [ComputeSDK](examples/computesdk-luxor/) | Luxor Agent Cloud as a provider for the unified sandbox interface |
+| [TinyFish](examples/tinyfish-luxor/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
+| [Harbor](examples/harbor-luxor/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
+| [Convex](examples/convex-luxor/) | A sandbox per user from Convex actions, with live state in a Convex table |
 
 ### Luxor Code Reviewer
 

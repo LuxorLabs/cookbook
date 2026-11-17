@@ -1,5 +1,5 @@
 """
-Proves this example against live Tenki: serve notebook.py with run.py's serve_marimo(),
+Proves this example against live Luxor Agent Cloud: serve notebook.py with run.py's serve_marimo(),
 then over the public preview URL assert that a request without the token lands on the
 login page, the token opens the editor, and the kernel answers on marimo's WebSocket.
 Exits non-zero on failure; the `with` block terminates the sandbox either way.
@@ -17,7 +17,7 @@ from websockets.asyncio.client import connect
 from run import sandbox_opts, serve_marimo
 
 if not sandbox_opts()["auth_token"]:
-    print("No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.")
+    print("No API key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.")
     sys.exit(1)
 
 
@@ -53,7 +53,7 @@ try:
         assert "/auth/login" not in landed and "marimo" in body, f"token rejected: {landed}"
         cookie = "; ".join(f"{c.name}={c.value}" for c in jar)
         assert asyncio.run(kernel_ready(url, cookie)), "no kernel-ready on the WebSocket"
-    print("✓ marimo-tenki: marimo edit → exposePort → no token: login page → token: editor → WebSocket kernel-ready")
+    print("✓ marimo-luxor: marimo edit → exposePort → no token: login page → token: editor → WebSocket kernel-ready")
 except Exception as e:  # noqa: BLE001
     print(f"✗ {type(e).__name__}: {e}")
     sys.exit(1)

@@ -1,9 +1,9 @@
 """
-Serve a marimo notebook from a Tenki sandbox on a public preview URL, behind
+Serve a marimo notebook from a Luxor sandbox on a public preview URL, behind
 marimo's own access token. Press Enter to copy your edits back and terminate.
 
 Needs Python 3.10+ and requirements.txt. API key from TENKI_AUTH_TOKEN /
-TENKI_API_KEY or ~/.config/tenki/config.yaml (`tenki login --api-key`).
+TENKI_API_KEY or ~/.config/luxor/config.yaml (`luxor login --api-key`).
 Run: .venv/bin/python run.py
 """
 import os
@@ -18,7 +18,7 @@ NOTEBOOK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "notebook.py
 
 def cfg(key):
     try:
-        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
+        with open(os.path.expanduser("~/.config/luxor/config.yaml")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()
