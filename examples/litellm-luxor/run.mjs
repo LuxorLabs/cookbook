@@ -1,7 +1,7 @@
-// Deploy (or redeploy) a LiteLLM proxy in a sticky Tenki sandbox behind a named preview URL.
+// Deploy (or redeploy) a LiteLLM proxy in a sticky Luxor sandbox behind a named preview URL.
 //   node run.mjs        upload provider keys as workspace secrets, start the proxy, point the URL at it
 //   node run.mjs down   delete the URL, the sandbox, the policy, and the secrets
-import { TenkiSandbox, WorkspaceClient } from "@tenkicloud/sandbox";
+import { LuxorSandbox, WorkspaceClient } from "@luxorai/sandbox";
 import { randomBytes } from "node:crypto";
 import { PROVIDERS, findByName, pointUrl, startProxy, upsertPolicy, upsertSecret } from "./proxy.mjs";
 
@@ -12,16 +12,16 @@ const SLUG = process.env.LITELLM_SLUG || "litellm";
 const POLICY = `${SLUG}-providers`; // request policy name
 const secretName = (k) => `LITELLM_${k}`; // workspace secret name for each provider key
 
-const tenki = new TenkiSandbox({ authToken });
+const luxor = new LuxorSandbox({ authToken });
 const ws = new WorkspaceClient({ authToken, workspaceId });
-const urlBySlug = async () => (await tenki.previewUrls.list({ workspaceId })).find((u) => u.slug === SLUG);
+const urlBySlug = async () => (await luxor.previewUrls.list({ workspaceId })).find((u) => u.slug === SLUG);
 
 try {
 	if (process.argv[2] === "down") {
 		const url = await urlBySlug();
-		const sandbox = url?.sessionId && (await tenki.get(url.sessionId));
+		const sandbox = url?.sessionId && (await luxor.get(url.sessionId));
 		if (sandbox && sandbox.name !== SLUG) throw new Error(`preview URL "${SLUG}" is bound to sandbox ${sandbox.name}, not this proxy`);
-		if (url) await tenki.previewUrls.delete(url.id);
+		if (url) await luxor.previewUrls.delete(url.id);
 		if (sandbox) await sandbox.close();
 		const policy = await findByName(ws, "policies", POLICY);
 		if (policy) await ws.secrets.policies.delete(policy.id, { expectedRevision: policy.revision });
@@ -50,15 +50,15 @@ async function deploy() {
 
 	// 3. The proxy. Its master key is the only credential that lives in the sandbox.
 	const masterKey = process.env.LITELLM_MASTER_KEY || `sk-${randomBytes(24).toString("hex")}`;
-	const sandbox = await startProxy(tenki, { name: SLUG, policy: POLICY, refs, masterKey, workspaceId });
+	const sandbox = await startProxy(luxor, { name: SLUG, policy: POLICY, refs, masterKey, workspaceId });
 
 	// 4. Same URL as last time: re-bind it to the new sandbox, then retire the old one.
-	const { url, previousSessionId } = await pointUrl(tenki, SLUG, sandbox).catch(async (e) => {
+	const { url, previousSessionId } = await pointUrl(luxor, SLUG, sandbox).catch(async (e) => {
 		await sandbox.close(); // a sticky sandbox would otherwise run until someone terminates it
 		throw e;
 	});
 	if (previousSessionId && previousSessionId !== sandbox.id) {
-		await (await tenki.get(previousSessionId)).close().catch(() => {});
+		await (await luxor.get(previousSessionId)).close().catch(() => {});
 	}
 
 	const models = Object.keys(refs).map((k) => PROVIDERS[k].model.split("/")[1]).join(", ");

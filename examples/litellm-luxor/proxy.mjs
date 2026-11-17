@@ -4,7 +4,7 @@ export const LITELLM_VERSION = "1.106.5";
 export const PORT = 4000;
 
 // Which outbound requests may carry each secret. The proxy sends `secrets://NAME` in the
-// listed header; Tenki swaps in the real value at egress, only for this origin and path.
+// listed header; Luxor Agent Cloud swaps in the real value at egress, only for this origin and path.
 export const PROVIDERS = {
 	OPENAI_API_KEY: { model: "openai/gpt-5-mini", origin: "https://api.openai.com", header: "Authorization" },
 	ANTHROPIC_API_KEY: { model: "anthropic/claude-sonnet-4-5", origin: "https://api.anthropic.com", header: "x-api-key" },
@@ -46,8 +46,8 @@ export async function upsertPolicy(ws, name, refs) {
 }
 
 // Sticky sandbox that runs until terminated; outbound requests go through the selected policy.
-export async function startProxy(tenki, { name, policy, refs, masterKey, workspaceId }) {
-	const sandbox = await tenki.createAndWait({
+export async function startProxy(luxor, { name, policy, refs, masterKey, workspaceId }) {
+	const sandbox = await luxor.createAndWait({
 		name, cpuCores: 2, memoryMb: 4096, sticky: true, allowInbound: true, secretPolicies: [policy], workspaceId,
 	});
 	try {
@@ -70,16 +70,16 @@ export async function startProxy(tenki, { name, policy, refs, masterKey, workspa
 
 // Point the named preview URL at the sandbox: create it, or re-bind it if the slug exists.
 // Returns the URL and the session it pointed at before, if any.
-export async function pointUrl(tenki, slug, sandbox) {
-	const old = (await tenki.previewUrls.list({ workspaceId: sandbox.workspaceId })).find((u) => u.slug === slug);
-	if (!old) return { url: await tenki.previewUrls.create(slug, { sessionId: sandbox.id, port: PORT, workspaceId: sandbox.workspaceId }) };
+export async function pointUrl(luxor, slug, sandbox) {
+	const old = (await luxor.previewUrls.list({ workspaceId: sandbox.workspaceId })).find((u) => u.slug === slug);
+	if (!old) return { url: await luxor.previewUrls.create(slug, { sessionId: sandbox.id, port: PORT, workspaceId: sandbox.workspaceId }) };
 	if (old.sessionId) {
 		// Only take over a URL that points at an earlier proxy (sandboxes are named after the slug).
-		const prev = await tenki.get(old.sessionId).catch(() => undefined);
+		const prev = await luxor.get(old.sessionId).catch(() => undefined);
 		if (prev && prev.name !== slug && !["TERMINATED", "TERMINATING"].includes(prev.state)) {
 			throw new Error(`preview URL "${slug}" is bound to sandbox ${prev.name}; pick another slug`);
 		}
-		await tenki.previewUrls.unbind(old.id); // bind() refuses a URL that is already bound
+		await luxor.previewUrls.unbind(old.id); // bind() refuses a URL that is already bound
 	}
-	return { url: await tenki.previewUrls.bind(old.id, sandbox.id, PORT), previousSessionId: old.sessionId };
+	return { url: await luxor.previewUrls.bind(old.id, sandbox.id, PORT), previousSessionId: old.sessionId };
 }

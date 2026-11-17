@@ -1,15 +1,15 @@
 # LiteLLM proxy
 
-Run a [LiteLLM](https://docs.litellm.ai) proxy in a long-lived Tenki sandbox and serve it on a named HTTPS URL that keeps its address when you redeploy. Your OpenAI and Anthropic keys are stored as Tenki workspace secrets. The sandbox only ever sees `secrets://NAME` references; Tenki swaps in the real key on the way out, and only on requests to that provider's API. Any OpenAI-compatible client, or Claude Code, can then use the proxy with one master key.
+Run a [LiteLLM](https://docs.litellm.ai) proxy in a long-lived Luxor sandbox and serve it on a named HTTPS URL that keeps its address when you redeploy. Your OpenAI and Anthropic keys are stored as Luxor Agent Cloud workspace secrets. The sandbox only ever sees `secrets://NAME` references; Luxor Agent Cloud swaps in the real key on the way out, and only on requests to that provider's API. Any OpenAI-compatible client, or Claude Code, can then use the proxy with one master key.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "LiteLLM proxy" example from https://github.com/LuxorLabs/cookbook, which runs a LiteLLM proxy in a long-lived Tenki sandbox on a named URL, with provider keys held as Tenki workspace secrets.
-1. Clone the repo, cd into examples/litellm-tenki, and run npm install (Node.js 20 or later).
-2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and at least one of OPENAI_API_KEY or ANTHROPIC_API_KEY in the environment. If they are missing, stop and ask me to export them. Never print the keys or write them to a file.
+Set up the Luxor Agent Cloud "LiteLLM proxy" example from https://github.com/LuxorLabs/cookbook, which runs a LiteLLM proxy in a long-lived Luxor sandbox on a named URL, with provider keys held as Luxor Agent Cloud workspace secrets.
+1. Clone the repo, cd into examples/litellm-luxor, and run npm install (Node.js 20 or later).
+2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and at least one of OPENAI_API_KEY or ANTHROPIC_API_KEY in the environment. If they are missing, stop and ask me to export them. Never print the keys or write them to a file.
 3. Run node verify.mjs and confirm the ✓ line.
 4. Run node run.mjs and give me the proxy URL and the LITELLM_MASTER_KEY line it prints.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -21,14 +21,14 @@ Remind me the proxy keeps running (and billing) until I run node run.mjs down.
 You need:
 
 - Node.js 20 or later. You don't install LiteLLM locally.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - An OpenAI or Anthropic API key, or both. `verify.mjs` needs neither.
 
 ### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
-cd cookbook/examples/litellm-tenki
+cd cookbook/examples/litellm-luxor
 npm install
 ```
 
@@ -39,7 +39,7 @@ export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
 export OPENAI_API_KEY=sk-...     # and/or ANTHROPIC_API_KEY
 ```
 
-`run.mjs` reads keys from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads keys from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -65,7 +65,7 @@ node verify.mjs
 
 ```text
   proxy: https://litellm-verify-50d931--….us.sb.tenki.sh (sticky=true)
-✓ litellm-tenki: sticky proxy → named URL → health 200 → no/wrong key rejected → models [gpt-5-mini] → OpenAI saw the stored key (…89f8)
+✓ litellm-luxor: sticky proxy → named URL → health 200 → no/wrong key rejected → models [gpt-5-mini] → OpenAI saw the stored key (…89f8)
 ```
 
 `verify.mjs` stores a fake OpenAI key as a workspace secret and deploys the proxy with it. It checks `/health/liveliness`, checks that `/v1/models` refuses a missing or wrong key and lists `gpt-5-mini` for the master key, then sends one chat request. OpenAI rejects the fake key with a 401 that shows its last four characters, which proves the stored value, not the `secrets://` reference, reached OpenAI. It deletes the URL, sandbox, policy, and secret either way.
@@ -113,8 +113,8 @@ To change the models, edit `PROVIDERS` in `proxy.mjs`. The `model_name` clients 
    ]);
    ```
 
-3. **Start the proxy.** The sandbox is created with `sticky: true` (it runs until terminated, with no lifetime cap) and `secretPolicies: ["litellm-providers"]`. LiteLLM starts with `OPENAI_API_KEY=secrets://LITELLM_OPENAI_API_KEY` in its environment, so it sends `Authorization: Bearer secrets://LITELLM_OPENAI_API_KEY`. Tenki's egress replaces the reference with the stored value when the request matches the policy. The image already trusts Tenki's egress CA (`SSL_CERT_FILE`, `REQUESTS_CA_BUNDLE`), so LiteLLM needs no TLS changes.
-4. **Point the URL.** `tenki.previewUrls.create("litellm", { sessionId, port: 4000 })` creates a named preview URL. On a redeploy the slug exists, so `run.mjs` unbinds it, binds it to the new sandbox, and terminates the old one. Clients keep the same address. It only takes over a URL whose sandbox is named after the slug, so it won't hijack someone else's.
+3. **Start the proxy.** The sandbox is created with `sticky: true` (it runs until terminated, with no lifetime cap) and `secretPolicies: ["litellm-providers"]`. LiteLLM starts with `OPENAI_API_KEY=secrets://LITELLM_OPENAI_API_KEY` in its environment, so it sends `Authorization: Bearer secrets://LITELLM_OPENAI_API_KEY`. Luxor Agent Cloud's egress replaces the reference with the stored value when the request matches the policy. The image already trusts Luxor Agent Cloud's egress CA (`SSL_CERT_FILE`, `REQUESTS_CA_BUNDLE`), so LiteLLM needs no TLS changes.
+4. **Point the URL.** `luxor.previewUrls.create("litellm", { sessionId, port: 4000 })` creates a named preview URL. On a redeploy the slug exists, so `run.mjs` unbinds it, binds it to the new sandbox, and terminates the old one. Clients keep the same address. It only takes over a URL whose sandbox is named after the slug, so it won't hijack someone else's.
 
 The proxy's master key is the only credential inside the sandbox. LiteLLM requires it on the API routes; the health checks and the API docs page at `/` are public.
 
@@ -134,12 +134,12 @@ The proxy's master key is the only credential inside the sandbox. LiteLLM requir
 | `uv venv … exited 1` | The package install failed in the sandbox. The error shows the end of its stderr; rerun `node run.mjs`. |
 | `/v1/models` returns `500 Internal Server Error` or `400 No connected db.` | No `Authorization: Bearer $LITELLM_MASTER_KEY` header, or the wrong key. See Notes. |
 | `401 Incorrect API key provided` from OpenAI, with the right key | The stored secret is stale. `export OPENAI_API_KEY=…` and run `node run.mjs` again. |
-| `403 secret_injection_denied` in a provider error | The request carried a `secrets://` reference but its origin, method, or path matched no rule. Tenki refuses it rather than forward the reference. Add a rule in `upsertPolicy`. |
-| Old sandboxes still running | A run was interrupted between creating the sandbox and binding the URL. Terminate them from [app.tenki.cloud](https://app.tenki.cloud). |
+| `403 secret_injection_denied` in a provider error | The request carried a `secrets://` reference but its origin, method, or path matched no rule. Luxor Agent Cloud refuses it rather than forward the reference. Add a rule in `upsertPolicy`. |
+| Old sandboxes still running | A run was interrupted between creating the sandbox and binding the URL. Terminate them from [app.luxor.ai](https://app.luxor.ai). |
 
 ## Notes
 
-- **The URL is public.** Tenki puts no login in front of a preview URL. The LiteLLM master key is the only thing that stops a stranger from spending your provider credit. Keep it secret, and rotate it by redeploying with a new `LITELLM_MASTER_KEY`.
+- **The URL is public.** Luxor Agent Cloud puts no login in front of a preview URL. The LiteLLM master key is the only thing that stops a stranger from spending your provider credit. Keep it secret, and rotate it by redeploying with a new `LITELLM_MASTER_KEY`.
 - **LiteLLM returns 500 or 400, not 401, for a bad master key** when it runs without a database, as here. A missing key gives `500 Internal Server Error`, and a wrong key gives `400 No connected db.` (seen on 1.103.10, 1.104.8, 1.105.6, and 1.106.5). Either way, nothing is served. LiteLLM's virtual keys need a Postgres `database_url`, which this example doesn't set up.
 - **What the policy protects, and what it doesn't.** Code in the sandbox can't read a provider key, and the key only goes to the listed origin and path. Code in the sandbox can still *use* the key by sending requests there. An upstream that echoes the `Authorization` header back would reveal it; OpenAI and Anthropic don't (OpenAI shows the last four characters).
 - **Sticky means it runs, and bills, until you stop it.** `sticky: true` ignores `maxDurationMs`. Run `node run.mjs down` when you're done.
@@ -150,6 +150,6 @@ The proxy's master key is the only credential inside the sandbox. LiteLLM requir
 
 - [OpenCode](../opencode-sandbox/): a password-protected agent server on a preview URL
 - [Expose a port](../expose-a-port/): preview URL basics
-- [Tenki docs](https://tenki.cloud/docs)
+- [Luxor Agent Cloud docs](https://luxor.ai/docs)
 - [LiteLLM proxy docs](https://docs.litellm.ai/docs/simple_proxy)
-- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox)
+- [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox)
