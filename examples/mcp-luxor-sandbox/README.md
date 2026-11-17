@@ -55,7 +55,7 @@ Claude Desktop (`claude_desktop_config.json`) or Cursor (`.cursor/mcp.json` for 
 ```json
 {
   "mcpServers": {
-    "tenki": {
+    "luxor": {
       "command": "npx",
       "args": ["-y", "@luxorai/mcp"],
       "env": { "LUXORAI_API_KEY": "tk_your_key_here" }
