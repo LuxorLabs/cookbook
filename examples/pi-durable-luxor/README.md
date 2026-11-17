@@ -230,6 +230,7 @@ Daemon behavior to know, from pi-env's [protocol](https://github.com/earendil-wo
 
 - The daemon exits when its connection closes or after 30 s with no messages, and stops every process it started. Nothing is left running if the bridge dies, but a running command doesn't survive a pause or a dropped connection.
 - A reconnect starts a new daemon. Anything opened before it, such as a file reader or a running command, fails with an error instead of reaching the new daemon.
+- The first call after a pause can fail with `connection lost` while the old bridge is still closing. If the call is safe to repeat, such as a read, retry it once with `retryOnLostConnection`. The retry reconnects and resumes the sandbox. Don't retry a call that changes something, since it may already have run.
 
 ## Troubleshooting
 

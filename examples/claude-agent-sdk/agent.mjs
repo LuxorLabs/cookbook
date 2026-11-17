@@ -20,7 +20,7 @@ for await (const message of query({
 	prompt: "Write fib.py, a Python script that computes the 30th Fibonacci number, run it, and tell me the number.",
 	options: {
 		tools: [], // turn off the SDK's built-in tools, which would run on this computer
-		// Offer Claude the three sandbox tools, bundled as an in-process MCP server named "tenki".
+		// Offer Claude the three sandbox tools, bundled as an in-process MCP server named "luxor".
 		mcpServers: { luxor: createSdkMcpServer({ name: "luxor", version: "1.0.0", tools: makeLuxorTools(sandbox) }) },
 		// Let Claude call them without a permission prompt. The SDK names them mcp__<server>__<tool>.
 		allowedTools: ["mcp__luxor__bash", "mcp__luxor__write_file", "mcp__luxor__read_file"],
