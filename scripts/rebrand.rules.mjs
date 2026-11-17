@@ -32,6 +32,10 @@ const NEW_PREFIX = [...new Set(onDisk.map((n) => n.match(/^luxor-(.+)$/)?.[1]).f
 const AS_FOLDER = new RegExp(`(?<=\\/|\\[|✓ |"name": "|FAILED: |\`)(${FOLDER})(?![\\w-])`, "g");
 
 export const rules = [
+	// Runner labels: luxor.ai/docs/runners lists luxor-ubuntu-* and luxor-macos-*; tenki-* labels keep working.
+	{ phase: "1", scope: "any", find: /\btenki-standard-(?=[a-z])/g, replace: "luxor-ubuntu-" },
+	{ phase: "1", scope: "any", find: /\btenki-macos-(?=\d)/g, replace: "luxor-macos-" },
+	{ phase: "1", scope: "any", find: /\btenki-(?=\[a-z0-9-\]|\.\.\.|…)/g, replace: "luxor-" },
 	...(NEW.length ? [{ phase: "1", scope: "any", find: new RegExp(`(?<![\\w-])(${NEW.join("|")})-tenki(?!\\w)`, "g"), replace: "$1-luxor" }] : []),
 	...(NEW_PREFIX.length ? [{ phase: "1", scope: "any", find: new RegExp(`(?<![\\w-])tenki-(${NEW_PREFIX.join("|")})(?![\\w-])`, "g"), replace: "luxor-$1" }] : []),
 	// The JS client reaching a sub-API: tenki.previewUrls.bind(...).
@@ -92,7 +96,6 @@ export const protect = [
 	// The platform.
 	{ why: "platform: sandbox user", find: /\/home\/tenki\b|\buser(name)? `?tenki`?|\btenki@|\btenki tenki\b|x86_64\s+tenki\b/g },
 	{ why: "platform: preview domain", find: /\b[a-z0-9.-]*sb\.tenki\.sh\b/g },
-	{ why: "platform: Runners labels", find: /\btenki-(standard|large|small|medium|xlarge|macos)[a-z0-9-]*|\btenki-\[a-z0-9-\]|\btenki-\.\.\./g },
 	{ why: "platform: Code Reviewer bot", find: /@tenki-reviewer\b/g },
 	{ why: "platform: container images", find: /\btenki\/(anchor|tinyfish)\b(:[a-z0-9.-]+)?/g },
 	// What the SDKs and packages still call themselves.
