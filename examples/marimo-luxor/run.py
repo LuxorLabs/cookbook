@@ -2,8 +2,8 @@
 Serve a marimo notebook from a Luxor sandbox on a public preview URL, behind
 marimo's own access token. Press Enter to copy your edits back and terminate.
 
-Needs Python 3.10+ and requirements.txt. API key from TENKI_AUTH_TOKEN /
-TENKI_API_KEY or ~/.config/luxor/config.yaml (`luxor login --api-key`).
+Needs Python 3.10+ and requirements.txt. API key from LUXORAI_AUTH_TOKEN /
+LUXORAI_API_KEY or ~/.config/luxor/config.yaml (`luxor login --api-key`).
 Run: .venv/bin/python run.py
 """
 import os
@@ -18,7 +18,7 @@ NOTEBOOK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "notebook.py
 
 def cfg(key):
     try:
-        with open(os.path.expanduser("~/.config/luxor/config.yaml")) as f:
+        with open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()
@@ -29,12 +29,12 @@ def cfg(key):
 
 def sandbox_opts():
     opts = {
-        "auth_token": os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token"),
+        "auth_token": os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token"),
         "cpu_cores": 2,
         "memory_mb": 2048,
         "max_duration": 2 * 60 * 60,  # seconds; a killed script can't leave it running past this
     }
-    workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+    workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
     if workspace_id:
         opts["workspace_id"] = workspace_id
     return opts

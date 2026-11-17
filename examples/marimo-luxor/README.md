@@ -10,7 +10,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 Set up the Luxor Agent Cloud "marimo notebooks" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo and cd into examples/marimo-luxor.
 2. Create a virtualenv on Python 3.10 or later (uv venv --python 3.12 if uv is installed) and install requirements.txt into it.
-3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 4. Run node verify.mjs and confirm it prints a line starting with "✓ marimo-luxor".
 5. If a step fails, use the Troubleshooting table in the example's README.md.
 Then tell me to run .venv/bin/python run.py myself, since it prints a private access link and waits for Enter.
@@ -37,10 +37,10 @@ marimo itself is installed inside the sandbox, not on your machine.
 ### 2. Set your API key
 
 ```bash
-export TENKI_API_KEY=tk_...
+export LUXORAI_API_KEY=tk_...
 ```
 
-The scripts check `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then the key that `luxor login --api-key <key>` saves in `~/.config/luxor/config.yaml`. `TENKI_WORKSPACE_ID` is optional.
+The scripts check `LUXORAI_AUTH_TOKEN`, then `LUXORAI_API_KEY`, then the key that `luxor login --api-key <key>` saves in `~/.config/luxor/config.yaml`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -93,7 +93,7 @@ return sb.expose_port(PORT).url.rstrip("/")
 
 | Problem | Fix |
 | --- | --- |
-| ``No API key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.`` | Export `TENKI_API_KEY` or run `luxor login --api-key <key>`. |
+| ``No API key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.`` | Export `LUXORAI_API_KEY` or run `luxor login --api-key <key>`. |
 | `ModuleNotFoundError: No module named 'tenki'` or `'websockets'` | Run with `.venv/bin/python`, or activate `.venv`. |
 | The link shows marimo's login page | The token in the URL doesn't match this run. Use the link `run.py` printed, or paste the token into the login form. |
 | The link doesn't load at first | marimo and the preview route can take a few seconds after the URL prints. Reload. |

@@ -17,7 +17,7 @@ from websockets.asyncio.client import connect
 from run import sandbox_opts, serve_marimo
 
 if not sandbox_opts()["auth_token"]:
-    print("No API key. Set TENKI_API_KEY, or run `luxor login --api-key <key>`.")
+    print("No API key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.")
     sys.exit(1)
 
 
