@@ -84,7 +84,7 @@ Use one label as the whole `runs-on` value.
 | `luxor-ubuntu-large-8c-16g` | 8 | 16 GB |
 | `luxor-ubuntu-large-plus-16c-32g` | 16 | 32 GB |
 
-macOS runs on Apple Silicon: `luxor-macos-26-{mini,small,medium,large,xlarge}` (macOS 26, Xcode 26 by default) and `luxor-macos-15-{mini,small,medium,large}` (macOS 15, Xcode 16 by default), from 2 to 14 vCPU. Labels that start with `tenki-`, from before the rename, keep working. Disk sizes, the full table, and sizing advice are on [Runner Sizes & Labels](https://luxor.ai/docs/runners/sizes) and [Which runner should I use?](https://luxor.ai/docs/runners/which-runner-should-i-use). Rates are on the [pricing page](https://luxor.ai/pricing).
+macOS runs on Apple Silicon: `luxor-macos-26-{mini,small,medium,large,xlarge}` (macOS 26, Xcode 26 by default) and `luxor-macos-15-{mini,small,medium,large}` (macOS 15, Xcode 16 by default), from 2 to 14 vCPU. Labels from before the rename keep working. Disk sizes, the full table, and sizing advice are on [Runner Sizes & Labels](https://luxor.ai/docs/runners/sizes) and [Which runner should I use?](https://luxor.ai/docs/runners/which-runner-should-i-use). Rates are on the [pricing page](https://luxor.ai/pricing).
 
 Your plan caps the size. Starter allows up to `luxor-ubuntu-small-2c-4g`, or `luxor-ubuntu-medium-4c-8g` with a payment method on file; Team allows up to 16 vCPU / 32 GB. A job above the cap is cancelled, not queued. See [Limits & Concurrency](https://luxor.ai/docs/runners/limits-and-concurrency).
 

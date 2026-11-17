@@ -13,7 +13,7 @@ const fetchDoc = async (page) => {
 const sizes = await fetchDoc("sizes").catch((e) => fail(e));
 const macos = await fetchDoc("macos-runners").catch((e) => fail(e));
 const labels = new Set([...sizes.matchAll(/^\|\s*`(luxor-[a-z0-9-]+)`/gm)].map((m) => m[1]));
-for (const [, prefix, sizesList] of macos.matchAll(/`(tenki-macos-\d+)-\{([a-z,]+)\}`/g)) {
+for (const [, prefix, sizesList] of macos.matchAll(/`(luxor-macos-\d+)-\{([a-z,]+)\}`/g)) {
 	for (const s of sizesList.split(",")) labels.add(`${prefix}-${s}`);
 }
 
