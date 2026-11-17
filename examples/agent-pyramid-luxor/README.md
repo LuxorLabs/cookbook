@@ -12,7 +12,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 Set up the Luxor Agent Cloud "Agent pyramid" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo and cd into examples/agent-pyramid-luxor.
 2. Check that Node.js is 20 or later, then run npm install.
-3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 4. Run node run.mjs --offline, open http://localhost:4321, and confirm the answer is 664579. Then run node verify.mjs.
 5. If I have OPENAI_API_KEY or OPENROUTER_API_KEY set, run node run.mjs "<a prompt of mine>" so a model does the splitting.
 If a step fails, use the Troubleshooting table in the example's README.md.
@@ -37,7 +37,7 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works, or a key saved with `luxor login`
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works, or a key saved with `luxor login`
 ```
 
 ### 3. Run it with no model
@@ -133,7 +133,7 @@ The brain answers two questions:
 
 | Problem | Fix |
 | --- | --- |
-| `No Tenki key` | Export `TENKI_AUTH_TOKEN`, or run `luxor login`. |
+| `No Luxor Agent Cloud key` | Export `LUXORAI_AUTH_TOKEN`, or run `luxor login`. |
 | `[failed_precondition] workspace balance is empty` | Top up the workspace at [app.luxor.ai](https://app.luxor.ai). |
 | `[resource_exhausted]` while sandboxes boot | The workspace's active-session limit is below what the pyramid needs. Run with `FANOUT=2`, or `DEPTH=2` for 21 agents. |
 | `the scripted brain only answers "Count the primes in [a, b)"` | You gave a prompt without a model key. Set `OPENAI_API_KEY` or `OPENROUTER_API_KEY`, or use `--offline` with no prompt. |

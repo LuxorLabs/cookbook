@@ -7,7 +7,7 @@
 //   node run.mjs --no-viz        no viewer; exit when done
 import { LuxorSandbox } from "@luxorai/sandbox";
 import { createServer } from "node:http";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { pickBrain, runPyramid } from "./pyramid.mjs";
@@ -50,11 +50,11 @@ if (replay) {
 } else {
 	const cfg = (k) => {
 		try {
-			return readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8").match(new RegExp(`^${k}:\\s*(.+)$`, "m"))?.[1].trim();
+			return readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8").match(new RegExp(`^${k}:\\s*(.+)$`, "m"))?.[1].trim();
 		} catch {}
 	};
-	const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-	if (!authToken) throw new Error("No Luxor Agent Cloud key. Export TENKI_AUTH_TOKEN, or run `luxor login`.");
+	const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+	if (!authToken) throw new Error("No Luxor Agent Cloud key. Export LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 	const luxor = new LuxorSandbox({ authToken });
 	const brain = await pickBrain({ offline: has("--offline") });
 	const prompt = args.find((a) => !a.startsWith("--")) || "Count the primes in [0, 10000000).";
@@ -84,7 +84,7 @@ if (replay) {
 	const started = Date.now();
 	let root;
 	try {
-		root = await runPyramid({ luxor, brain, prompt, fanout, depth, workspaceId: process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id"), emit });
+		root = await runPyramid({ luxor, brain, prompt, fanout, depth, workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id"), emit });
 	} catch (e) {
 		console.error(`✗ ${e?.message ?? e}`);
 		process.exit(1);
