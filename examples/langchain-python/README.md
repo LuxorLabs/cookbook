@@ -1,18 +1,18 @@
 # LangChain (Python)
 
-Give a LangChain Python agent a `run_python` code-interpreter tool that runs in a Tenki sandbox. The agent writes Python, the tool runs it in one sandbox shared for the session, and the output goes back to the agent. The tool is one file, `tenki_tool.py`, built on the [`tenki`](https://pypi.org/project/tenki/) SDK. For Node, see [LangChain (JavaScript)](../langchain-code-interpreter/).
+Give a LangChain Python agent a `run_python` code-interpreter tool that runs in a Luxor sandbox. The agent writes Python, the tool runs it in one sandbox shared for the session, and the output goes back to the agent. The tool is one file, `luxor_tool.py`, built on the [`tenki`](https://pypi.org/project/tenki/) SDK. For Node, see [LangChain (JavaScript)](../langchain-code-interpreter/).
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "LangChain (Python)" example from https://github.com/LuxorLabs/cookbook.
+Set up the Luxor Agent Cloud "LangChain (Python)" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/langchain-python, create a .venv there on Python 3.10 or later (uv venv --python 3.12 if uv is installed), and install requirements.txt.
-2. It needs TENKI_API_KEY (a Tenki key starting with tk_, from https://app.tenki.cloud) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and, for agent.py, OPENAI_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (no model call, expects 55), then .venv/bin/python agent.py.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
-Then add tenki_tool.py to my own LangChain agent: one sandbox per session in a with block, make_code_tool(sandbox) in the tools list, and a timeout on exec.
+Then add luxor_tool.py to my own LangChain agent: one sandbox per session in a with block, make_code_tool(sandbox) in the tools list, and a timeout on exec.
 ```
 
 ## Quick start
@@ -20,7 +20,7 @@ Then add tenki_tool.py to my own LangChain agent: one sandbox per session in a w
 You need:
 
 - Python 3.10 or later. [uv](https://docs.astral.sh/uv/) is optional.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - An OpenAI API key, for the agent run only.
 
 ### 1. Install
@@ -39,11 +39,11 @@ Without uv: `python3.12 -m venv .venv && .venv/bin/pip install -r requirements.t
 ### 2. Set your keys
 
 ```bash
-export TENKI_API_KEY=tk_...
+export LUXORAI_API_KEY=tk_...
 export OPENAI_API_KEY=sk-...
 ```
 
-Both scripts check `TENKI_AUTH_TOKEN`, then `TENKI_API_KEY`, then a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+Both scripts check `LUXORAI_AUTH_TOKEN`, then `LUXORAI_API_KEY`, then a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run the agent
 
@@ -60,7 +60,7 @@ node verify.mjs      # or: .venv/bin/python verify.py
 ```
 
 ```
-✓ langchain-python: LangChain tool executed Python in a Tenki sandbox → 55
+✓ langchain-python: LangChain tool executed Python in a Luxor sandbox → 55
 ```
 
 `verify.py` calls the tool directly with `print(sum(range(11)))` and checks for `55`. It needs no OpenAI key. `verify.mjs` is a CI shim that runs it with `.venv/bin/python`, `$PYTHON`, or `python3`.
@@ -70,11 +70,11 @@ node verify.mjs      # or: .venv/bin/python verify.py
 The part of `agent.py` that builds the sandbox and the agent:
 
 ```python
-# A tk_ API key, from env or ~/.config/tenki/config.yaml (`tenki login --api-key`).
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+# A tk_ API key, from env or ~/.config/luxor/config.yaml (`luxor login --api-key`).
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 
 opts = {"auth_token": token, "cpu_cores": 1, "memory_mb": 1024}
-workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
 if workspace_id:
     opts["workspace_id"] = workspace_id
 
@@ -82,7 +82,7 @@ if workspace_id:
 with Sandbox.create(**opts) as sandbox:
     agent = create_react_agent(
         ChatOpenAI(model="gpt-4o-mini"),  # needs OPENAI_API_KEY
-        tools=[make_code_tool(sandbox)],  # the tool runs the agent's code in Tenki
+        tools=[make_code_tool(sandbox)],  # the tool runs the agent's code in Luxor Agent Cloud
     )
     result = agent.invoke(
         {"messages": [{"role": "user", "content": "What is the 20th Fibonacci number? Compute it with Python."}]}
@@ -94,7 +94,7 @@ The `with` block terminates the sandbox when the agent finishes or raises. To us
 
 ## The tool
 
-`tenki_tool.py`:
+`luxor_tool.py`:
 
 ```python
 from langchain_core.tools import tool
@@ -102,7 +102,7 @@ from tenki import Sandbox
 
 
 def make_code_tool(sandbox: Sandbox):
-    """Return a `run_python` LangChain tool bound to a live Tenki sandbox."""
+    """Return a `run_python` LangChain tool bound to a live Luxor sandbox."""
 
     @tool
     def run_python(code: str) -> str:
@@ -130,8 +130,8 @@ Things to know:
 
 | Problem | Fix |
 | --- | --- |
-| ``No API key. Set TENKI_API_KEY, or run `tenki login --api-key <key>`.`` or `missing auth token` | Export `TENKI_API_KEY` or run `tenki login --api-key <key>`. |
-| `invalid auth token: expected an API key or service token starting with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| ``No API key. Set LUXORAI_API_KEY, or run `luxor login --api-key <key>`.`` or `missing auth token` | Export `LUXORAI_API_KEY` or run `luxor login --api-key <key>`. |
+| `invalid auth token: expected an API key or service token starting with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `ModuleNotFoundError: No module named 'tenki'` from `node verify.mjs` | There's no `.venv` here. Create it as in step 1, or set `PYTHON`. |
 | `✗ AssertionError: tool returned '…'` | The quoted text is the sandbox's output. Read it for the error. |
 
@@ -140,4 +140,4 @@ Things to know:
 - [LangChain (JavaScript)](../langchain-code-interpreter/)
 - [Run code with Python](../run-code-python/): the bare SDK loop
 - [LangChain](https://www.langchain.com) and [LangGraph](https://github.com/langchain-ai/langgraph)
-- [`tenki` SDK docs](https://tenki.cloud/docs/sandbox/sdk) and [LuxorLabs/tenki-sdk-python](https://github.com/LuxorLabs/tenki-sdk-python)
+- [`tenki` SDK docs](https://luxor.ai/docs/sandbox/sdk) and [LuxorLabs/tenki-sdk-python](https://github.com/LuxorLabs/tenki-sdk-python)
