@@ -22,7 +22,7 @@ token = os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN"
 if not token:
     print("No token. Set LUXORAI_API_KEY, or run `luxor login`.")
     sys.exit(1)
-(os.environ.get("LUXORAI_API_KEY") or os.environ["TENKI_API_KEY"]) = token
+os.environ["LUXORAI_API_KEY"] = token
 
 from pydantic import TypeAdapter  # noqa: E402
 import tenki  # noqa: E402
