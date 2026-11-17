@@ -1,4 +1,4 @@
-// Proves the Tenki side of the Trigger.dev tasks without a Trigger.dev account or model key:
+// Proves the Luxor Agent Cloud side of the Trigger.dev tasks without a Trigger.dev account or model key:
 // typechecks src/trigger/*.ts against @trigger.dev/sdk, then drives src/tenki.mjs live:
 // the task's create → run → close, the chat agent's executeCode tool on a run-scoped sandbox,
 // and pause → resume by id. Exits non-zero on failure; closes every sandbox it created.
@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/tenki/config.yaml`, "utf8");
+		const c = readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
@@ -18,7 +18,7 @@ const cfg = (key) => {
 
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
+	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 process.env.TENKI_AUTH_TOKEN = authToken; // src/tenki.mjs lets the SDK read it from the environment
@@ -59,7 +59,7 @@ try {
 	const r3 = await runCommand(resumed, "cat /home/tenki/marker");
 	if (r3.stdout.trim() !== runId) throw new Error(`marker lost after resume: ${JSON.stringify(r3)}`);
 
-	console.log("✓ trigger-dev-tenki: tsc → task exec (42) → executeCode ×2 on one run sandbox (12) → dispose → pause → resume (marker kept)");
+	console.log("✓ trigger-dev-luxor: tsc → task exec (42) → executeCode ×2 on one run sandbox (12) → dispose → pause → resume (marker kept)");
 } catch (e) {
 	console.error("✗ " + (e?.message ?? e));
 	process.exitCode = 1;

@@ -1,8 +1,8 @@
 {
-  "name": "trigger-dev-tenki",
+  "name": "trigger-dev-luxor",
   "private": true,
   "type": "module",
-  "description": "Cookbook example — run untrusted and agent-written code from Trigger.dev tasks in Tenki sandboxes.",
+  "description": "Cookbook example — run untrusted and agent-written code from Trigger.dev tasks in Luxor sandboxes.",
   "scripts": {
     "dev": "trigger dev",
     "deploy": "trigger deploy",
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.104",
-    "@tenkicloud/sandbox": ">=1.4.1",
+    "@luxorai/sandbox": ">=1.4.1",
     "@trigger.dev/sdk": "4.8.2",
     "ai": "^7.0.156",
     "zod": "^4.6.7"

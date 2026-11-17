@@ -1,14 +1,14 @@
-// Tenki sandbox helpers for the Trigger.dev tasks in src/trigger/.
+// Luxor sandbox helpers for the Trigger.dev tasks in src/trigger/.
 // Plain ESM so verify.mjs can drive the same code on Node 20 without a Trigger.dev account.
-import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
+import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
 
 // Created on first use: Trigger.dev imports task files to index them, before env vars matter.
 // Reads TENKI_API_KEY (or TENKI_AUTH_TOKEN) from the Trigger.dev environment.
 let client;
-const tenki = () => (client ??= new TenkiSandbox());
+const luxor = () => (client ??= new LuxorSandbox());
 
 /**
- * Boot a sandbox. Backstops for a worker that dies before its `finally`: Tenki pauses the sandbox
+ * Boot a sandbox. Backstops for a worker that dies before its `finally`: Luxor Agent Cloud pauses the sandbox
  * after maxDurationMs of running time, and drops a paused sandbox after pauseRetentionMs.
  */
 export function createSandbox({ maxDurationMs = 15 * 60_000, pauseRetentionMs = 60 * 60_000 } = {}) {

@@ -1,7 +1,7 @@
 import { task } from "@trigger.dev/sdk";
 import { createSandbox, runCommand } from "../tenki.mjs";
 
-// Runs an untrusted command in a Tenki microVM instead of on the Trigger.dev worker.
+// Runs an untrusted command in a Luxor Agent Cloud microVM instead of on the Trigger.dev worker.
 export const runInSandbox = task({
   id: "run-in-sandbox",
   maxDuration: 600, // seconds of compute for this run

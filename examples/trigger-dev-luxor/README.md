@@ -1,6 +1,6 @@
 # Trigger.dev
 
-Run untrusted or agent-written code from [Trigger.dev](https://trigger.dev) tasks in [Tenki sandboxes](https://tenki.cloud) instead of on the Trigger.dev worker. A Trigger.dev worker is a long-running Node.js process with your environment variables in it; each Tenki sandbox is a separate microVM that you create, use, and close from the task.
+Run untrusted or agent-written code from [Trigger.dev](https://trigger.dev) tasks in [Luxor sandboxes](https://luxor.ai) instead of on the Trigger.dev worker. A Trigger.dev worker is a long-running Node.js process with your environment variables in it; each Luxor sandbox is a separate microVM that you create, use, and close from the task.
 
 The example has three tasks:
 
@@ -13,9 +13,9 @@ The example has three tasks:
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "Trigger.dev" example from https://github.com/LuxorLabs/cookbook.
-1. Clone the repo, cd into examples/trigger-dev-tenki, and run npm install (Node.js 22 or later).
-2. node verify.mjs needs a Tenki API key (starts with tk_) in TENKI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.tenki.cloud). Never print the key or write it to a file.
+Set up the Luxor Agent Cloud "Trigger.dev" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/trigger-dev-luxor, and run npm install (Node.js 22 or later).
+2. node verify.mjs needs a Luxor Agent Cloud API key (starts with tk_) in TENKI_API_KEY. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run node verify.mjs and confirm the ✓ line.
 4. To run the tasks on Trigger.dev, ask me for my Trigger.dev project ref and put it in trigger.config.ts, then ask me to add TENKI_API_KEY (and OPENAI_API_KEY for code-agent) to a .env file myself. Run npm run dev and trigger run-in-sandbox with the command in the README.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -26,18 +26,18 @@ Set up the Tenki "Trigger.dev" example from https://github.com/LuxorLabs/cookboo
 You need:
 
 - Node.js 22 or later. `verify.mjs` alone runs on Node 20.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - For step 3 only: a [Trigger.dev](https://cloud.trigger.dev) project, and an OpenAI API key for `code-agent`.
 
 ### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
-cd cookbook/examples/trigger-dev-tenki
+cd cookbook/examples/trigger-dev-luxor
 npm install
 ```
 
-This installs `@trigger.dev/sdk` and the `trigger.dev` CLI (both `4.8.2`), `@tenkicloud/sandbox`, and the AI SDK.
+This installs `@trigger.dev/sdk` and the `trigger.dev` CLI (both `4.8.2`), `@luxorai/sandbox`, and the AI SDK.
 
 ### 2. Set your API key
 
@@ -48,7 +48,7 @@ TENKI_API_KEY=tk_...
 OPENAI_API_KEY=sk-...   # code-agent only
 ```
 
-For `verify.mjs`, export the key in your shell instead: `export TENKI_API_KEY=tk_...` (`TENKI_AUTH_TOKEN` and a `tenki login --api-key <key>` key also work). `TENKI_WORKSPACE_ID` is optional.
+For `verify.mjs`, export the key in your shell instead: `export TENKI_API_KEY=tk_...` (`TENKI_AUTH_TOKEN` and a `luxor login --api-key <key>` key also work). `TENKI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -66,7 +66,7 @@ npx trigger tasks trigger run-in-sandbox --payload '{"command":"python3 -c \"pri
 
 The task returns `{ "exitCode": 0, "stdout": "42\n", "stderr": "" }`. Trigger `pause-during-wait` from the dashboard or the same command with a `{ "setup": "...", "after": "..." }` payload. `code-agent` takes messages from a chat frontend; see Trigger.dev's [AI chat docs](https://trigger.dev/docs/ai-chat/overview) for `useChat` with the Trigger.dev transport.
 
-This step was not run for this example: it needs a Trigger.dev account and project. Step 4 covers the Tenki side.
+This step was not run for this example: it needs a Trigger.dev account and project. Step 4 covers the Luxor Agent Cloud side.
 
 ### 4. Verify
 
@@ -75,10 +75,10 @@ node verify.mjs
 ```
 
 ```text
-✓ trigger-dev-tenki: tsc → task exec (42) → executeCode ×2 on one run sandbox (12) → dispose → pause → resume (marker kept)
+✓ trigger-dev-luxor: tsc → task exec (42) → executeCode ×2 on one run sandbox (12) → dispose → pause → resume (marker kept)
 ```
 
-`verify.mjs` typechecks the task files against the installed `@trigger.dev/sdk` types (`tsc --noEmit`), then calls the helpers in [`src/tenki.mjs`](src/tenki.mjs) that the tasks call, against live Tenki: the `run-in-sandbox` body, two `executeCode` calls sharing one run-scoped sandbox followed by the `onChatSuspend` dispose, and pause, then resume by id with a file kept in `/home/tenki`. It needs no Trigger.dev account and no model key, and it closes every sandbox it opens. It does not run the Trigger.dev runtime, `wait.for()`, or a model.
+`verify.mjs` typechecks the task files against the installed `@trigger.dev/sdk` types (`tsc --noEmit`), then calls the helpers in [`src/tenki.mjs`](src/tenki.mjs) that the tasks call, against live Luxor Agent Cloud: the `run-in-sandbox` body, two `executeCode` calls sharing one run-scoped sandbox followed by the `onChatSuspend` dispose, and pause, then resume by id with a file kept in `/home/tenki`. It needs no Trigger.dev account and no model key, and it closes every sandbox it opens. It does not run the Trigger.dev runtime, `wait.for()`, or a model.
 
 ## The code
 
@@ -114,7 +114,7 @@ export function createSandbox({ maxDurationMs = 15 * 60_000, pauseRetentionMs = 
 }
 ```
 
-When `maxDurationMs` of running time is used up, Tenki pauses the sandbox. A paused sandbox is kept for `pauseRetentionMs` (7 days if you don't set it).
+When `maxDurationMs` of running time is used up, Luxor Agent Cloud pauses the sandbox. A paused sandbox is kept for `pauseRetentionMs` (7 days if you don't set it).
 
 `runCommand` wraps the command in `sh -c`, because `exec()` takes an argv and does no shell splitting.
 
@@ -180,7 +180,7 @@ try {
 }
 ```
 
-During a `wait.for()` longer than a minute, Trigger.dev checkpoints the run and frees its machine. `pauseSandbox` calls `pause()` and `waitPaused()`; Tenki snapshots the VM's memory and disk and stops it. After the wait, `resumeSandbox` looks the sandbox up by id with `tenki.get(id)` and calls `resume()` and `waitResumed()`. Processes and files under `/home/tenki` survive; `/tmp` is cleared. Set `pauseRetentionMs` longer than the wait, or the paused sandbox is gone when the run comes back. In testing, time spent paused did not count toward `maxDurationMs`.
+During a `wait.for()` longer than a minute, Trigger.dev checkpoints the run and frees its machine. `pauseSandbox` calls `pause()` and `waitPaused()`; Luxor Agent Cloud snapshots the VM's memory and disk and stops it. After the wait, `resumeSandbox` looks the sandbox up by id with `luxor.get(id)` and calls `resume()` and `waitResumed()`. Processes and files under `/home/tenki` survive; `/tmp` is cleared. Set `pauseRetentionMs` longer than the wait, or the paused sandbox is gone when the run comes back. In testing, time spent paused did not count toward `maxDurationMs`.
 
 ## Deploy
 
@@ -190,15 +190,15 @@ npx trigger env set OPENAI_API_KEY sk-... --secret --env prod
 npm run deploy
 ```
 
-You can also add the variables on the project's Environment Variables page, or sync them from a secrets manager with the [`syncEnvVars`](https://trigger.dev/docs/deploy-environment-variables#using-the-syncenvvars-build-extension) build extension. `@tenkicloud/sandbox` is plain JavaScript (Connect RPC and `ws`), so `trigger.config.ts` needs no build extension or `external` entry for it. The deploy was not run for this example. The task files bundle with esbuild, which `trigger.dev` uses for builds, without warnings.
+You can also add the variables on the project's Environment Variables page, or sync them from a secrets manager with the [`syncEnvVars`](https://trigger.dev/docs/deploy-environment-variables#using-the-syncenvvars-build-extension) build extension. `@luxorai/sandbox` is plain JavaScript (Connect RPC and `ws`), so `trigger.config.ts` needs no build extension or `external` entry for it. The deploy was not run for this example. The task files bundle with esbuild, which `trigger.dev` uses for builds, without warnings.
 
 ## Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export `TENKI_API_KEY` or run `tenki login --api-key <key>`. |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export `TENKI_API_KEY` or run `luxor login --api-key <key>`. |
 | `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` in a run | The Trigger.dev environment has no key. Add `TENKI_API_KEY` to `.env` for dev, or to the deployed environment. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `Project not found: <your project ref>` | Set `project` in `trigger.config.ts` to the ref from your project settings. |
 | `tsc --noEmit failed` from `verify.mjs` | The task files don't match the installed `@trigger.dev/sdk` types. Run `npm run typecheck` to see the errors. |
 | `executeCode` reads a file an earlier turn wrote and gets `No such file` | The sandbox is closed in `onChatSuspend`, so files last one turn. Pause and resume instead (see above). |
@@ -214,6 +214,6 @@ You can also add the variables on the project's Environment Variables page, or s
 - [Trigger.dev: code execution sandbox](https://trigger.dev/docs/ai-chat/patterns/code-sandbox)
 - [Trigger.dev: wait for](https://trigger.dev/docs/wait-for)
 - [Pause, snapshot, and resume](../snapshots-pause-resume/)
-- [Vercel AI SDK](../vercel-ai-sdk/): Tenki as the AI SDK's sandbox
-- [Covalent](../covalent-tenki/): each workflow task in its own sandbox
-- [`@tenkicloud/sandbox` on npm](https://www.npmjs.com/package/@tenkicloud/sandbox)
+- [Vercel AI SDK](../vercel-ai-sdk/): Luxor Agent Cloud as the AI SDK's sandbox
+- [Covalent](../covalent-luxor/): each workflow task in its own sandbox
+- [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox)
