@@ -10,8 +10,8 @@ const STATE = new URL(".service.json", import.meta.url); // ids of what this scr
 const state = existsSync(STATE) ? JSON.parse(readFileSync(STATE, "utf8")) : {};
 const save = () => writeFileSync(STATE, JSON.stringify(state, null, 2) + "\n");
 
-const workspaceId = process.env.TENKI_WORKSPACE_ID;
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN, workspaceId });
+const workspaceId = (process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID);
+const luxor = new LuxorSandbox({ authToken: (process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN), workspaceId });
 
 if (state.sandboxId) {
 	const old = await luxor.get(state.sandboxId).catch(() => undefined);

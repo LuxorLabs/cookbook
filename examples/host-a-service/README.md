@@ -9,7 +9,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "Host a long-running service" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/host-a-service, and run npm install (Node.js 20 or later).
-2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+2. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run node run.mjs from that directory. Give me the service URL it prints, and tell me the sandbox is sticky: it keeps running until I run node down.mjs.
 4. Run node verify.mjs and confirm the ✓ line.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -34,10 +34,10 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`run.mjs` and `down.mjs` read the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` and `down.mjs` read the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -123,8 +123,8 @@ The same pattern works for any app you host yourself: put its start command in `
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` and `down.mjs` read only the environment. Export the key in this shell. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` and `down.mjs` read only the environment. Export the key in this shell. |
 | `VolumeInUseError: … volume is attached to a session` | A volume attaches to one sandbox at a time, and stays attached for a few seconds after that sandbox ends. Wait for `getVolume(id).state` to be `AVAILABLE`. `run.mjs` waits up to a minute. |
 | `already running: https://…` | `.service.json` points at a running sandbox. Run `node down.mjs` first. |
 | The URL returns `404` | Nothing is bound to it, for example between `down.mjs` and the next `run.mjs`. |

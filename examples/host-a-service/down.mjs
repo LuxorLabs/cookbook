@@ -11,7 +11,7 @@ if (!existsSync(STATE)) {
 }
 const state = JSON.parse(readFileSync(STATE, "utf8"));
 const del = process.argv.includes("--delete");
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN, workspaceId: process.env.TENKI_WORKSPACE_ID });
+const luxor = new LuxorSandbox({ authToken: (process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN), workspaceId: (process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID) });
 const gone = (e) => /not.found/i.test(String(e?.message)); // already deleted
 const ignoreGone = (e) => {
 	if (!gone(e)) throw e;
