@@ -1,8 +1,8 @@
-// Proves run.mjs end to end against Tenki: start the box with a repo, check code-server's login
+// Proves run.mjs end to end against Luxor Agent Cloud: start the box with a repo, check code-server's login
 // page, password login, the authenticated workbench and a websocket over the public URL; stop and
 // rebuild it, and check the URL, password and cloned repo survive; then delete everything and
-// assert nothing named after this run is left. Token/workspace from env or ~/.config/tenki/config.yaml.
-import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
+// assert nothing named after this run is left. Token/workspace from env or ~/.config/luxor/config.yaml.
+import { LuxorSandbox, stdoutText } from "@luxorai/sandbox";
 import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -12,7 +12,7 @@ import { promisify } from "node:util";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/tenki/config.yaml`, "utf8");
+		const c = readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
@@ -22,7 +22,7 @@ const cfg = (key) => {
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
+	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 
@@ -48,7 +48,7 @@ const upgrade = (url, cookie = "") => new Promise((resolve, reject) => {
 });
 const check = (ok, msg) => { if (!ok) throw new Error(msg); };
 
-const tenki = new TenkiSandbox({ authToken });
+const luxor = new LuxorSandbox({ authToken });
 try {
 	const first = await up();
 	check(first.url && /^[0-9a-f]{48}$/.test(first.password ?? ""), "run.mjs printed no URL or password");
@@ -68,20 +68,20 @@ try {
 	await run("stop");
 	const second = await up();
 	check(second.url === first.url && second.password === first.password, "URL or password changed across a rebuild");
-	const [box] = await tenki.list({ workspaceId, tags: [BOX] });
+	const [box] = await luxor.list({ workspaceId, tags: [BOX] });
 	check(box && stdoutText(await box.exec("ls", { args: ["/home/tenki/workspace"] })).includes("yocto-queue"), "the workspace did not survive the rebuild");
 	check(await login(second.url, second.password), "login failed after the rebuild");
 
-	console.log(`✓ code-server-tenki: sticky box + volume + ${first.url} → login page, wrong password refused, workbench 200, websocket 101 (${anon} without the cookie) → stop → rebuild keeps URL, password, repo → delete`);
+	console.log(`✓ code-server-luxor: sticky box + volume + ${first.url} → login page, wrong password refused, workbench 200, websocket 101 (${anon} without the cookie) → stop → rebuild keeps URL, password, repo → delete`);
 } catch (e) {
 	console.error("✗ " + (e?.stderr || e?.message || e));
 	process.exitCode = 1;
 } finally {
 	try { await run("delete"); } catch (e) { console.error("✗ cleanup: " + (e?.stderr || e?.message)); process.exitCode = 1; }
 	const left = [
-		...(await tenki.list({ workspaceId, tags: [BOX] })).filter((s) => s.state !== "TERMINATED" && s.state !== "TERMINATING"),
-		...(await tenki.previewUrls.list({ workspaceId })).filter((u) => u.slug === BOX),
-		...(await tenki.listVolumes({ workspaceId })).filter((v) => v.name === BOX && v.state !== "DELETED" && v.state !== "DELETING"),
+		...(await luxor.list({ workspaceId, tags: [BOX] })).filter((s) => s.state !== "TERMINATED" && s.state !== "TERMINATING"),
+		...(await luxor.previewUrls.list({ workspaceId })).filter((u) => u.slug === BOX),
+		...(await luxor.listVolumes({ workspaceId })).filter((v) => v.name === BOX && v.state !== "DELETED" && v.state !== "DELETING"),
 	];
 	if (left.length) { console.error(`✗ left behind: ${left.map((x) => x.id).join(", ")}`); process.exitCode = 1; }
 }

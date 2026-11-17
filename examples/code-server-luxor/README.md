@@ -1,15 +1,15 @@
 # code-server
 
-Run [code-server](https://github.com/coder/code-server) (VS Code in the browser) on a Tenki dev box that stays up until you stop it. The box is a sticky sandbox, your workspace lives on a Tenki volume, and the box is served on a named preview URL. Stop the sandbox and start it again, and you get the same URL, the same password, and the same files, with VS Code settings and extensions kept. The URL is public, so code-server's own password login is always on.
+Run [code-server](https://github.com/coder/code-server) (VS Code in the browser) on a Luxor Agent Cloud dev box that stays up until you stop it. The box is a sticky sandbox, your workspace lives on a Luxor Agent Cloud volume, and the box is served on a named preview URL. Stop the sandbox and start it again, and you get the same URL, the same password, and the same files, with VS Code settings and extensions kept. The URL is public, so code-server's own password login is always on.
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "code-server" example from https://github.com/LuxorLabs/cookbook, which runs VS Code in the browser on a persistent Tenki sandbox with a password-protected URL.
-1. Clone the repo, cd into examples/code-server-tenki, and run npm install (Node.js 20 or later).
-2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) in the environment. If it is missing, stop and ask me to export it. Never print the key or write it to a file.
+Set up the Luxor Agent Cloud "code-server" example from https://github.com/LuxorLabs/cookbook, which runs VS Code in the browser on a persistent Luxor sandbox with a password-protected URL.
+1. Clone the repo, cd into examples/code-server-luxor, and run npm install (Node.js 20 or later).
+2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) in the environment. If it is missing, stop and ask me to export it. Never print the key or write it to a file.
 3. Run node verify.mjs and confirm the ✓ line.
 4. Run node run.mjs (add a git URL as the argument if I named a repo), then give me the URL and the password it prints.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
@@ -21,13 +21,13 @@ Remind me the sandbox keeps running (and billing) until I run node run.mjs stop,
 You need:
 
 - Node.js 20 or later.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud). You don't install code-server locally.
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai). You don't install code-server locally.
 
 ### 1. Install
 
 ```bash
 git clone https://github.com/LuxorLabs/cookbook.git
-cd cookbook/examples/code-server-tenki
+cd cookbook/examples/code-server-luxor
 npm install
 ```
 
@@ -37,7 +37,7 @@ npm install
 export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -69,28 +69,28 @@ node verify.mjs
 ```
 
 ```
-✓ code-server-tenki: sticky box + volume + https://cs-verify-<id>--<workspace>.us.sb.tenki.sh → login page, wrong password refused, workbench 200, websocket 101 (401 without the cookie) → stop → rebuild keeps URL, password, repo → delete
+✓ code-server-luxor: sticky box + volume + https://cs-verify-<id>--<workspace>.us.sb.tenki.sh → login page, wrong password refused, workbench 200, websocket 101 (401 without the cookie) → stop → rebuild keeps URL, password, repo → delete
 ```
 
 `verify.mjs` drives `run.mjs` itself under a random `BOX` name. Over the public URL it checks code-server's login page, that a wrong password is refused, that the printed password logs in and loads the VS Code workbench, and that a websocket upgrades with the session cookie but not without it. Then it runs `stop` and starts the box again, and checks that the URL and password are unchanged and the cloned repo is still in the workspace. Finally it runs `delete` and fails if any sandbox, URL, or volume with that name is left. It takes about a minute and a half.
 
 ## How it works
 
-Three Tenki resources share the `BOX` name, and only the sandbox is disposable:
+Three Luxor Agent Cloud resources share the `BOX` name, and only the sandbox is disposable:
 
 - **A volume** (`createVolume`, 10 GiB) mounted at `/home/tenki/workspace`. It holds your files and `.code-server/`: the code-server install, the password, VS Code's user data, and extensions.
-- **A named preview URL** (`tenki.previewUrls.create(slug)`). The script binds it to port 8080 of whichever sandbox is current. Binding it to a new sandbox is how the address survives a rebuild.
+- **A named preview URL** (`luxor.previewUrls.create(slug)`). The script binds it to port 8080 of whichever sandbox is current. Binding it to a new sandbox is how the address survives a rebuild.
 - **A sticky sandbox** (`createAndWait({ sticky: true, volumes: [...] })`). `sticky` means no lifetime cap: it runs until `node run.mjs stop`.
 
 The setup step that `run.mjs` runs in the sandbox is idempotent. It downloads code-server 4.143.1 onto the volume only if it isn't there, writes a password only if there isn't one, and starts the server only if `localhost:8080/healthz` doesn't answer. So a rebuild skips the download, and running `node run.mjs` against a live box just prints the URL and password.
 
 code-server starts with `--bind-addr 0.0.0.0:8080 --auth password`, and the password comes from the volume through the `PASSWORD` environment variable. `0.0.0.0` is required; the gateway can't reach `127.0.0.1`.
 
-VS Code in the browser keeps a websocket open to the server. Tenki preview URLs carry websockets, and `verify.mjs` checks the upgrade through the public URL.
+VS Code in the browser keeps a websocket open to the server. Luxor Agent Cloud preview URLs carry websockets, and `verify.mjs` checks the upgrade through the public URL.
 
 ## Keep the URL locked
 
-Preview URLs are public: Tenki doesn't put a login in front of them. code-server is a full terminal on the box, so never start it with `--auth none` here. With `--auth password`, an unauthenticated request redirects to `/login`, and a websocket without the session cookie gets `401`. `verify.mjs` checks both.
+Preview URLs are public: Luxor Agent Cloud doesn't put a login in front of them. code-server is a full terminal on the box, so never start it with `--auth none` here. With `--auth password`, an unauthenticated request redirects to `/login`, and a websocket without the session cookie gets `401`. `verify.mjs` checks both.
 
 The password is 48 hex characters from `crypto.randomBytes`, saved once at `/home/tenki/workspace/.code-server/password`. To rotate it, delete that file in the VS Code terminal, then run `node run.mjs stop` and `node run.mjs`.
 
@@ -98,9 +98,9 @@ The password is 48 hex characters from `crypto.randomBytes`, saved once at `/hom
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
 | `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `setup failed (exit <n>) ...` | The download or the clone failed; the error follows. The box is still running: fix it and run again, or `node run.mjs stop`. |
 | `code-server never answered; see /tmp/code-server.log in the sandbox ...` | If you changed the start command, keep `--bind-addr 0.0.0.0:8080`. |
 | The URL returns `404` | No sandbox is bound to it. Run `node run.mjs`. |
@@ -124,4 +124,4 @@ The password is 48 hex characters from `crypto.randomBytes`, saved once at `/hom
 - [Expose a port](../expose-a-port/): preview URLs on their own
 - [Snapshots, pause and resume](../snapshots-pause-resume/): keep a sandbox's state without keeping it running
 - [code-server](https://github.com/coder/code-server) and its [docs](https://coder.com/docs/code-server)
-- [Tenki Sandbox](https://tenki.cloud/products/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
+- [Luxor Sandbox](https://luxor.ai/products/sandbox) and the [Luxor Agent Cloud docs](https://luxor.ai/docs)
