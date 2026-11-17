@@ -23,8 +23,8 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
 Add the Luxor Agent Cloud MCP server to this coding agent so you can run code in Luxor sandboxes, following https://github.com/LuxorLabs/cookbook/tree/main/examples/mcp-luxor-sandbox.
-1. If you are Claude Code: run claude mcp add --transport http luxor https://mcp.tenki.cloud/mcp, then ask me to run claude mcp login luxor in my terminal and finish the browser sign-in. No API key is needed. Skip steps 2 and 3.
-2. Otherwise, check that Node.js is 22 or later. I need a Luxor Agent Cloud API key (starts with tk_). If TENKI_API_KEY isn't set in my shell, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key.
+1. If you are Claude Code: run claude mcp add --transport http luxor https://mcp.luxor.ai/mcp, then ask me to run claude mcp login luxor in my terminal and finish the browser sign-in. No API key is needed. Skip steps 2 and 3.
+2. Otherwise, check that Node.js is 22 or later. I need a Luxor Agent Cloud API key (starts with tk_). If LUXORAI_API_KEY isn't set in my shell, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key.
 3. Register the local server the way this client expects: the mcpServers block from the README for Cursor or Claude Desktop, or the [mcp_servers.luxor] block for Codex. Tell me which file you edited, since it will contain my key.
 4. Tell me to restart the session, then call tenki_auth_status, then use tenki_run_code to run print(sum(range(100))) in Python and show me the output.
 ```
@@ -39,10 +39,10 @@ You need:
 
 ### 1. Add the server to your client
 
-**Claude Code** connects to the hosted server at `https://mcp.tenki.cloud/mcp`:
+**Claude Code** connects to the hosted server at `https://mcp.luxor.ai/mcp`:
 
 ```bash
-claude mcp add --transport http luxor https://mcp.tenki.cloud/mcp
+claude mcp add --transport http luxor https://mcp.luxor.ai/mcp
 claude mcp login luxor
 ```
 
@@ -70,12 +70,12 @@ Codex (`~/.codex/config.toml`):
 [mcp_servers.luxor]
 command = "npx"
 args = ["-y", "@luxorai/mcp"]
-env = { TENKI_API_KEY = "tk_your_key_here" }
+env = { LUXORAI_API_KEY = "tk_your_key_here" }
 ```
 
-Claude Code can run the local server too: `claude mcp add luxor --env TENKI_API_KEY=tk_your_key_here -- npx -y @luxorai/mcp`.
+Claude Code can run the local server too: `claude mcp add luxor --env LUXORAI_API_KEY=tk_your_key_here -- npx -y @luxorai/mcp`.
 
-The local server reads its key only from its environment: `TENKI_API_KEY` or `TENKI_AUTH_TOKEN` (which wins if both are set).
+The local server reads its key only from its environment: `LUXORAI_API_KEY` or `LUXORAI_AUTH_TOKEN` (which wins if both are set).
 
 ### 2. Check the connection
 
@@ -131,6 +131,10 @@ const transport = new StdioClientTransport({
 const client = new Client({ name: "cookbook-verify", version: "1.0.0" });
 ```
 
+## Versions
+
+`package.json` pins `@luxorai/mcp` `^0.4.3`, so `verify.mjs` tests 0.4.3 (82 tools). `@luxorai/mcp` is the tenki-mcp server under its new name, so it still names its tools `tenki_*` and logs as `tenki-mcp`. Release 0.2.0 removed the standalone image tools and the project-scoped list tools, and capped `tenki_exec` and `tenki_run_code` output at 64 KB per stream ([CHANGELOG](https://github.com/LuxorLabs/tenki-mcp/blob/main/CHANGELOG.md)).
+
 ## Things to know
 
 - **Control plane and data plane.** Creating, reading, and terminating sandboxes use Luxor Agent Cloud's public control plane. Running code, `tenki_exec` output, and the file tools use each sandbox's own data-plane endpoint, which some networks can't reach.
@@ -138,15 +142,14 @@ const client = new Client({ name: "cookbook-verify", version: "1.0.0" });
 - **`tenki_git` supports `clone`, `checkout`, `diff`, and `log`.** For commit, push, or a repo in a subdirectory, run `git -C <dir> …` through `tenki_exec`.
 - **Cleanup.** `tenki_run_code` tears its sandbox down. A sandbox from `tenki_create_sandbox` runs until `tenki_terminate_sandbox` or its `max_duration_seconds` cap.
 - **Limit what the agent can do.** Every tool acts with your account. On the local server, set `TENKI_MCP_READONLY=1` for read tools only, or `TENKI_MCP_DISABLED_TOOLS=tenki_run_code,…` to drop specific tools.
-- **Versions.** `package.json` requires `@luxorai/mcp` 0.3.1 or later, so `verify.mjs` tests the same release `npx -y @luxorai/mcp` fetches. Release 0.2.0 removed the standalone image tools and the project-scoped list tools ([CHANGELOG](https://github.com/LuxorLabs/tenki-mcp/blob/main/CHANGELOG.md)).
 
 ## Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
-| Claude Code shows the hosted `tenki` server but no `tenki_*` tools | Run `claude mcp login luxor`, finish the browser sign-in, and start a new session. |
-| ``No token. Set TENKI_API_KEY, or run `luxor login`.`` | `verify.mjs` found no key. Export `TENKI_API_KEY` or run `luxor login --api-key <key>`. |
-| The agent sees only `tenki_auth_status` | The local server started without a key. Put `TENKI_API_KEY` in the client's `env` block (or `--env`) and restart. The server doesn't read `~/.config/luxor/config.yaml`. |
+| Claude Code shows the hosted `luxor` server but no `tenki_*` tools | Run `claude mcp login luxor`, finish the browser sign-in, and start a new session. |
+| ``No token. Set LUXORAI_API_KEY, or run `luxor login`.`` | `verify.mjs` found no key. Export `LUXORAI_API_KEY` or run `luxor login --api-key <key>`. |
+| The agent sees only `tenki_auth_status` | The local server started without a key. Put `LUXORAI_API_KEY` in the client's `env` block (or `--env`) and restart. The server doesn't read `~/.config/luxor/config.yaml`. |
 | No `tenki_*` tools at all | Restart the client or start a new session. |
 | `✗ server did not advertise tenki_create_sandbox` | Unset `TENKI_MCP_READONLY` and `TENKI_MCP_DISABLED_TOOLS` in your shell. |
 | `tenki_run_code skipped`, or `tenki_exec` returns `captureError` with `ok: false` | Your network can't reach the data plane. Run from one that can. |
