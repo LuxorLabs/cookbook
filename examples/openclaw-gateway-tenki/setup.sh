@@ -10,7 +10,7 @@ openclaw onboard --non-interactive --accept-risk --mode local "${model[@]}" \
   --gateway-bind lan --gateway-auth token --gateway-token "$OPENCLAW_GATEWAY_TOKEN" \
   --skip-daemon --skip-health --skip-channels --skip-skills --skip-hooks --skip-search --skip-ui
 
-# The preview URL is the only allowed browser origin. Tenki's edge connects from 172.30.0.0/16 and
+# The preview URL is the only allowed browser origin. Luxor Agent Cloud's edge connects from 172.30.0.0/16 and
 # rebuilds X-Forwarded-For; the gateway rejects proxied requests unless that source is trusted.
 openclaw config set gateway.publicOrigin "$PUBLIC_URL"
 openclaw config set gateway.trustedProxies '["172.30.0.0/16"]' --strict-json

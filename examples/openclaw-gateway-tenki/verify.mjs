@@ -1,7 +1,7 @@
 // Proves this example without a model key: sticky sandbox → named preview URL → setup.sh (install,
 // non-interactive onboard, systemd gateway) → /healthz and the dashboard over the preview URL → a
 // WebSocket that rejects a wrong token and accepts the right one. Deletes the URL and the sandbox.
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { LuxorSandbox } from "@luxorai/sandbox";
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -9,7 +9,7 @@ import WebSocket from "ws";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/tenki/config.yaml`, "utf8");
+		const c = readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
@@ -17,7 +17,7 @@ const cfg = (key) => {
 };
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
+	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 
@@ -40,12 +40,12 @@ const connect = (url, token) => new Promise((resolve, reject) => {
 	});
 });
 
-const tenki = new TenkiSandbox({ authToken });
+const luxor = new LuxorSandbox({ authToken });
 let sandbox, url;
 try {
-	sandbox = await tenki.createAndWait({ sticky: true, allowInbound: true, cpuCores: 2, memoryMb: 4096, diskSizeGb: 10, tags: ["openclaw-gateway"] });
+	sandbox = await luxor.createAndWait({ sticky: true, allowInbound: true, cpuCores: 2, memoryMb: 4096, diskSizeGb: 10, tags: ["openclaw-gateway"] });
 	assert(sandbox.sticky, "sandbox is not sticky");
-	url = await tenki.previewUrls.create(`openclaw-${randomBytes(3).toString("hex")}`, { sessionId: sandbox.id, port: 18789 });
+	url = await luxor.previewUrls.create(`openclaw-${randomBytes(3).toString("hex")}`, { sessionId: sandbox.id, port: 18789 });
 	console.log(`  preview URL: ${url.previewUrl}`);
 
 	await sandbox.writeFile("/home/tenki/setup.sh", readFileSync(new URL("./setup.sh", import.meta.url), "utf8"));
@@ -76,6 +76,6 @@ try {
 	process.exitCode = 1;
 } finally {
 	// Sticky sandboxes and named URLs outlive the script, so delete both explicitly.
-	if (url) await tenki.previewUrls.delete(url.id).catch(() => {});
+	if (url) await luxor.previewUrls.delete(url.id).catch(() => {});
 	if (sandbox) await sandbox.close().catch(() => {});
 }

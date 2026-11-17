@@ -1,20 +1,20 @@
-# OpenClaw gateway on Tenki
+# OpenClaw gateway on Luxor Agent Cloud
 
-Host the [OpenClaw](https://openclaw.ai) gateway in a [Tenki](https://tenki.cloud) sandbox that keeps running until you terminate it, and open its dashboard at a fixed HTTPS address. `run.mjs` creates a sticky sandbox, installs and onboards OpenClaw without prompts, starts the gateway as a systemd service, and points a named preview URL at port 18789. Rerun it and the same URL moves to the new sandbox.
+Host the [OpenClaw](https://openclaw.ai) gateway in a [Luxor Agent Cloud](https://luxor.ai) sandbox that keeps running until you terminate it, and open its dashboard at a fixed HTTPS address. `run.mjs` creates a sticky sandbox, installs and onboards OpenClaw without prompts, starts the gateway as a systemd service, and points a named preview URL at port 18789. Rerun it and the same URL moves to the new sandbox.
 
-This runs the whole gateway on Tenki. To keep OpenClaw on your machine and run only its agent tools in Tenki sandboxes, see [OpenClaw sandbox backend](../openclaw-tenki/).
+This runs the whole gateway on Luxor Agent Cloud. To keep OpenClaw on your machine and run only its agent tools in Luxor sandboxes, see [OpenClaw sandbox backend](../openclaw-luxor/).
 
 ## Set it up with a coding agent
 
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Host an OpenClaw gateway on Tenki, following https://github.com/LuxorLabs/cookbook/tree/main/examples/openclaw-gateway-tenki.
+Host an OpenClaw gateway on Luxor Agent Cloud, following https://github.com/LuxorLabs/cookbook/tree/main/examples/openclaw-gateway-tenki.
 1. Clone the repo, cd into examples/openclaw-gateway-tenki, and run npm install (Node.js 20 or later).
-2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud), OPENCLAW_GATEWAY_TOKEN, and optionally ANTHROPIC_API_KEY in the environment. If one is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai), OPENCLAW_GATEWAY_TOKEN, and optionally ANTHROPIC_API_KEY in the environment. If one is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs and confirm the ✓ line.
 4. Run node run.mjs and give me the dashboard URL and sandbox ID it prints.
-5. When I've opened the dashboard and entered my gateway token, list the pending pairing request with tenki sandbox exec --session <sandbox-id> -- bash -lc 'openclaw devices list' and approve the one I confirm.
+5. When I've opened the dashboard and entered my gateway token, list the pending pairing request with luxor sandbox exec --session <sandbox-id> -- bash -lc 'openclaw devices list' and approve the one I confirm.
 6. If a step fails, use the Troubleshooting table in the example's README.md.
 Remind me that the sandbox runs until it is terminated.
 ```
@@ -24,9 +24,9 @@ Remind me that the sandbox runs until it is terminated.
 You need:
 
 - Node.js 20 or later.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - A model provider key. The example wires `ANTHROPIC_API_KEY`; without it the gateway starts with no model and you add one later.
-- The [`tenki` CLI](https://tenki.cloud/docs) for approving devices and cleaning up.
+- The [`tenki` CLI](https://luxor.ai/docs) for approving devices and cleaning up.
 
 ### 1. Install
 
@@ -60,11 +60,11 @@ sandbox:   01a1…
 It takes about a minute. Open the dashboard, paste the gateway token into **Gateway secret**, and click **Connect**. A new browser then waits for pairing approval. Approve it from your machine:
 
 ```bash
-tenki sandbox exec --session <sandbox-id> -- bash -lc 'openclaw devices list'
-tenki sandbox exec --session <sandbox-id> -- bash -lc 'openclaw devices approve <requestId>'
+luxor sandbox exec --session <sandbox-id> -- bash -lc 'openclaw devices list'
+luxor sandbox exec --session <sandbox-id> -- bash -lc 'openclaw devices approve <requestId>'
 ```
 
-Or open a shell with `tenki sandbox ssh <sandbox-id>` and run `openclaw` commands there.
+Or open a shell with `luxor sandbox ssh <sandbox-id>` and run `openclaw` commands there.
 
 ### 4. Verify
 
@@ -94,7 +94,7 @@ sudo loginctl enable-linger "$(id -un)"
 XDG_RUNTIME_DIR="/run/user/$(id -u)" openclaw gateway install
 ```
 
-- **Bind to `lan`.** Tenki's edge connects to the sandbox's network interface, not loopback, so a loopback-bound gateway answers `502`. OpenClaw requires a token or password for a non-loopback bind.
+- **Bind to `lan`.** Luxor Agent Cloud's edge connects to the sandbox's network interface, not loopback, so a loopback-bound gateway answers `502`. OpenClaw requires a token or password for a non-loopback bind.
 - **`publicOrigin`** makes the preview URL the only browser origin the gateway accepts. A dashboard opened from any other origin is refused with `origin not allowed`.
 - **`trustedProxies`.** The edge connects from `172.30.0.0/16` and rewrites `X-Forwarded-For` (a client can't spoof it). Without this setting the gateway rejects every proxied request with `proxy_attribution_required`.
 - **systemd.** The sandbox runs systemd, so `openclaw gateway install` registers a user service that restarts the gateway if it exits. Lingering keeps it running with nobody logged in.
@@ -103,20 +103,20 @@ XDG_RUNTIME_DIR="/run/user/$(id -u)" openclaw gateway install
 
 ## Notes
 
-- **Cost and cleanup.** The sandbox runs, and bills, until you terminate it. `tenki sandbox terminate <sandbox-id>` removes it and also deletes the named URL bound to it. Running `run.mjs` again with the same slug recreates the same address.
+- **Cost and cleanup.** The sandbox runs, and bills, until you terminate it. `luxor sandbox terminate <sandbox-id>` removes it and also deletes the named URL bound to it. Running `run.mjs` again with the same slug recreates the same address.
 - **State lives on the sandbox disk.** Config, sessions, paired devices, and the model key sit in `~/.openclaw` on the sandbox. A rebuilt sandbox starts fresh, so you pair your browser again.
 - **One sandbox at a time.** After a rebuild, `run.mjs` prints the previous sandbox's ID. It no longer serves the URL but keeps running until you terminate it.
 - **Model key.** `setup.sh` passes `ANTHROPIC_API_KEY` to `--anthropic-api-key`. For another provider, swap the flag (`openclaw onboard --help` lists them), or add one later from the dashboard.
 - **Paused sandboxes** serve no traffic: the URL returns `404` until you resume.
-- **OpenClaw version.** `OPENCLAW_VERSION` pins 2026.10.8, which needs Node.js 24.22.1 or later. The Tenki base image ships Node.js 24.22.1.
+- **OpenClaw version.** `OPENCLAW_VERSION` pins 2026.10.8, which needs Node.js 24.22.1 or later. The Luxor Agent Cloud base image ships Node.js 24.22.1.
 
 ## Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
 | `Set OPENCLAW_GATEWAY_TOKEN, …` | Export a token, e.g. `export OPENCLAW_GATEWAY_TOKEN=$(openssl rand -hex 32)`. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
-| `` No token. Set TENKI_AUTH_TOKEN, or run `tenki login`. `` from `verify.mjs` | Export a key or run `tenki login --api-key <key>`. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
+| `` No token. Set TENKI_AUTH_TOKEN, or run `luxor login`. `` from `verify.mjs` | Export a key or run `luxor login --api-key <key>`. |
 | Dashboard says **This Gateway expects its token** | Paste `OPENCLAW_GATEWAY_TOKEN` into **Gateway secret**. |
 | Dashboard waits on `pairing required` | Approve the browser with `openclaw devices list` and `openclaw devices approve <requestId>` (step 3). |
 | `{"type":"proxy_attribution_required"}` | The edge connected from an address outside `trustedProxies`. Find it with `openclaw logs` (`observed unattributable proxy-shaped traffic from <ip>`) and add it to `gateway.trustedProxies`. |
@@ -125,7 +125,7 @@ XDG_RUNTIME_DIR="/run/user/$(id -u)" openclaw gateway install
 
 ## Related
 
-- [OpenClaw sandbox backend](../openclaw-tenki/): run OpenClaw's agent tools in Tenki sandboxes
+- [OpenClaw sandbox backend](../openclaw-luxor/): run OpenClaw's agent tools in Luxor sandboxes
 - [Expose a port](../expose-a-port/): preview URL basics
 - [Pause, snapshot, and resume](../snapshots-pause-resume/)
 - [OpenClaw docs: Gateway](https://docs.openclaw.ai/gateway) and [Connect and pair](https://docs.openclaw.ai/web/control-ui/connect-and-pair)
