@@ -12,12 +12,12 @@ from tenki import AsyncClient
 from tinker_cookbook.recipes.harbor_rl.harbor_tools import HarborReward
 from tinker_cookbook.sandbox import SandboxInterface
 
-from tinker_tenki import tenki_sandbox_factory
+from tinker_luxor import luxor_sandbox_factory
 
 
 def cfg(key):
     try:
-        text = open(os.path.expanduser("~/.config/luxor/config.yaml")).read()
+        text = open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")).read()
         return re.search(rf"^{key}:\s*(.+)$", text, re.M).group(1).strip()
     except (OSError, AttributeError):
         return ""
@@ -43,7 +43,7 @@ async def main():
         (env_dir / "Dockerfile").write_text("FROM python:3.12-slim\nWORKDIR /app\n")
         (tests_dir / "test.sh").write_text(TEST_SH)
 
-        sb = await tenki_sandbox_factory(env_dir, 600)
+        sb = await luxor_sandbox_factory(env_dir, 600)
         try:
             assert isinstance(sb, SandboxInterface), "not a SandboxInterface"
             assert (await sb.run_command("pwd")).stdout.strip() == "/app", "Dockerfile WORKDIR ignored"

@@ -1,6 +1,6 @@
 # Tinker RL on Terminal-Bench
 
-Train a model with reinforcement learning on [Terminal-Bench](https://www.tbench.ai) tasks, with every rollout in its own Luxor sandbox and no GPU on your side. [Tinker](https://thinkingmachines.ai/tinker/) hosts the model, the sampling and the training. [tinker-cookbook](https://github.com/thinking-machines-lab/tinker-cookbook)'s `harbor_rl` recipe gives the model a bash tool inside a task's container, lets it attempt the task, and rewards it with the task's own tests. The recipe takes its sandbox as a plug-in, and [`tinker_tenki.py`](tinker_tenki.py) is that plug-in for Luxor Agent Cloud.
+Train a model with reinforcement learning on [Terminal-Bench](https://www.tbench.ai) tasks, with every rollout in its own Luxor sandbox and no GPU on your side. [Tinker](https://thinkingmachines.ai/tinker/) hosts the model, the sampling and the training. [tinker-cookbook](https://github.com/thinking-machines-lab/tinker-cookbook)'s `harbor_rl` recipe gives the model a bash tool inside a task's container, lets it attempt the task, and rewards it with the task's own tests. The recipe takes its sandbox as a plug-in, and [`tinker_luxor.py`](tinker_luxor.py) is that plug-in for Luxor Agent Cloud.
 
 ## Set it up with a coding agent
 
@@ -65,7 +65,7 @@ TB_TASKS=fix-git,overfull-hbox python train.py \
   model_name=Qwen/Qwen3-8B group_size=4 groups_per_batch=2 max_steps=10
 ```
 
-`train.py` is the recipe's launcher with one change: it passes `tenki_sandbox_factory`. Every `key=value` is a field of the recipe's [`CLIConfig`](https://github.com/thinking-machines-lab/tinker-cookbook/blob/main/tinker_cookbook/recipes/harbor_rl/train.py): `model_name`, `group_size`, `groups_per_batch`, `learning_rate`, `max_turns`, `max_steps`, `wandb_project`, and the rest. `TB_TASKS` picks tasks by name; leave it unset to train on all 89.
+`train.py` is the recipe's launcher with one change: it passes `luxor_sandbox_factory`. Every `key=value` is a field of the recipe's [`CLIConfig`](https://github.com/thinking-machines-lab/tinker-cookbook/blob/main/tinker_cookbook/recipes/harbor_rl/train.py): `model_name`, `group_size`, `groups_per_batch`, `learning_rate`, `max_turns`, `max_steps`, `wandb_project`, and the rest. `TB_TASKS` picks tasks by name; leave it unset to train on all 89.
 
 Each step samples `group_size` attempts at each of `groups_per_batch` tasks, so this run starts 8 sandboxes at a time. The recipe logs metrics for every step to its run directory, and to Weights & Biases if you set `wandb_project`.
 
@@ -73,7 +73,7 @@ Terminal-Bench has four `easy` tasks. We ran each one's reference solution throu
 
 ## How a rollout runs
 
-For each attempt, the recipe asks the factory for a sandbox from the task's `environment/` folder, and [`tinker_tenki.py`](tinker_tenki.py) does this:
+For each attempt, the recipe asks the factory for a sandbox from the task's `environment/` folder, and [`tinker_luxor.py`](tinker_luxor.py) does this:
 
 1. Creates a Luxor sandbox: 2 vCPU, 4 GB of memory, 50 GB of disk, ending at the recipe's `sandbox_timeout` plus 25 minutes of setup allowance.
 2. Installs Docker in it. Luxor sandboxes can't boot a container image directly, so the task's container runs under Docker inside the sandbox.

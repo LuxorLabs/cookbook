@@ -14,7 +14,7 @@ import chz
 from tinker_cookbook.recipes.harbor_rl.harbor_env import load_harbor_tasks
 from tinker_cookbook.recipes.harbor_rl.train import CLIConfig, cli_main
 
-from tinker_tenki import tenki_sandbox_factory
+from tinker_luxor import luxor_sandbox_factory
 
 DATASET = "terminal-bench-2.0/terminal-bench"  # under ~/.cache/harbor/tasks/
 
@@ -28,4 +28,4 @@ if __name__ == "__main__":
             raise SystemExit(f"Unknown TB_TASKS: {sorted(missing)}")
         tasks = [t for t in tasks if t.task_name in names]
     print(f"Training on {len(tasks)} task(s); rollouts run on Luxor Agent Cloud.")
-    asyncio.run(cli_main(cli_config, tasks, sandbox_factory=tenki_sandbox_factory))
+    asyncio.run(cli_main(cli_config, tasks, sandbox_factory=luxor_sandbox_factory))

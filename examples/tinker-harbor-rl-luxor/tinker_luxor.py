@@ -207,6 +207,6 @@ class LuxorSandbox:
         )
 
 
-async def tenki_sandbox_factory(env_dir: Path, timeout: int) -> LuxorSandbox:
+async def luxor_sandbox_factory(env_dir: Path, timeout: int) -> LuxorSandbox:
     """Drop-in for tinker-cookbook's ``SandboxFactory``: ``(env_dir, timeout) -> sandbox``."""
     return await LuxorSandbox.create(env_dir, timeout)
