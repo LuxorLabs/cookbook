@@ -1,0 +1,232 @@
+# Pi Durable
+
+Run [Pi](https://github.com/earendil-works/pi) Durable's agent tools in a Luxor sandbox. Pi's Durable harness checkpoints every conversation, model turn, and tool call to storage. Its `@earendil-works/pi-env` package runs tools on another machine through a small daemon, normally over SSH. This example runs that daemon in a Luxor sandbox with no SSH, so Pi checkpoints the agent's state and Luxor Agent Cloud can pause and resume the machine. A read after a pause resumes the sandbox on its own.
+
+pi-durable and pi-env are experimental upstream, and their APIs can change between releases. This example was built against 1.2.0.
+
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Set up the Luxor Agent Cloud "Pi Durable" example from https://github.com/LuxorLabs/cookbook.
+1. Clone the repo, cd into examples/pi-durable-luxor, check that Node.js is 22.19 or later, and run npm install.
+2. It needs TENKI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) in the environment. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run node run.mjs (the pause takes about a minute) and confirm the last line is "resumed -> state the agent built up", then run node verify.mjs.
+4. If a step fails, use the Troubleshooting table in the example's README.md.
+Then show me how to plug luxor-env.mjs and bridge.mjs into my Pi Durable worker through the harness env option.
+```
+
+## Quick start
+
+You need:
+
+- Node.js 22.19 or later (what the Pi packages declare). `verify.mjs` also runs on Node 20 with `EBADENGINE` warnings.
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
+
+### 1. Install
+
+```bash
+git clone https://github.com/LuxorLabs/cookbook.git
+cd cookbook/examples/pi-durable-luxor
+npm install
+```
+
+This installs `@earendil-works/pi-durable`, `pi-env`, and `chord` at `^1.2.0`, and `@luxorai/sandbox` 1.4.1 or later.
+
+### 2. Set your API key
+
+```bash
+export TENKI_API_KEY=tk_...   # TENKI_AUTH_TOKEN also works
+```
+
+`run.mjs` and the bridge read the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`.
+
+### 3. Run
+
+```bash
+node run.mjs
+```
+
+```text
+daemon up: pi-env 1.2.0 on linux/x86_64
+exec -> Linux 6.18.29
+pausing (snapshot memory + disk, free the VM) ...
+resumed -> state the agent built up
+```
+
+The pause takes about a minute. The read after it resumes the sandbox, respawns the daemon in about 0.5 s, and finds the file. The script terminates the sandbox at the end.
+
+### 4. Verify
+
+```bash
+node verify.mjs
+```
+
+```text
+✓ pi-durable-luxor: boot + daemon → hello → exec → file round-trip → pause → same env resumes, file intact
+```
+
+`verify.mjs` checks that the daemon reports `linux`, `uname -s` prints `Linux`, a marker file round-trips, the sandbox reaches `PAUSED`, and a read on the same env returns the marker and leaves the sandbox `RUNNING`. It needs no model key, so it doesn't run the Durable harness or an agent turn.
+
+## The demo
+
+`run.mjs`:
+
+```js
+// Drive Pi Durable's ExecutionEnv surface on a Luxor sandbox, pause the
+// sandbox mid-session, and watch the same env recover on the next call.
+import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import { getOrThrow } from "@earendil-works/pi-durable/env";
+import { createLuxorEnv, retryOnLostConnection } from "./luxor-env.mjs";
+
+const { session, connection, env, dispose } = await createLuxorEnv();
+try {
+  const info = await connection.info();
+  console.log(`daemon up: pi-env ${info.version} on ${info.os}/${info.arch}`);
+
+  let out = "";
+  getOrThrow(await env.exec(["uname", "-sr"], { onOutput: (t) => (out += t) }, BACKGROUND_CONTEXT));
+  console.log(`exec -> ${out.trim()}`);
+
+  getOrThrow(await env.writeFile("notes.txt", "state the agent built up\n", BACKGROUND_CONTEXT));
+
+  console.log("pausing (snapshot memory + disk, free the VM) ...");
+  await session.pause();
+
+  // Same env object: this read resumes the sandbox and respawns the daemon.
+  const back = await retryOnLostConnection(async () =>
+    getOrThrow(await env.readTextFile("notes.txt", BACKGROUND_CONTEXT)),
+  );
+  console.log(`resumed -> ${back.trim()}`);
+} finally {
+  await dispose();
+}
+```
+
+## Use it in a Durable worker
+
+`createLuxorEnv()` returns a `harnessEnv` for the harness's `env` option:
+
+```js
+import { Harness } from "@earendil-works/pi-durable";
+import { createLuxorEnv } from "./luxor-env.mjs";
+
+const luxorEnv = await createLuxorEnv();
+const harness = await Harness.open(storage, {
+  models,
+  registry,
+  env: luxorEnv.harnessEnv, // every tool call now runs in the sandbox
+}, context);
+// at shutdown: await luxorEnv.dispose();
+```
+
+`storage`, `models`, `registry`, and `context` come from your Pi Durable setup ([quick start](https://github.com/earendil-works/pi/tree/main/packages/durable#quick-start)). Running an agent turn needs a model provider and key.
+
+- Copy `luxor-env.mjs` and `bridge.mjs` into the same directory. The connection starts the bridge from there.
+- `createLuxorEnv()` takes `{ cpuCores, memoryMb, onLog }` (defaults: 1 core, 1024 MB). `onLog` receives daemon and bridge diagnostics.
+- Use one env id and one `Connection` per sandbox. In Pi, equal env ids mean the same files, and `edit`/`write` serialize by env id and path.
+- Check a custom env against Pi's expectations with `registerEnvConformance()` from `@earendil-works/pi-durable/testing`.
+
+## How the bridge works
+
+pi-env's `Connection` spawns a local command and speaks its framed protocol over that process's stdio. Normally that's `ssh`. Here it's `bridge.mjs`, which starts the daemon in the sandbox and pipes its stdio over Tenki's exec data plane. A pause from another client doesn't end that stream, so the bridge watches the session and exits when it leaves `RUNNING`:
+
+```js
+#!/usr/bin/env node
+// Spawned by pi-env's Connection as: node bridge.mjs <sessionId> serve --token <hex>
+// Runs the daemon inside the Luxor sandbox and pipes its stdio through — the
+// framed protocol rides Luxor Agent Cloud's exec data plane, no SSH involved.
+import { Readable, Writable } from "node:stream";
+import { LuxorSandbox } from "@luxorai/sandbox";
+
+const [sessionId, ...daemonArgs] = process.argv.slice(2);
+const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY;
+
+try {
+  const client = new LuxorSandbox({ authToken });
+  const session = await client.get(sessionId);
+  const handle = session.run(["/home/tenki/pi-env", ...daemonArgs], {
+    stdin: Readable.toWeb(process.stdin),
+  });
+  // Pausing from another client leaves this stream open (it hangs until the session
+  // ends), so watch the state and drop the connection; pi-env resumes on the next request.
+  setInterval(async () => {
+    try {
+      await session.refresh();
+    } catch {
+      return;
+    }
+    if (session.state !== "RUNNING") {
+      console.error(`bridge: sandbox ${session.state.toLowerCase()}`);
+      process.exit(1);
+    }
+  }, 1000).unref();
+  const piped = Promise.allSettled([
+    handle.stdout.pipeTo(Writable.toWeb(process.stdout)),
+    handle.stderr.pipeTo(Writable.toWeb(process.stderr)),
+  ]);
+  const { exitCode } = await handle;
+  // Drain the final framed stdout frame before exiting, or pi-env sees a half-response.
+  await piped;
+  process.exit(exitCode ?? 1);
+} catch (err) {
+  // An unreachable sandbox becomes a clean spawn failure; pi-env retries on the next request.
+  console.error(`bridge: ${err?.message ?? err}`);
+  process.exit(1);
+}
+```
+
+`luxor-env.mjs` uploads the static linux-x64 daemon from the pi-env package (2.4 MB) and wires a `RemoteExecutionEnv` through the bridge. The `command` option is re-run on every reconnect, so a paused sandbox is resumed before the bridge starts:
+
+```js
+  // The pi-env package ships a static linux-x64 daemon that runs on Luxor Agent Cloud's stock image.
+  const daemon = join(dirname(require.resolve("@earendil-works/pi-env")), "../bin/pi-env-linux-x64/pi-env");
+  await session.writeFile("/home/tenki/pi-env", readFileSync(daemon));
+  await session.exec(["chmod", "+x", "/home/tenki/pi-env"]);
+
+  // pi-env recomputes `command` on every (re)connect, so a sandbox paused between
+  // requests is resumed before the bridge spawns — the next call recovers on its own.
+  const connection = new Connection({
+    command: async () => {
+      await session.refresh();
+      if (session.state === "PAUSED") {
+        await session.resume();
+        await session.waitResumed();
+      }
+      return ["node", join(here, "bridge.mjs"), session.id];
+    },
+    onLog,
+  });
+
+  // Equal env ids mean the same files, so: one id (and one Connection) per sandbox.
+  const env = new RemoteExecutionEnv({
+    connection,
+    id: `pi-env:luxor:${session.id}`,
+    cwd: "/home/tenki",
+  });
+```
+
+Daemon behavior to know, from pi-env's [protocol](https://github.com/earendil-works/pi/blob/main/packages/env/docs/protocol.md):
+
+- The daemon exits when its stdin ends or after 30 s without traffic and kills every process it started. A dead bridge leaks nothing, but commands don't survive a pause or a dropped connection.
+- A reconnect is a fresh daemon session. Handles opened before it, such as readers and running execs, fail cleanly instead of reaching the new daemon.
+- The first call after a pause can fail with `connection lost` while the old bridge is still closing. If the call is idempotent, such as a read, retry it once with `retryOnLostConnection`. The retry reconnects and resumes the sandbox. Don't retry a call that changes state, since it may already have run.
+
+## Troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export `TENKI_API_KEY`. |
+| ``No token. Set TENKI_API_KEY, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
+| `npm warn EBADENGINE Unsupported engine` | Use Node 22.19 or later. On Node 20 it's only a warning. |
+| `pi-env connection lost` from a handle opened before a pause | Handles belong to the old daemon session. Open a new one. |
+| `pi-env connection lost` on the first call after a pause | The old bridge can stay open for a while after the pause, so the call rides a connection that then drops. Retry an idempotent call once: `retryOnLostConnection` in `luxor-env.mjs` does this, and the retry resumes the sandbox. |
+| `bridge: <message>` in `onLog` | The bridge couldn't reach the sandbox. pi-env retries on the next request. |
+
+## Related
+
+- [Pi](https://github.com/earendil-works/pi), [`pi-durable`](https://github.com/earendil-works/pi/tree/main/packages/durable), and [`pi-env`](https://github.com/earendil-works/pi/tree/main/packages/env)
+- [Pause, snapshot, and resume](../snapshots-pause-resume/): pause and resume with the SDK alone
+- [`@luxorai/sandbox` on npm](https://www.npmjs.com/package/@luxorai/sandbox) and the [Luxor Agent Cloud docs](https://luxor.ai/docs)
