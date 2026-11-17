@@ -11,7 +11,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 ```text
 Set up the Luxor Agent Cloud "RL rollouts at scale" example from https://github.com/LuxorLabs/cookbook/tree/main/examples/rl-rollouts-at-scale.
 1. Check that Python 3.12+ and uv are installed. In that folder, create a venv and install requirements.txt.
-2. It needs a Luxor Agent Cloud API key (starts with tk_) in TENKI_API_KEY, or one saved by `luxor login`. If neither exists, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+2. It needs a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_API_KEY, or one saved by `luxor login`. If neither exists, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 3. Run `node verify.mjs` and confirm it prints three check marks.
 4. Run `python run_episodes.py -n 10` and tell me the restore and lifetime latencies it prints.
 5. Ask me before running 50 or more episodes, and tell me my workspace's concurrency limit first.
@@ -39,7 +39,7 @@ source .venv/bin/activate
 ### 2. Set your API key
 
 ```bash
-export TENKI_API_KEY=tk_...
+export LUXORAI_API_KEY=tk_...
 ```
 
 If you ran `luxor login`, the script reads the key it saved in `~/.config/luxor/config.yaml` instead.
@@ -145,7 +145,7 @@ What the numbers say: a snapshot start replaces a 13-second setup with a 1 to 2 
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_API_KEY, or run `luxor login`.`` | The script found no key. Export one or run `luxor login --api-key <key>`. |
+| ``No token. Set LUXORAI_API_KEY, or run `luxor login`.`` | The script found no key. Export one or run `luxor login --api-key <key>`. |
 | `ModuleNotFoundError: No module named 'tenki'` | Create the `.venv` here and install `requirements.txt`, or set `PYTHON` for `node verify.mjs`. |
 | `RuntimeError: setup failed: ...` | `prepare()` needs outbound network to reach github.com and PyPI, which sandboxes have by default. If you restricted egress, allow those hosts. |
 | Episodes fail with a quota or rate-limit error after the retries | The batch is wider than your workspace allows. Lower `--concurrency`. By default it is your free slots, which assumes nothing else starts sandboxes during the run. |

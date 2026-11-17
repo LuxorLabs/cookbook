@@ -5,7 +5,7 @@ episode(i) creates a NEW sandbox from that snapshot, runs a scripted policy, sco
            and always terminates the sandbox.
 main()     fans out N episodes under a semaphore, retries 429/503, and prints latency and cost.
 
-Auth: TENKI_API_KEY (or TENKI_AUTH_TOKEN), else the token `luxor login` saved in
+Auth: LUXORAI_API_KEY (or LUXORAI_AUTH_TOKEN), else the token `luxor login` saved in
 ~/.config/luxor/config.yaml.
 """
 
@@ -36,14 +36,14 @@ TERMINAL = {"TERMINATING", "TERMINATED"}
 
 
 def resolve_token() -> str:
-    token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN")
+    token = os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN")
     if not token:
         try:
-            text = open(os.path.expanduser("~/.config/luxor/config.yaml")).read()
+            text = open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")).read()
             token = re.search(r"^auth_token:\s*(.+)$", text, re.M).group(1).strip()
         except (OSError, AttributeError):
-            sys.exit("No token. Set TENKI_API_KEY, or run `luxor login`.")
-    os.environ["TENKI_API_KEY"] = token
+            sys.exit("No token. Set LUXORAI_API_KEY, or run `luxor login`.")
+    (os.environ.get("LUXORAI_API_KEY") or os.environ["TENKI_API_KEY"]) = token
     return token
 
 
