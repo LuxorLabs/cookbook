@@ -19,7 +19,7 @@ const authorized = (req) => {
 };
 
 function buildServer() {
-  const server = new McpServer({ name: "tenki-remote-mcp", version: "1.0.0" });
+  const server = new McpServer({ name: "luxor-remote-mcp", version: "1.0.0" });
   server.registerTool(
     "echo",
     { description: "Echo the given text back", inputSchema: { text: z.string() } },

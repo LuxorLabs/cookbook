@@ -1,5 +1,5 @@
 {
-  "name": "tenki-remote-mcp-server",
+  "name": "luxor-remote-mcp-server",
   "private": true,
   "type": "module",
   "dependencies": {

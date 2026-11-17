@@ -2,9 +2,9 @@
   "name": "remote-mcp-server",
   "private": true,
   "type": "module",
-  "description": "Cookbook example: a token-protected remote MCP server on a Tenki preview URL.",
+  "description": "Cookbook example: a token-protected remote MCP server on a Luxor Agent Cloud preview URL.",
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
-    "@tenkicloud/sandbox": ">=1.4.1"
+    "@luxorai/sandbox": ">=1.4.1"
   }
 }

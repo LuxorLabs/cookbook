@@ -1,7 +1,7 @@
 // Proves this example: deploy the MCP server to a sticky sandbox behind a named preview URL,
 // check /health and the token gate, then list and call tools with the MCP SDK client over
 // Streamable HTTP. Exits non-zero on failure; deletes the URL and sandbox either way.
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { LuxorSandbox } from "@luxorai/sandbox";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { randomBytes } from "node:crypto";
@@ -11,7 +11,7 @@ import { up, down } from "./deploy.mjs";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/tenki/config.yaml`, "utf8");
+		const c = readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
@@ -21,15 +21,15 @@ const cfg = (key) => {
 const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 const workspaceId = process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined;
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.");
+	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 
-const tenki = new TenkiSandbox({ authToken });
+const luxor = new LuxorSandbox({ authToken });
 const slug = `mcp-verify-${randomBytes(3).toString("hex")}`;
 const token = randomBytes(32).toString("hex");
 try {
-	const { sandbox, url } = await up(tenki, { slug, token, workspaceId });
+	const { sandbox, url } = await up(luxor, { slug, token, workspaceId });
 	if (!sandbox.sticky) throw new Error("sandbox is not sticky");
 	const mcp = `${url.previewUrl}/mcp`;
 	console.log(`  MCP endpoint: ${mcp}`);
@@ -56,5 +56,5 @@ try {
 	console.error("✗ " + (e?.message ?? e));
 	process.exitCode = 1;
 } finally {
-	try { await down(tenki, { slug, workspaceId }); } catch (e) { console.error(`cleanup failed for ${slug}: ${e?.message ?? e}`); }
+	try { await down(luxor, { slug, workspaceId }); } catch (e) { console.error(`cleanup failed for ${slug}: ${e?.message ?? e}`); }
 }
