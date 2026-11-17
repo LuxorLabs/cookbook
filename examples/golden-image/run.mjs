@@ -2,8 +2,8 @@
 // from that snapshot. The restore takes seconds; the install happened once.
 import { LuxorSandbox, stdoutText } from "@luxorai/sandbox";
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
-const workspaceId = process.env.TENKI_WORKSPACE_ID;
+const luxor = new LuxorSandbox({ authToken: (process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN) });
+const workspaceId = (process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID);
 
 let snapshot;
 try {

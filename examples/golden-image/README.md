@@ -10,7 +10,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 Set up the Luxor Agent Cloud "Golden image" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo and cd into examples/golden-image.
 2. Check that Node.js is 24 or later, then run npm install.
-3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 4. Run node run.mjs and confirm it prints "restored -> hello from the golden image", then run node verify.mjs.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
 Then show me how to turn my own install script into a golden image that is kept, and how to create sandboxes from it by id.
@@ -34,10 +34,10 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
-`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run
 
@@ -116,8 +116,8 @@ Stop polling after a few consecutive errors that say the session cannot be resol
 | Problem | Fix |
 | --- | --- |
 | `SyntaxError` at `await using builder` | Use Node 24 or later, or run `verify.mjs`. |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
 | `snapshot is FAILED` | The builder was still writing, or ran out of disk. Stop its services, check `isDiskExhausted` on your install's result, try again. |
 | The restored sandbox is bigger than you asked for | The builder was bigger. Rebuild on the smallest size you will ever restore onto. |
 | A restore cannot find the snapshot | It expired (`expiresAt`), was deleted, or belongs to another workspace. Snapshots are private to their workspace. |
