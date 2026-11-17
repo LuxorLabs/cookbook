@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Cookbook example: fine-tune a Laya decision model on your own labelled tickets inside a Luxor sandbox, on CPU.",
   "dependencies": {
-    "@luxorai/sandbox": ">=1.4.1"
+    "@luxorai/sandbox": ">=1.5.2"
   }
 }

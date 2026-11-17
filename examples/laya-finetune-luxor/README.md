@@ -10,7 +10,7 @@ Paste this into Claude Code, Codex, Cursor, or another coding agent:
 Set up the Luxor Agent Cloud "Fine-tune a Laya decision model" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo and cd into examples/laya-finetune-luxor.
 2. Check that Node.js is 24 or later, then run npm install.
-3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in TENKI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
+3. The scripts need a Luxor Agent Cloud API key (starts with tk_) in LUXORAI_AUTH_TOKEN. If it isn't set, stop and ask me to export it (keys come from https://app.luxor.ai). Never print the key or write it to a file.
 4. Run node run.mjs and confirm the held-out accuracy goes from 0.7000 to 0.8500, then run node verify.mjs.
 5. If a step fails, use the Troubleshooting table in the example's README.md.
 Then help me replace data/train.csv and data/eval.csv with my own labelled examples (a text column and a label column) and rerun it.
@@ -36,7 +36,7 @@ npm install
 ### 2. Set your API key
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 ```
 
 `run.mjs` reads the key from the environment only. `verify.mjs` also accepts a key saved with `luxor login --api-key <key>`.
@@ -147,7 +147,7 @@ The snapshot holds the virtual environment and the 1.6 GB checkpoint directory. 
 | Problem | Fix |
 | --- | --- |
 | `SyntaxError` at `await using sandbox` | Use Node 24 or later, or run `verify.mjs`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
 | `training failed (exit 1)` with `missing text column` or `missing label column` | Your CSV headers must be `text` and `label`, or change `--text-column` and `--label-column` in `train.sh`. |
 | `training failed` with `Killed` in the log | The sandbox ran out of memory. Lower `--micro-batch`, or raise `memoryMb`. |
 | `RuntimeWarning: ... fewer than 10, so the temperature stays 1.0` | Expected with 60 training rows. Add rows to calibrate. |

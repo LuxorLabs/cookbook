@@ -4,7 +4,7 @@
 import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
 import { readFileSync } from "node:fs";
 
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 const keep = process.argv.includes("--keep");
 const sh = async (sandbox, cmd) => {
 	const r = await sandbox.exec(["sh", "-lc", cmd]);

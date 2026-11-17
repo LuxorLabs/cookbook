@@ -5,20 +5,20 @@
  * ~/.config/luxor/config.yaml. Exits non-zero on failure; terminates the sandbox.
  */
 import { LuxorSandbox, stdoutText } from "@luxorai/sandbox";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 
 const cfg = (key) => {
 	try {
-		const c = readFileSync(`${homedir()}/.config/luxor/config.yaml`, "utf8");
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
 	} catch {
 		return "";
 	}
 };
-const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 if (!authToken) {
-	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
+	console.error("No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);
 }
 const assert = (ok, msg) => { if (!ok) throw new Error(msg); };
@@ -27,7 +27,7 @@ let sandbox;
 const sh = async (cmd) => stdoutText(await sandbox.exec(["sh", "-lc", cmd])).trim();
 
 try {
-	sandbox = await luxor.createAndWait({ cpuCores: 8, memoryMb: 16384, diskSizeGb: 20, workspaceId: process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined });
+	sandbox = await luxor.createAndWait({ cpuCores: 8, memoryMb: 16384, diskSizeGb: 20, workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id") || undefined });
 	for (const f of ["data/train.csv", "data/eval.csv", "train.sh", "predict.py"]) {
 		await sandbox.writeFile(`/home/tenki/laya/${f}`, readFileSync(new URL(f, import.meta.url)));
 	}
