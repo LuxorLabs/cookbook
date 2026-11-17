@@ -1,23 +1,23 @@
-// Stand up a full-stack app inside one Tenki sandbox, drive its API, and expose its UI.
+// Stand up a full-stack app inside one Luxor sandbox, drive its API, and expose its UI.
 //
-// This is the shape of an agent session: every step here maps to a Tenki MCP tool
+// This is the shape of an agent session: every step here maps to a Luxor Agent Cloud MCP tool
 // (tenki_create_sandbox / tenki_write_file / tenki_exec / tenki_expose_port), so an
 // agent like Claude can do exactly this through the MCP server — no bespoke backend.
-import { TenkiSandbox, stdoutText } from "@tenkicloud/sandbox";
+import { LuxorSandbox, stdoutText } from "@luxorai/sandbox";
 import { readFileSync } from "node:fs";
 
 const PORT = 8000;
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
 
 // allowInbound: the gateway routes public traffic to the sandbox (for the preview URL).
 // This script deliberately leaves the sandbox running so you can open the URL, so
 // set a billing guard: it self-terminates after 2 hours.
-const sandbox = await tenki.createAndWait({
+const sandbox = await luxor.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
 	allowInbound: true,
 	maxDurationMs: 2 * 60 * 60_000,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 try {
@@ -59,7 +59,7 @@ def go(method, path, body=None):
 	const res = await fetch(previewUrl);
 	console.log(`   GET ${res.status} · ${(await res.text()).includes("<title>") ? "frontend served" : "unexpected body"}`);
 	console.log("\n(sandbox left running so you can open the URL; it self-terminates after 2 hours)");
-	console.log(`   terminate now:  node -e "import('@tenkicloud/sandbox').then(async m=>{const s=await new m.TenkiSandbox({authToken:process.env.TENKI_AUTH_TOKEN}).get('${sandbox.id}');await s[Symbol.asyncDispose]()})"`);
+	console.log(`   terminate now:  node -e "import('@luxorai/sandbox').then(async m=>{const s=await new m.LuxorSandbox({authToken:process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN}).get('${sandbox.id}');await s[Symbol.asyncDispose]()})"`);
 } catch (e) {
 	console.error("error:", e?.message ?? e);
 	await sandbox[Symbol.asyncDispose]().catch(() => {});

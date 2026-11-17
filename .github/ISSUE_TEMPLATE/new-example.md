@@ -11,7 +11,7 @@ labels: cookbook
 
 **Template to copy** (`run-code-in-a-sandbox` / `langchain-code-interpreter` / `vercel-ai-sdk` / new):
 
-**The bar:** ships a `verify.mjs` that runs against a live Tenki sandbox and passes in CI (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
+**The bar:** ships a `verify.mjs` that runs against a live Luxor sandbox and passes in CI (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
 
 **Companion article:** the example is the canonical code; the walkthrough article goes with it.
 
