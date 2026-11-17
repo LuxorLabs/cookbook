@@ -15,7 +15,7 @@ export default function Page() {
 	return (
 		<main className="shell">
 			<header>
-				<b>MCP Apps</b> on Tenki sandboxes — tools that bring their own UI
+				<b>MCP Apps</b> on Luxor sandboxes — tools that bring their own UI
 			</header>
 			<CopilotChat agentId="default" className="chat" labels={{ chatInputPlaceholder: "Ask for anything that needs a computer…" }} />
 		</main>
