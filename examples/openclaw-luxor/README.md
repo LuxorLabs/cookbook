@@ -9,12 +9,12 @@ Run every [OpenClaw](https://github.com/openclaw/openclaw) agent tool in a Luxor
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Make my OpenClaw agents run their tools in Tenki sandboxes, following https://github.com/LuxorLabs/cookbook/tree/main/examples/openclaw-tenki.
+Make my OpenClaw agents run their tools in Luxor sandboxes, following https://github.com/LuxorLabs/cookbook/tree/main/examples/openclaw-luxor.
 1. Check my OpenClaw version with openclaw --version. Plugin 0.3.0 needs 2026.10.9 or later and Node 24.22.1+ (or 26.12.1+). If I'm on 2026.7.x, install plugin 0.2.x instead; if I'm on 2026.8.x or 2026.9.x, stop and tell me before changing anything.
-2. Check that ssh, ssh-keygen, and tar are installed, then run openclaw plugins install clawhub:@tenkicloud/openclaw.
-3. The Gateway needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud). Ask me to add it to ~/.openclaw/.env myself. Never ask me to paste the key to you, print it, or write it to a file yourself.
+2. Check that ssh, ssh-keygen, and tar are installed, then run openclaw plugins install clawhub:@luxorai/openclaw.
+3. The Gateway needs TENKI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai). Ask me to add it to ~/.openclaw/.env myself. Never ask me to paste the key to you, print it, or write it to a file yourself.
 4. Add the plugins.entries.tenki and agents.defaults.sandbox blocks from the README to ~/.openclaw/openclaw.json (plus plugins.allow: ["tenki"] if the plugin was not installed from ClawHub), then run openclaw gateway restart and openclaw gateway status.
-5. To check the Tenki side, clone https://github.com/LuxorLabs/cookbook, cd into examples/openclaw-tenki, run npm install and node verify.mjs (it needs the key exported in that shell; ask me to export it), and confirm the ✓ line.
+5. To check the Luxor Agent Cloud side, clone https://github.com/LuxorLabs/cookbook, cd into examples/openclaw-luxor, run npm install and node verify.mjs (it needs the key exported in that shell; ask me to export it), and confirm the ✓ line.
 6. If a step fails, use the Troubleshooting table in the example's README.md.
 ```
 
@@ -23,7 +23,7 @@ Make my OpenClaw agents run their tools in Tenki sandboxes, following https://gi
 You need:
 
 - An OpenClaw 2026.10.9 or later host, on Node.js `>=24.22.1` or `>=26.12.1`. For a 2026.7.x host, use plugin 0.2.x instead.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - `ssh`, `ssh-keygen`, and `tar` on the machine that runs OpenClaw.
 
 ### 1. Install
@@ -84,7 +84,7 @@ Add this to `~/.openclaw/openclaw.json` (JSON5) to enable the plugin and make `t
 }
 ```
 
-Leave `image` out unless you have a registry image: Tenki rejects base-image ids such as `ubuntu-24`.
+Leave `image` out unless you have a registry image: Luxor Agent Cloud rejects base-image ids such as `ubuntu-24`.
 
 Then restart the Gateway:
 
@@ -111,7 +111,7 @@ node verify.mjs
 ✓ openclaw-luxor: plugin contract → live find-by-tag → sh positional args → stdin staging → SSH cert + gateway → dispose
 ```
 
-`verify.mjs` needs no OpenClaw host. It checks the published plugin's manifest (id `tenki`, the strict config schema, host version pin), then makes the Tenki calls the backend relies on against a live session: find by tag, exec with positional args, stdin staging, an SSH certificate and gateway stream, and dispose. It uses SDK 1.4.1 or later; plugin 0.3.0 pins `@tenkicloud/sandbox` 1.4.1 (0.2.0 pinned 0.5.2). The backend's own tests run at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
+`verify.mjs` needs no OpenClaw host. It checks the published plugin's manifest (id `tenki`, the strict config schema, host version pin), then makes the Luxor Agent Cloud calls the backend relies on against a live session: find by tag, exec with positional args, stdin staging, an SSH certificate and gateway stream, and dispose. It uses SDK 1.4.1 or later; plugin 0.3.0 pins `@luxorai/sandbox` 1.4.1 (0.2.0 pinned 0.5.2). The backend's own tests run at [LuxorLabs/tenki-openclaw](https://github.com/LuxorLabs/tenki-openclaw).
 
 ## Plugin config
 
@@ -119,10 +119,10 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
 
 | Key | What it sets |
 | --- | --- |
-| `authToken` | Tenki API key. Prefer `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` (Step 2). |
-| `baseUrl` | Tenki API endpoint override. Defaults to the SDK's `TENKI_API_ENDPOINT` / `TENKI_API_URL` fallback. |
-| `workspaceId` | Tenki workspace the sessions are created in. Optional. |
-| `image` | Tenki registry image ref (`workspace/name:tag` or `name@<snapshot-id>`, listed by `tenki sandbox registry list`). Omit for the Tenki default image. Base-image ids such as `ubuntu-24` are rejected with `registry image not found`. |
+| `authToken` | Luxor Agent Cloud API key. Prefer `TENKI_AUTH_TOKEN` / `TENKI_API_KEY` (Step 2). |
+| `baseUrl` | Luxor Agent Cloud API endpoint override. Defaults to the SDK's `TENKI_API_ENDPOINT` / `TENKI_API_URL` fallback. |
+| `workspaceId` | Luxor Agent Cloud workspace the sessions are created in. Optional. |
+| `image` | Luxor Agent Cloud registry image ref (`workspace/name:tag` or `name@<snapshot-id>`, listed by `luxor sandbox registry list`). Omit for the Luxor Agent Cloud default image. Base-image ids such as `ubuntu-24` are rejected with `registry image not found`. |
 | `workspaceRoot` | Absolute path inside the session for per-scope workspaces. Defaults to `/tmp/openclaw-sandboxes`. |
 | `maxDurationMinutes` | Hard cap on session lifetime in minutes; the session is terminated after that much total runtime. Replaces `idleTimeoutMinutes`, which the SDK ignores. |
 | `cpuCores` / `memoryMb` / `diskSizeGb` | Resources per session. |
@@ -153,7 +153,7 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
 
 ## Things to know
 
-- **Sessions don't stop on idle.** The plugin never pauses a session and Tenki doesn't pause on idle. Set `maxDurationMinutes` for a hard cap; otherwise sessions close when OpenClaw removes the sandbox runtime. Find leftovers by the `openclaw` tag.
+- **Sessions don't stop on idle.** The plugin never pauses a session and Luxor Agent Cloud doesn't pause on idle. Set `maxDurationMinutes` for a hard cap; otherwise sessions close when OpenClaw removes the sandbox runtime. Find leftovers by the `openclaw` tag.
 - **Outbound network is always on.** The config has no option to turn it off.
 - `sandbox.docker.binds` isn't supported.
 - Large workspaces are buffered in memory during upload.
@@ -163,7 +163,7 @@ The schema is strict: only these keys, strings non-empty, numbers 1 or more.
 
 | Problem | Fix |
 | --- | --- |
-| `[not_found] registry image not found` | `image` is a registry ref, not a base-image id. Remove `image` or use a ref from `tenki sandbox registry list`. |
+| `[not_found] registry image not found` | `image` is a registry ref, not a base-image id. Remove `image` or use a ref from `luxor sandbox registry list`. |
 | Plugin skipped with `reason=provenance-invalid` | The plugin wasn't installed from ClawHub. Add `"allow": ["tenki"]` under `plugins`. |
 | `Plugin entry is outside its captured source package` | You ran `plugins install --link` on a checkout with its own `node_modules/openclaw`. Install from ClawHub or a tarball instead. |
 | `SSH sandbox environment requires secure script staging` | Plugin older than 0.3.0 on a 2026.10.x host. Upgrade the plugin. |
