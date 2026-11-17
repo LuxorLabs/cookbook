@@ -77,13 +77,13 @@ const projectId = process.env.TENKI_PROJECT_ID || "default";
 async function lookUpWorkspaceId() {
   let workspaces;
   try {
-    ({ workspaces } = await new TenkiSandbox({ authToken }).whoAmI());
+    ({ workspaces } = await new LuxorSandbox({ authToken }).whoAmI());
   } catch (err) {
-    console.error(`Tenki workspace lookup failed (${err.message}). Check the token, or set TENKI_WORKSPACE_ID.`);
+    console.error(`Luxor Agent Cloud workspace lookup failed (${err.message}). Check the token, or set TENKI_WORKSPACE_ID.`);
     process.exit(1);
   }
   if (!workspaces?.[0]?.id) {
-    console.error("This Tenki token can't see any workspace. Set TENKI_WORKSPACE_ID.");
+    console.error("This Luxor Agent Cloud token can't see any workspace. Set TENKI_WORKSPACE_ID.");
     process.exit(1);
   }
   return workspaces[0].id;

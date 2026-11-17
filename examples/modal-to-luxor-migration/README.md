@@ -159,7 +159,7 @@ To read output while a command runs, use `sb.start(...)`, which returns a live p
   ```
 
   Commands run with `exec` can write anywhere.
-- **Use `max_duration` for lifetime.** Don't map Modal's `idle_timeout` to `idle_timeout_minutes`: the SDK accepts it but ignores it, and Tenki doesn't pause idle sandboxes. Use `max_duration`, or call `sb.pause()` yourself. A paused sandbox keeps its memory and disk.
+- **Use `max_duration` for lifetime.** Don't map Modal's `idle_timeout` to `idle_timeout_minutes`: the SDK accepts it but ignores it, and Luxor Agent Cloud doesn't pause idle sandboxes. Use `max_duration`, or call `sb.pause()` yourself. A paused sandbox keeps its memory and disk.
 - **Outbound network is on by default**, as on Modal. Pass `allow_outbound=False` to isolate a sandbox.
 
 ## Troubleshooting

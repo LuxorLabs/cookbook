@@ -1,6 +1,6 @@
 # Pause, snapshot, and resume
 
-Write a file into a Tenki sandbox, pause it, resume it, and read the file back. `pause()` saves the sandbox's memory and disk and releases the VM, so a paused sandbox leaves your concurrency quota. `resume()` brings back the same sandbox, with the same id, from that snapshot.
+Write a file into a Luxor sandbox, pause it, resume it, and read the file back. `pause()` saves the sandbox's memory and disk and releases the VM, so a paused sandbox leaves your concurrency quota. `resume()` brings back the same sandbox, with the same id, from that snapshot.
 
 ## Set it up with a coding agent
 

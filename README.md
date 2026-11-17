@@ -182,11 +182,11 @@ Packages you install in your own project:
 
 | Integration | Install | What it does |
 | --- | --- | --- |
-| [Composio tools](https://github.com/LuxorLabs/tenki-composio-tools) | `npm install @tenkicloud/composio-tools` | Create, execute, snapshot, and terminate tools for Composio agents |
-| [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Tenki sandboxes |
-| [GitHub Actions](https://github.com/LuxorLabs/tenki-actions) | `uses: LuxorLabs/tenki-actions/setup-cli@v1` | Installs the Tenki CLI and builds sandbox templates in CI |
-| [Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) | `go get github.com/LuxorLabs/tenki-sdk-go/sandbox` | Go client for the Tenki Sandbox API |
-| [Convex component](https://github.com/LuxorLabs/tenki-convex) | `npm install @tenkicloud/convex` | Creates and drives sandboxes from Convex actions, with each one's state in a Convex table |
+| [Composio tools](https://github.com/LuxorLabs/tenki-composio-tools) | `npm install @luxorai/composio-tools` | Create, execute, snapshot, and terminate tools for Composio agents |
+| [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Luxor sandboxes |
+| [GitHub Actions](https://github.com/LuxorLabs/tenki-actions) | `uses: LuxorLabs/tenki-actions/setup-cli@v1` | Installs the Luxor CLI and builds sandbox templates in CI |
+| [Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) | `go get github.com/LuxorLabs/tenki-sdk-go/sandbox` | Go client for the Luxor Sandbox API |
+| [Convex component](https://github.com/LuxorLabs/tenki-convex) | `npm install @luxorai/convex` | Creates and drives sandboxes from Convex actions, with each one's state in a Convex table |
 
 `covalent-tenki-plugin` 0.1.0 is the only release on PyPI. It depends on the renamed `tenki-sandbox` package, so `pip install` fails until 0.1.1 is published.
 

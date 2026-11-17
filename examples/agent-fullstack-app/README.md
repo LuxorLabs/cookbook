@@ -41,7 +41,7 @@ export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 
 ### 3. Run
 
-`run.mjs` finds `app/server.py` and `app/seed.py` relative to itself, so it runs from any directory. Run it from this one so the `terminate now:` command it prints can import `@tenkicloud/sandbox` from this example's `node_modules`:
+`run.mjs` finds `app/server.py` and `app/seed.py` relative to itself, so it runs from any directory. Run it from this one so the `terminate now:` command it prints can import `@luxorai/sandbox` from this example's `node_modules`:
 
 ```bash
 node run.mjs
@@ -156,10 +156,10 @@ The local server needs Node 22 or later. For Claude Desktop and Cursor, see [MCP
 
 | Error | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
+| ``No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
 | `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `run.mjs` reads only the environment. Export the key. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
-| `Cannot find package '@tenkicloud/sandbox'` from the `terminate now:` command | Run it from `examples/agent-fullstack-app`, after `npm install`. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
+| `Cannot find package '@luxorai/sandbox'` from the `terminate now:` command | Run it from `examples/agent-fullstack-app`, after `npm install`. |
 | `permission_denied … path outside workdir` | Keep SDK file paths under `/home/tenki`, or write with `exec`. |
 | `InboundDisabledError` | Create the sandbox with `allowInbound: true` (or `allow_inbound: true` in MCP). |
 
