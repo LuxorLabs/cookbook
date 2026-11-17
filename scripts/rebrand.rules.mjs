@@ -1,3 +1,4 @@
+import { readdirSync } from "node:fs";
 // What the Tenki → Luxor rename does to each mention of "tenki". See scripts/README.md.
 // Every case-insensitive "tenki" in the repo must be matched by a rule or a protect pattern;
 // `node scripts/rebrand.mjs --check` fails on any mention that is not, so a new name is decided
@@ -22,10 +23,19 @@ export const FOLDERS = [
 	"orca", "pi-durable", "praisonai", "prefect", "ragflow", "stickydisk", "tinyfish",
 ];
 const FOLDER = `(?:${FOLDERS.join("|")})-tenki|(?:e2b|daytona|modal)-to-tenki-migration|mcp-tenki-sandbox`;
+// Folders added after the rename (examples/<name>-luxor on disk but not listed above) are ours alone,
+// so <name>-tenki is renamed wherever it stands: tags, verify lines, prompts. Same for luxor-<name> folders.
+const onDisk = ["examples", "benchmarks"].flatMap((d) => { try { return readdirSync(new URL(`../${d}`, import.meta.url)); } catch { return []; } });
+const NEW = [...new Set(onDisk.map((n) => n.match(/^(.+)-luxor$/)?.[1]).filter((n) => n && !FOLDERS.includes(n)))];
+const NEW_PREFIX = [...new Set(onDisk.map((n) => n.match(/^luxor-(.+)$/)?.[1]).filter(Boolean))];
 // A folder name only where it names the folder: a path, a relative link, a verify line, a package name.
 const AS_FOLDER = new RegExp(`(?<=\\/|\\[|✓ |"name": "|FAILED: |\`)(${FOLDER})(?![\\w-])`, "g");
 
 export const rules = [
+	...(NEW.length ? [{ phase: "1", scope: "any", find: new RegExp(`(?<![\\w-])(${NEW.join("|")})-tenki(?![\\w-])`, "g"), replace: "$1-luxor" }] : []),
+	...(NEW_PREFIX.length ? [{ phase: "1", scope: "any", find: new RegExp(`(?<![\\w-])tenki-(${NEW_PREFIX.join("|")})(?![\\w-])`, "g"), replace: "luxor-$1" }] : []),
+	// The JS client reaching a sub-API: tenki.previewUrls.bind(...).
+	{ phase: "1", scope: "code", files: /\.(m?[jt]s|tsx?)$/, find: /\btenki(?=\.[a-z]\w*\.[a-z]\w*\()/g, replace: "luxor" },
 	// Domains. tenki.cloud, app.tenki.cloud and api.tenki.cloud all moved to luxor.ai.
 	{ phase: "1", scope: "any", find: /https?:\/\/(www\.)?tenki\.cloud(?=[\/\s)"'`>\]#?]|$)/gm, replace: "https://luxor.ai" },
 	{ phase: "1", scope: "any", find: /\b(app|api)\.tenki\.cloud\b/g, replace: "$1.luxor.ai" },
