@@ -1,0 +1,10 @@
+{
+  "name": "openclaw-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — OpenClaw agents with all tool execution in Luxor Agent Cloud Firecracker sandboxes via @luxorai/openclaw.",
+  "dependencies": {
+    "@luxorai/openclaw": "^0.2.0",
+    "@luxorai/sandbox": ">=1.5.2"
+  }
+}

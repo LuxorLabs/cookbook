@@ -1,6 +1,6 @@
 # Claude Agent SDK
 
-Run every tool call from the [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) in a Tenki sandbox. The example turns off the SDK's built-in Bash, Read, Write, and Edit tools, which run on your machine, and replaces them with `bash`, `write_file`, and `read_file` tools backed by one sandbox per session. The agent writes `fib.py`, runs it, and answers `832040`.
+Run every tool call from the [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) in a Luxor sandbox. The example turns off the SDK's built-in Bash, Read, Write, and Edit tools, which run on your machine, and replaces them with `bash`, `write_file`, and `read_file` tools backed by one sandbox per session. The agent writes `fib.py`, runs it, and answers `832040`.
 
 `query()` and the model calls still run locally. Only tool execution moves into the sandbox.
 
@@ -9,12 +9,12 @@ Run every tool call from the [Claude Agent SDK](https://www.npmjs.com/package/@a
 Paste this into Claude Code, Codex, Cursor, or another coding agent:
 
 ```text
-Set up the Tenki "Claude Agent SDK" example from https://github.com/LuxorLabs/cookbook.
+Set up the Luxor Agent Cloud "Claude Agent SDK" example from https://github.com/LuxorLabs/cookbook.
 1. Clone the repo, cd into examples/claude-agent-sdk, check that Node.js is 24 or later, and run npm install.
-2. It needs TENKI_AUTH_TOKEN (a Tenki key starting with tk_, from https://app.tenki.cloud) and ANTHROPIC_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
+2. It needs LUXORAI_AUTH_TOKEN (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) and ANTHROPIC_API_KEY. If either is missing, stop and ask me to export it. Never print the keys or write them to a file.
 3. Run node verify.mjs first (it doesn't call the model), then node agent.mjs, and confirm the agent answers 832040 and the final ls shows fib.py in the sandbox.
 4. If a step fails, use the Troubleshooting table in the example's README.md.
-Then show me how to add tenki-tools.mjs to my own Agent SDK project with tools: [] so no tool runs on my machine.
+Then show me how to add luxor-tools.mjs to my own Agent SDK project with tools: [] so no tool runs on my machine.
 ```
 
 ## Quick start
@@ -22,7 +22,7 @@ Then show me how to add tenki-tools.mjs to my own Agent SDK project with tools: 
 You need:
 
 - Node.js 24 or later for `agent.mjs`, which uses top-level `await using`. `verify.mjs` runs on Node 20.
-- A Tenki API key (`tk_...`) from [app.tenki.cloud](https://app.tenki.cloud).
+- A Luxor Agent Cloud API key (`tk_...`) from [app.luxor.ai](https://app.luxor.ai).
 - An Anthropic API key, for the agent run only.
 
 ### 1. Install
@@ -33,16 +33,16 @@ cd cookbook/examples/claude-agent-sdk
 npm install
 ```
 
-This installs `@anthropic-ai/claude-agent-sdk`, `@tenkicloud/sandbox`, and `zod`. The Agent SDK pulls a platform package of about 250 MB, so the first install takes a while.
+This installs `@anthropic-ai/claude-agent-sdk`, `@luxorai/sandbox`, and `zod`. The Agent SDK pulls a platform package of about 250 MB, so the first install takes a while.
 
 ### 2. Set your keys
 
 ```bash
-export TENKI_AUTH_TOKEN=tk_...   # TENKI_API_KEY also works
+export LUXORAI_AUTH_TOKEN=tk_...   # LUXORAI_API_KEY also works
 export ANTHROPIC_API_KEY=...
 ```
 
-`agent.mjs` reads both from the environment only. `verify.mjs` also accepts a Tenki key saved with `tenki login --api-key <key>`. `TENKI_WORKSPACE_ID` is optional.
+`agent.mjs` reads both from the environment only. `verify.mjs` also accepts a Luxor Agent Cloud key saved with `luxor login --api-key <key>`. `LUXORAI_WORKSPACE_ID` is optional.
 
 ### 3. Run the agent
 
@@ -51,8 +51,8 @@ node agent.mjs
 ```
 
 ```
-→ mcp__tenki__write_file {"path":"fib.py","content":"def fib(n):\n    a, b = 0, 1\n    for _ in
-→ mcp__tenki__bash {"command":"python3 fib.py"}
+→ mcp__luxor__write_file {"path":"fib.py","content":"def fib(n):\n    a, b = 0, 1\n    for _ in
+→ mcp__luxor__bash {"command":"python3 fib.py"}
 The 30th Fibonacci number is **832040**.
 -rw-r--r-- 1 tenki tenki 136 … fib.py
 ```
@@ -76,30 +76,30 @@ node verify.mjs
 `agent.mjs`:
 
 ```js
-// The Claude Agent SDK with Tenki as its execution backend: every command the
+// The Claude Agent SDK with Luxor Agent Cloud as its execution backend: every command the
 // agent runs and every file it writes lands in a disposable sandbox, not on this box.
 //
 // Needs a model key: export ANTHROPIC_API_KEY=...
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
-import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
-import { makeTenkiTools } from "./tenki-tools.mjs";
+import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
+import { makeLuxorTools } from "./luxor-tools.mjs";
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 
 // One sandbox for the whole agent session, reused across every tool call.
-await using sandbox = await tenki.createAndWait({
+await using sandbox = await luxor.createAndWait({
   cpuCores: 1,
   memoryMb: 1024,
-  workspaceId: process.env.TENKI_WORKSPACE_ID,
+  workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 for await (const message of query({
   prompt: "Write fib.py, a Python script that computes the 30th Fibonacci number, run it, and tell me the number.",
   options: {
     tools: [], // empty array disables every built-in tool — nothing can execute locally
-    mcpServers: { tenki: createSdkMcpServer({ name: "tenki", version: "1.0.0", tools: makeTenkiTools(sandbox) }) },
+    mcpServers: { luxor: createSdkMcpServer({ name: "luxor", version: "1.0.0", tools: makeLuxorTools(sandbox) }) },
     // In-process MCP tools are still namespaced mcp__<server>__<tool>.
-    allowedTools: ["mcp__tenki__bash", "mcp__tenki__write_file", "mcp__tenki__read_file"],
+    allowedTools: ["mcp__luxor__bash", "mcp__luxor__write_file", "mcp__luxor__read_file"],
     maxTurns: 12,
   },
 })) {
@@ -119,21 +119,21 @@ console.log(proof.exitCode === 0 ? stdoutText(proof) : `fib.py is not in the san
 
 ## The tools
 
-`tenki-tools.mjs`:
+`luxor-tools.mjs`:
 
 ```js
-// Claude Agent SDK tools backed by a Tenki sandbox.
+// Claude Agent SDK tools backed by a Luxor sandbox.
 //
 // The SDK's built-in Bash/Read/Write run on whatever host called query(). These
 // three route the same capabilities into a disposable sandbox instead, so the
 // agent's execution surface is a machine you delete rather than your laptop.
 import { tool } from "@anthropic-ai/claude-agent-sdk";
-import { stdoutText, stderrText } from "@tenkicloud/sandbox";
+import { stdoutText, stderrText } from "@luxorai/sandbox";
 import { z } from "zod";
 
 const say = (text) => ({ content: [{ type: "text", text }] });
 
-export function makeTenkiTools(sandbox) {
+export function makeLuxorTools(sandbox) {
   return [
     // The schema argument is a raw Zod shape — a bare object of fields, not z.object({...}).
     tool("bash", "Run a shell command in the sandbox and return its stdout and stderr.", { command: z.string() }, async ({ command }) => {
@@ -175,12 +175,12 @@ Things to know:
 
 | Problem | Fix |
 | --- | --- |
-| ``No token. Set TENKI_AUTH_TOKEN, or run `tenki login`.`` | `verify.mjs` found no key. Export one or run `tenki login --api-key <key>`. |
-| `missing auth token - set TENKI_AUTH_TOKEN or TENKI_API_KEY ...` | `agent.mjs` reads only the environment. Export the key. |
-| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.tenki.cloud](https://app.tenki.cloud). |
+| ``No token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.`` | `verify.mjs` found no key. Export one or run `luxor login --api-key <key>`. |
+| `missing auth token - set LUXORAI_AUTH_TOKEN or LUXORAI_API_KEY ...` | `agent.mjs` reads only the environment. Export the key. |
+| `invalid auth token - API keys and service tokens must start with tk_` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `SyntaxError` at `await using` | Use Node 24 or later. |
-| The agent asks for permission on every call | `allowedTools` must list the full `mcp__tenki__*` names. Update it if you rename the server or add tools. |
-| `timed out after 120s` | Raise `timeoutMs` in `tenki-tools.mjs`. |
+| The agent asks for permission on every call | `allowedTools` must list the full `mcp__luxor__*` names. Update it if you rename the server or add tools. |
+| `timed out after 120s` | Raise `timeoutMs` in `luxor-tools.mjs`. |
 | `permission_denied … path outside workdir` | Use a path under `/home/tenki`, or write it with `bash`. |
 
 ## Related
@@ -188,4 +188,4 @@ Things to know:
 - [Claude Code](../claude-code-sandbox/): run Claude Code itself headless in a sandbox
 - [OpenAI Agents SDK](../openai-agents-sdk/): the same one-sandbox-per-session pattern
 - [`@anthropic-ai/claude-agent-sdk` on npm](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk)
-- [Tenki Sandbox](https://tenki.cloud/products/sandbox) and the [Tenki docs](https://tenki.cloud/docs)
+- [Luxor Sandbox](https://luxor.ai/products/sandbox) and the [Luxor Agent Cloud docs](https://luxor.ai/docs)

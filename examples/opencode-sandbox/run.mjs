@@ -1,27 +1,27 @@
-// A headless OpenCode server in a disposable Tenki sandbox, reachable over HTTPS:
+// A headless OpenCode server in a disposable Luxor sandbox, reachable over HTTPS:
 // boot with the agent and a repo already inside, serve, expose, then drive it from here.
-import { TenkiSandbox, WaitReadyFailedError } from "@tenkicloud/sandbox";
+import { LuxorSandbox, WaitReadyFailedError } from "@luxorai/sandbox";
 import { randomBytes } from "node:crypto";
 
 const REPO = "https://github.com/sindresorhus/yocto-queue";
 const PORT = 4096;
 const PASSWORD = randomBytes(24).toString("hex"); // this URL is public; see the note below
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 
 // enableOpenCode bakes the CLI into the guest — nothing to npm install.
 // No `await using` here: it would terminate the sandbox at the end of this scope and the
 // URL below would 404 before you could open it. maxDurationMs caps it instead.
 // createAndWait does not clean up after itself: a VM that is provisioned but never gets
 // ready comes back as WaitReadyFailedError, half-born and billing, with its session attached.
-const sandbox = await tenki.createAndWait({
+const sandbox = await luxor.createAndWait({
 	cpuCores: 2,
 	memoryMb: 4096,
 	enableOpenCode: true,
 	allowInbound: true,
 	cloneRepoUrl: REPO,
 	maxDurationMs: 2 * 60 * 60_000,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 }).catch(async (e) => {
 	if (e instanceof WaitReadyFailedError) await e.session[Symbol.asyncDispose]();
 	throw e;

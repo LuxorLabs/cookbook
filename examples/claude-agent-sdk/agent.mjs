@@ -1,27 +1,27 @@
-// The Claude Agent SDK with Tenki as its execution backend: every command the
+// The Claude Agent SDK with Luxor Agent Cloud as its execution backend: every command the
 // agent runs and every file it writes lands in a disposable sandbox, not on this box.
 //
 // Needs a model key: export ANTHROPIC_API_KEY=...
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
-import { TenkiSandbox, stdoutText, stderrText } from "@tenkicloud/sandbox";
-import { makeTenkiTools } from "./tenki-tools.mjs";
+import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
+import { makeLuxorTools } from "./luxor-tools.mjs";
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 
 // One sandbox for the whole agent session, reused across every tool call.
-await using sandbox = await tenki.createAndWait({
+await using sandbox = await luxor.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 for await (const message of query({
 	prompt: "Write fib.py, a Python script that computes the 30th Fibonacci number, run it, and tell me the number.",
 	options: {
 		tools: [], // empty array disables every built-in tool — nothing can execute locally
-		mcpServers: { tenki: createSdkMcpServer({ name: "tenki", version: "1.0.0", tools: makeTenkiTools(sandbox) }) },
+		mcpServers: { luxor: createSdkMcpServer({ name: "luxor", version: "1.0.0", tools: makeLuxorTools(sandbox) }) },
 		// In-process MCP tools are still namespaced mcp__<server>__<tool>.
-		allowedTools: ["mcp__tenki__bash", "mcp__tenki__write_file", "mcp__tenki__read_file"],
+		allowedTools: ["mcp__luxor__bash", "mcp__luxor__write_file", "mcp__luxor__read_file"],
 		maxTurns: 12,
 	},
 })) {

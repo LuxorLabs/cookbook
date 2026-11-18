@@ -1,0 +1,9 @@
+{
+  "name": "orca-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — Luxor sandboxes as orca ephemeral-VM recipes.",
+  "dependencies": {
+    "@luxorai/sandbox": ">=1.5.2"
+  }
+}

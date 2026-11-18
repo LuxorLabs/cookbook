@@ -1,13 +1,13 @@
-"""Run SWE-bench (Lite / Verified / full) on Tenki Sandboxes — faithfully.
+"""Run SWE-bench (Lite / Verified / full) on Luxor Sandboxes — faithfully.
 
-Tenki gives you a stock Ubuntu sandbox (no nested virt), but Docker *containers*
+Luxor Agent Cloud gives you a stock Ubuntu sandbox (no nested virt), but Docker *containers*
 run inside it fine: containers are namespaces, not VMs, so `docker run` works
 without /dev/kvm. So we run the canonical, per-instance SWE-bench Docker image
-INSIDE a Tenki VM and grade with the official `swebench` eval script — no
+INSIDE a Luxor Agent Cloud VM and grade with the official `swebench` eval script — no
 from-source reimplementation, no fidelity loss.
 
 Per instance:
-  1. create a Tenki VM (disk big enough for one ~2-4 GB image)
+  1. create a Luxor Agent Cloud VM (disk big enough for one ~2-4 GB image)
   2. install + start docker, pull docker.io/swebench/sweb.eval.x86_64.<iid>
   3. `docker run -d` the image — the repo is checked out at base_commit in /testbed
   4. either apply the gold patch (--oracle) or run an agent against /testbed
@@ -70,13 +70,13 @@ def log(msg: str) -> None:
         print(msg, flush=True)
 
 
-# ---- Tenki auth ------------------------------------------------------------
-# Token/workspace from env (CI: TENKI_API_KEY) or ~/.config/tenki/config.yaml
-# (local `tenki login`).
+# ---- Luxor Agent Cloud auth ------------------------------------------------------------
+# Token/workspace from env (CI: TENKI_API_KEY) or ~/.config/luxor/config.yaml
+# (local `luxor login`).
 
 def _cfg(key: str) -> str:
     try:
-        with open(os.path.expanduser("~/.config/tenki/config.yaml")) as f:
+        with open(next((p for p in (os.path.expanduser(f"~/.config/{d}/config.yaml") for d in ("luxor", "tenki")) if os.path.exists(p)), "")) as f:
             for line in f:
                 if line.startswith(key + ":"):
                     return line.split(":", 1)[1].strip()
@@ -85,17 +85,17 @@ def _cfg(key: str) -> str:
     return ""
 
 
-def tenki_client() -> tuple[Client, str | None]:
-    token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or _cfg("auth_token")
+def luxor_client() -> tuple[Client, str | None]:
+    token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or _cfg("auth_token")
     if not token:
-        raise SystemExit("No token. Set TENKI_AUTH_TOKEN / TENKI_API_KEY, or run `tenki login`.")
-    # A `tk_` API key works as-is; a `tenki login` session token must be sent as a
+        raise SystemExit("No token. Set TENKI_AUTH_TOKEN / TENKI_API_KEY, or run `luxor login`.")
+    # A `tk_` API key works as-is; a `luxor login` session token must be sent as a
     # cookie, which the SDK does when you prefix it `cookie:`.
     if not token.startswith(("tk_", "ory_st_", "cookie:")):
         token = f"cookie:{token}"
     client = Client(auth_token=token)
     # None lets the SDK pick the key's default workspace.
-    wid = os.environ.get("TENKI_WORKSPACE_ID") or _cfg("current_workspace_id") or None
+    wid = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or _cfg("current_workspace_id") or None
     return client, wid
 
 
@@ -107,7 +107,7 @@ def image_name(instance_id: str) -> str:
 
 
 def _sh(sb, cmd: str, timeout: int = 240) -> tuple[bool, str]:
-    """Run a bash command in the Tenki VM (not the container). Returns (ok, output)."""
+    """Run a bash command in the Luxor Agent Cloud VM (not the container). Returns (ok, output)."""
     r = sb.exec("bash", "-lc", cmd, timeout=timeout)
     return bool(r.ok), (r.stdout_text or "") + (r.stderr_text or "")
 
@@ -247,7 +247,7 @@ def run_one(instance: dict, *, oracle: bool = False, model_id: str | None = None
             api_base: str = "", api_key_env: str = "", keep: bool = False) -> dict:
     iid = instance["instance_id"]
     test_spec = make_test_spec(instance)
-    client, wid = tenki_client()
+    client, wid = luxor_client()
     t0 = time.time()
     sb = client.create(name=f"swe-{iid[:32]}", workspace_id=wid, cpu_cores=2,
                        memory_mb=4096, max_duration=1800, disk_size_gb=DISK_GB)
@@ -297,7 +297,7 @@ def load_instances(dataset: str, instances: list[str] | None, limit: int | None)
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Run SWE-bench on Tenki Sandboxes.")
+    ap = argparse.ArgumentParser(description="Run SWE-bench on Luxor Sandboxes.")
     ap.add_argument("--dataset", choices=list(DATASETS), default="lite")
     ap.add_argument("--instances", nargs="*", help="explicit instance ids")
     ap.add_argument("--limit", type=int, help="first N instances")
@@ -307,12 +307,12 @@ def main() -> int:
     ap.add_argument("--api-key-env", default="OPENAI_API_KEY", help="env var holding the model API key")
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--keep", action="store_true", help="don't terminate VMs (debug)")
-    ap.add_argument("--out", default="swebench-tenki.json")
+    ap.add_argument("--out", default="swebench-luxor.json")
     a = ap.parse_args()
 
     rows = load_instances(a.dataset, a.instances, a.limit)
     mode = "oracle" if a.oracle else (a.model or "empty")
-    log(f"SWE-bench/{a.dataset} on Tenki: {len(rows)} instance(s), {a.workers} workers, mode={mode}")
+    log(f"SWE-bench/{a.dataset} on Luxor Agent Cloud: {len(rows)} instance(s), {a.workers} workers, mode={mode}")
 
     results = []
     with cf.ThreadPoolExecutor(max_workers=a.workers) as ex:

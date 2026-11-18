@@ -1,0 +1,100 @@
+/**
+ * Proves the Composio ↔ Luxor Agent Cloud integration: bind @luxorai/composio-tools to a
+ * real Composio session, then drive the LOCAL_TENKI_* tools directly via
+ * session.execute() — CREATE_SANDBOX → EXEC_COMMAND → TERMINATE_SANDBOX — and
+ * assert each step. No LLM needed (the full agent is in agent.mjs).
+ *
+ * Needs two keys:
+ *   COMPOSIO_API_KEY  (https://app.composio.dev)
+ *   a Luxor Agent Cloud token     (TENKI_AUTH_TOKEN / TENKI_API_KEY, or `luxor login`)
+ */
+import { Composio } from "@composio/core";
+import { luxorToolkit } from "@luxorai/composio-tools";
+import { LuxorSandbox } from "@luxorai/sandbox";
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+
+const cfg = (key) => {
+	try {
+		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
+		return (c.match(new RegExp(`^${key}:\\s*(.+)$`, "m"))?.[1] ?? "").trim();
+	} catch {
+		return "";
+	}
+};
+
+const composioKey = process.env.COMPOSIO_API_KEY;
+const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+
+if (!composioKey) {
+	console.error("No COMPOSIO_API_KEY. Get one at https://app.composio.dev.");
+	process.exit(1);
+}
+if (!authToken) {
+	console.error("No Luxor Agent Cloud token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
+	process.exit(1);
+}
+
+// @luxorai/composio-tools 0.1.0 needs both IDs up front; with no projects on the account its own
+// lookup fails. Projects are legacy, so any projectId is accepted. 0.2.0 (unpublished) drops both.
+const workspaceId = process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || (await lookUpWorkspaceId());
+const projectId = process.env.TENKI_PROJECT_ID || "default";
+
+async function lookUpWorkspaceId() {
+	let workspaces;
+	try {
+		({ workspaces } = await new LuxorSandbox({ authToken }).whoAmI());
+	} catch (err) {
+		console.error(`Luxor Agent Cloud workspace lookup failed (${err.message}). Check the token, or set TENKI_WORKSPACE_ID.`);
+		process.exit(1);
+	}
+	if (!workspaces?.[0]?.id) {
+		console.error("This Luxor Agent Cloud token can't see any workspace. Set TENKI_WORKSPACE_ID.");
+		process.exit(1);
+	}
+	return workspaces[0].id;
+}
+
+const composio = new Composio({ apiKey: composioKey });
+const session = await composio.sessions.create("default", {
+	experimental: { customToolkits: [luxorToolkit({ authToken, workspaceId, projectId })] },
+});
+
+/** Execute one LOCAL_TENKI_* tool and assert Composio + the tool itself both succeeded. */
+async function tool(slug, args) {
+	const res = await session.execute(slug, args);
+	if (res.error !== null || res.data?.success !== true) {
+		throw new Error(`${slug} failed: ${res.error ?? JSON.stringify(res.data?.error ?? res.data)}`);
+	}
+	return res.data;
+}
+
+let sandboxId;
+try {
+	const created = await tool("LOCAL_TENKI_CREATE_SANDBOX", { name: "cookbook-composio-verify" });
+	sandboxId = created.sessionId;
+	if (!sandboxId) throw new Error("CREATE_SANDBOX returned no sessionId");
+
+	const exec = await tool("LOCAL_TENKI_EXEC_COMMAND", {
+		sessionId: sandboxId,
+		command: "echo hello-from-composio && python3 -c 'print(6*7)'",
+	});
+	if (exec.exitCode !== 0) throw new Error(`exec exitCode ${exec.exitCode}`);
+	const out = String(exec.stdout);
+	if (!out.includes("hello-from-composio") || !out.includes("42")) {
+		throw new Error(`unexpected stdout: ${JSON.stringify(exec.stdout)}`);
+	}
+
+	console.log("✓ composio-luxor: a Composio session created a Luxor sandbox and ran code in it → 42");
+} catch (e) {
+	console.error("✗ " + (e?.message ?? e));
+	process.exitCode = 1;
+} finally {
+	if (sandboxId) {
+		try {
+			await session.execute("LOCAL_TENKI_TERMINATE_SANDBOX", { sessionId: sandboxId });
+		} catch {
+			/* self-reaps via idle/lifetime caps */
+		}
+	}
+}

@@ -1,14 +1,14 @@
-// Pause a Tenki sandbox and resume it later — its filesystem survives the round-trip.
+// Pause a Luxor sandbox and resume it later — its filesystem survives the round-trip.
 // pause() snapshots memory + disk and stops the running machine; resume() brings it back.
-import { TenkiSandbox } from "@tenkicloud/sandbox";
+import { LuxorSandbox } from "@luxorai/sandbox";
 
-const tenki = new TenkiSandbox({ authToken: process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 
 // `await using` auto-terminates the sandbox when this scope ends (Session is AsyncDisposable).
-await using sandbox = await tenki.createAndWait({
+await using sandbox = await luxor.createAndWait({
 	cpuCores: 1,
 	memoryMb: 1024,
-	workspaceId: process.env.TENKI_WORKSPACE_ID,
+	workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 });
 
 // Leave a marker in the sandbox filesystem (relative paths resolve under /home/tenki).

@@ -5,7 +5,7 @@ import "@copilotkit/react-ui/v2/styles.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-	title: "MCP Apps on Tenki sandboxes",
+	title: "MCP Apps on Luxor sandboxes",
 	description: "Tools that bring their own UI, backed by real Linux sandboxes.",
 };
 
