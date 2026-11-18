@@ -1,0 +1,9 @@
+{
+  "name": "host-a-service",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — host a long-running service on a sticky Luxor sandbox behind a stable preview URL, with its data on a volume.",
+  "dependencies": {
+    "@luxorai/sandbox": ">=1.5.2"
+  }
+}
