@@ -19,7 +19,8 @@ This is the examples/cookbook layer for Luxor Agent Cloud, and this is your play
 **Every example runs on Luxor Agent Cloud and proves it in CI.** A public example that doesn't work damages the brand more than a missing one helps.
 
 - Each example ships a **`verify.mjs`** that exercises it against the live Luxor Agent Cloud API and **exits non-zero on any failure**.
-- CI (`.github/workflows/verify.yml`) runs every `verify.mjs` with the `TENKI_API_KEY` secret, exported as both `LUXORAI_API_KEY` and `TENKI_API_KEY`. A red build blocks the merge.
+- CI (`.github/workflows/verify.yml`) runs `verify.mjs` with the `TENKI_API_KEY` secret, exported as both `LUXORAI_API_KEY` and `TENKI_API_KEY`, one job per example: a pull request runs the examples it touches plus `run-code-in-a-sandbox`; `main` and the nightly run cover everything. A red `verify` check blocks the merge.
+- An example that needs a third-party key lists the variable in `.verify-requires` (skipped when unset). One that cannot run yet carries a `.verify-skip` whose first line says why and links to what has to change. Never skip inside the workflow file.
 - `verify.mjs` proves the *sandbox-facing* part. If an example needs an LLM (an agent turn), verify the tool/backend against Luxor Agent Cloud directly — don't require a model key in CI. (See `langchain-code-interpreter` for the pattern.)
 
 ## What to build

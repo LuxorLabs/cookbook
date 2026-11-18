@@ -1,0 +1,1 @@
+gateway SSH host keys are not stable across connections, so the pinned-alias check fails intermittently; verify locally
