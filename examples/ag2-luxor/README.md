@@ -160,7 +160,7 @@ The core of `verify.py`:
 | ``No token. Set TENKI_API_KEY, or run `luxor login`.`` | Export `TENKI_API_KEY`. |
 | `Token must be a tk_ API key …` or `InvalidAuthTokenError` | Create a `tk_` key at [app.luxor.ai](https://app.luxor.ai). |
 | `MissingAuthTokenError` in the agent after the check passed | Agent code doesn't read the `luxor login` key. Export `TENKI_API_KEY`. |
-| ``The Luxor Agent Cloud API key can access multiple workspaces. Pass `workspace_id` …`` | Set `TENKI_WORKSPACE_ID` or pass `workspace_id=`. If it says `has no visible workspace`, create one. |
+| ``The Tenki API key can access multiple workspaces. Pass `workspace_id` …`` | Set `TENKI_WORKSPACE_ID` or pass `workspace_id=`. If it says `has no visible workspace`, create one. |
 | `ImportError: TenkiEnvironment requires optional dependencies.` | Install `requirements.txt`, which includes `tenki`. |
 | `ModuleNotFoundError` for `ag2` or `ag2.extensions.tenki` | Create the `.venv` here and install `requirements.txt`, or set `PYTHON`. |
 | `Tenki execution timed out after 60s` | Pass a larger `timeout=` to `TenkiEnvironment`. |

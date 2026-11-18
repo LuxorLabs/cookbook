@@ -21,7 +21,7 @@ const cfg = (key) => {
 	}
 };
 
-const apiKey = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+const apiKey = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 if (!apiKey) {
 	console.error("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.");
 	process.exit(1);

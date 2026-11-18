@@ -73,7 +73,7 @@ export function categories(file, src) {
 			fence = null;
 		} else if (fence === null) {
 			mark(pos, pos + line.length, "text");
-			for (const m of line.matchAll(/`[^`]*`/g)) mark(pos + m.index, pos + m.index + m[0].length, "code");
+			for (const m of line.matchAll(/(`+)(?!`)[^]*?(?<!`)\1(?!`)/g)) mark(pos + m.index, pos + m.index + m[0].length, "code");
 		}
 		pos += line.length + 1;
 	}
@@ -125,6 +125,10 @@ function main() {
 	const SKIP = /(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|poetry\.lock|uv\.lock|go\.sum)$|^(scripts\/(rebrand\.mjs|rebrand\.rules\.mjs|rebrand\.test\.mjs|README\.md)|\.github\/workflows\/(brand|links)\.yml|lychee\.toml)$|\.(png|jpe?g|gif|ico|pdf|woff2?|ttf|zip|gz)$/i;
 	const files = execFileSync("git", ["ls-files", ...paths], { encoding: "utf8" }).split("\n").filter((f) => f && !SKIP.test(f));
 
+	if (paths.length && !files.length) {
+		console.error(`no tracked files match ${paths.join(", ")}`);
+		process.exit(1);
+	}
 	const tracked = execFileSync("git", ["ls-files", "examples", "benchmarks"], { encoding: "utf8" });
 	useFolders([...new Set(tracked.split("\n").map((f) => f.split("/")[1]).filter(Boolean))]);
 

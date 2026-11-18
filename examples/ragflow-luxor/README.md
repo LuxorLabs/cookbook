@@ -130,7 +130,7 @@ The check makes the Go provider's create call. From `main.go`:
 | `` ✗ no token: set TENKI_API_KEY, or run `luxor login` `` | Export a `tk_` key, or run `luxor login --api-key <key>`. |
 | `✗ could not run go: …` | Install Go 1.21 or later and put it on your `PATH`. |
 | `tenki: API key is required (set it in Admin > Sandbox Settings or TENKI_API_KEY)` | Set `api_key` in Sandbox Settings, or `TENKI_API_KEY` on the RAGFlow server. |
-| `` tenki is required for the Luxor sandbox provider. Install it with `pip install tenki` … `` | On v0.27.x, run `pip install tenki` in RAGFlow's Python environment. |
+| `` tenki is required for the Tenki sandbox provider. Install it with `pip install tenki` … `` | On v0.27.x, run `pip install tenki` in RAGFlow's Python environment. |
 | `pip install` or another network call fails in a component | Turn on `allow_outbound`. |
 | `tenki: exec python3: …` or `tenki: exec node: …` | The command failed outright, often by passing `timeout`. Raise `timeout`, up to 600 s. |
 | `tenki: output exceeds 1048576 bytes` | Print less, or raise `max_output_bytes`. |

@@ -3,7 +3,7 @@
 import { LuxorSandbox } from "@luxorai/sandbox";
 
 const sessionId = process.argv[2];
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 const conn = await luxor.ssh(sessionId);
 
 // Serialize writes; conn.write is async and ssh will not tolerate reordered bytes.

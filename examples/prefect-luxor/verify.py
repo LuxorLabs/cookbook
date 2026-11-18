@@ -38,7 +38,7 @@ def cfg(key):
     return ""
 
 
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 if not token:
     print("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.")
     sys.exit(1)
@@ -52,7 +52,7 @@ if not token.startswith(("tk_", "ory_st_", "cookie:")):
 async def main():
     credentials = TenkiCredentials(api_key=token)
 
-    workspace_id = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+    workspace_id = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
     if not workspace_id:
         async with AsyncClient(**credentials.get_client_options()) as client:
             workspaces = list((await client.who_am_i()).workspaces)

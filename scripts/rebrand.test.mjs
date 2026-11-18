@@ -73,3 +73,9 @@ test("text about a tool that still reads the old CLI's file keeps saying so", ()
 test("the CopilotKit MCP server id is ours, so it moves", () => {
 	assert.equal(r("agent.ts", 'mcpServers: [{ type: "http", url: MCP_URL, serverId: "tenki" }]'), 'mcpServers: [{ type: "http", url: MCP_URL, serverId: "luxor" }]');
 });
+
+test("a message another tool prints, quoted in double backticks, is left as that tool prints it", () => {
+	const src = "| `` tenki is required for the Tenki sandbox provider. Install it with `pip install tenki` … `` | Run `pip install tenki`. |";
+	assert.equal(r("examples/ragflow-luxor/README.md", src), src);
+	assert.ok(classify("examples/ragflow-luxor/README.md", src).every((m) => m.by));
+});

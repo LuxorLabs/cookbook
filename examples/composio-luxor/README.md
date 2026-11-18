@@ -72,7 +72,7 @@ From `verify.mjs` (`authToken` is the Luxor Agent Cloud key, `composioKey` is `C
 // @luxorai/composio-tools 0.1.0 needs both IDs up front; with no projects on the account its own
 // lookup fails. Projects are legacy, so any projectId is accepted. 0.2.0 (unpublished) drops both.
 const workspaceId =
-  process.env.TENKI_WORKSPACE_ID || (await new LuxorSandbox({ authToken }).whoAmI()).workspaces[0]?.id;
+  process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || (await new LuxorSandbox({ authToken }).whoAmI()).workspaces[0]?.id;
 const projectId = process.env.TENKI_PROJECT_ID || "default";
 
 const composio = new Composio({ apiKey: composioKey });

@@ -86,7 +86,7 @@ def _cfg(key: str) -> str:
 
 
 def luxor_client() -> tuple[Client, str | None]:
-    token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or _cfg("auth_token")
+    token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or _cfg("auth_token")
     if not token:
         raise SystemExit("No token. Set TENKI_AUTH_TOKEN / TENKI_API_KEY, or run `luxor login`.")
     # A `tk_` API key works as-is; a `luxor login` session token must be sent as a
@@ -95,7 +95,7 @@ def luxor_client() -> tuple[Client, str | None]:
         token = f"cookie:{token}"
     client = Client(auth_token=token)
     # None lets the SDK pick the key's default workspace.
-    wid = os.environ.get("TENKI_WORKSPACE_ID") or _cfg("current_workspace_id") or None
+    wid = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or _cfg("current_workspace_id") or None
     return client, wid
 
 

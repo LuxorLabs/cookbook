@@ -9,14 +9,15 @@ import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { getOrThrow } from "@earendil-works/pi-durable/env";
 import { createLuxorEnv, retryOnLostConnection } from "./luxor-env.mjs";
 
-if (!process.env.TENKI_AUTH_TOKEN && !process.env.TENKI_API_KEY) {
+const envKey = () => process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY;
+if (!envKey()) {
 	try {
 		const c = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		process.env.TENKI_API_KEY = (c.match(/^auth_token:\s*(.+)$/m)?.[1] ?? "").trim();
 	} catch {
 		/* fall through to the check below */
 	}
-	if (!process.env.TENKI_API_KEY) {
+	if (!envKey()) {
 		console.error("No token. Set TENKI_API_KEY, or run `luxor login`.");
 		process.exit(1);
 	}

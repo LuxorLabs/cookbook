@@ -160,7 +160,7 @@ To use another provider, install its AI SDK package and swap `openai("gpt-4o-min
 ```js
 export async function createLuxorSandbox(options = {}) {
   const authToken = options.authToken || process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
-  const workspaceId = options.workspaceId || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
+  const workspaceId = options.workspaceId || process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || cfg("current_workspace_id");
   if (!authToken) throw new Error("No Luxor Agent Cloud token. Set LUXORAI_AUTH_TOKEN, or run `luxor login`.");
 
   const client = new LuxorSandbox({ authToken });

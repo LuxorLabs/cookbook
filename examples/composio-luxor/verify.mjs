@@ -24,7 +24,7 @@ const cfg = (key) => {
 };
 
 const composioKey = process.env.COMPOSIO_API_KEY;
-const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
+const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token");
 
 if (!composioKey) {
 	console.error("No COMPOSIO_API_KEY. Get one at https://app.composio.dev.");
@@ -37,7 +37,7 @@ if (!authToken) {
 
 // @luxorai/composio-tools 0.1.0 needs both IDs up front; with no projects on the account its own
 // lookup fails. Projects are legacy, so any projectId is accepted. 0.2.0 (unpublished) drops both.
-const workspaceId = process.env.TENKI_WORKSPACE_ID || (await lookUpWorkspaceId());
+const workspaceId = process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID || (await lookUpWorkspaceId());
 const projectId = process.env.TENKI_PROJECT_ID || "default";
 
 async function lookUpWorkspaceId() {

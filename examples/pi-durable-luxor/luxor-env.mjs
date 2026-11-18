@@ -15,7 +15,7 @@ const require = createRequire(import.meta.url);
  * the connection and terminates the sandbox.
  */
 export async function createLuxorEnv({ cpuCores = 1, memoryMb = 1024, onLog } = {}) {
-	const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY;
+	const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY;
 	const luxor = new LuxorSandbox({ authToken });
 	const session = await luxor.createAndWait({ cpuCores, memoryMb, name: "pi-durable-env" });
 

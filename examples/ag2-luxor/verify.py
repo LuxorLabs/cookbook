@@ -33,7 +33,7 @@ def cfg(key):
     return ""
 
 
-token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
 if not token:
     print("No token. Set TENKI_API_KEY, or run `luxor login`.")
     sys.exit(1)
@@ -49,7 +49,7 @@ if not token.startswith("tk_"):
 async def main() -> None:
     env = TenkiEnvironment(
         api_key=token,
-        workspace_id=os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id") or None,
+        workspace_id=os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id") or None,
         name="cookbook-verify",
         resources=TenkiResources(cpu_cores=1, memory_mb=1024),
         timeout=90,

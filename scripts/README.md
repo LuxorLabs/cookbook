@@ -17,7 +17,7 @@ Tenki is now **Luxor Agent Cloud**, at [luxor.ai](https://luxor.ai). The cookboo
 
 | Kept | Why |
 | --- | --- |
-| `TENKI_API_KEY`, `TENKI_AUTH_TOKEN`, `TENKI_WORKSPACE_ID` | The SDKs read `LUXORAI_*` first and these as a fallback. SDK-only examples read and document `LUXORAI_*` (`env-luxorai.mjs`); plugin examples keep `TENKI_*`, which those plugins read themselves |
+| `TENKI_API_KEY`, `TENKI_AUTH_TOKEN`, `TENKI_WORKSPACE_ID` | The SDKs read `LUXORAI_*` first and these as a fallback. Every script reads `LUXORAI_*` first (`env-luxorai.mjs`). SDK-only examples document `LUXORAI_*` too; plugin examples still document `TENKI_*`, the only names those plugins read |
 | `~/.config/tenki/config.yaml` | Read as a fallback after `~/.config/luxor/config.yaml`, for keys saved by the old `tenki login` |
 | The `tenki` Python package and `tenki_sandbox` module, `tenki-sdk-go`, the `LuxorLabs/tenki-*` repos | Not renamed upstream yet |
 | `tenki_*` MCP tool names, the OpenClaw and AgentBox plugin id `tenki`, the Convex component's `Tenki` class | What the `@luxorai` packages still call them |

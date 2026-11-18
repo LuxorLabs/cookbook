@@ -23,7 +23,7 @@ def cfg(key: str) -> str:
 
 
 async def main() -> None:
-    token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
+    token = os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
     if not token:
         sys.exit("No token. Set TENKI_API_KEY (tk_...), or run `luxor login`.")
     if "tenki" not in list_providers():

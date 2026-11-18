@@ -12,7 +12,7 @@ import { randomUUID } from "node:crypto";
 const mode = process.argv[2] ?? "create";
 const proxy = new URL("./ssh-proxy.mjs", import.meta.url).pathname;
 const knownHosts = `${homedir()}/.ssh/known_hosts`;
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 
 const stdinJson = async () => {
 	let raw = "";
@@ -38,7 +38,7 @@ if (mode === "create") {
 			memoryMb: 4096,
 			cloneRepoUrl: repoUrl,
 			sshAuthorizedKeys: [publicKey],
-			workspaceId: process.env.TENKI_WORKSPACE_ID,
+			workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
 		});
 		const cert = await luxor.issueSandboxSSHCert(sandbox.id, publicKey);
 		writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");

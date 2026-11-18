@@ -28,7 +28,7 @@ Each example is self-contained: its own README, source, and dependencies. Nothin
 export LUXORAI_API_KEY="tk_..."
 ```
 
-The SDKs (`@luxorai/sandbox` and the `tenki` Python package, 1.5.2 or later) read `LUXORAI_AUTH_TOKEN` or `LUXORAI_API_KEY`, and still accept the old `TENKI_AUTH_TOKEN` and `TENKI_API_KEY`. The scripts here read them in that order. Examples that run through another project's plugin, such as AG2, Harbor or RAGFlow, still use `TENKI_API_KEY`, because those plugins read it themselves. Each example README names the variable it expects.
+The SDKs (`@luxorai/sandbox` and the `tenki` Python package, 1.5.2 or later) read `LUXORAI_AUTH_TOKEN` or `LUXORAI_API_KEY`, and still accept the old `TENKI_AUTH_TOKEN` and `TENKI_API_KEY`. Every script here reads them in that order. Examples that run through another project's plugin, such as AG2, Harbor or RAGFlow, still tell you to set `TENKI_API_KEY`, because those plugins read only that name: their verify scripts accept either, but the plugin doesn't. Each example README names the variable it expects.
 
 To store the key, run `luxor login --api-key <key>`. That writes `~/.config/luxor/config.yaml`, and every verify script reads it from there. Some demos, including `examples/run-code-in-a-sandbox/run.mjs`, read the environment only, so export the key before you run those.
 

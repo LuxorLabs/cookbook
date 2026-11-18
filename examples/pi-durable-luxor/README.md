@@ -141,7 +141,7 @@ import { Readable, Writable } from "node:stream";
 import { LuxorSandbox } from "@luxorai/sandbox";
 
 const [sessionId, ...daemonArgs] = process.argv.slice(2);
-const authToken = process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY;
+const authToken = process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY;
 
 try {
   const client = new LuxorSandbox({ authToken });

@@ -57,7 +57,7 @@ try:
     user = {"valves": mod.Tools.UserValves(tenki_api_key="user-key")}
     assert mod.resolve_effective_key(tools.valves, user) == "user-key"
 
-    token = os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
+    token = os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or cfg("auth_token")
     if not token:
         print("No token. Set TENKI_AUTH_TOKEN, or run `luxor login`.")
         sys.exit(1)
@@ -66,7 +66,7 @@ try:
         print("Token must be a tk_ API key (tenki SDK 1.x). Run `luxor login --api-key tk_...` or set TENKI_AUTH_TOKEN.")
         sys.exit(1)
     tools.valves.tenki_api_key = token
-    ws = os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
+    ws = os.environ.get("LUXORAI_WORKSPACE_ID") or os.environ.get("TENKI_WORKSPACE_ID") or cfg("current_workspace_id")
     if ws:
         tools.valves.tenki_workspace_id = ws
 

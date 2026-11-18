@@ -27,7 +27,7 @@ def cfg(key):
     return ""
 
 
-token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
+token = os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
 if not token.startswith("tk_"):
     print("✗ The `tenki` SDK (1.4) behind agent-env's provider takes only a `tk_` API key.")
     print("  Create one at https://luxor.ai/docs/account/api-keys and export TENKI_API_KEY=tk_...")

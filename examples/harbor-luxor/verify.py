@@ -20,7 +20,7 @@ def cfg(key):
         return ""
 
 
-token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
+token = os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or cfg("auth_token")
 if not token:
     print("No token. Set TENKI_API_KEY, or run `luxor login`.")
     sys.exit(1)

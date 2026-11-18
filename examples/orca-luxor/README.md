@@ -97,7 +97,7 @@ orca runs `create` from your checkout and sets `ORCA_REPO_URL`. The recipe clone
       memoryMb: 4096,
       cloneRepoUrl: repoUrl,
       sshAuthorizedKeys: [publicKey],
-      workspaceId: process.env.TENKI_WORKSPACE_ID,
+      workspaceId: process.env.LUXORAI_WORKSPACE_ID || process.env.TENKI_WORKSPACE_ID,
     });
     const cert = await luxor.issueSandboxSSHCert(sandbox.id, publicKey);
     writeFileSync(`${keyDir}/id-cert.pub`, cert.sshCert.trim() + "\n");
@@ -134,7 +134,7 @@ Luxor Agent Cloud carries SSH over a WebSocket, so `ssh-proxy.mjs` is a `ProxyCo
 import { LuxorSandbox } from "@luxorai/sandbox";
 
 const sessionId = process.argv[2];
-const luxor = new LuxorSandbox({ authToken: process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 const conn = await luxor.ssh(sessionId);
 
 // Serialize writes; conn.write is async and ssh will not tolerate reordered bytes.

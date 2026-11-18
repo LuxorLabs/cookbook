@@ -2,7 +2,7 @@
 import { compute } from "computesdk";
 import { tenki } from "@computesdk/tenki";
 
-compute.setConfig({ provider: tenki({ apiKey: process.env.TENKI_API_KEY }) });
+compute.setConfig({ provider: tenki({ apiKey: process.env.LUXORAI_API_KEY || process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_API_KEY || process.env.TENKI_AUTH_TOKEN }) });
 
 const sandbox = await compute.sandbox.create();
 try {

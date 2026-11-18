@@ -52,9 +52,11 @@ func main() {
 }
 
 func run() error {
-	token := os.Getenv("TENKI_API_KEY")
-	if token == "" {
-		token = os.Getenv("TENKI_AUTH_TOKEN")
+	token := ""
+	for _, name := range []string{"LUXORAI_API_KEY", "LUXORAI_AUTH_TOKEN", "TENKI_API_KEY", "TENKI_AUTH_TOKEN"} {
+		if token = os.Getenv(name); token != "" {
+			break
+		}
 	}
 	if token == "" {
 		token = cfg("auth_token")
