@@ -1,0 +1,61 @@
+text,label
+Why was I charged a late fee when autopay is on?,billing
+My package was marked delivered but it is not here.,shipping
+The tax on my bill looks wrong for a customer in Oregon.,billing
+"I can't verify my phone number, the SMS never comes.",account
+"I received the wrong size, I ordered a medium.",shipping
+Only two of the three items in my order arrived.,shipping
+I forgot my password and the reset email never arrives.,account
+Exports to CSV have been stuck at 0% for an hour.,technical
+"I was charged twice for my March invoice, please refund one of them.",billing
+Our webhook endpoint receives the same event three times.,technical
+Page load takes over 30 seconds on the reports tab.,technical
+Do you offer a discount for nonprofits? We are a registered charity.,billing
+Our finance team wants invoices sent to accounts@ourfirm.com instead.,billing
+Video calls drop after exactly five minutes.,technical
+I want to exchange the blue one for the black one.,shipping
+My order has been 'in transit' for twelve days.,shipping
+Dark mode makes the table text unreadable.,technical
+Where can I download all of my data?,account
+Sync between the phone and the desktop app is broken since Monday.,technical
+The box arrived damaged and the screen is cracked.,shipping
+Push notifications stopped arriving after the last update.,technical
+How do I change the email address on my login?,account
+"Two-factor codes from the authenticator are always rejected as invalid, even fresh ones.",technical
+I signed up with Google and now want to use a password instead.,account
+When will my order #4821 ship?,shipping
+How long do international orders usually take?,shipping
+Customs is holding my package and asking for a fee.,shipping
+The tracking number you sent doesn't work on the carrier's site.,shipping
+I get a 500 error when I upload a file larger than 10 MB.,technical
+Why did my monthly price go up from $20 to $29 without notice?,billing
+I left my old job; how do I move my personal projects to a new account?,account
+My account is locked after too many login attempts.,account
+The driver says nobody was home but I was there all day.,shipping
+Someone else seems to have logged into my account from another country.,account
+The checkout page showed one price and my card was charged another.,billing
+I need a refund for the add-on I bought by mistake.,billing
+"Do you ship to Canada, and how much does it cost?",shipping
+Can a guest user be upgraded to a full member?,account
+How do I add a new admin to our team?,account
+Please reactivate the account I closed last month.,account
+The app crashes every time I open the settings screen.,technical
+The courier left my parcel in the rain and everything is soaked.,shipping
+Our scheduled job ran at the wrong time after the daylight saving change.,technical
+The calendar shows events one day off.,technical
+I applied the promo code SPRING25 and it did not take anything off.,billing
+My card was declined but the money still left my account.,billing
+Please send me a copy of every invoice from last year.,billing
+Please delete my account and all my data.,account
+I need a return label printed and emailed to me.,shipping
+How do I turn on single sign-on for our company?,account
+The integration with Slack posts messages to the wrong channel.,technical
+We were billed after we downgraded to the free plan.,billing
+Can I merge my two accounts into one?,account
+Can I pick up my order in store instead of waiting for delivery?,shipping
+The invoice lists 12 seats but we only have 9 users.,billing
+Please cancel the annual renewal that hit my card yesterday.,billing
+How do I set up two-factor authentication for the first time?,account
+The Android app freezes on the login spinner.,technical
+Can you split the payment across two credit cards?,billing
+The API returns 429 even though we send two requests a minute.,technical
