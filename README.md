@@ -109,6 +109,7 @@ Give an agent a sandbox to run the code it writes.
 | [ComputeSDK](examples/computesdk-luxor/) | Luxor Agent Cloud as a provider for the unified sandbox interface |
 | [TinyFish](examples/tinyfish-luxor/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
 | [Harbor](examples/harbor-luxor/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
+| [hills](examples/hills-luxor/) | Unattended agent optimization loops against a frozen, signed evaluation on a separate judge sandbox |
 | [Convex](examples/convex-luxor/) | A sandbox per user from Convex actions, with live state in a Convex table |
 
 ### Luxor Code Reviewer
