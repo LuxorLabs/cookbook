@@ -1,0 +1,10 @@
+{
+  "name": "remote-mcp-server",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example: a token-protected remote MCP server on a Luxor Agent Cloud preview URL.",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@luxorai/sandbox": ">=1.5.2"
+  }
+}
