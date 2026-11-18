@@ -73,6 +73,7 @@ Open the example closest to what you are building and follow its README. Agent-f
 | [Work with files](examples/files-in-a-sandbox/) | Read, write, and list files with the TypeScript SDK |
 | [Expose a port](examples/expose-a-port/) | Serve a web app on a public preview URL |
 | [Pause, snapshot, and resume](examples/snapshots-pause-resume/) | Preserve a sandbox and pick up where it left off |
+| [Golden image](examples/golden-image/) | Build a toolchain once, snapshot it, restore every later sandbox from it |
 | [Run code with Python](examples/run-code-python/) | The official `tenki` Python SDK |
 | [Run a full-stack app](examples/agent-fullstack-app/) | Serve an API, frontend, and seeded database from one sandbox |
 
