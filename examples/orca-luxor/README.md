@@ -169,7 +169,7 @@ process.exit(0);
     }
 ```
 
-- `suspend` pauses the sandbox. Pausing is free and keeps memory and disk.
+- `suspend` pauses the sandbox. Pausing keeps memory and disk.
 - `resume` polls until the sandbox is running (up to 120 seconds), mints a fresh certificate, re-learns the host key, and prints `{"ok":true,"mode":"resume"}`.
 - `destroy` terminates the sandbox and removes its key directory and `known_hosts` entry.
 

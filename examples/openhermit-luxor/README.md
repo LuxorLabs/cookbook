@@ -117,7 +117,7 @@ Set the preset before `autoProvisionSandbox`, which must name a known preset. To
 - **One sticky sandbox per agent.** It creates the session with `sticky: true`, stores its id, and after a gateway restart reattaches with `client.get(id)`, resuming it if paused. It creates a new, empty sandbox only when the old one has expired or been terminated.
 - **Commands run as `sh -c`** in `agent_home`, with the agent's pass-through secrets as env vars. A command past `timeout_ms` exits 137 with its partial output kept.
 - **Skills sync as file uploads**, staged and swapped in. A sync while paused sets a dirty flag, and the next `ensure()` re-pushes them.
-- **Pause, not terminate.** Pausing is free, and the next command resumes the VM. OpenHermit pauses the sandbox 5 minutes after the agent's last command (`exec.lifecycle`), when the gateway evicts an idle runner (30 minutes, `OPENHERMIT_EVICTION_TTL_MINUTES`), when you disable the agent, or when its runner stops.
+- **Pause, not terminate.** The next command resumes a paused VM. OpenHermit pauses the sandbox 5 minutes after the agent's last command (`exec.lifecycle`), when the gateway evicts an idle runner (30 minutes, `OPENHERMIT_EVICTION_TTL_MINUTES`), when you disable the agent, or when its runner stops.
 
 `verify.mjs` makes the same SDK calls. It boots a sticky session and runs a command the way the backend does:
 

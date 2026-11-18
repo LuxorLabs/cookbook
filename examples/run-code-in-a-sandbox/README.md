@@ -89,7 +89,7 @@ console.log(`exit ${result.exitCode} -> ${stdoutText(result).trim()}`); // exit 
 
 - **`exec` runs a binary, not a shell line.** For pipes, `&&`, globs, or variable expansion, start a shell: `sandbox.exec("sh", { args: ["-c", "echo hi && ls"] })`.
 - **A failing command does not throw.** `exec` resolves to `{ exitCode, stdout, stderr }` whatever the exit code, so check `exitCode`. `stdout` and `stderr` are bytes; `stdoutText()` and `stderrText()` decode them.
-- **Dispose of every sandbox.** A sandbox boots in about 2 seconds, is billed per second, and runs until it is terminated. `await using` handles that here. On older Node versions, call `await sandbox[Symbol.asyncDispose]()` in a `finally` block, as `verify.mjs` does. Pass `maxDurationMs` to `createAndWait` to cap a sandbox's lifetime.
+- **Dispose of every sandbox.** A sandbox is billed per second and runs until it is terminated. `await using` handles that here. On older Node versions, call `await sandbox[Symbol.asyncDispose]()` in a `finally` block, as `verify.mjs` does. Pass `maxDurationMs` to `createAndWait` to cap a sandbox's lifetime.
 - **Outbound network is on by default.** Pass `allowOutbound: false` to `createAndWait` to isolate the sandbox.
 
 ## Troubleshooting
