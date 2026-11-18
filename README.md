@@ -105,6 +105,7 @@ Give an agent a sandbox to run the code it writes.
 | [OpenCode](examples/opencode-sandbox/) | Headless OpenCode server on a public preview URL |
 | [Composio](examples/composio-luxor/) | Luxor Agent Cloud tools in a Composio agent |
 | [Covalent](examples/covalent-luxor/) | Each workflow task in its own sandbox |
+| [Trigger.dev](examples/trigger-dev-luxor/) | Untrusted and agent-written code from background tasks and chat agents, paused across waits |
 | [AgentBox](examples/agentbox-luxor/) | Coding-agent boxes on Luxor sandboxes |
 | [ComputeSDK](examples/computesdk-luxor/) | Luxor Agent Cloud as a provider for the unified sandbox interface |
 | [TinyFish](examples/tinyfish-luxor/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
