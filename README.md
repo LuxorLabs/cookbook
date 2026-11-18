@@ -108,8 +108,18 @@ Give an agent a sandbox to run the code it writes.
 | [AgentBox](examples/agentbox-luxor/) | Coding-agent boxes on Luxor sandboxes |
 | [ComputeSDK](examples/computesdk-luxor/) | Luxor Agent Cloud as a provider for the unified sandbox interface |
 | [TinyFish](examples/tinyfish-luxor/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
-| [Harbor](examples/harbor-luxor/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
 | [Convex](examples/convex-luxor/) | A sandbox per user from Convex actions, with live state in a Convex table |
+
+### Reinforcement learning
+
+Run RL rollouts, environments, and evals with one disposable sandbox per episode.
+
+| Example | What it covers |
+| --- | --- |
+| [Tinker RL](examples/tinker-harbor-rl-luxor/) | RL training on Terminal-Bench with Tinker's hosted GPUs and one Luxor sandbox per rollout |
+| [AgentEnv](examples/agentenv-luxor/) | Built-in sandbox backend for Scale AI's RL environment framework |
+| [NeMo Gym](examples/nemo-gym-luxor/) | A `tenki` sandbox provider for NVIDIA NeMo Gym rollouts |
+| [Harbor](examples/harbor-luxor/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
 
 ### Luxor Code Reviewer
 
@@ -128,7 +138,6 @@ Run a self-hosted agent platform's sandboxes on Luxor Agent Cloud.
 | [DeerFlow](examples/deerflow-luxor/) | Community sandbox provider for ByteDance's SuperAgent harness |
 | [RAGFlow](examples/ragflow-luxor/) | Ephemeral sandboxes for the RAG engine's code components |
 | [Open WebUI](examples/open-webui-luxor/) | Sandboxed code interpreter for the self-hosted chat platform |
-| [AgentEnv](examples/agentenv-luxor/) | Built-in sandbox backend for Scale AI's RL environment framework |
 | [OpenHermit](examples/openhermit-luxor/) | Sticky per-agent sandboxes for an agent fleet |
 | [Omnara](examples/omnara-luxor/) | Machine pool provider for the open-source managed agent platform |
 
