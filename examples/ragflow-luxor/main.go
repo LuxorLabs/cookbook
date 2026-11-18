@@ -25,16 +25,20 @@ import (
 
 func cfg(key string) string {
 	home, _ := os.UserHomeDir()
-	f, err := os.Open(filepath.Join(home, ".config", "tenki", "config.yaml"))
-	if err != nil {
-		return ""
-	}
-	defer f.Close()
-	sc := bufio.NewScanner(f)
-	for sc.Scan() {
-		if v, ok := strings.CutPrefix(sc.Text(), key+":"); ok {
-			return strings.TrimSpace(v)
+	// The file `luxor login` writes, then the one the CLI wrote under its old name.
+	for _, dir := range []string{"luxor", "tenki"} {
+		f, err := os.Open(filepath.Join(home, ".config", dir, "config.yaml"))
+		if err != nil {
+			continue
 		}
+		defer f.Close()
+		sc := bufio.NewScanner(f)
+		for sc.Scan() {
+			if v, ok := strings.CutPrefix(sc.Text(), key+":"); ok {
+				return strings.TrimSpace(v)
+			}
+		}
+		return ""
 	}
 	return ""
 }

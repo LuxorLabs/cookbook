@@ -140,7 +140,7 @@ terminal:
 | --- | --- |
 | `No Hermes checkout with the Luxor Agent Cloud backend at …` | Run `./setup.sh`, or set `HERMES_REPO` to a checkout of the fork. |
 | `Feature 'terminal.tenki' unavailable: pip install failed … tenki-sandbox` | Your checkout predates `2890bd3`. Delete `./hermes-agent` and run `./setup.sh` again. |
-| `Set TENKI_API_KEY (tk_...)` | Export `TENKI_API_KEY`. Inside Hermes, the backend also reads the `luxor login` key. |
+| `Set TENKI_API_KEY (tk_...)` | Export `TENKI_API_KEY`. The pinned fork doesn't read the `luxor login` key; the only file it reads is `~/.config/tenki/config.yaml`, which the old `tenki login` wrote. |
 | A persistent session starts empty | The task ID or Hermes profile changed. Restores match on both. |
 
 ## Files
