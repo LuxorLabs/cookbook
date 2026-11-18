@@ -42,15 +42,15 @@ A small tokenizer tells these apart, so a prose rule never touches an identifier
 ```bash
 node scripts/rebrand.mjs --check                # CI: fail on any "tenki" no rule or protect pattern covers
 node scripts/rebrand.mjs --report               # counts by rule and protect pattern
-node scripts/rebrand.mjs --dry-run --phase 1    # print every line the rules would change
-node scripts/rebrand.mjs --write --phase 1      # apply them; running it twice changes nothing
+node scripts/rebrand.mjs --dry-run              # print every line the rules would change
+node scripts/rebrand.mjs --write                # apply them; running it twice changes nothing
 node --test scripts/rebrand.test.mjs            # the codemod's own tests
 ```
 
 An open pull request written before the rename can catch up after rebasing:
 
 1. Move its folder with `git mv examples/x-tenki examples/x-luxor`.
-2. Run `--write --phase 1`.
+2. Run `node scripts/rebrand.mjs --write`.
 3. Review the diff and run its `verify.mjs`.
 
 When `--check` fails on a new mention, decide what it is. If the cookbook should say luxor, add a rule. If something outside the cookbook still owns the name, add a protect pattern that says who.

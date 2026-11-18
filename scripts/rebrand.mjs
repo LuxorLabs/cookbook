@@ -1,15 +1,22 @@
 #!/usr/bin/env node
 // The Tenki → Luxor Agent Cloud codemod. No dependencies; run from the repo root.
 //   node scripts/rebrand.mjs --check            fail if any "tenki" mention is not covered by a rule or protect pattern
-//   node scripts/rebrand.mjs --report           count mentions by phase, rule and protect pattern
-//   node scripts/rebrand.mjs --write --phase 1  apply every decided rule up to that phase
-//   node scripts/rebrand.mjs --dry-run --phase 1  print the changes --write would make
+//   node scripts/rebrand.mjs --report           count mentions by rule and protect pattern
+//   node scripts/rebrand.mjs --write            apply every rule; running it twice changes nothing
+//   node scripts/rebrand.mjs --dry-run          print the changes --write would make
 // Paths after the flags limit it to those files or folders.
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { extname, basename } from "node:path";
 import { pathToFileURL } from "node:url";
-import { PHASES, protect, rules } from "./rebrand.rules.mjs";
+import { folderRules, protect, rules as fixedRules } from "./rebrand.rules.mjs";
+
+// The fixed rules, plus the ones for example folders added after the rename (see useFolders).
+let rules = fixedRules;
+/** Tell the codemod which example folders exist, so <name>-tenki follows a new <name>-luxor folder. */
+export function useFolders(names) {
+	rules = [...folderRules(names), ...fixedRules];
+}
 
 const LANG = {
 	".js": "js", ".mjs": "js", ".cjs": "js", ".ts": "js", ".tsx": "js", ".jsx": "js", ".json": "js",
@@ -75,7 +82,6 @@ export function categories(file, src) {
 
 const spans = (src, re) => [...src.matchAll(new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g"))].map((m) => [m.index, m.index + m[0].length, m]);
 const inScope = (rule, cat, at) => rule.scope === "any" || [].concat(rule.scope).includes(cat[at]);
-const upTo = (p) => PHASES.indexOf(p);
 
 const applies = (x, file) => !x.files || x.files.test(file);
 const guards = (file, src, cat) =>
@@ -83,9 +89,9 @@ const guards = (file, src, cat) =>
 const expand = (rule, m) =>
 	typeof rule.replace === "function" ? rule.replace(...m) : rule.replace.replace(/\$(\d)/g, (_, n) => m[+n] ?? "");
 
-/** Apply every decided rule up to `phase` to one file's source. */
-export function rewrite(file, src, phase) {
-	for (const rule of rules.filter((r) => upTo(r.phase) <= upTo(phase) && r.replace !== null && applies(r, file))) {
+/** Apply every rule to one file's source. */
+export function rewrite(file, src) {
+	for (const rule of rules.filter((r) => applies(r, file))) {
 		const cat = categories(file, src);
 		const guarded = guards(file, src, cat).flatMap(([, s]) => s);
 		let out = "", last = 0;
@@ -115,17 +121,18 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) main();
 function main() {
 	const args = process.argv.slice(2);
 	const flag = (f) => args.includes(f);
-	const phaseArg = args[args.indexOf("--phase") + 1];
-	const paths = args.filter((a, i) => !a.startsWith("--") && args[i - 1] !== "--phase");
+	const paths = args.filter((a) => !a.startsWith("--"));
 	const SKIP = /(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|poetry\.lock|uv\.lock|go\.sum)$|^(scripts\/(rebrand\.mjs|rebrand\.rules\.mjs|rebrand\.test\.mjs|README\.md)|\.github\/workflows\/(brand|links)\.yml|lychee\.toml)$|\.(png|jpe?g|gif|ico|pdf|woff2?|ttf|zip|gz)$/i;
 	const files = execFileSync("git", ["ls-files", ...paths], { encoding: "utf8" }).split("\n").filter((f) => f && !SKIP.test(f));
 
+	const tracked = execFileSync("git", ["ls-files", "examples", "benchmarks"], { encoding: "utf8" });
+	useFolders([...new Set(tracked.split("\n").map((f) => f.split("/")[1]).filter(Boolean))]);
+
 	if (flag("--write") || flag("--dry-run")) {
-		if (!PHASES.includes(phaseArg)) throw new Error(`--phase must be one of ${PHASES.join(", ")}`);
 		let changed = 0;
 		for (const file of files) {
 			const before = readFileSync(file, "utf8");
-			const src = rewrite(file, before, phaseArg);
+			const src = rewrite(file, before);
 			if (src === before) continue;
 			changed++;
 			if (flag("--write")) writeFileSync(file, src);
@@ -134,7 +141,7 @@ function main() {
 				a.forEach((l, i) => l !== b[i] && console.log(`${file}:${i + 1}\n  - ${l.trim()}\n  + ${b[i]?.trim()}`));
 			}
 		}
-		console.log(`${flag("--write") ? "changed" : "would change"} ${changed} files (phase ≤ ${phaseArg})`);
+		console.log(`${flag("--write") ? "changed" : "would change"} ${changed} files`);
 		return;
 	}
 
@@ -145,7 +152,7 @@ function main() {
 		const src = readFileSync(file, "utf8");
 		for (const { at, line, by } of classify(file, src)) {
 			if (by) {
-				const k = by.why ? `protect  ${by.why}` : `phase ${by.phase.padEnd(3)} ${by.replace === null ? "(name pending) " : ""}${by.find.source.slice(0, 60)}`;
+				const k = by.why ? `protect  ${by.why}` : `rename   ${by.find.source.slice(0, 60)}`;
 				tally.set(k, (tally.get(k) ?? 0) + 1);
 				continue;
 			}

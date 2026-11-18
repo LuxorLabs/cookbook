@@ -1,9 +1,9 @@
 // node --test scripts/rebrand.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { classify, rewrite } from "./rebrand.mjs";
+import { classify, rewrite, useFolders } from "./rebrand.mjs";
 
-const r = (file, src) => rewrite(file, src, "1");
+const r = rewrite;
 
 test("the SDK, its class and its client variable move to Luxor", () => {
 	assert.equal(
@@ -54,4 +54,22 @@ test("the config read falls back to the old tenki CLI's file, and a second run c
 
 test("an unknown name is unclassified", () => {
 	assert.deepEqual(classify("README.md", "Run the tenkifoo daemon.").map((m) => m.by), [null]);
+});
+
+test("a folder added after the rename takes its tags along, once the codemod is told it exists", () => {
+	const src = 'tags: ["hills-tenki-climber"], image: "tenki-runners"';
+	assert.equal(r("x.mjs", src), src);
+	useFolders(["hills-luxor", "luxor-runners"]);
+	assert.equal(r("x.mjs", src), 'tags: ["hills-luxor-climber"], image: "luxor-runners"');
+	useFolders([]);
+});
+
+test("text about a tool that still reads the old CLI's file keeps saying so", () => {
+	const src = "The fork reads `~/.config/tenki/config.yaml`, which the old `tenki login` wrote.";
+	assert.equal(r("examples/hermes-luxor/README.md", src), src);
+	assert.notEqual(r("examples/other/README.md", src), src);
+});
+
+test("the CopilotKit MCP server id is ours, so it moves", () => {
+	assert.equal(r("agent.ts", 'mcpServers: [{ type: "http", url: MCP_URL, serverId: "tenki" }]'), 'mcpServers: [{ type: "http", url: MCP_URL, serverId: "luxor" }]');
 });
