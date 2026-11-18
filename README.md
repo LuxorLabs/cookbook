@@ -131,6 +131,8 @@ Run a self-hosted agent platform's sandboxes on Luxor Agent Cloud.
 | [AgentEnv](examples/agentenv-luxor/) | Built-in sandbox backend for Scale AI's RL environment framework |
 | [OpenHermit](examples/openhermit-luxor/) | Sticky per-agent sandboxes for an agent fleet |
 | [Omnara](examples/omnara-luxor/) | Machine pool provider for the open-source managed agent platform |
+| [OpenClaw](examples/openclaw-luxor/) | Sandbox backend for the personal AI assistant: every agent tool call runs in a Luxor sandbox |
+| [OpenClaw gateway](examples/openclaw-gateway-luxor/) | The OpenClaw gateway and dashboard in a sticky sandbox behind a named preview URL |
 
 ### Migrating from another provider
 
