@@ -1,6 +1,6 @@
 # Crabbox
 
-Run your tests on a warm Luxor sandbox with [Crabbox](https://crabbox.sh), an open-source CLI from [OpenClaw](https://github.com/openclaw/crabbox). Crabbox syncs your Git working tree (uncommitted edits included, ignored files like `.env` left out) to a remote Linux machine over rsync, runs a command there, and exits with its exit code. With `provider: tenki`, that machine is a Luxor sandbox, created through the `tenki` CLI and reached through Luxor Agent Cloud's SSH proxy, so there are no SSH keys or IPs to manage.
+Run your tests on a warm Luxor sandbox with [Crabbox](https://crabbox.sh), an open-source CLI from [OpenClaw](https://github.com/openclaw/crabbox). Crabbox syncs your Git working tree (uncommitted edits included, ignored files like `.env` left out) to a remote Linux machine over rsync, runs a command there, and exits with its exit code. With `provider: tenki`, that machine is a Luxor sandbox, created through the `luxor` CLI and reached through Luxor Agent Cloud's SSH proxy, so there are no SSH keys or IPs to manage.
 
 ## Set it up with a coding agent
 
@@ -19,7 +19,7 @@ Set up Crabbox so my tests run on a warm Luxor sandbox, following https://github
 
 You need:
 
-- The [`tenki` CLI](https://luxor.ai/docs/sandbox/cli), signed in with `luxor login`. Crabbox uses its saved key and workspace.
+- The [`luxor` CLI](https://luxor.ai/docs/sandbox/cli), signed in with `luxor login`. Crabbox runs it for every sandbox call, so it uses the CLI's saved key and workspace.
 - Crabbox: `brew install openclaw/tap/crabbox`, or a binary from [GitHub Releases](https://github.com/openclaw/crabbox/releases).
 - Git and Node.js 20 or later.
 
@@ -95,6 +95,7 @@ node verify.mjs
 provider: tenki
 target: linux
 tenki:
+  cliPath: luxor # Crabbox looks for a binary named tenki unless told otherwise
   cpus: 2
   memoryMB: 4096
   diskGB: 20 # the default root disk is 5 GiB, and it can't grow later
@@ -111,7 +112,8 @@ jobs:
     stop: auto # stop a box the job created; leave one passed with --id running
 ```
 
-- The `tenki` block becomes `luxor sandbox create --cpu --memory-mb --disk-size-gb`. Keep the disk at 20 GB or more; it can't grow later.
+- `cliPath: luxor` tells Crabbox which binary to run. Its Luxor Agent Cloud provider is still named `tenki` and looks for a `tenki` binary by default, which `@luxorai/cli` doesn't install.
+- The rest of the `tenki` block becomes `luxor sandbox create --cpu --memory-mb --disk-size-gb`. Keep the disk at 20 GB or more; it can't grow later.
 - `warmup.keep: false` makes `crabbox warmup` pass `lease.ttl` as the sandbox's maximum duration. Without it, warmup creates a sticky session that runs, and bills, until you stop it. At the deadline Luxor Agent Cloud pauses the sandbox, keeping its disk, and Crabbox resumes it on the next run.
 - `stop: auto` terminates a box the job created and leaves one passed with `--id` running.
 
@@ -154,6 +156,7 @@ For coding agents, [`demo/AGENTS.md`](demo/AGENTS.md) is a section to paste into
 | Problem | Fix |
 | --- | --- |
 | `crabbox not found` from `node run.mjs` | Install Crabbox and put it on your `PATH`. |
+| `exec: "tenki": executable file not found in $PATH` | `.crabbox.yaml` is missing `cliPath: luxor` under `tenki:`. `CRABBOX_TENKI_CLI=luxor` does the same from the environment. |
 | `crabbox doctor` says the Luxor CLI isn't logged in | Run `luxor login`, then `luxor status`. |
 | The sandbox is in the wrong workspace | Run `luxor login` and pick the workspace, then `crabbox stop` the stray slug. |
 | A test that reads an env var fails on the box | Add `--allow-env NAME`, or `env.allow` with `CI` and `NODE_OPTIONS` repeated. |

@@ -1,6 +1,6 @@
 // Crabbox on Luxor Agent Cloud, end to end: copy demo/ into a fresh Git repo, lease a sandbox with
 // `crabbox warmup`, run the tests there, break them with an uncommitted edit, run them
-// again, and stop the sandbox. Needs `crabbox` and a signed-in `tenki` CLI on PATH.
+// again, and stop the sandbox. Needs `crabbox` and a signed-in `luxor` CLI on PATH.
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

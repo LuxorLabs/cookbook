@@ -2,6 +2,7 @@
 provider: tenki
 target: linux
 tenki:
+  cliPath: luxor # Crabbox looks for a binary named tenki unless told otherwise
   cpus: 2
   memoryMB: 4096
   diskGB: 20 # the default root disk is 5 GiB, and it can't grow later
