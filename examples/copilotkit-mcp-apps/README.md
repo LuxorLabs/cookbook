@@ -250,7 +250,7 @@ export function createAgent(): BuiltInAgent {
   // wraps the MCP Apps middleware and can see the tool results it emits.
   agent.use(
     new ContinueAfterAppsMiddleware(2),
-    new MCPAppsMiddleware({ mcpServers: [{ type: "http", url: MCP_URL, serverId: "tenki" }] }),
+    new MCPAppsMiddleware({ mcpServers: [{ type: "http", url: MCP_URL, serverId: "luxor" }] }),
   );
   return agent;
 }

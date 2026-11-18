@@ -49,7 +49,7 @@ try {
 	assert(pkg.openclaw?.extensions?.length, "package.json openclaw.extensions is empty");
 	assert(pkg.openclaw?.install?.minHostVersion, "openclaw.install.minHostVersion missing");
 	// The plugin still depends on the SDK under its old npm scope, so accept either name.
-	assert(Object.keys(pkg.dependencies ?? {}).some((d) => d.endsWith("/sandbox")), "sandbox SDK dependency missing");
+	assert(Object.keys(pkg.dependencies ?? {}).some((d) => /^@(tenkicloud|luxorai)\/sandbox$/.test(d)), "sandbox SDK dependency missing");
 
 	// Part 2: the live session lifecycle the backend rides on.
 	client = new LuxorSandbox({ authToken });
