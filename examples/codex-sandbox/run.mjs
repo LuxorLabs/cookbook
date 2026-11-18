@@ -7,7 +7,7 @@ const TASK = "Add a toArray() method to the Queue class in index.js that returns
 // codex exec reads its key from CODEX_API_KEY and ignores OPENAI_API_KEY.
 const PASSTHROUGH = ["CODEX_API_KEY"];
 
-const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 
 // cloneRepoUrl checks the repo out to ./repo before createAndWait resolves.
 await using sandbox = await luxor.createAndWait({

@@ -19,8 +19,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 
 function loadToken() {
-	if (process.env.LUXORAI_API_KEY || process.env.TENKI_API_KEY) return process.env.LUXORAI_API_KEY || process.env.TENKI_API_KEY;
-	if (process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN) return process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN;
+	const env = process.env.LUXORAI_API_KEY || process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_API_KEY || process.env.TENKI_AUTH_TOKEN;
+	if (env) return env;
 	try {
 		const cfg = readFileSync(["luxor", "tenki"].map((d) => `${homedir()}/.config/${d}/config.yaml`).find(existsSync) ?? "", "utf8");
 		return (cfg.match(/^auth_token:\s*(.+)$/m)?.[1] ?? "").trim();

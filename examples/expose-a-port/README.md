@@ -71,7 +71,7 @@ node verify.mjs
 const PORT = 8000;
 const BODY = "Hello from a Luxor sandbox!";
 
-const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 
 // allowInbound: true lets the Luxor Agent Cloud gateway route public traffic to the sandbox port.
 // (Outbound isn't needed here — the host does the fetching, not the sandbox.)

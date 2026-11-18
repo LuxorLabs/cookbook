@@ -7,7 +7,7 @@ import { LuxorSandbox, stdoutText } from "@luxorai/sandbox";
 import { readFileSync } from "node:fs";
 
 const PORT = 8000;
-const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 
 // allowInbound: the gateway routes public traffic to the sandbox (for the preview URL).
 // This script deliberately leaves the sandbox running so you can open the URL, so
@@ -59,7 +59,7 @@ def go(method, path, body=None):
 	const res = await fetch(previewUrl);
 	console.log(`   GET ${res.status} · ${(await res.text()).includes("<title>") ? "frontend served" : "unexpected body"}`);
 	console.log("\n(sandbox left running so you can open the URL; it self-terminates after 2 hours)");
-	console.log(`   terminate now:  node -e "import('@luxorai/sandbox').then(async m=>{const s=await new m.LuxorSandbox({authToken:process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN}).get('${sandbox.id}');await s[Symbol.asyncDispose]()})"`);
+	console.log(`   terminate now:  node -e "import('@luxorai/sandbox').then(async m=>{const s=await new m.LuxorSandbox({authToken:process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY}).get('${sandbox.id}');await s[Symbol.asyncDispose]()})"`);
 } catch (e) {
 	console.error("error:", e?.message ?? e);
 	await sandbox[Symbol.asyncDispose]().catch(() => {});

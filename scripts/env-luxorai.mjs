@@ -7,6 +7,7 @@
 //   node scripts/env-luxorai.mjs [--dry-run]
 import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 import { categories } from "./rebrand.mjs";
 
 export const SDK_ONLY = [
@@ -18,17 +19,21 @@ export const SDK_ONLY = [
 ].map((d) => `examples/${d}/`);
 
 const V = "(AUTH_TOKEN|API_KEY|WORKSPACE_ID)";
-const js = (n) => `process.env.LUXORAI_${n} || process.env.TENKI_${n}`;
-const py = (n) => `os.environ.get("LUXORAI_${n}") or os.environ.get("TENKI_${n}")`;
+// A token read tries both LUXORAI names before either TENKI name, so a stale TENKI_AUTH_TOKEN in a
+// shell profile never beats a new LUXORAI_API_KEY.
+const OTHER = { AUTH_TOKEN: "API_KEY", API_KEY: "AUTH_TOKEN" };
+const order = (n) => (OTHER[n] ? ["LUXORAI_" + n, "LUXORAI_" + OTHER[n], "TENKI_" + n, "TENKI_" + OTHER[n]] : ["LUXORAI_" + n, "TENKI_" + n]);
+const js = (n) => order(n).map((v) => `process.env.${v}`).join(" || ");
+const py = (n) => order(n).map((v) => `os.environ.get("${v}")`).join(" or ");
 
 /** Reads in code: LUXORAI_* first, TENKI_* after, in the order the SDK uses. */
 export function reads(src) {
 	return src
-		.replace(/process\.env\.TENKI_AUTH_TOKEN \|\| process\.env\.TENKI_API_KEY/g, `process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY`)
-		.replace(/process\.env\.TENKI_API_KEY \|\| process\.env\.TENKI_AUTH_TOKEN/g, `process.env.LUXORAI_API_KEY || process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_API_KEY || process.env.TENKI_AUTH_TOKEN`)
+		.replace(/(?<!\|\| )process\.env\.TENKI_AUTH_TOKEN \|\| process\.env\.TENKI_API_KEY/g, `process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY`)
+		.replace(/(?<!\|\| )process\.env\.TENKI_API_KEY \|\| process\.env\.TENKI_AUTH_TOKEN/g, `process.env.LUXORAI_API_KEY || process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_API_KEY || process.env.TENKI_AUTH_TOKEN`)
 		.replace(new RegExp(`(?<!\\|\\| |LUXORAI_\\w+ \\|\\| )process\\.env\\.TENKI_${V}\\b(?! \\|\\| process\\.env\\.TENKI)`, "g"), (_, n) => `(${js(n)})`)
-		.replace(/os\.environ\.get\("TENKI_AUTH_TOKEN"\) or os\.environ\.get\("TENKI_API_KEY"\)/g, `os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY")`)
-		.replace(/os\.environ\.get\("TENKI_API_KEY"\) or os\.environ\.get\("TENKI_AUTH_TOKEN"\)/g, `os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN")`)
+		.replace(/(?<!or )os\.environ\.get\("TENKI_AUTH_TOKEN"\) or os\.environ\.get\("TENKI_API_KEY"\)/g, `os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("LUXORAI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY")`)
+		.replace(/(?<!or )os\.environ\.get\("TENKI_API_KEY"\) or os\.environ\.get\("TENKI_AUTH_TOKEN"\)/g, `os.environ.get("LUXORAI_API_KEY") or os.environ.get("LUXORAI_AUTH_TOKEN") or os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN")`)
 		.replace(new RegExp(`(?<!or |LUXORAI_\\w+"\\) or )os\\.environ\\.get\\("TENKI_${V}"\\)(?! or os\\.environ\\.get\\("TENKI)`, "g"), (_, n) => `(${py(n)})`)
 		.replace(new RegExp(`os\\.environ\\["TENKI_${V}"\\]`, "g"), (_, n) => `(os.environ.get("LUXORAI_${n}") or os.environ["TENKI_${n}"])`);
 }
@@ -44,7 +49,7 @@ export function names(file, src) {
 }
 
 const dry = process.argv.includes("--dry-run");
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
 	const files = execFileSync("git", ["ls-files", ...SDK_ONLY], { encoding: "utf8" }).split("\n").filter((f) => /\.(md|mjs|js|ts|tsx|py)$/.test(f));
 	let n = 0;
 	for (const f of files) {

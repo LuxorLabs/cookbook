@@ -17,7 +17,7 @@ const cfg = (key) => {
 	}
 };
 
-const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN || cfg("auth_token") });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY || cfg("auth_token") });
 
 // One sandbox for the whole agent session, reused across every tool call.
 const sandbox = await luxor.createAndWait({

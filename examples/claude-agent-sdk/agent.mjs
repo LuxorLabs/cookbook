@@ -6,7 +6,7 @@ import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
 import { LuxorSandbox, stdoutText, stderrText } from "@luxorai/sandbox";
 import { makeLuxorTools } from "./luxor-tools.mjs";
 
-const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 
 // One sandbox for the whole agent session, reused across every tool call.
 await using sandbox = await luxor.createAndWait({

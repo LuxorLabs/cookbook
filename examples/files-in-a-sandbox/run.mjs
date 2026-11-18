@@ -2,7 +2,7 @@
 // Uses the official @luxorai/sandbox SDK — no exec/shell needed for any of it.
 import { LuxorSandbox } from "@luxorai/sandbox";
 
-const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.TENKI_AUTH_TOKEN });
+const luxor = new LuxorSandbox({ authToken: process.env.LUXORAI_AUTH_TOKEN || process.env.LUXORAI_API_KEY || process.env.TENKI_AUTH_TOKEN || process.env.TENKI_API_KEY });
 
 // `await using` auto-terminates the sandbox when this scope ends (Session is AsyncDisposable).
 await using sandbox = await luxor.createAndWait({
