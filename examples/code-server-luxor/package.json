@@ -1,0 +1,9 @@
+{
+  "name": "code-server-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example — VS Code in the browser (code-server) on a persistent Luxor Agent Cloud dev box.",
+  "dependencies": {
+    "@luxorai/sandbox": ">=1.5.2"
+  }
+}
