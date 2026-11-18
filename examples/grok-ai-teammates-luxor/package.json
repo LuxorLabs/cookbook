@@ -1,0 +1,10 @@
+{
+  "name": "grok-ai-teammates-luxor",
+  "private": true,
+  "type": "module",
+  "description": "Cookbook example: run Grok AI Teammates bots on Luxor sandboxes.",
+  "dependencies": {
+    "@luxorai/sandbox": ">=1.5.2",
+    "tsx": "4.23.15"
+  }
+}

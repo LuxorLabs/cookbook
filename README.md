@@ -131,6 +131,7 @@ Run a self-hosted agent platform's sandboxes on Luxor Agent Cloud.
 | [AgentEnv](examples/agentenv-luxor/) | Built-in sandbox backend for Scale AI's RL environment framework |
 | [OpenHermit](examples/openhermit-luxor/) | Sticky per-agent sandboxes for an agent fleet |
 | [Omnara](examples/omnara-luxor/) | Machine pool provider for the open-source managed agent platform |
+| [Grok AI Teammates](examples/grok-ai-teammates-luxor/) | A sticky sandbox per chat bot, with a noVNC desktop and idle pause, for the Trigger.dev app |
 
 ### Migrating from another provider
 
