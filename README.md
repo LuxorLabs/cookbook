@@ -2,7 +2,17 @@
 
 Runnable examples for [Luxor Sandbox](https://luxor.ai/products/sandbox). Each folder under `examples/` is a short program you can run against the live API and copy into your own project.
 
-The first example takes about 10 minutes once you have an API key.
+## Set it up with a coding agent
+
+Paste this into Claude Code, Codex, Cursor, or another coding agent:
+
+```text
+Help me try Luxor Sandbox using the cookbook at https://github.com/LuxorLabs/cookbook.
+1. Clone the repo and cd into examples/run-code-in-a-sandbox. Check that Node.js is 24 or later, then run npm install.
+2. It needs TENKI_API_KEY (a Luxor Agent Cloud key starting with tk_, from https://app.luxor.ai) exported in the shell. If it isn't set, stop and ask me to export it. Never print the key or write it to a file.
+3. Run node run.mjs and confirm it prints "exit 0 -> 42", then run node verify.mjs and confirm the ✓ line.
+4. Then ask me what I'm building, pick the closest example from the tables in the root README.md, and follow that example's README.
+```
 
 ## Quick start
 
@@ -105,9 +115,12 @@ Give an agent a sandbox to run the code it writes.
 | [OpenCode](examples/opencode-sandbox/) | Headless OpenCode server on a public preview URL |
 | [Composio](examples/composio-luxor/) | Luxor Agent Cloud tools in a Composio agent |
 | [Covalent](examples/covalent-luxor/) | Each workflow task in its own sandbox |
+| [Prefect](examples/prefect-luxor/) | Each flow run in its own sandbox via a Prefect 3.x worker |
 | [AgentBox](examples/agentbox-luxor/) | Coding-agent boxes on Luxor sandboxes |
+| [Crabbox](examples/crabbox-luxor/) | Run tests on a warm sandbox against your uncommitted working tree |
 | [ComputeSDK](examples/computesdk-luxor/) | Luxor Agent Cloud as a provider for the unified sandbox interface |
 | [TinyFish](examples/tinyfish-luxor/) | Web agents, fetch, search, and remote browsers from the tenki/tinyfish image |
+| [Anchor Browser](examples/anchor-browser-luxor/) | A remote Anchor browser over CDP, driven from the `tenki/anchor` image |
 | [Harbor](examples/harbor-luxor/) | Agent evals and benchmarks (Terminal-Bench), one sandbox per trial |
 | [Convex](examples/convex-luxor/) | A sandbox per user from Convex actions, with live state in a Convex table |
 
@@ -128,9 +141,13 @@ Run a self-hosted agent platform's sandboxes on Luxor Agent Cloud.
 | [DeerFlow](examples/deerflow-luxor/) | Community sandbox provider for ByteDance's SuperAgent harness |
 | [RAGFlow](examples/ragflow-luxor/) | Ephemeral sandboxes for the RAG engine's code components |
 | [Open WebUI](examples/open-webui-luxor/) | Sandboxed code interpreter for the self-hosted chat platform |
+| [OpenClaw](examples/openclaw-luxor/) | Sandbox backend for the personal AI assistant |
 | [AgentEnv](examples/agentenv-luxor/) | Built-in sandbox backend for Scale AI's RL environment framework |
 | [OpenHermit](examples/openhermit-luxor/) | Sticky per-agent sandboxes for an agent fleet |
+| [Hermes Agent](examples/hermes-luxor/) | Hermes' terminal backend on Luxor Agent Cloud, with snapshot-and-restore sessions (from a fork; not in a Hermes release yet) |
+| [NeMo Gym](examples/nemo-gym-luxor/) | A `tenki` sandbox provider for NVIDIA's RL environment library. Each rollout runs in its own sandbox (the provider installs from git; it is not on PyPI yet) |
 | [Omnara](examples/omnara-luxor/) | Machine pool provider for the open-source managed agent platform |
+| [orca](examples/orca-luxor/) | One sandbox per parallel coding agent, via orca's ephemeral-VM recipe hook |
 
 ### Migrating from another provider
 
@@ -141,6 +158,22 @@ Each guide shows the two APIs side by side.
 | E2B | [E2B to Luxor Agent Cloud](examples/e2b-to-luxor-migration/) |
 | Modal | [Modal to Luxor Agent Cloud](examples/modal-to-luxor-migration/) |
 | Daytona | [Daytona to Luxor Agent Cloud](examples/daytona-to-luxor-migration/) |
+
+## Luxor Runners
+
+Speed up GitHub Actions jobs on [Luxor Runners](https://luxor.ai/products/runners).
+
+| Example | What it covers |
+| --- | --- |
+| [Sticky disks](examples/stickydisk-luxor/) | Keep dependency caches on a persistent disk between jobs |
+
+## Benchmarks
+
+Coding benchmarks, run on Luxor sandboxes and graded with each benchmark's official harness. They are heavier than the examples. Each one ships a `verify.mjs` that CI can run without a model key. See [benchmarks/](benchmarks/).
+
+| Benchmark | What it measures |
+| --- | --- |
+| [swe-bench](benchmarks/swe-bench/) | Fix a real GitHub issue so the repo's hidden tests pass, using the official images and grader, with Docker inside the sandbox |
 
 ## Check an example
 
@@ -172,7 +205,7 @@ CI runs the same checks on every push and pull request, and a failed check block
 
 - `composio-luxor`, which needs a Composio API key
 - `covalent-luxor`, until [`covalent-tenki-plugin` 0.1.1](https://github.com/LuxorLabs/tenki-covalent-plugin/pull/1) is on PyPI
-- `orca-luxor`, until gateway SSH host keys are stable across connections
+- `orca-luxor`, because the gateway SSH host keys are not stable across connections
 
 `node verify.mjs` on your machine runs those three as well. If they fail locally, see Troubleshooting.
 
@@ -185,6 +218,7 @@ Packages you install in your own project:
 | [Composio tools](https://github.com/LuxorLabs/tenki-composio-tools) | `npm install @luxorai/composio-tools` | Create, execute, snapshot, and terminate tools for Composio agents |
 | [Covalent executor](https://github.com/LuxorLabs/tenki-covalent-plugin) | `pip install covalent-tenki-plugin` | Runs Covalent workflow tasks in Luxor sandboxes |
 | [GitHub Actions](https://github.com/TenkiCloud/actions) | `uses: TenkiCloud/actions/setup-cli@v1` | Installs the Luxor CLI and builds sandbox templates in CI |
+| [Sticky disk action](https://github.com/LuxorLabs/stickydisk) | `uses: LuxorLabs/stickydisk@v1` | Mounts a persistent, workspace-scoped cache disk on Luxor runners |
 | [Go SDK](https://github.com/LuxorLabs/tenki-sdk-go) | `go get github.com/LuxorLabs/tenki-sdk-go/sandbox` | Go client for the Luxor Sandbox API |
 | [Convex component](https://github.com/LuxorLabs/tenki-convex) | `npm install @luxorai/convex` | Creates and drives sandboxes from Convex actions, with each one's state in a Convex table |
 
@@ -212,7 +246,7 @@ These projects ship a Luxor Agent Cloud provider or backend:
 - **`No API key. Set LUXORAI_API_KEY, or run luxor login --api-key <key>`.** A Python `verify.py` found no key in those same places. Export `LUXORAI_API_KEY`, or run `luxor login --api-key <key>`. Plugin examples that print `Set TENKI_API_KEY` want the old name.
 - **`node run.mjs` fails with a `SyntaxError` at `await using`.** Top-level `await using` needs Node 24. Node 22 cannot parse it. `node verify.mjs` still runs on Node 20.
 - **`node verify.mjs` at the repository root prints `FAILED: <example>` for an example you have not set up.** The root script expects that example's dependencies to be installed already. Install them in the example folder, or run that folder's own `node verify.mjs`.
-- **`FAILED: composio-luxor` or `FAILED: covalent-luxor` from `node verify.mjs` at the repository root.** CI skips both. `composio-luxor` also needs a `COMPOSIO_API_KEY` from [app.composio.dev](https://app.composio.dev). `covalent-luxor` needs `covalent-tenki-plugin` 0.1.1 or later, because 0.1.0 depends on the renamed `tenki-sandbox` package and no longer installs. Until 0.1.1 is published, run `node verify.mjs` inside the examples you use.
+- **`FAILED: composio-luxor`, `FAILED: covalent-luxor`, or `FAILED: orca-luxor` from `node verify.mjs` at the repository root.** CI skips these three. `composio-luxor` also needs a `COMPOSIO_API_KEY` from [app.composio.dev](https://app.composio.dev). `covalent-luxor` needs `covalent-tenki-plugin` 0.1.1 or later, because 0.1.0 depends on the renamed `tenki-sandbox` package and no longer installs. `orca-luxor` fails when the gateway presents a different SSH host key on the next connection. Until those are resolved, run `node verify.mjs` inside the examples you use.
 - **`ModuleNotFoundError: No module named '<package>'` from a Python example's `verify.mjs`.** The shim runs `.venv/bin/python` when that file exists, and otherwise `$PYTHON` or `python3`. Create the venv in the example folder with `uv venv --python 3.12` and `uv pip install -r requirements.txt`. You can also set `PYTHON` to an interpreter that already has the packages.
 
 ## FAQ

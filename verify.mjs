@@ -1,7 +1,7 @@
 /**
  * Run every examples/<name>/verify.mjs from the repository root.
  * Install each example's dependencies first. Exits non-zero if any example fails.
- * CI uses .github/workflows/verify.yml, which skips a few examples.
+ * CI uses .github/workflows/verify.yml, which also runs benchmarks/ and skips a few examples.
  */
 import { readdirSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
