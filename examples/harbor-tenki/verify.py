@@ -1,6 +1,6 @@
 """
 Verify the Harbor walkthrough without a model key:
-  1. `tenki_harbor.TenkiEnvironment` imports and is a Harbor environment, and
+  1. `luxor_harbor.LuxorEnvironment` imports and is a Harbor environment, and
   2. a real Harbor trial runs on Tenki: Harbor's hello-world task with the
      `oracle` agent (the task's reference solution), graded by the task's own
      tests -> reward 1.0, and the trial's Tenki session is terminated after.
@@ -9,7 +9,7 @@ import asyncio, glob, json, os, re, shutil, subprocess, sys, tempfile  # noqa: E
 
 from harbor.environments.base import BaseEnvironment
 from tenki import AsyncClient
-from tenki_harbor import TenkiEnvironment
+from luxor_harbor import LuxorEnvironment
 
 
 def cfg(key):
@@ -24,7 +24,7 @@ token = os.environ.get("TENKI_API_KEY") or os.environ.get("TENKI_AUTH_TOKEN") or
 if not token:
     print("No token. Set TENKI_API_KEY, or run `tenki login`.")
     sys.exit(1)
-# tenki-harbor only reads the environment (its preflight checks TENKI_API_KEY).
+# luxor-harbor only reads the environment (its preflight checks TENKI_API_KEY).
 os.environ["TENKI_API_KEY"] = token
 
 
@@ -39,14 +39,14 @@ async def session_state(trial_name):
 
 
 try:
-    assert issubclass(TenkiEnvironment, BaseEnvironment) and TenkiEnvironment.type() == "tenki"
+    assert issubclass(LuxorEnvironment, BaseEnvironment) and LuxorEnvironment.type() == "tenki"
 
     harbor = os.path.join(os.path.dirname(sys.executable), "harbor")
     if not os.path.exists(harbor):
         harbor = shutil.which("harbor") or "harbor"
     with tempfile.TemporaryDirectory() as jobs:
         cmd = [harbor, "run", "-t", "hello-world/hello-world",
-               "-e", "tenki_harbor:TenkiEnvironment", "--agent", "oracle", "-o", jobs]
+               "-e", "luxor_harbor:LuxorEnvironment", "--agent", "oracle", "-o", jobs]
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
         if r.returncode != 0:
             raise RuntimeError(f"harbor run exited {r.returncode}:\n{(r.stdout + r.stderr)[-2000:]}")
@@ -64,7 +64,7 @@ try:
     if state not in {"TERMINATING", "TERMINATED"}:
         raise AssertionError(f"Tenki session for {trial['trial_name']} is {state!r}, expected terminated")
 
-    print(f"✓ harbor-tenki: TenkiEnvironment loads → harbor run hello-world (oracle) on a Tenki VM → reward {reward} → session {state.lower()}")
+    print(f"✓ harbor-tenki: LuxorEnvironment loads → harbor run hello-world (oracle) on a Tenki VM → reward {reward} → session {state.lower()}")
 except Exception as e:  # noqa: BLE001
     print(f"✗ {type(e).__name__}: {e}")
     sys.exit(1)

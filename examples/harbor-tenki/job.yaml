@@ -5,7 +5,7 @@
 #   harbor run -c job.yaml
 n_concurrent_trials: 16
 environment:
-  import_path: tenki_harbor:TenkiEnvironment
+  import_path: luxor_harbor:LuxorEnvironment
   delete: true
 agents:
   - name: claude-code
